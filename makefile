@@ -1,0 +1,60 @@
+#standard places to find cuda files
+CUDA_INC = /usr/local/cuda/includes
+CUDA_LIB = /usr/local/cuda/lib64
+CUDA_LIB2 = /usr/local/cuda/lib
+
+CXX := g++
+CC := gcc
+LINK := g++ #-fPIC
+NVCC := nvcc
+
+INCLUDES = -I. -I./src/ -I./ext_src/ -I./inc/ -I$(CUDA_INC)
+LIB_CUDA = -L. -L$(CUDA_LIB) -L$(CUDA_LIB2) -lcuda -lcudart
+
+#common flags
+COMMONFLAGS += $(INCLUDES) -O3 -g
+NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS)
+CXXFLAGS += $(COMMONFLAGS)
+CXXFLAGS += -w
+CFLAGS += $(COMMONFLAGS)
+
+#target rules
+all:build
+
+build: delGPU.out
+
+OBJS= obj/voroguppy.o obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o
+
+EXT_OBJS = obj/triangle.o
+
+CUOBJS=
+
+#for now, just compile triangle separately and copy the .o file to /obj directory
+#TRILIBDEFS = -DTRILIBRARY
+#CSWITCHES = -O
+#obj/triangle.o: ext_src/triangle.c ext_src/triangle.h
+#	$(CC) $(CSWITCHES) $(INCLUDES) -o $@ -c $<
+
+
+obj/DelaunayTri.o:src/DelaunayTri.cpp obj/triangle.o
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
+
+
+obj/Delaunay1.o:src/Delaunay1.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
+
+obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
+
+obj/voroguppy.o:voroguppy.cpp
+	$(NVCC) $(CXXFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
+
+delGPU.out: $(OBJS) $(CUOBJS) $(EXT_OBJS)
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ $+
+
+run: build
+	./delGPU.out
+
+clean:
+	rm -f $(OBJS) delGPU.out
+

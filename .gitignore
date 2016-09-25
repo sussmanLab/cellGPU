@@ -1,0 +1,7 @@
+*.swp
+*.o
+*.out
+*_store
+*.txt
+callgrind*
+*.dsym
