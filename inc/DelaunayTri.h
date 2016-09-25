@@ -3,8 +3,10 @@
 #define DELAUNAYTRI_H
 
 using namespace std;
+using namespace voroguppy;
 extern "C" {
 #include "triangle.h"
+#include "box.h"
 
 };
 //A class that computes periodic Delaunay triangulations by calling Shewchuk's Triangle program on a 9X copied version of the original cell
@@ -16,6 +18,7 @@ class DelaunayTri
         int nV;                       //number of vertices
         bool sorted;                  //are the points sorted
         bool triangulated;            //has a triangulation been performed?
+        box Box;
     
     public:
         DelaunayTri();
@@ -23,6 +26,7 @@ class DelaunayTri
         DelaunayTri(std::vector<float> points){setPoints(points);};
 
         void setPoints(std::vector<float> points);
+        void setBox(box &bx);
 
         //default call... update this whenever a better algorithm is implemented
         void getTriangulation();//name change required since "triangulate" is triangle's algorithm

@@ -85,12 +85,18 @@ int main(int argc, char*argv[])
     DelaunayNP delnp(ps2);
     cout << "DelaunayNP object set up" << endl; cout.flush();
     delnp.testDel(numpts,5);
+
     DelaunayLoc del(ps2,Bx);
     cout << "DelaunayLOC object set up" << endl; cout.flush();
     del.testDel(numpts,5);
-
+    
+    DelaunayTri DTri;
+    cout << "DelaunayTri object set up" << endl; cout.flush();
+    DTri.testDel(numpts,5);
 // test using the triangle algorithm to get triangulation
 //    DelaunayTri DTri;
+//    DTri.setBox(Bx);
+//    DTri.setPoints(ps2);
 //    DTri.getTriangulation();
 
 

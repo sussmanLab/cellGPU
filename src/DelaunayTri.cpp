@@ -16,6 +16,7 @@ using namespace std;
 #include <vector>
 #include <sys/time.h>
 
+#include "box.h"
 #include "DelaunayTri.h"
 
 extern "C" void triangulate(char*, triangulateio*,triangulateio*,triangulateio*);
@@ -27,8 +28,15 @@ DelaunayTri::DelaunayTri()
 
 void DelaunayTri::setPoints(std::vector<float> points)
     {
+    pts=points;
     };
 
+void DelaunayTri::setBox(voroguppy::box &bx)
+    {
+    dbl b11,b12,b21,b22;
+    bx.getBoxDims(b11,b12,b21,b22);
+    Box.setGeneral(b11,b12,b21,b22);
+    };
 
 
 void DelaunayTri::getTriangulation()
@@ -37,7 +45,48 @@ void DelaunayTri::getTriangulation()
     struct triangulateio in, mid, out, vorout;
 
     /* Define input points. */
+    dbl b11,b12,b21,b22;
+    Box.getBoxDims(b11,b12,b21,b22);
+    int np = pts.size()/2;
+    int numpts = 9*pts.size()/2;
+    in.numberofpoints = numpts;
+    in.numberofpointattributes = 1;
+    in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
+    for (int xx = -1; xx <= 1; ++xx)
+        {
+        for (int yy = -1; yy <= 1;++yy)
+            {
+            for (int ii = 0; ii < pts.size(); ++ii)
+                {
+                int idx = ((yy+1)+3*(xx+1))*np*2+ii;
+                if (ii % 2 ==0)
+                    in.pointlist[idx]=pts[ii]+xx*b11;
+                if (ii % 2 ==1)
+                    in.pointlist[idx]=pts[ii]+yy*b22;
+                };
+            }
+        };
 
+    in.pointattributelist = (REAL *) malloc(in.numberofpoints *
+            in.numberofpointattributes *
+            sizeof(REAL));
+    for (int ii = 0; ii < numpts; ++ii)
+        in.pointattributelist[ii]= 0.0;
+
+    in.pointmarkerlist = (int *) malloc(in.numberofpoints * sizeof(int));
+    for (int ii = 0; ii < numpts; ++ii)
+        in.pointmarkerlist[ii]= 0.0;
+
+    in.numberofsegments = 0;
+    in.numberofholes = 0;
+    in.numberofregions = 1;
+    in.regionlist = (REAL *) malloc(in.numberofregions * 4 * sizeof(REAL));
+
+    in.regionlist[0] = 0.5;
+    in.regionlist[1] = 5.0;
+    in.regionlist[2] = 7.0;            /* Regional attribute (for whole mesh). */
+    in.regionlist[3] = 0.1;          /* Area constraint that will not be used. */
+    /*
     in.numberofpoints = 4;
     in.numberofpointattributes = 1;
     in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
@@ -66,6 +115,8 @@ void DelaunayTri::getTriangulation()
     in.numberofholes = 0;
     in.numberofregions = 1;
     in.regionlist = (REAL *) malloc(in.numberofregions * 4 * sizeof(REAL));
+
+    */
     in.regionlist[0] = 0.5;
     in.regionlist[1] = 5.0;
     in.regionlist[2] = 7.0;            /* Regional attribute (for whole mesh). */
@@ -104,11 +155,11 @@ void DelaunayTri::getTriangulation()
     /*   produce an edge list (e), a Voronoi diagram (v), and a triangle */
     /*   neighbor list (n).                                              */
 
-    triangulate("pczAevn", &in, &mid, &vorout);
+    triangulate("pczAevnQ", &in, &mid, &vorout);
 
-    printf("Initial triangulation:\n\n");
+//    printf("Initial triangulation:\n\n");
 //    report(&mid, 1, 1, 1, 1, 1, 0);
-    printf("Initial Voronoi diagram:\n\n");
+//    printf("Initial Voronoi diagram:\n\n");
 //    report(&vorout, 0, 0, 0, 0, 1, 1);
 
     /* Attach area constraints to the triangles in preparation for */
@@ -132,7 +183,7 @@ void DelaunayTri::getTriangulation()
     /* Refine the triangulation according to the attached */
     /*   triangle area constraints.                       */
 
-    triangulate("prazBP", &mid, &out, (struct triangulateio *) NULL);
+    //triangulate("prazBP", &mid, &out, (struct triangulateio *) NULL);
 
     //printf("Refined triangulation:\n\n");
     //report(&out, 0, 1, 0, 0, 0, 0);
@@ -168,5 +219,35 @@ void DelaunayTri::getTriangulation()
 
 void DelaunayTri::testDel(int numpts, int tmax)
     {
+    nV = numpts;
+    float boxa = sqrt(numpts)+1.0;
+    box Bx(boxa,boxa);
+    setBox(Bx);
+    vector<float> ps2(2*numpts);
+    float maxx = 0.0;
+    int randmax = 1000000;
+    for (int i=0;i<numpts;++i)
+        {
+        float x =EPSILON+boxa/(float)randmax* (float)(rand()%randmax);
+        float y =EPSILON+boxa/(float)randmax* (float)(rand()%randmax);
+        ps2[i*2]=x;
+        ps2[i*2+1]=y;
+        //cout <<"{"<<x<<","<<y<<"},";
+        };
+    setPoints(ps2);
+
+    clock_t tstart,tstop;
+    float timing = 0.0;
+    tstart = clock();
+    for (int tt = 0; tt < tmax; ++tt)
+        {
+        getTriangulation();
+        };
+    tstop = clock();
+    timing = (tstop-tstart)/(dbl)CLOCKS_PER_SEC/(dbl)tmax;
+    cout << "average time per complete triangulation = " << timing<< endl;
+
+
+
     };
 
