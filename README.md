@@ -11,10 +11,13 @@ One of the underlying routines (for non-periodic systems) is a naive $(O(N^{1.5}
 * CPU-only files (mostly for testing purposes and algorithm design... but for small triangulations will be faster):
     * Delaunay1.h/cpp -- Defines DelaunayNP, a class to contruct the Delaunay triangulation of a local (non-periodic) set of points. Can easily get the local voronoi cell of a targeted Delaunay vertex. This is a purely serial class.
     * DelaunayLoc.h/cpp -- Defines a class that looks at a vertex, localizes the Delaunay triangulation to a possible set of vertices, then calls DelaunayNP to find the triangulation of the set and the voronoi cell of the vertex.
-    * cell.h -- a class with a cell list
 * GPU files:
 * Assorted helper files:
     * structures.h -- contains classes corresponding to helpful structures (points, triangles, triangulations, local voronoi cells)
     * functions.h -- contains helpful functions, such as those correpsonding to circumcirle operations
     * box.h -- a class for computing periodic boundary condition distances
-    * the ext_src directory contains Shewchuk's Triangle code
+    * cell.h -- a class with a cell list
+
+##Directory structure
+In this repository follows a simple structure. The main executable, voroguppy.cpp is in the base directory. Header files are in inc/, source files are in src/, and object files get put in obj/ (which is .gitignored, by default). A super-explicit makefile is used. An additional folder, ext_src/, contains the source code of Shewchuk's ``Triangle'' code. 
+
