@@ -114,8 +114,6 @@ vector<int> neighs;
 del.triangulatePoint(8,neighs,cell);
 
 */
-/*
-*/
 
 
 
