@@ -447,8 +447,9 @@ void DelaunayLoc::writeTriangulation(ofstream &outfile)
 
 
 
-void DelaunayLoc::testDel(int numpts, int tmax)
+void DelaunayLoc::testDel(int numpts, int tmax,bool verbose)
     {
+    cout << "Timing DelaunayLoc routine..." << endl;
     nV = numpts;
     float boxa = sqrt(numpts)+1.0;
     box Bx(boxa,boxa);
@@ -485,11 +486,14 @@ void DelaunayLoc::testDel(int numpts, int tmax)
     tstop=clock();
     dbl timing = (tstop-tstart)/(dbl)CLOCKS_PER_SEC/(dbl)tmax;
     cout << "average time per complete triangulation = " << timing<< endl;
-    cout << "          mean time for getPolygon = " << polytiming/(dbl)tmax << endl;
-    cout << "          mean time for 1ringcandidates = " << (ringcandtiming-polytiming-reducedtiming)/(dbl)tmax << endl;
-    cout << "          mean time for reduced ring= " << reducedtiming/(dbl)tmax << endl;
-    cout << "          mean time for triangulation   = " << tritiming/(dbl)tmax << endl;
-    cout << " ratio of total candidate time to triangulating time:  " <<ringcandtiming/tritiming << endl;
+    if (verbose)
+        {
+        cout << "          mean time for getPolygon = " << polytiming/(dbl)tmax << endl;
+        cout << "          mean time for 1ringcandidates = " << (ringcandtiming-polytiming-reducedtiming)/(dbl)tmax << endl;
+        cout << "          mean time for reduced ring= " << reducedtiming/(dbl)tmax << endl;
+        cout << "          mean time for triangulation   = " << tritiming/(dbl)tmax << endl;
+        cout << " ratio of total candidate time to triangulating time:  " <<ringcandtiming/tritiming << endl;
+        };
 
     };
 

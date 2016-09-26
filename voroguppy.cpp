@@ -41,11 +41,13 @@ int main(int argc, char*argv[])
     int numpts = 200;
     int USE_GPU = 0;
     int c;
+    int testRepeat = 5;
 
-    while((c=getopt(argc,argv,"n:g:m:s:r:b:x:y:z:p:")) != -1)
+    while((c=getopt(argc,argv,"n:g:m:s:r:b:x:y:z:p:t:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
+            case 't': testRepeat = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
             case '?':
                     if(optopt=='c')
@@ -83,16 +85,13 @@ int main(int argc, char*argv[])
     //simple testing
 
     DelaunayNP delnp(ps2);
-    cout << "DelaunayNP object set up" << endl; cout.flush();
-    delnp.testDel(numpts,5);
+    delnp.testDel(numpts,testRepeat,false);
 
     DelaunayLoc del(ps2,Bx);
-    cout << "DelaunayLOC object set up" << endl; cout.flush();
-    del.testDel(numpts,5);
-    
+    del.testDel(numpts,testRepeat,false);
+
     DelaunayTri DTri;
-    cout << "DelaunayTri object set up" << endl; cout.flush();
-    DTri.testDel(numpts,5);
+    DTri.testDel(numpts,testRepeat,false);
 // test using the triangle algorithm to get triangulation
 //    DelaunayTri DTri;
 //    DTri.setBox(Bx);

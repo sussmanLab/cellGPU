@@ -52,7 +52,7 @@ void DelaunayNP::setPoints(vector<pt> points)
     sorted=false;
     triangulated = false;
     sortmap.clear();
-    sortmap.reserve(nV);
+    sortmap.reserve(nV+3);
     mapi.clear();
     mapi.resize(nV);
     for (unsigned int ii = 0; ii<nV; ++ii)
@@ -245,8 +245,9 @@ void DelaunayNP::writeTriangulation(ofstream &outfile)
         outfile << DT.edges[ii].i <<"\t" <<DT.edges[ii].j<<endl;
     };
 
-void DelaunayNP::testDel(int numpts, int tmax)
+void DelaunayNP::testDel(int numpts, int tmax,bool verbose)
     {
+    cout << "Timing the base, non-periodic routine..." << endl;
     nV = numpts;
     float boxa = sqrt(numpts)+1.0;
     vector<float> ps2(2*numpts);

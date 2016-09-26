@@ -217,8 +217,9 @@ void DelaunayTri::getTriangulation()
     };
 
 
-void DelaunayTri::testDel(int numpts, int tmax)
+void DelaunayTri::testDel(int numpts, int tmax,bool verbose)
     {
+    cout << "Timing Shewchuk's Triangle (9-sheeted)..." << endl;
     nV = numpts;
     float boxa = sqrt(numpts)+1.0;
     box Bx(boxa,boxa);

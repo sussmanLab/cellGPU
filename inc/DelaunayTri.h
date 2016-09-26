@@ -32,7 +32,7 @@ class DelaunayTri
         void getTriangulation();//name change required since "triangulate" is triangle's algorithm
 
         //simple unit test
-        void testDel(int numpts,int tmax);
+        void testDel(int numpts,int tmax,bool verbose);
     };
 
 

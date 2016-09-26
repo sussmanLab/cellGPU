@@ -60,7 +60,7 @@ class DelaunayNP
         void writeTriangulation(ofstream &outfile);
 
         //simple unit test
-        void testDel(int numpts,int tmax);
+        void testDel(int numpts,int tmax,bool verbose);
     };
 
 
