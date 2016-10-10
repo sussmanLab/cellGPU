@@ -22,7 +22,7 @@ class DelaunayLoc
         grid clist;
         box Box;
 
-        float polytiming,ringcandtiming,reducedtiming,tritiming;
+        float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming;
 
     public:
         DelaunayLoc(){triangulated=false;cellsize=2.0;};
@@ -49,6 +49,11 @@ class DelaunayLoc
         //default call... update this whenever a better algorithm is implemented
         //"neighbors" returns a vector of the index of Delaunay neighbors of vertex i, sorted in clockwise order
         void triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &DCell,bool timing=false);
+
+
+        //test triangulations... "neighbors" must be in CW or CCW order!
+        bool testPointTriangulation(int i, vector<int> &neighbors, bool timing=false);
+
 
         //a public variable (for now) that stores the triangulation as sets of (i,j,k) vertices
         triangulation DT;

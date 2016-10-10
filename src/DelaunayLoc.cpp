@@ -413,10 +413,70 @@ cout << endl;
 //if (i ==143 || i==111 || i==268) cout << nidx[nn] <<", ";
 
         };
-
-
-
     };
+
+
+bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool timing)
+    {
+    clock_t tstart,tstop;
+    tstart = clock();
+
+    pt v = pts[i];
+    //for each circumcirlce, see if its empty
+    int neigh1 = neighbors[neighbors.size()-1];
+    int neigh2;
+    vector<int> cns;
+    dbl radius;
+    dbl vx = 0.0; dbl vy = 0.0;
+    bool repeat = false;
+    pt tocenter, disp;
+    for (int nn = 0; nn < neighbors.size(); ++nn)
+        {
+        if (repeat) continue;
+        int neigh2 = neighbors[nn];
+        pt pt1, pt2;
+        Box.minDist(pts[neigh1],v,pt1);
+        Box.minDist(pts[neigh2],v,pt2);
+
+        pt Q;
+        bool valid =Circumcircle(vx,vy,pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
+        dbl rad2 = radius*radius;
+
+        //what cell indices to check
+        int cix = clist.posToCellIdx(v.x+Q.x,v.y+Q.y);
+        int wcheck = ceil(radius/clist.getCellSize())+1;
+        clist.cellNeighbors(cix,wcheck,cns);
+        for (int cc = 0; cc < cns.size(); ++cc)
+            {
+            if (repeat) continue;
+            for (int pp = 0; pp < clist.cells[cns[cc]].size();++pp)
+                {
+                if (repeat) continue;
+                int idx  = clist.cells[cns[cc]][pp];
+                Box.minDist(pts[idx],v,disp);
+                //how far is the point from the circumcircle's center?
+                Box.minDist(disp,Q,tocenter);
+                if(tocenter.x*tocenter.x+tocenter.y*tocenter.y<rad2)
+                    {
+                    //double check that it isn't one of the points in the nlist or i
+                    repeat = true;
+                    for (int n2 = 0; n2 < neighbors.size();++n2)
+                        if (neighbors[n2] == idx) repeat = false;
+                    if (idx == i) repeat = false;
+                    };
+                };
+            };
+        neigh1 = neigh2;
+        }; // end loop over neighbors for circumcircle
+
+
+
+    tstop = clock();
+    if (timing) tritesttiming +=(tstop-tstart)/(dbl)CLOCKS_PER_SEC;
+    return (!repeat);
+    };
+
+
 
 void DelaunayLoc::printTriangulation(int maxprint)
     {
@@ -471,27 +531,32 @@ void DelaunayLoc::testDel(int numpts, int tmax,bool verbose)
     clock_t tstart,tstop;
     tstart = clock();
 
-    polytiming=ringcandtiming=reducedtiming=tritiming=0.;
-    tstart = clock();
+    polytiming=ringcandtiming=reducedtiming=tritiming=tritesttiming=0.;
+    dbl timing = 0.;
     for (int tt = 0; tt < tmax; ++tt)
         {
         DelaunayCell cell;
         vector<int> neighs;
         for (int nn = 0; nn < numpts; ++nn)
             {
+            tstart = clock();
             triangulatePoint(nn,neighs,cell,true);
+            tstop=clock();
+            timing += (tstop-tstart)/(dbl)CLOCKS_PER_SEC/(dbl)tmax;
+
+            bool check = testPointTriangulation(nn,neighs,true);
+            if (!check) cout << "point incorrectly triangulated " << endl;
             };
         };
     
-    tstop=clock();
-    dbl timing = (tstop-tstart)/(dbl)CLOCKS_PER_SEC/(dbl)tmax;
-    cout << "average time per complete triangulation = " << timing<< endl;
+    cout << "average time per complete triangulation = " << timing << endl;
     if (verbose)
         {
         cout << "          mean time for getPolygon = " << polytiming/(dbl)tmax << endl;
         cout << "          mean time for 1ringcandidates = " << (ringcandtiming-polytiming-reducedtiming)/(dbl)tmax << endl;
         cout << "          mean time for reduced ring= " << reducedtiming/(dbl)tmax << endl;
         cout << "          mean time for triangulation   = " << tritiming/(dbl)tmax << endl;
+        cout << "average time to check triangulation   = " << tritesttiming/(dbl)tmax << endl;
         cout << " ratio of total candidate time to triangulating time:  " <<ringcandtiming/tritiming << endl;
         };
 

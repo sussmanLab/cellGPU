@@ -87,7 +87,7 @@ int grid::posToCellIdx(dbl x, dbl y)
 
 void grid::cellNeighbors(int cidx, int width, std::vector<int> &cellneighs)
     {
-    int w = min(width,cellnumx);
+    int w = min(width,cellnumx/2);
     int cellix = cidx%cellnumx;
     int celliy = (cidx - cellix)/cellnumx;
     cellneighs.clear();

@@ -88,7 +88,7 @@ int main(int argc, char*argv[])
     delnp.testDel(numpts,testRepeat,false);
 
     DelaunayLoc del(ps2,Bx);
-    del.testDel(numpts,testRepeat,false);
+    del.testDel(numpts,testRepeat,true);
 
     DelaunayTri DTri;
     DTri.testDel(numpts,testRepeat,false);
