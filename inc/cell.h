@@ -40,6 +40,7 @@ class grid
         inline int posToCellIdx(dbl x, dbl y);
         //all cells within width of the cell index
         inline void cellNeighbors(int cidx, int width, std::vector<int> &cellneighs);
+        inline void cellNeighborsShort(int cidx, int width, std::vector<int> &cellneighs);
         //all cells in square shells aroudn the target cell index
         inline void cellShell(int cidx, int width, std::vector<int> &cellneighs);
         //all particle indices that are in the cell
@@ -100,6 +101,26 @@ void grid::cellNeighbors(int cidx, int width, std::vector<int> &cellneighs)
             int cy = (celliy+ii)%cellnumx;
             if (cy <0) cy+=cellnumx;
             cellneighs.push_back(cx+cellnumx*cy);
+            };
+    };
+
+void grid::cellNeighborsShort(int cidx, int width, std::vector<int> &cellneighs)
+    {
+    int w = min(width,cellnumx/2);
+    int cellix = cidx%cellnumx;
+    int celliy = (cidx - cellix)/cellnumx;
+    cellneighs.clear();
+    cellneighs.reserve(w*w);
+    for (int ii = -w; ii <=w; ++ii)
+        for (int jj = -w; jj <=w; ++jj)
+            {
+            int cx = (cellix+jj)%cellnumx;
+            if (cx <0) cx+=cellnumx;
+            int cy = (celliy+ii)%cellnumx;
+            if (cy <0) cy+=cellnumx;
+            int idx = cx+cellnumx*cy;
+            if (cells[idx].size()>0)
+                cellneighs.push_back(idx);
             };
     };
 

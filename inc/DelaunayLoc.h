@@ -22,7 +22,7 @@ class DelaunayLoc
         grid clist;
         box Box;
 
-        float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming;
+        float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming;
 
     public:
         DelaunayLoc(){triangulated=false;cellsize=2.0;};

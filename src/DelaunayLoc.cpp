@@ -193,7 +193,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
 
         //implementation improvement: can sometimes substract 1 from wcheck by considering the distance to cell boundary
         int wcheck = ceil(rads[ii]/clist.getCellSize())+1;
-        clist.cellNeighbors(cix,wcheck,cns);
+        clist.cellNeighborsShort(cix,wcheck,cns);
         cellschecked += cns.size();
         for (int cc = 0; cc < cns.size(); ++cc)
             cellns.push_back(cns[cc]);
@@ -352,26 +352,17 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
 void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &DCell,bool timing)
     {
     clock_t tstart,tstop;
+
     //first, get candidate 1-ring
     vector<int> DTringIdx;
     vector<pt> DTring;
-
     tstart = clock();
     getOneRingCandidate(i,DTringIdx,DTring);
     tstop = clock();
     if (timing) ringcandtiming +=(tstop-tstart)/(dbl)CLOCKS_PER_SEC;
 
-/*
-if (i ==143 || i==111 || i==268)
-{
-cout << endl << i <<": ";
-for (int jj = 0; jj < DTringIdx.size();++jj)
-    cout << DTringIdx[jj]<<", ";
-cout << endl;
-};
-*/
 
-    //use some other algorithm to do the triangulation
+    //call another algorithm to triangulate the candidate set
     tstart=clock();
     DelaunayNP del(DTring);
     del.triangulate();
@@ -382,36 +373,33 @@ cout << endl;
     //pick out the triangulation of the desired vertex
     int sv = del.mapi[0];
 
-
+    //get the Delaunay neighbors of that point
     del.DT.getNeighbors(sv,neighbors);
-
     DCell.setSize(neighbors.size());
     pt pi;
     for (int ii = 0; ii < DCell.n; ++ii)
         {
         del.getSortedPoint(neighbors[ii],pi);
         DCell.Dneighs[ii]=pi;
-
         };
-    DCell.Calculate();
 
+    //calculate the cell geometric properties, and put the points in CW order
+    tstart=clock();
+    DCell.Calculate();
+    tstop = clock();
+    if (timing) geotiming +=(tstop-tstart)/(dbl)CLOCKS_PER_SEC;
 
     //convert neighbors to global indices,
     //and store the neighbor indexes in clockwise order
-    vector<int> nidx;nidx.reserve(neighbors.size()); 
+    vector<int> nidx;nidx.reserve(neighbors.size());
     for (int nn = 0; nn < neighbors.size(); ++nn)
         {
         int localidx = del.deSortPoint(neighbors[DCell.CWorder[nn].second]);
         nidx.push_back(DTringIdx[localidx]);
         };
-//        if (i ==3 || i==63 || i==168 || i==158 || i==21) cout << endl << i <<": ";
-//if (i ==143 || i==111 || i==268)  cout << endl << i <<": ";
     for (int nn = 0; nn < neighbors.size(); ++nn)
         {
         neighbors[nn] = nidx[nn];
-//        if (i ==3||i==63||i==168||i==158||i==21) cout << nidx[nn] <<", ";
-//if (i ==143 || i==111 || i==268) cout << nidx[nn] <<", ";
-
         };
     };
 
@@ -452,6 +440,7 @@ bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool tim
             for (int pp = 0; pp < clist.cells[cns[cc]].size();++pp)
                 {
                 if (repeat) continue;
+
                 int idx  = clist.cells[cns[cc]][pp];
                 Box.minDist(pts[idx],v,disp);
                 //how far is the point from the circumcircle's center?
@@ -527,11 +516,10 @@ void DelaunayLoc::testDel(int numpts, int tmax,bool verbose)
         };
     setPoints(ps2);
     initialize(boxa/sqrt(numpts));
-
     clock_t tstart,tstop;
     tstart = clock();
 
-    polytiming=ringcandtiming=reducedtiming=tritiming=tritesttiming=0.;
+    geotiming=polytiming=ringcandtiming=reducedtiming=tritiming=tritesttiming=0.;
     dbl timing = 0.;
     for (int tt = 0; tt < tmax; ++tt)
         {
@@ -544,8 +532,9 @@ void DelaunayLoc::testDel(int numpts, int tmax,bool verbose)
             tstop=clock();
             timing += (tstop-tstart)/(dbl)CLOCKS_PER_SEC/(dbl)tmax;
 
+//            if (nn ==3) neighs.push_back(13);
             bool check = testPointTriangulation(nn,neighs,true);
-            if (!check) cout << "point incorrectly triangulated " << endl;
+            if (!check) cout << "point " << nn << " incorrectly triangulated " << endl;
             };
         };
     
@@ -555,6 +544,7 @@ void DelaunayLoc::testDel(int numpts, int tmax,bool verbose)
         cout << "          mean time for getPolygon = " << polytiming/(dbl)tmax << endl;
         cout << "          mean time for 1ringcandidates = " << (ringcandtiming-polytiming-reducedtiming)/(dbl)tmax << endl;
         cout << "          mean time for reduced ring= " << reducedtiming/(dbl)tmax << endl;
+        cout << "          mean time for geometry   = " << geotiming/(dbl)tmax << endl;
         cout << "          mean time for triangulation   = " << tritiming/(dbl)tmax << endl;
         cout << "average time to check triangulation   = " << tritesttiming/(dbl)tmax << endl;
         cout << " ratio of total candidate time to triangulating time:  " <<ringcandtiming/tritiming << endl;
