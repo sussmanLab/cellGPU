@@ -53,6 +53,8 @@ class DelaunayLoc
 
         //test triangulations... "neighbors" must be in CW or CCW order!
         bool testPointTriangulation(int i, vector<int> &neighbors, bool timing=false);
+        //void testTriangulation(vector< vector<int> > &neighbors, vector<bool> &points, bool timing=false);
+        void testTriangulation(vector< int > &neighbors, vector<bool> &points, bool timing=false);
 
 
         //a public variable (for now) that stores the triangulation as sets of (i,j,k) vertices
