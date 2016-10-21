@@ -142,7 +142,13 @@ bool gpu_test_circumcircles(bool *d_redo,
     if (Np < 128) block_size = 16;
     unsigned int nblocks  = Np/block_size + 1;
 
-    gpu_test_circumcircles_kernel<<<nblocks,block_size>>>(d_redo,
+    bool *d_retri_gpu;
+    static const size_t size = Np*sizeof(bool);
+    cudaMalloc(&d_retri_gpu,size);
+    cudaMemcpy(d_retri_gpu,d_redo,size,cudaMemcpyHostToDevice);
+
+    gpu_test_circumcircles_kernel<<<nblocks,block_size>>>(//d_redo,
+                                                d_retri_gpu,
                                               d_ccs,
                                               d_pt,
                                               d_cell_sizes,
@@ -157,7 +163,7 @@ bool gpu_test_circumcircles(bool *d_redo,
                                               );
     
     cudaDeviceSynchronize();
-    cout.flush();
+    cudaMemcpy(d_redo,d_retri_gpu,size,cudaMemcpyDeviceToHost);
     return cudaSuccess;
     };
 

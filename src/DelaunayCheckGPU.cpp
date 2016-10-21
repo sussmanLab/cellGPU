@@ -40,8 +40,8 @@ void DelaunayTest::testTriangulation(vector<float> &points,
     cellListGPU clgpu(cellsize,points,box);
     clgpu.computeGPU();
 
-    if(true)
-    {
+    //if(true)
+    //{
     //get particle data
     ArrayHandle<float2> d_pt(clgpu.particles,access_location::device,access_mode::read);
 
@@ -49,12 +49,17 @@ void DelaunayTest::testTriangulation(vector<float> &points,
     ArrayHandle<unsigned int> d_cell_sizes(clgpu.cell_sizes,access_location::device,access_mode::read);
     ArrayHandle<int> d_idx(clgpu.idxs,access_location::device,access_mode::read);
 
-    ArrayHandle<bool> d_retri(reTriangulate,access_location::device,access_mode::overwrite);
+//    ArrayHandle<bool> d_retri(reTriangulate,access_location::device,access_mode::overwrite);
     ArrayHandle<int> d_ccs(circumcenters,access_location::device,access_mode::read);
     bool run;
 
 
-    run=gpu_test_circumcircles(d_retri.data,
+    bool temp[Np];
+    for (int nn = 0; nn < Np; ++nn) temp[nn]=false;
+
+    bool *bt=temp;
+
+    run=gpu_test_circumcircles(bt,//temp.data(),//d_retri.data,
                             d_ccs.data,
                             d_pt.data,
                             d_cell_sizes.data,
@@ -67,10 +72,12 @@ void DelaunayTest::testTriangulation(vector<float> &points,
                             clgpu.cell_indexer,
                             clgpu.cell_list_indexer
                             );
-    };
-    ArrayHandle<bool> h_retri(reTriangulate,access_location::host,access_mode::read);
+    //};
+    //ArrayHandle<bool> h_retri(reTriangulate,access_location::host,access_mode::read);
+    //for (int nn = 0; nn < Np; ++nn)
+    //   cout << nn <<"  asd  " << h_retri.data[nn] << endl;
     for (int nn = 0; nn < Np; ++nn)
-        cout << nn <<"  asd  " << h_retri.data[nn] << endl;
+       cout << nn <<"  asd  " << temp[nn] << endl;
 
 
     };
