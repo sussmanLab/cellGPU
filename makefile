@@ -56,5 +56,5 @@ run: build
 	./delGPU.out
 
 clean:
-	rm -f $(OBJS) delGPU.out
+	rm -f $(OBJS) $(CUOBJS) delGPU.out
 

@@ -26,7 +26,27 @@
 #include "DelaunayTri.h"
 
 //comment this definition out to compile on cuda-free systems
-//#define ENABLE_CUDA
+#define ENABLE_CUDA
+
+#include "gpubox.h"
+#include "gpuarray.h"
+
+#include "cuda_runtime.h"
+
+#define DIM 2
+#define dbl float
+#define REAL float // for triangle
+#define EPSILON 1e-12
+
+#include "box.h"
+#include "Delaunay1.h"
+#include "DelaunayLoc.h"
+#include "DelaunayTri.h"
+
+//comment this definition out to compile on cuda-free systems
+#define ENABLE_CUDA
+
+
 
 /*
 #ifdef ENABLE_CUDA
@@ -63,6 +83,7 @@ int main(int argc, char*argv[])
     float boxa = sqrt(numpts)+1.0;
 
     box Bx(boxa,boxa);
+    gpubox BxGPU(boxa,boxa);
     dbl bx,bxx,by,byy;
     Bx.getBoxDims(bx,bxx,byy,by);
     cout << "Box:" << bx << " " <<bxx << " " <<byy<< " "<< by << endl;
@@ -88,33 +109,19 @@ int main(int argc, char*argv[])
  //   delnp.testDel(numpts,testRepeat,false);
 
     DelaunayLoc del(ps2,Bx);
-    del.testDel(numpts,testRepeat,true);
+//    del.testDel(numpts,testRepeat,false);
 
-    DelaunayTri DTri;
-    DTri.testDel(numpts,testRepeat,false);
-// test using the triangle algorithm to get triangulation
-//    DelaunayTri DTri;
-//    DTri.setBox(Bx);
-//    DTri.setPoints(ps2);
-//    DTri.getTriangulation();
+    //
+    GPUArray<bool> reTriangulate(numpts);
+    if(true)
+        {
+        ArrayHandle<bool> tt(reTriangulate,access_location::host,access_mode::overwrite);
+        for (int ii = 0; ii < numpts; ++ii)
+            {
+            tt.data[ii]=false;
+            };
 
-
-//    DelaunayLoc del(ps2,Bx);
-//    del.initialize(1.5);
-//DelaunayCell cell;
-//vector<int> neighs;
-//del.triangulatePoint(0,neighs,cell);
-//del.testDel(numpts,10);
-//cout <<endl; 
-/* CPU testing
-    DelaunayLoc del(ps2,Bx);
-DelaunayCell cell;
-vector<int> neighs;
-del.triangulatePoint(8,neighs,cell);
-
-*/
-
-
+        };
 
 
 
