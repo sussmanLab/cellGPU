@@ -20,7 +20,7 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
                                               int *d_circumcircles,
                                               float2 *d_pt,
                                               unsigned int *d_cell_sizes,
-                                              int *d_idx,
+                                              int *d_cell_idx,
                                               int Np,
                                               int xsize,
                                               int ysize,
@@ -62,6 +62,49 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
     float rad;
     Circumcircle(vz,vz,pt1.x,pt1.y,pt2.x,pt2.y,
                     Q.x,Q.y,rad);
+    rad = rad*rad;
+
+    //look through cells for other particles
+    bool badParticle = false;
+    float2 ptnew,toCenter; 
+    int wcheck = min((int)ceil(rad/boxsize),(int)xsize/2);
+    for (int ii = -wcheck; ii <= wcheck; ++ii)
+        for (int jj = -wcheck; jj <= wcheck; ++jj)
+            {
+            if(badParticle) continue;
+
+            int cx = (ib+ii);
+            if(cx < 0) cx += xsize;
+            if(cx >= xsize) cx -= xsize;
+            int cy = (ib+ii);
+            if(cy < 0) cx += ysize;
+            if(cy >= xsize) cx -= ysize;
+
+            int bin = ci(cx,cy);
+            for (int pp = 0; pp < d_cell_sizes[bin]; ++pp)
+                {
+                int newidx = d_cell_idx[cli(pp,bin)];
+
+                float2 pnreal = d_pt[newidx];
+                Box.minDist(pnreal,v,ptnew);
+                Box.minDist(ptnew,Q,toCenter);
+
+                //if it's in the circumcircle, check that its not one of the three points
+                if(toCenter.x*toCenter.x+toCenter.y*toCenter.y < rad)
+                    {
+                    badParticle = true;
+                    if (newidx == i1 || newidx == i2 || newidx ==i3) badParticle = false;
+                    };
+
+                };
+
+            };// end loop over cells
+    if (badParticle)
+        {
+        d_redo[i1] = true;
+        d_redo[i2] = true;
+        d_redo[i3] = true;
+        };
 
     return;
     };
