@@ -725,7 +725,7 @@ void DelaunayLoc::testDel(int numpts, int tmax,bool verbose)
 //            bool check = testPointTriangulation(nn,neighs,false);
 //            if (!check) cout << "point " << nn << " incorrectly triangulated " << endl;
             };
-        setPoints(ps3);
+        setPoints(ps2);
         vector<bool> reTriangulate(numpts,false);
 //        testTriangulation(allneighs,reTriangulate,true);
         testTriangulation(circumcenters,reTriangulate,true);

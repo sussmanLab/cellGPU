@@ -105,7 +105,7 @@ int main(int argc, char*argv[])
 
     DelaunayLoc del(ps2,Bx);
 //    del.testDel(numpts,testRepeat,false);
-    del.testDel(numpts,1,false);
+    del.testDel(numpts,5,true);
 
 
     cout << "Testing cellistgpu" << endl;
