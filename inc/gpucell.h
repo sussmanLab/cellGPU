@@ -60,12 +60,12 @@ class cellListGPU
         Index2D cell_indexer; //indexes cells from (i,j) pairs
         Index2D cell_list_indexer; //indexes elements in the cell list
 
+        GPUArray<float2> particles;
         GPUArray<unsigned int> cell_sizes; //number of elements in each cell
         GPUArray<int> idxs; //cell list with index
 
     private:
         GPUArray<int> assist; //first index is Nmax, second is whether to recompute
-        GPUArray<float2> particles;
         int Np; //number of particles to put in cells
         dbl boxsize; //linear size of each grid cell
         int xsize;

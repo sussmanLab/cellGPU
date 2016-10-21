@@ -36,13 +36,10 @@ void DelaunayTest::testTriangulation(vector<float> &points,
                         gpubox &box,
                         GPUArray<bool> &reTriangulate)
     {
-    cout << "Cell list started" << endl;cout.flush();
     int Np = points.size()/2;
     cellListGPU clgpu(cellsize,points,box);
     clgpu.computeGPU();
 
-    cout << "Cell list computed" << endl;cout.flush();
-/*
     //get particle data
     ArrayHandle<float2> d_pt(clgpu.particles,access_location::device,access_mode::read);
 
@@ -54,15 +51,13 @@ void DelaunayTest::testTriangulation(vector<float> &points,
     ArrayHandle<int> d_ccs(circumcenters,access_location::device,access_mode::read);
     bool run;
 
-    cout << " Entering GPU function" << endl;
 
-        run=gpu_test_circumcircles(d_retri.data,
+    run=gpu_test_circumcircles(d_retri.data,
                             d_ccs.data,
                             d_pt.data,
                             d_cell_sizes.data,
                             d_idx.data,
                             Np,
-                            clgpu.getNmax(),
                             clgpu.getXsize(),
                             clgpu.getYsize(),
                             clgpu.getBoxsize(),
@@ -70,6 +65,6 @@ void DelaunayTest::testTriangulation(vector<float> &points,
                             clgpu.cell_indexer,
                             clgpu.cell_list_indexer
                             );
-*/
+
     };
 
