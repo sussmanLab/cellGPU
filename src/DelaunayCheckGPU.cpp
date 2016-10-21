@@ -40,6 +40,8 @@ void DelaunayTest::testTriangulation(vector<float> &points,
     cellListGPU clgpu(cellsize,points,box);
     clgpu.computeGPU();
 
+    if(true)
+    {
     //get particle data
     ArrayHandle<float2> d_pt(clgpu.particles,access_location::device,access_mode::read);
 
@@ -65,6 +67,11 @@ void DelaunayTest::testTriangulation(vector<float> &points,
                             clgpu.cell_indexer,
                             clgpu.cell_list_indexer
                             );
+    };
+    ArrayHandle<bool> h_retri(reTriangulate,access_location::host,access_mode::read);
+    for (int nn = 0; nn < Np; ++nn)
+        if(h_retri.data[nn]) cout << "asd" << endl;
+
 
     };
 

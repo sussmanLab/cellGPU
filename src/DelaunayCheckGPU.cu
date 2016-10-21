@@ -34,13 +34,14 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= Np)
         return;
+//printf("idx = %i\t",idx);
 
     //the indices of particles forming the circumcircle
     int i1,i2,i3;
     i1 = d_circumcircles[3*idx];
     i2 = d_circumcircles[3*idx+1];
     i3 = d_circumcircles[3*idx+2];
-
+//if (idx  < 1) printf("%i %i %i check",i1,i2,i3);
     //the vertex we will take to be the origin, and its cell position
     float2 v = d_pt[i1];
     float vz = 0.0;
@@ -62,21 +63,29 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
     float rad;
     Circumcircle(vz,vz,pt1.x,pt1.y,pt2.x,pt2.y,
                     Q.x,Q.y,rad);
-    rad = rad*rad;
 
     //look through cells for other particles
     bool badParticle = false;
     float2 ptnew,toCenter; 
-    int wcheck = min((int)ceil(rad/boxsize),(int)xsize/2);
+    int wcheck = ceil(rad/boxsize);
+    if(wcheck > xsize/2) wcheck = xsize/2;
+if(idx <1)
+{
+//    printf("(%f,%f), (%f,%f)\n",pt1.x,pt1.y,pt2.x,pt2.y);
+//    printf("i1 %i, i2 %i, i3 %i, rad %f, cellsize %f wc = %i\n",i1,i2,i3,rad,boxsize,wcheck);
+
+};
+    rad = rad*rad;
     for (int ii = -wcheck; ii <= wcheck; ++ii)
         for (int jj = -wcheck; jj <= wcheck; ++jj)
             {
+//if(idx <10) printf("%i\t",jj);
             if(badParticle) continue;
 
             int cx = (ib+ii);
             if(cx < 0) cx += xsize;
             if(cx >= xsize) cx -= xsize;
-            int cy = (ib+ii);
+            int cy = (jb+jj);
             if(cy < 0) cx += ysize;
             if(cy >= xsize) cx -= ysize;
 
@@ -88,7 +97,7 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
                 float2 pnreal = d_pt[newidx];
                 Box.minDist(pnreal,v,ptnew);
                 Box.minDist(ptnew,Q,toCenter);
-
+//if(idx <10) printf("%i\t",newidx);
                 //if it's in the circumcircle, check that its not one of the three points
                 if(toCenter.x*toCenter.x+toCenter.y*toCenter.y < rad)
                     {
@@ -101,6 +110,8 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
             };// end loop over cells
     if (badParticle)
         {
+printf("badparticle for idxs %i %i %i on threadidx%i\n",i1,i2,i3,idx);
+        d_redo[idx] = true;
         d_redo[i1] = true;
         d_redo[i2] = true;
         d_redo[i3] = true;
@@ -128,7 +139,6 @@ bool gpu_test_circumcircles(bool *d_redo,
     if (Np < 128) block_size = 16;
     unsigned int nblocks  = Np/block_size + 1;
 
-
     gpu_test_circumcircles_kernel<<<nblocks,block_size>>>(d_redo,
                                               d_ccs,
                                               d_pt,
@@ -142,7 +152,9 @@ bool gpu_test_circumcircles(bool *d_redo,
                                               ci,
                                               cli
                                               );
-
+    
+    cudaDeviceSynchronize();
+    cout.flush();
     return cudaSuccess;
     };
 

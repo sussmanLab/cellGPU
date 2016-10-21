@@ -155,15 +155,30 @@ int main(int argc, char*argv[])
 cout << "starting GPU test routine" << endl;
 clock_t t1,t2;
 t1=clock();
+//ps2[0]=2.0;
 for (int tt = 0; tt < testRepeat; ++tt)
 {
     DelaunayTest gputester;
     gputester.testTriangulation(ps2,ccs,1.25,BxGPU,reTriangulate);
+    if (true)
+        {
+        ArrayHandle<bool> h_re(reTriangulate,access_location::host,access_mode::readwrite);
+        for (int nn = 0; nn < numpts; ++nn)
+            {
+            if (h_re.data[nn]) cout << "ah: " <<nn << endl; 
+            };
+        };
 };
 t2=clock();
 float gputime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
 cout << "gpu testing time = " << gputime << endl;
-
+    
+            vector<int> neighs;
+            DelaunayCell cell;
+            del.triangulatePoint(5,neighs,cell,false);
+            for (int nn = 0; nn < neighs.size(); ++nn)
+                cout << neighs[nn] << "   ";
+            cout << endl;
 
 /*
     char fname[256];
