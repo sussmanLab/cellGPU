@@ -30,6 +30,7 @@
 
 #include "gpubox.h"
 #include "gpuarray.h"
+#include "gpucell.h"
 
 #include "cuda_runtime.h"
 
@@ -123,7 +124,8 @@ int main(int argc, char*argv[])
 
         };
 
-
+    cellListGPU clgpu(1.5,ps2,BxGPU);
+    clgpu.computeGPU();
 
 /*
     char fname[256];
