@@ -102,6 +102,7 @@ if(idx <1)
                 if(toCenter.x*toCenter.x+toCenter.y*toCenter.y < rad)
                     {
                     badParticle = true;
+                    if (idx ==16) printf("%i %i %i...%i\n",i1,i2,i3,newidx);
                     if (newidx == i1 || newidx == i2 || newidx ==i3) badParticle = false;
                     };
 
@@ -116,6 +117,8 @@ printf("badparticle for idxs %i %i %i on threadidx%i\n",i1,i2,i3,idx);
         d_redo[i2] = true;
         d_redo[i3] = true;
         };
+
+if (idx == 29) printf("\n%i %i\n",d_redo[6],d_redo[12]);
 
     return;
     };

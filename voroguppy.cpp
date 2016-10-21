@@ -51,6 +51,41 @@
 using namespace std;
 using namespace voroguppy;
 
+
+bool chooseGPU(int USE_GPU,bool verbose = false)
+    {
+    int nDev;
+    cudaGetDeviceCount(&nDev);
+    if (USE_GPU >= nDev)
+        {
+        cout << "Requested GPU (device " << USE_GPU<<") does not exist. Stopping triangulation" << endl;
+        return false;
+        };
+    if (USE_GPU <nDev)
+        cudaSetDevice(USE_GPU);
+    if(verbose)    cout << "Device # \t\t Device Name \t\t MemClock \t\t MemBusWidth" << endl;
+    for (int ii=0; ii < nDev; ++ii)
+        {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop,ii);
+        if (verbose)
+            {
+            if (ii == USE_GPU) cout << "********************************" << endl;
+            if (ii == USE_GPU) cout << "****Using the following gpu ****" << endl;
+            cout << ii <<"\t\t\t" << prop.name << "\t\t" << prop.memoryClockRate << "\t\t" << prop.memoryBusWidth << endl;
+            if (ii == USE_GPU) cout << "*******************************" << endl;
+            };
+        };
+    if (!verbose)
+        {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop,USE_GPU);
+        cout << "using " << prop.name << "\t ClockRate = " << prop.memoryClockRate << " memBusWidth = " << prop.memoryBusWidth << endl << endl;
+        };
+    return true;
+    };
+
+
 int main(int argc, char*argv[])
 {
     int numpts = 200;
@@ -75,6 +110,11 @@ int main(int argc, char*argv[])
             default:
                        abort();
         };
+    bool gpu = chooseGPU(USE_GPU);
+    if (!gpu) return 0;
+    cudaSetDevice(USE_GPU);
+
+
     float boxa = sqrt(numpts)+1.0;
 
     box Bx(boxa,boxa);
@@ -155,6 +195,9 @@ int main(int argc, char*argv[])
 cout << "starting GPU test routine" << endl;
 clock_t t1,t2;
 t1=clock();
+
+printf("(%f,%f), (%f,%f), (%f,%f), (%f,%f)\n",ps2[4],ps2[5],ps2[16],ps2[17],ps2[52],ps2[53],ps2[24],ps2[25]);
+
 //ps2[0]=2.0;
 for (int tt = 0; tt < testRepeat; ++tt)
 {
