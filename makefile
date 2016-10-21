@@ -23,11 +23,11 @@ all:build
 
 build: delGPU.out
 
-OBJS= obj/voroguppy.o obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/gpucell.o
+OBJS= obj/voroguppy.o obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/gpucell.o obj/DelaunayCheckGPU.o
 
 EXT_OBJS = obj/triangle.o
 
-CUOBJS= obj/gpucell.cu.o
+CUOBJS= obj/gpucell.cu.o obj/DelaunayCheckGPU.cu.o
 
 #for now, just compile triangle separately and copy the .o file to /obj directory
 #TRILIBDEFS = -DTRILIBRARY
@@ -39,6 +39,12 @@ obj/gpucell.cu.o:src/gpucell.cu
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA)  -o $@ -c $<
 
 obj/gpucell.o:src/gpucell.cpp obj/gpucell.cu.o
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
+
+obj/DelaunayCheckGPU.cu.o:src/DelaunayCheckGPU.cu
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA)  -o $@ -c $<
+
+obj/DelaunayCheckGPU.o:src/DelaunayCheckGPU.cpp obj/DelaunayCheckGPU.cu.o
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
 obj/DelaunayTri.o:src/DelaunayTri.cpp obj/triangle.o

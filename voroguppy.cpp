@@ -44,15 +44,9 @@
 #include "DelaunayLoc.h"
 #include "DelaunayTri.h"
 
-//comment this definition out to compile on cuda-free systems
-#define ENABLE_CUDA
+#include "DelaunayCheckGPU.h"
 
 
-
-/*
-#ifdef ENABLE_CUDA
-#endif
-*/
 
 using namespace std;
 using namespace voroguppy;
@@ -111,8 +105,16 @@ int main(int argc, char*argv[])
 
     DelaunayLoc del(ps2,Bx);
 //    del.testDel(numpts,testRepeat,false);
+    del.testDel(numpts,1,false);
 
-    //
+
+    cout << "Testing cellistgpu" << endl;
+    cellListGPU clgpu2(1.5,ps2,BxGPU);
+    clgpu2.computeGPU();
+
+    cout << "making array of bools" << endl;
+
+    //get gpuarray of bools
     GPUArray<bool> reTriangulate(numpts);
     if(true)
         {
@@ -121,11 +123,47 @@ int main(int argc, char*argv[])
             {
             tt.data[ii]=false;
             };
-
         };
+    cout << "making array of circumcenter indices" << endl;
+    //get gpuarray of circumcenter indices
+    GPUArray<int> ccs(6*numpts);
+    if(true)
+        {
+        ArrayHandle<int> h_ccs(ccs,access_location::host,access_mode::overwrite);
+        int cidx = 0;
+        for (int nn = 0; nn < numpts; ++nn)
+            {
+            vector<int> neighs;
+            DelaunayCell cell;
+            del.triangulatePoint(nn,neighs,cell,false);
+            for (int jj = 0; jj < neighs.size();++jj)
+                {
+                int n1 = neighs[jj];
+                int ne2 = jj + 1;
+                if (jj == neighs.size()-1) ne2 = 0;
+                int n2 = neighs[ne2];
+                if (nn < n1 && nn < n2)
+                    {
+                    h_ccs.data[3*cidx+0] = nn;
+                    h_ccs.data[3*cidx+1] = n1;
+                    h_ccs.data[3*cidx+2] = n2;
+                    cidx+=1;
+                    };
+                };
+            };
+        };
+cout << "starting GPU test routine" << endl;
+clock_t t1,t2;
+t1=clock();
+for (int tt = 0; tt < testRepeat; ++tt)
+{
+    DelaunayTest gputester;
+    gputester.testTriangulation(ps2,ccs,1.25,BxGPU,reTriangulate);
+};
+t2=clock();
+float gputime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
+cout << "gpu testing time = " << gputime << endl;
 
-    cellListGPU clgpu(1.5,ps2,BxGPU);
-    clgpu.computeGPU();
 
 /*
     char fname[256];
