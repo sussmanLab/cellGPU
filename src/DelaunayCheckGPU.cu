@@ -82,16 +82,22 @@ if(idx <1)
         for (int jj = -wcheck; jj <= wcheck; ++jj)
             {
 //if(idx <10) printf("%i\t",jj);
-            if(badParticle) continue;
+
+            //if(badParticle) continue;
 
             int cx = (ib+ii);
             if(cx < 0) cx += xsize;
             if(cx >= xsize) cx -= xsize;
             int cy = (jb+jj);
-            if(cy < 0) cx += ysize;
-            if(cy >= xsize) cx -= ysize;
+            if(cy < 0) cy += ysize;
+            if(cy >= ysize) cy -= ysize;
 
             int bin = ci(cx,cy);
+            if (bin >= ci.getNumElements())
+                {
+                printf("bin %i out of %i; cx,cy = (%i,%i)",bin,ci.getNumElements(),cx,cy);
+                };
+
             for (int pp = 0; pp < d_cell_sizes[bin]; ++pp)
                 {
                 int newidx = d_cell_idx[cli(pp,bin)];
@@ -106,7 +112,8 @@ if(idx <1)
                     if (newidx != i1 && newidx != i2 && newidx !=i3)
                         {
                         badParticle = true;
-                        printf("%i %i %i...%i\n",i1,i2,i3,newidx);
+                //        d_redo[newidx] = true;
+//                        printf("%i %i %i...%i\n",i1,i2,i3,newidx);
                         };
                     };
 
@@ -123,7 +130,7 @@ if(idx <1)
         d_redo[i3] = true;
         };
 
-if (idx == 16) printf("\n%i %i\n",d_redo[2],d_redo[12]);
+if (idx == 35) printf("\n%i %i\n",d_redo[5],d_redo[9]);
 
     return;
     };
@@ -146,26 +153,28 @@ bool gpu_test_circumcircles(      bool *d_redo, // bool *h_redo,
     cudaError_t code;
 
     unsigned int block_size = 128;
-    if (Nccs < 128) block_size = 16;
+    if (Nccs < 128) block_size = 32;
     unsigned int nblocks  = Nccs/block_size + 1;
 
-/*
-    bool *d_redo;
+
+    bool *d_redo2;
     static const size_t size = Np*sizeof(bool);
 
     bool *bt = (bool*)malloc(Np*sizeof(bool));
     for (int nn = 0; nn < Np; ++nn) bt[nn]=false;
 
-    code = cudaMalloc((void **) &d_redo,size);
+    code = cudaMalloc((void **) &d_redo2,size);
 if(code!=cudaSuccess)
     printf("1 GPUassert: %s \n", cudaGetErrorString(code));
-    code = cudaMemcpy(d_redo,bt,size,cudaMemcpyHostToDevice);
+    code = cudaMemcpy(d_redo2,bt,size,cudaMemcpyHostToDevice);
 if(code!=cudaSuccess)
     printf("2 GPUassert: %s \n", cudaGetErrorString(code));
-*/
+
+    cudaDeviceSynchronize();
 
     gpu_test_circumcircles_kernel<<<nblocks,block_size>>>(
-                                                d_redo,
+                                                //d_redo,
+                                                d_redo2,
                                               d_ccs,
                                               d_pt,
                                               d_cell_sizes,
@@ -179,19 +188,29 @@ if(code!=cudaSuccess)
                                               cli
                                               );
     code = cudaPeekAtLastError();
-if(code!=cudaSuccess)
-    printf("3 GPUassert: %s \n", cudaGetErrorString(code));
     cudaDeviceSynchronize();
 
-/*
-    code = cudaMemcpy(bt,d_redo,size,cudaMemcpyDeviceToHost);
+    cout << "Kernel finished" << endl;
+
+if(code!=cudaSuccess)
+    printf("3 GPUassert: %s \n", cudaGetErrorString(code));
+
+    code = cudaMemcpy(bt,d_redo2,size,cudaMemcpyDeviceToHost);
 
 if(code!=cudaSuccess)
     printf("4 GPUassert: %s \n", cudaGetErrorString(code));
 
     cudaFree(d_redo);
+
+    for (int nn = 0; nn < Np; ++nn)
+        {
+        cout << nn << "   " << bt[nn]<<endl;
+        };
+    cout << endl;
+
     free(bt);
-*/
+
+
     return cudaSuccess;
     };
 

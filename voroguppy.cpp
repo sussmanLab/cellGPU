@@ -203,12 +203,12 @@ t1=clock();
 
 printf("(%f,%f), (%f,%f), (%f,%f), (%f,%f)\n",ps2[4],ps2[5],ps2[16],ps2[17],ps2[52],ps2[53],ps2[24],ps2[25]);
 
-//ps2[4]=41.0;
+ps2[11]+=0.0;
 for (int tt = 0; tt < testRepeat; ++tt)
 {
     DelaunayTest gputester;
     gputester.testTriangulation(ps2,ccs,1.25,BxGPU,reTriangulate);
-    if (true)
+    if (false)
         {
         ArrayHandle<bool> h_re(reTriangulate,access_location::host,access_mode::readwrite);
         for (int nn = 0; nn < numpts; ++nn)
