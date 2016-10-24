@@ -93,10 +93,10 @@ if(idx <1)
             if(cy >= ysize) cy -= ysize;
 
             int bin = ci(cx,cy);
-            if (bin >= ci.getNumElements())
-                {
-                printf("bin %i out of %i; cx,cy = (%i,%i)",bin,ci.getNumElements(),cx,cy);
-                };
+//            if (bin >= ci.getNumElements())
+//                {
+//                printf("bin %i out of %i; cx,cy = (%i,%i)",bin,ci.getNumElements(),cx,cy);
+//                };
 
             for (int pp = 0; pp < d_cell_sizes[bin]; ++pp)
                 {
@@ -112,7 +112,7 @@ if(idx <1)
                     if (newidx != i1 && newidx != i2 && newidx !=i3)
                         {
                         badParticle = true;
-                //        d_redo[newidx] = true;
+                        d_redo[newidx] = true;
 //                        printf("%i %i %i...%i\n",i1,i2,i3,newidx);
                         };
                     };
@@ -124,13 +124,13 @@ if(idx <1)
 
     if (badParticle)
         {
-        printf("badparticle for idxs %i %i %i on threadidx%i\n",i1,i2,i3,idx);
+//        printf("badparticle for idxs %i %i %i on threadidx%i\n",i1,i2,i3,idx);
         d_redo[i1] = true;
         d_redo[i2] = true;
         d_redo[i3] = true;
         };
 
-if (idx == 35) printf("\n%i %i\n",d_redo[5],d_redo[9]);
+//if (idx == 35) printf("\n%i %i\n",d_redo[5],d_redo[9]);
 
     return;
     };
@@ -187,13 +187,12 @@ if(code!=cudaSuccess)
                                               ci,
                                               cli
                                               );
-    code = cudaPeekAtLastError();
-    cudaDeviceSynchronize();
+//    code = cudaPeekAtLastError();
+//    cudaDeviceSynchronize();
 
-    cout << "Kernel finished" << endl;
 
-if(code!=cudaSuccess)
-    printf("3 GPUassert: %s \n", cudaGetErrorString(code));
+//if(code!=cudaSuccess)
+//    printf("3 GPUassert: %s \n", cudaGetErrorString(code));
 
     code = cudaMemcpy(bt,d_redo2,size,cudaMemcpyDeviceToHost);
 
@@ -201,12 +200,16 @@ if(code!=cudaSuccess)
     printf("4 GPUassert: %s \n", cudaGetErrorString(code));
 
     cudaFree(d_redo);
-
+    
+    int totalwrong = 0;
     for (int nn = 0; nn < Np; ++nn)
         {
-        cout << nn << "   " << bt[nn]<<endl;
+        if (bt[nn])
+            totalwrong +=1;
+//            cout << nn << "   " << bt[nn]<<endl;
         };
-    cout << endl;
+//    cout << endl;
+//    cout << "totalwrong = " << totalwrong << endl;
 
     free(bt);
 

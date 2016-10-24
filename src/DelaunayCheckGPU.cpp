@@ -57,7 +57,7 @@ void DelaunayTest::testTriangulation(vector<float> &points,
 //    for (int nn = 0; nn < Np; ++nn) bt[nn]=false;
 
     int nccs= circumcenters.getNumElements()/3;
-    cout << "Processing " << nccs << " circumcenters on the gpu" << endl;
+//    cout << "Processing " << nccs << " circumcenters on the gpu" << endl;
 
     run=gpu_test_circumcircles(d_retri.data,//temp.data(),//d_retri.data,//bt,
                             d_ccs.data,
