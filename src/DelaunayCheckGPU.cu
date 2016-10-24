@@ -21,7 +21,7 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
                                               float2 *d_pt,
                                               unsigned int *d_cell_sizes,
                                               int *d_cell_idx,
-                                              int Np,
+                                              int Nccs,
                                               int xsize,
                                               int ysize,
                                               float boxsize,
@@ -32,7 +32,7 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
     {
     // read in the particle that belongs to this thread
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= Np)
+    if (idx >= Nccs)
         return;
 //printf("idx = %i\t",idx);
 
@@ -41,6 +41,7 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
     i1 = d_circumcircles[3*idx];
     i2 = d_circumcircles[3*idx+1];
     i3 = d_circumcircles[3*idx+2];
+
 //if (idx  < 1) printf("%i %i %i check",i1,i2,i3);
     //the vertex we will take to be the origin, and its cell position
     float2 v = d_pt[i1];
@@ -49,8 +50,8 @@ __global__ void gpu_test_circumcircles_kernel(bool *d_redo,
     ib=floor(v.x/boxsize);
     jb=floor(v.y/boxsize);
 
-    
-    
+
+
     float2 p1real = d_pt[i2];
     float2 p2real = d_pt[i3];
 
@@ -77,6 +78,7 @@ if(idx <1)
 };
     rad = rad*rad;
     for (int ii = -wcheck; ii <= wcheck; ++ii)
+        {
         for (int jj = -wcheck; jj <= wcheck; ++jj)
             {
 //if(idx <10) printf("%i\t",jj);
@@ -101,30 +103,31 @@ if(idx <1)
                 //if it's in the circumcircle, check that its not one of the three points
                 if(toCenter.x*toCenter.x+toCenter.y*toCenter.y < rad)
                     {
-                    badParticle = true;
+                    if (newidx != i1 || newidx != i2 || newidx !=i3) badParticle = true;
                     if (idx ==16) printf("%i %i %i...%i\n",i1,i2,i3,newidx);
-                    if (newidx == i1 || newidx == i2 || newidx ==i3) badParticle = false;
                     };
 
                 };
 
-            };// end loop over cells
+            };
+        };// end loop over cells
+
     if (badParticle)
         {
-printf("badparticle for idxs %i %i %i on threadidx%i\n",i1,i2,i3,idx);
-        d_redo[idx] = true;
+        printf("badparticle for idxs %i %i %i on threadidx%i\n",i1,i2,i3,idx);
         d_redo[i1] = true;
         d_redo[i2] = true;
         d_redo[i3] = true;
         };
 
-if (idx == 29) printf("\n%i %i\n",d_redo[6],d_redo[12]);
+if (idx == 16) printf("\n%i %i\n",d_redo[2],d_redo[12]);
 
     return;
     };
 
-bool gpu_test_circumcircles(bool *d_redo,
+bool gpu_test_circumcircles(      bool *d_redo, // bool *h_redo,
                                   int *d_ccs,
+                                  int Nccs,
                                   float2 *d_pt,
                                   unsigned int *d_cell_sizes,
                                   int *d_idx,
@@ -137,23 +140,34 @@ bool gpu_test_circumcircles(bool *d_redo,
                                   Index2D &cli
                                   )
     {
+    cudaError_t code;
 
     unsigned int block_size = 128;
-    if (Np < 128) block_size = 16;
-    unsigned int nblocks  = Np/block_size + 1;
+    if (Nccs < 128) block_size = 16;
+    unsigned int nblocks  = Nccs/block_size + 1;
 
-    bool *d_retri_gpu;
+/*
+    bool *d_redo;
     static const size_t size = Np*sizeof(bool);
-    cudaMalloc(&d_retri_gpu,size);
-    cudaMemcpy(d_retri_gpu,d_redo,size,cudaMemcpyHostToDevice);
 
-    gpu_test_circumcircles_kernel<<<nblocks,block_size>>>(//d_redo,
-                                                d_retri_gpu,
+    bool *bt = (bool*)malloc(Np*sizeof(bool));
+    for (int nn = 0; nn < Np; ++nn) bt[nn]=false;
+
+    code = cudaMalloc((void **) &d_redo,size);
+if(code!=cudaSuccess)
+    printf("1 GPUassert: %s \n", cudaGetErrorString(code));
+    code = cudaMemcpy(d_redo,bt,size,cudaMemcpyHostToDevice);
+if(code!=cudaSuccess)
+    printf("2 GPUassert: %s \n", cudaGetErrorString(code));
+*/
+
+    gpu_test_circumcircles_kernel<<<nblocks,block_size>>>(
+                                                d_redo,
                                               d_ccs,
                                               d_pt,
                                               d_cell_sizes,
                                               d_idx,
-                                              Np,
+                                              Nccs,
                                               xsize,
                                               ysize,
                                               boxsize,
@@ -161,9 +175,20 @@ bool gpu_test_circumcircles(bool *d_redo,
                                               ci,
                                               cli
                                               );
-    
+    code = cudaPeekAtLastError();
+if(code!=cudaSuccess)
+    printf("3 GPUassert: %s \n", cudaGetErrorString(code));
     cudaDeviceSynchronize();
-    cudaMemcpy(d_redo,d_retri_gpu,size,cudaMemcpyDeviceToHost);
+
+/*
+    code = cudaMemcpy(bt,d_redo,size,cudaMemcpyDeviceToHost);
+
+if(code!=cudaSuccess)
+    printf("4 GPUassert: %s \n", cudaGetErrorString(code));
+
+    cudaFree(d_redo);
+    free(bt);
+*/
     return cudaSuccess;
     };
 

@@ -191,14 +191,18 @@ int main(int argc, char*argv[])
                     };
                 };
             };
+        cout << "printing ccs" << endl;
         };
+
+
+
 cout << "starting GPU test routine" << endl;
 clock_t t1,t2;
 t1=clock();
 
 printf("(%f,%f), (%f,%f), (%f,%f), (%f,%f)\n",ps2[4],ps2[5],ps2[16],ps2[17],ps2[52],ps2[53],ps2[24],ps2[25]);
 
-//ps2[0]=2.0;
+ps2[4]=41.0;
 for (int tt = 0; tt < testRepeat; ++tt)
 {
     DelaunayTest gputester;
@@ -208,7 +212,7 @@ for (int tt = 0; tt < testRepeat; ++tt)
         ArrayHandle<bool> h_re(reTriangulate,access_location::host,access_mode::readwrite);
         for (int nn = 0; nn < numpts; ++nn)
             {
-            if (h_re.data[nn]) cout << "ah: " <<nn << endl; 
+            if (h_re.data[nn]) cout << "ah: " <<nn << endl;
             };
         };
 };
@@ -218,7 +222,7 @@ cout << "gpu testing time = " << gputime << endl;
     
             vector<int> neighs;
             DelaunayCell cell;
-            del.triangulatePoint(5,neighs,cell,false);
+            del.triangulatePoint(2,neighs,cell,false);
             for (int nn = 0; nn < neighs.size(); ++nn)
                 cout << neighs[nn] << "   ";
             cout << endl;
