@@ -207,14 +207,14 @@ t2=clock();arraytime += (t2-t1)/(dbl)CLOCKS_PER_SEC;
             };
         };
 };
-cout << "array conversion time testing time = " << arraytime/testRepeat << endl;
+cout <<endl << endl << "array conversion time testing time = " << arraytime/testRepeat << endl;
 
 
 
 //    cout << "making array of bools" << endl;
-
     //get gpuarray of bools
     GPUArray<bool> reTriangulate(numpts);
+/*
     if(true)
         {
         ArrayHandle<bool> tt(reTriangulate,access_location::host,access_mode::overwrite);
@@ -223,7 +223,7 @@ cout << "array conversion time testing time = " << arraytime/testRepeat << endl;
             tt.data[ii]=false;
             };
         };
-
+*/
 //    cout << "making array of circumcenter indices" << endl;
     //get gpuarray of circumcenter indices
     GPUArray<int> ccs(6*numpts);
@@ -260,32 +260,36 @@ cout << "array conversion time testing time = " << arraytime/testRepeat << endl;
 cout << "starting GPU test routine" << endl;
 t1=clock();
 
-printf("(%f,%f), (%f,%f), (%f,%f), (%f,%f)\n",ps2[4],ps2[5],ps2[16],ps2[17],ps2[52],ps2[53],ps2[24],ps2[25]);
 
 ps2[11]+=err;
+DelaunayTest gputester;
 for (int tt = 0; tt < testRepeat; ++tt)
 {
-    DelaunayTest gputester;
     gputester.testTriangulation(ps2,ccs,1.25,BxGPU,reTriangulate);
-    if (false)
-        {
-        ArrayHandle<bool> h_re(reTriangulate,access_location::host,access_mode::readwrite);
-        for (int nn = 0; nn < numpts; ++nn)
-            {
-            if (h_re.data[nn]) cout << "ah: " <<nn << endl;
-            };
-
-        };
+//    if (false)
+//        {
+//        ArrayHandle<bool> h_re(reTriangulate,access_location::host,access_mode::readwrite);
+//        for (int nn = 0; nn < numpts; ++nn)
+//            {
+//            if (h_re.data[nn]) cout << "ah: " <<nn << endl;
+//            };
+//
+//        };
 };
 t2=clock();
 float gputime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
 cout << "gpu testing time = " << gputime << endl;
+cout << "total gpu time = " << gputime + arraytime/testRepeat << endl << endl;
     
+
+cout << "triitesttiming / tritiming = "<< del2.tritesttiming/testRepeat/del2.totaltiming << endl;
+cout << "gputest timing  / tritiming = "<< (gputime)/del2.totaltiming << endl;
+cout << "gputtotal timing / tritiming = "<< (gputime + arraytime/testRepeat)/del2.totaltiming << endl;
             vector<int> neighs;
             DelaunayCell cell;
             del.triangulatePoint(5,neighs,cell,false);
-            for (int nn = 0; nn < neighs.size(); ++nn)
-                cout << neighs[nn] << "   ";
+//            for (int nn = 0; nn < neighs.size(); ++nn)
+//                cout << neighs[nn] << "   ";
             cout << endl;
 
 /*

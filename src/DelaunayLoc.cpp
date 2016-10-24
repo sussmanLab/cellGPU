@@ -743,6 +743,7 @@ void DelaunayLoc::testDel(int numpts, int tmax,bool verbose)
         tritesttiming += (tstop-tstart)/(dbl)CLOCKS_PER_SEC;
         };
     
+    totaltiming=timing;
     cout << "average time per complete triangulation = " << timing << endl;
     if (verbose)
         {

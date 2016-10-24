@@ -22,9 +22,11 @@ class DelaunayLoc
         grid clist;
         box Box;
 
-        float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming;
 
     public:
+        float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
+
+
         DelaunayLoc(){triangulated=false;cellsize=2.0;};
         //constructor via a vector of point objects
         DelaunayLoc(std::vector<pt> &points, box &bx){setPoints(points);setBox(bx);};
