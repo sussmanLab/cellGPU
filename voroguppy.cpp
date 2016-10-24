@@ -133,7 +133,7 @@ int main(int argc, char*argv[])
         float y =EPSILON+boxa/(dbl)randmax* (dbl)(rand()%randmax);
         ps2[i*2]=x;
         ps2[i*2+1]=y;
-        //cout <<"{"<<x<<","<<y<<"},";
+        cout <<"{"<<x<<","<<y<<"},";
         };
 //    cout << endl << maxx << endl;
     cout << endl << endl;
@@ -144,8 +144,9 @@ int main(int argc, char*argv[])
  //   delnp.testDel(numpts,testRepeat,false);
 
     DelaunayLoc del(ps2,Bx);
+    del.initialize(1.5);
 //    del.testDel(numpts,testRepeat,false);
-    del.testDel(numpts,5,true);
+//    del.testDel(numpts,5,true);
 
 
     cout << "Testing cellistgpu" << endl;
@@ -202,7 +203,7 @@ t1=clock();
 
 printf("(%f,%f), (%f,%f), (%f,%f), (%f,%f)\n",ps2[4],ps2[5],ps2[16],ps2[17],ps2[52],ps2[53],ps2[24],ps2[25]);
 
-ps2[4]=41.0;
+//ps2[4]=41.0;
 for (int tt = 0; tt < testRepeat; ++tt)
 {
     DelaunayTest gputester;
@@ -222,7 +223,7 @@ cout << "gpu testing time = " << gputime << endl;
     
             vector<int> neighs;
             DelaunayCell cell;
-            del.triangulatePoint(2,neighs,cell,false);
+            del.triangulatePoint(5,neighs,cell,false);
             for (int nn = 0; nn < neighs.size(); ++nn)
                 cout << neighs[nn] << "   ";
             cout << endl;

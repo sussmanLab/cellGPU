@@ -103,8 +103,11 @@ if(idx <1)
                 //if it's in the circumcircle, check that its not one of the three points
                 if(toCenter.x*toCenter.x+toCenter.y*toCenter.y < rad)
                     {
-                    if (newidx != i1 || newidx != i2 || newidx !=i3) badParticle = true;
-                    if (idx ==16) printf("%i %i %i...%i\n",i1,i2,i3,newidx);
+                    if (newidx != i1 && newidx != i2 && newidx !=i3)
+                        {
+                        badParticle = true;
+                        printf("%i %i %i...%i\n",i1,i2,i3,newidx);
+                        };
                     };
 
                 };
