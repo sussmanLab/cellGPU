@@ -69,7 +69,7 @@ class DelaunayLoc
         void printPoint(int i){cout <<pts[i].x << " " <<pts[i].y << endl;};
 
         //simple test
-        void testDel(int numpts,int tmax, bool verbose);
+        void testDel(int numpts,int tmax,double err, bool verbose);
 
     };
 

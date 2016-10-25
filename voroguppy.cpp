@@ -149,7 +149,7 @@ int main(int argc, char*argv[])
     DelaunayLoc del2(ps2,Bx);
     del.initialize(1.5);
 //    del.testDel(numpts,testRepeat,false);
-    del2.testDel(numpts,testRepeat,true);
+    del2.testDel(numpts,testRepeat,err, true);
 
 
 //    cout << "Testing cellistgpu" << endl;
@@ -261,7 +261,12 @@ cout << "starting GPU test routine" << endl;
 t1=clock();
 
 
-ps2[11]+=err;
+for (int nn = 0; nn < ps2.size(); ++nn)
+    {
+    float diff = -err*0.5+err*(dbl)(rand()%randmax)/((dbl)randmax); 
+    ps2[nn] += diff;
+    };
+
 DelaunayTest gputester;
 for (int tt = 0; tt < testRepeat; ++tt)
 {

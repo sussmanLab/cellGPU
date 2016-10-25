@@ -652,7 +652,7 @@ void DelaunayLoc::writeTriangulation(ofstream &outfile)
 
 
 
-void DelaunayLoc::testDel(int numpts, int tmax,bool verbose)
+void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
     {
     cout << "Timing DelaunayLoc routine..." << endl;
     nV = numpts;
@@ -675,6 +675,16 @@ void DelaunayLoc::testDel(int numpts, int tmax,bool verbose)
         ps3[i*2+1]=y3;
         //cout <<"{"<<x<<","<<y<<"},";
         };
+    
+    for (int nn = 0; nn < ps2.size(); ++nn)
+        {
+        float diff = -err*0.5+err*(dbl)(rand()%randmax)/((dbl)randmax); 
+        ps3[nn] = ps2[nn] + diff;
+        };
+    
+    
+    
+    
     setPoints(ps2);
     initialize(boxa/sqrt(numpts));
     clock_t tstart,tstop;
