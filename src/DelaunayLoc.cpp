@@ -676,11 +676,6 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
         //cout <<"{"<<x<<","<<y<<"},";
         };
     
-    for (int nn = 0; nn < ps2.size(); ++nn)
-        {
-        float diff = -err*0.5+err*(dbl)(rand()%randmax)/((dbl)randmax); 
-        ps3[nn] = ps2[nn] + diff;
-        };
     
     
     
@@ -735,7 +730,12 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
 //            bool check = testPointTriangulation(nn,neighs,false);
 //            if (!check) cout << "point " << nn << " incorrectly triangulated " << endl;
             };
-        setPoints(ps2);
+        for (int nn = 0; nn < ps2.size(); ++nn)
+            {
+            float diff = -err*0.5+err*(dbl)(rand()%randmax)/((dbl)randmax); 
+            ps3[nn] = ps2[nn] + diff;
+            };
+        setPoints(ps3);
         vector<bool> reTriangulate(numpts,false);
 //        testTriangulation(allneighs,reTriangulate,true);
         testTriangulation(circumcenters,reTriangulate,true);
