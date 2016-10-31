@@ -32,19 +32,8 @@
 #include "gpuarray.h"
 #include "gpucell.h"
 
-#include "cuda_runtime.h"
-
-#define DIM 2
-#define dbl float
-#define REAL float // for triangle
-#define EPSILON 1e-12
-
-#include "box.h"
-#include "Delaunay1.h"
-#include "DelaunayLoc.h"
-#include "DelaunayTri.h"
-
 #include "DelaunayCheckGPU.h"
+#include "DelaunayMD.h"
 
 
 
@@ -116,7 +105,11 @@ int main(int argc, char*argv[])
     if (!gpu) return 0;
     cudaSetDevice(USE_GPU);
 
-
+    DelaunayMD delmd;
+    delmd.initialize(numpts);
+    delmd.updateCellList();
+    delmd.reportCellList();
+/*
     float boxa = sqrt(numpts)+1.0;
 
     box Bx(boxa,boxa);
@@ -220,6 +213,7 @@ cout <<endl << endl << "array conversion time testing time = " << arraytime << e
 
 //    cout << "making array of bools" << endl;
     //get gpuarray of bools
+*/
 /*
     if(true)
         {
@@ -232,6 +226,9 @@ cout <<endl << endl << "array conversion time testing time = " << arraytime << e
 */
 //    cout << "making array of circumcenter indices" << endl;
     //get gpuarray of circumcenter indices
+    //
+    //
+/*
     if(true)
         {
         ArrayHandle<int> h_ccs(ccs,access_location::host,access_mode::overwrite);
@@ -292,7 +289,7 @@ cout << "gputtotal timing / tritiming = "<< (gputime + arraytime)/del2.totaltimi
 //            for (int nn = 0; nn < neighs.size(); ++nn)
 //                cout << neighs[nn] << "   ";
             cout << endl;
-
+*/
 /*
     char fname[256];
     sprintf(fname,"DT.txt");

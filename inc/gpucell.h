@@ -24,6 +24,7 @@ class cellListGPU
 
         void setParticles(const vector<float> &points);
         void setBox(gpubox &bx);
+        void setNp(int nn){Np=nn;};
 
         //only call this if particles and box already set...doubles as a general initialization of data structures
         void setGridSize(dbl a);
@@ -47,7 +48,10 @@ class cellListGPU
 
         void compute(); // compute the cell list given current particle positions
 
-        void computeGPU(); // compute the cell list given current particle positions...write this next
+        void computeGPU(); // compute the cell list given current particle positions
+
+        void computeGPU(GPUArray<float2> &points); // compute the cell list of the gpuarry passed to it
+
 
         void repP(int i)
             {

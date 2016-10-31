@@ -29,9 +29,8 @@ using namespace std;
 using namespace voroguppy;
 
 
-//namespace voroguppy
-//{
 //DEFINE functions here
+
 cellListGPU::cellListGPU(dbl a, vector<float> &points,gpubox &bx)
     {
     setParticles(points);
@@ -238,6 +237,68 @@ void cellListGPU::computeGPU()
     };
 
 
+void cellListGPU::computeGPU(GPUArray<float2> &points)
+    {
+    bool recompute = true;
+    resetCellSizes();
+
+    while (recompute)
+        {
+        resetCellSizes();
+
+        //scope for arrayhandles
+        if (true)
+            {
+            //associate with the passed particle data
+            ArrayHandle<float2> d_pt(points,access_location::device,access_mode::read);
+
+            //get cell list arrays...readwrite so things are properly zeroed out
+            ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_assist(assist,access_location::device,access_mode::readwrite);
+
+            //call the gpu function
+            gpu_compute_cell_list(d_pt.data,        //particle positions...broken
+                          d_cell_sizes.data,//particles per cell
+                          d_idx.data,       //cell list
+                          Np,               //number of particles
+                          Nmax,             //maximum particles per cell
+                          xsize,            //number of cells in x direction
+                          ysize,            // ""     ""      "" y directions
+                          boxsize,          //size of each grid cell
+                          Box,
+                          cell_indexer,
+                          cell_list_indexer,
+                          d_assist.data
+                          );               //the box
+            }
+        //get cell list arrays
+        recompute = false;
+        //bool loopcheck=false;
+        if (true)
+            {
+            ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
+            ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::read);
+            for (int cc = 0; cc < totalCells; ++cc)
+                {
+                int cs = h_cell_sizes.data[cc] ;
+                for (int bb = 0; bb < cs; ++bb)
+                    {
+                    int wp = cell_list_indexer(bb,cc);
+                    };
+                if(cs > Nmax)
+                    {
+                    Nmax =cs ;
+                    recompute = true;
+                    };
+
+                };
+
+            };
+        };
+    cell_list_indexer = Index2D(Nmax,totalCells);
+
+    };
 
 
 //} //end namespace
