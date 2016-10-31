@@ -15,6 +15,7 @@ class DelaunayMD
     {
     private:
         GPUArray<float2> points;      //vector of particle positions
+        GPUArray<float2> forces;      //vector of particle positions
 
         std::vector<pt> pts;          //vector of points to triangulate
         int N;                       //number of vertices
