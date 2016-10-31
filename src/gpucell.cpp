@@ -50,7 +50,7 @@ void cellListGPU::setParticles(const vector<float> &points)
     Np=newsize;
     if(true)
         {
-        ArrayHandle<float2> h_handle(particles,access_location::host,access_mode::readwrite);
+        ArrayHandle<float2> h_handle(particles,access_location::host,access_mode::overwrite);
         for (int ii = 0; ii < points.size()/2; ++ii)
             {
             h_handle.data[ii].x = points[2*ii];
