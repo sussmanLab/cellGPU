@@ -106,7 +106,9 @@ int main(int argc, char*argv[])
     cudaSetDevice(USE_GPU);
 
     DelaunayMD delmd;
+cout << " object initialized " << endl; cout.flush();
     delmd.initialize(numpts);
+cout << " initialized " << endl; cout.flush();
     delmd.updateCellList();
     delmd.reportCellList();
 /*

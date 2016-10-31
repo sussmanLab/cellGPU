@@ -33,12 +33,15 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
     {
     int randmax = 100000000;
     ArrayHandle<float2> h_points(points,access_location::host, access_mode::overwrite);
+    ArrayHandle<float2> h_forces(forces,access_location::host, access_mode::overwrite);
     for (int ii = 0; ii < N; ++ii)
         {
         float x =EPSILON+boxx/(dbl)(randmax+1)* (dbl)(rand()%randmax);
         float y =EPSILON+boxy/(dbl)(randmax+1)* (dbl)(rand()%randmax);
         h_points.data[ii].x=x;
         h_points.data[ii].y=y;
+        h_forces.data[ii].x=0.0;
+        h_forces.data[ii].y=0.0;
         };
     };
 
@@ -51,6 +54,7 @@ void DelaunayMD::initialize(int n)
 
     //set particle positions (randomly)
     points.resize(N);
+    forces.resize(N);
     randomizePositions(boxsize,boxsize);
 
     //cell list initialization
