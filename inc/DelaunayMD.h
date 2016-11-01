@@ -27,9 +27,12 @@ class DelaunayMD
         
         DelaunayLoc delLoc;
 
+        //neighbor lists
         GPUArray<int> neigh_num; 
         GPUArray<int> neighs;
         Index2D n_idx;
+        //circumcenter lists
+        GPUArray<int> circumcenters;
 
         int neighMax;
 
@@ -61,6 +64,9 @@ class DelaunayMD
 
         //construct complete triangulation
         void fullTriangulation();
+
+        //construct circumcenters structure from neighbor list
+        void getCircumcenterIndices();
 
         //Test the current neigh list to see if it is still a valid triangulation
         //If it isn't, fix it on the cpu

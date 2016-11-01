@@ -11,14 +11,28 @@
 using namespace voroguppy;
 
 
+bool gpu_test_circumcenters(
+                            int *d_repair,
+                            int *d_ccs,
+                            int Nccs,
+                            float2 *d_pt,
+                            unsigned int *d_cell_sizes,
+                            int *d_idx,
+                            int Np,
+                            int xsize,
+                            int ysize,
+                            float boxsize,
+                            gpubox &Box,
+                            Index2D &ci,
+                            Index2D &cli
+                            );
+
 
 bool gpu_move_particles(float2 *d_points,
                     float2 *d_disp,
                     int N,
                     gpubox &Box
                     );
-
-
 
 #endif
 

@@ -130,8 +130,11 @@ int main(int argc, char*argv[])
     t1=clock();
     for (int tt = 0; tt < testRepeat; ++tt)
         {
-        rnddisp(ds,numpts,0.01);
+        rnddisp(ds,numpts,0.1);
         delmd.movePoints(ds);
+        delmd.testAndRepairTriangulation();
+
+
         };
     t2=clock();
     float movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
