@@ -51,6 +51,7 @@ class cellListGPU
         void computeGPU(); // compute the cell list given current particle positions
 
         void computeGPU(GPUArray<float2> &points); // compute the cell list of the gpuarry passed to it
+        void compute(GPUArray<float2> &points); // compute the cell list of the gpuarry passed to it
 
 
         void repP(int i)

@@ -130,6 +130,7 @@ int main(int argc, char*argv[])
     t1=clock();
     for (int tt = 0; tt < testRepeat; ++tt)
         {
+        cout << "Starting loop " <<tt << endl;
         rnddisp(ds,numpts,0.1);
         delmd.movePoints(ds);
         delmd.testAndRepairTriangulation();
