@@ -9,13 +9,12 @@ using namespace std;
 #include "gpuarray.h"
 #include "gpucell.h"
 
-#include "Delaunay1.h"
+#include "DelaunayLoc.h"
 
 class DelaunayMD
     {
     private:
         GPUArray<float2> points;      //vector of particle positions
-        GPUArray<float2> forces;      //vector of particle positions
 
         std::vector<pt> pts;          //vector of points to triangulate
         int N;                       //number of vertices
@@ -24,7 +23,12 @@ class DelaunayMD
         float cellsize;
         cellListGPU celllist;
         gpubox Box;
+        
+        DelaunayLoc delLoc;
 
+        GPUArray<int> neigh_num; 
+        GPUArray<int> neighs;
+        int NeighMax;
 
     public:
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
@@ -42,9 +46,17 @@ class DelaunayMD
         void randomizePositions(float boxx, float boxy);
 
         //utility functions
+        void resetDelLocPoints();
         void updateCellList();
         void reportCellList();
 
+        //construct complete triangulation
+        void fullTriangulation();
+
+
+
+
+        //old functions
         void setPoints(std::vector<pt> &points);
         void setPoints(std::vector<float> &points);
         void setBox(gpubox &bx);

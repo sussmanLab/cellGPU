@@ -350,6 +350,52 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
 
 
 
+void DelaunayLoc::getNeighbors(int i, vector<int> &neighbors)
+    {
+    DelaunayCell DCell;
+    //first, get candidate 1-ring
+    vector<int> DTringIdx;
+    vector<pt> DTring;
+    getOneRingCandidate(i,DTringIdx,DTring);
+
+
+    //call another algorithm to triangulate the candidate set
+    DelaunayNP del(DTring);
+    del.triangulate();
+
+
+    //pick out the triangulation of the desired vertex
+    int sv = del.mapi[0];
+
+    //get the Delaunay neighbors of that point
+    del.DT.getNeighbors(sv,neighbors);
+    DCell.setSize(neighbors.size());
+    pt pi;
+    for (int ii = 0; ii < DCell.n; ++ii)
+        {
+        del.getSortedPoint(neighbors[ii],pi);
+        DCell.Dneighs[ii]=pi;
+        };
+
+    //calculate the cell geometric properties, and put the points in CW order
+    DCell.getCW();
+
+    //convert neighbors to global indices,
+    //and store the neighbor indexes in clockwise order
+    vector<int> nidx;nidx.reserve(neighbors.size());
+    for (int nn = 0; nn < neighbors.size(); ++nn)
+        {
+        int localidx = del.deSortPoint(neighbors[DCell.CWorder[nn].second]);
+        nidx.push_back(DTringIdx[localidx]);
+        };
+    for (int nn = 0; nn < neighbors.size(); ++nn)
+        {
+        neighbors[nn] = nidx[nn];
+        };
+    };
+
+
+
 void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &DCell,bool timing)
     {
     clock_t tstart,tstop;

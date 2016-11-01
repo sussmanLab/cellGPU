@@ -51,6 +51,8 @@ class DelaunayLoc
         //default call... update this whenever a better algorithm is implemented
         //"neighbors" returns a vector of the index of Delaunay neighbors of vertex i, sorted in clockwise order
         void triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &DCell,bool timing=false);
+        //"neighbors" returns a vector of the index of Delaunay neighbors of vertex i, sorted in clockwise order
+        void getNeighbors(int i, vector<int> &neighbors);
 
 
         //test triangulations... "neighbors" must be in CW or CCW order!

@@ -118,10 +118,9 @@ struct DelaunayCell
 
         void setSize(int nn){n=nn;Dneighs.resize(n);Voro=false;};
 
-        //find the positions of the voronoi cell around the vertex
-        void getVoro()
+        //find CW order of neighbors
+        void getCW()
             {
-            //first, put the points in clockwise order
             CWorder.resize(n);
             Vpoints.resize(n);
             for (int ii = 0; ii < n; ++ii)
@@ -130,6 +129,13 @@ struct DelaunayCell
                 CWorder[ii].second=ii;
                 };
             sort(CWorder.begin(),CWorder.begin()+n);
+            }
+
+        //find the positions of the voronoi cell around the vertex
+        void getVoro()
+            {
+            //first, put the points in clockwise order
+            getCW();
 
             //calculate the voronoi points as the circumcenter of the origin,p_i,p_{i+1}
             pt ori(0.0,0.0);

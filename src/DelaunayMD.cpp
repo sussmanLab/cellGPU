@@ -1,5 +1,6 @@
 using namespace std;
 #define EPSILON 1e-12
+#define dbl float
 #define ENABLE_CUDA
 
 #include <cmath>
@@ -20,6 +21,8 @@ using namespace std;
 #include "vector_types.h"
 #include "vector_functions.h"
 
+#include "box.h"
+
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "gpucell.cuh"
@@ -33,20 +36,33 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
     {
     int randmax = 100000000;
     ArrayHandle<float2> h_points(points,access_location::host, access_mode::overwrite);
-    ArrayHandle<float2> h_forces(forces,access_location::host, access_mode::overwrite);
     for (int ii = 0; ii < N; ++ii)
         {
         float x =EPSILON+boxx/(dbl)(randmax+1)* (dbl)(rand()%randmax);
         float y =EPSILON+boxy/(dbl)(randmax+1)* (dbl)(rand()%randmax);
         h_points.data[ii].x=x;
         h_points.data[ii].y=y;
-        h_forces.data[ii].x=0.0;
-        h_forces.data[ii].y=0.0;
         };
+    };
+
+void DelaunayMD::resetDelLocPoints()
+    {
+    ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        pts[ii].x=h_points.data[ii].x;
+        pts[ii].y=h_points.data[ii].y;
+        };
+    delLoc.setPoints(pts);
+    delLoc.initialize(cellsize);
+
     };
 
 void DelaunayMD::initialize(int n)
     {
+    //set cellsize to about unity
+    cellsize = 1.25;
+
     //set particle number and box
     N = n;
     float boxsize = sqrt(N);
@@ -54,13 +70,21 @@ void DelaunayMD::initialize(int n)
 
     //set particle positions (randomly)
     points.resize(N);
-    forces.resize(N);
+    pts.resize(N);
     randomizePositions(boxsize,boxsize);
 
     //cell list initialization
     celllist.setNp(N);
     celllist.setBox(Box);
-    celllist.setGridSize(1.25);
+    celllist.setGridSize(cellsize);
+
+    //DelaunayLoc initialization
+    box Bx(boxsize,boxsize);
+    delLoc.setBox(Bx);
+    resetDelLocPoints();
+
+    //make a full triangulation
+
     };
 
 void DelaunayMD::updateCellList()
@@ -84,6 +108,11 @@ void DelaunayMD::reportCellList()
         cout << endl;
 
         };
+
+    };
+
+void DelaunayMD::fullTriangulation()
+    {
 
     };
 
