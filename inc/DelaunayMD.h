@@ -8,6 +8,7 @@ using namespace std;
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "gpucell.h"
+#include "indexer.h"
 
 #include "DelaunayLoc.h"
 
@@ -28,7 +29,9 @@ class DelaunayMD
 
         GPUArray<int> neigh_num; 
         GPUArray<int> neighs;
-        int NeighMax;
+        Index2D n_idx;
+
+        int neighMax;
 
     public:
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;

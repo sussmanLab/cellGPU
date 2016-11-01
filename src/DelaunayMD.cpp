@@ -84,7 +84,7 @@ void DelaunayMD::initialize(int n)
     resetDelLocPoints();
 
     //make a full triangulation
-
+    fullTriangulation();
     };
 
 void DelaunayMD::updateCellList()
@@ -113,6 +113,37 @@ void DelaunayMD::reportCellList()
 
 void DelaunayMD::fullTriangulation()
     {
+    cout << "Resetting complete triangulation" << endl;
+    //get neighbors of each cell in CW order
+    neigh_num.resize(N);
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
+    vector< vector<int> > allneighs(N);
+    int nmax = 0;
+    for(int nn = 0; nn < N; ++nn)
+        {
+        vector<int> neighTemp;
+        delLoc.getNeighbors(nn,neighTemp);
+        allneighs[nn]=neighTemp;
+        neighnum.data[nn] = neighTemp.size();
+        if (neighTemp.size() > nmax) nmax= neighTemp.size();
+        };
+    neighMax = nmax; cout << "new Nmax = " << nmax << endl;
+    neighs.resize(neighMax*N);
+
+    //store data in gpuarray
+    n_idx = Index2D(neighMax,N);
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
+    for (int nn = 0; nn < N; ++nn)
+        {
+        int imax = neighnum.data[nn];
+        for (int ii = 0; ii < imax; ++ii)
+            {
+            int idxpos = n_idx(ii,nn);
+            ns.data[idxpos] = allneighs[nn][ii];
+//printf("particle %i (%i,%i)\n",nn,idxpos,allneighs[nn][ii]);
+            };
+
+        };
 
     };
 
