@@ -33,6 +33,9 @@ class DelaunayMD
 
         int neighMax;
 
+        //repair is a vector of zeros (everything is fine) and ones (that index needs to be repaired)
+        GPUArray<int> repair;
+
     public:
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
 
@@ -48,6 +51,9 @@ class DelaunayMD
         void initialize(int n);
         void randomizePositions(float boxx, float boxy);
 
+        //move particles
+        void movePoints(GPUArray<float2> &displacements);
+
         //utility functions
         void resetDelLocPoints();
         void updateCellList();
@@ -56,6 +62,11 @@ class DelaunayMD
         //construct complete triangulation
         void fullTriangulation();
 
+        //Test the current neigh list to see if it is still a valid triangulation
+        //If it isn't, fix it on the cpu
+        void testTriangulation();
+        void repairTriangulation(vector<int> &fixlist);
+        void testAndRepairTriangulation();
 
 
 

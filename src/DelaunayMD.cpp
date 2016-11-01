@@ -28,6 +28,7 @@ using namespace std;
 #include "gpucell.cuh"
 #include "gpucell.h"
 
+#include "DelaunayMD.cuh"
 #include "DelaunayMD.h"
 
 
@@ -71,6 +72,7 @@ void DelaunayMD::initialize(int n)
     //set particle positions (randomly)
     points.resize(N);
     pts.resize(N);
+    repair.resize(N);
     randomizePositions(boxsize,boxsize);
 
     //cell list initialization
@@ -116,7 +118,11 @@ void DelaunayMD::fullTriangulation()
     cout << "Resetting complete triangulation" << endl;
     //get neighbors of each cell in CW order
     neigh_num.resize(N);
+
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
+
+    ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
+
     vector< vector<int> > allneighs(N);
     int nmax = 0;
     for(int nn = 0; nn < N; ++nn)
@@ -126,6 +132,7 @@ void DelaunayMD::fullTriangulation()
         allneighs[nn]=neighTemp;
         neighnum.data[nn] = neighTemp.size();
         if (neighTemp.size() > nmax) nmax= neighTemp.size();
+        h_repair.data[nn]=0;
         };
     neighMax = nmax; cout << "new Nmax = " << nmax << endl;
     neighs.resize(neighMax*N);
@@ -146,4 +153,29 @@ void DelaunayMD::fullTriangulation()
         };
 
     };
+
+void DelaunayMD::movePoints(GPUArray<float2> &displacements)
+    {
+    ArrayHandle<float2> d_p(points,access_location::device,access_mode::readwrite);
+    ArrayHandle<float2> d_d(displacements,access_location::device,access_mode::readwrite);
+    gpu_move_particles(d_p.data,d_d.data,N,Box);
+    };
+
+void DelaunayMD::repairTriangulation(vector<int> &fixlist)
+    {
+    };
+
+void DelaunayMD::testTriangulation()
+    {
+    };
+
+
+void DelaunayMD::testAndRepairTriangulation()
+    {
+    testTriangulation();
+    vector<int> NeedsFixing;
+    repairTriangulation(NeedsFixing);
+    };
+
+
 

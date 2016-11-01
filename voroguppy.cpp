@@ -14,6 +14,7 @@
 
 //#include "cuda.h"
 #include "cuda_runtime.h"
+#include "vector_types.h"
 
 #define DIM 2
 #define dbl float
@@ -75,6 +76,20 @@ bool chooseGPU(int USE_GPU,bool verbose = false)
     };
 
 
+void rnddisp(GPUArray<float2> &disps, int N,float scale)
+    {
+    disps.resize(N);
+    ArrayHandle<float2> h_d(disps,access_location::host,access_mode::overwrite);
+    int randmax = 1000000;
+    for (int i=0;i<N;++i)
+        {
+        float x =scale*(-0.5+1.0/(dbl)randmax* (dbl)(rand()%randmax));
+        float y =scale*(-0.5+1.0/(dbl)randmax* (dbl)(rand()%randmax));
+        h_d.data[i].x=x;
+        h_d.data[i].y=y;
+        };
+    };
+
 int main(int argc, char*argv[])
 {
     int numpts = 200;
@@ -101,6 +116,8 @@ int main(int argc, char*argv[])
             default:
                        abort();
         };
+    clock_t t1,t2;
+    
     bool gpu = chooseGPU(USE_GPU);
     if (!gpu) return 0;
     cudaSetDevice(USE_GPU);
@@ -108,6 +125,18 @@ int main(int argc, char*argv[])
     DelaunayMD delmd;
     delmd.initialize(numpts);
     delmd.updateCellList();
+
+    GPUArray<float2> ds;
+    t1=clock();
+    for (int tt = 0; tt < testRepeat; ++tt)
+        {
+        rnddisp(ds,numpts,0.01);
+        delmd.movePoints(ds);
+        };
+    t2=clock();
+    float movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
+    cout << "move time (data transfer) ~ " << movetime << " per frame" << endl;
+    
 //    delmd.reportCellList();
 /*
     float boxa = sqrt(numpts)+1.0;
