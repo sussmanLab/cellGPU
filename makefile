@@ -12,8 +12,8 @@ INCLUDES = -I. -I./src/ -I./ext_src/ -I./inc/ -I$(CUDA_INC)
 LIB_CUDA = -L. -L$(CUDA_LIB) -L$(CUDA_LIB2) -lcuda -lcudart
 
 #common flags
-COMMONFLAGS += $(INCLUDES) -O2 -g
-NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -G
+COMMONFLAGS += $(INCLUDES) -O3 #-g
+NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) #-Xptxas -dlcm=ca#-G
 CXXFLAGS += $(COMMONFLAGS)
 CXXFLAGS += -w
 CFLAGS += $(COMMONFLAGS)

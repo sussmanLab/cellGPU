@@ -15,7 +15,9 @@
 #include "DelaunayMD.cuh"
 
 
-
+//
+//texture<int,1,cudaReadModeElementType> dcc_tex;
+//
 __global__ void gpu_test_circumcenters_kernel(int *d_repair,
                                               int *d_circumcircles,
                                               float2 *d_pt,
@@ -37,6 +39,11 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
 
     //the indices of particles forming the circumcircle
     int i1,i2,i3;
+    //
+    //i1=tex1Dfetch(dcc_tex,3*idx);
+    //i2=tex1Dfetch(dcc_tex,3*idx+1);
+    //i3=tex1Dfetch(dcc_tex,3*idx+2);
+    //
     i1 = d_circumcircles[3*idx];
     i2 = d_circumcircles[3*idx+1];
     i3 = d_circumcircles[3*idx+2];
@@ -60,6 +67,8 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     float rad;
     Circumcircle(vz,vz,pt1.x,pt1.y,pt2.x,pt2.y,
                     Q.x,Q.y,rad);
+
+    syncthreads();
 
     //look through cells for other particles
     bool badParticle = false;
@@ -153,6 +162,7 @@ bool gpu_test_circumcenters(int *d_repair,
     unsigned int nblocks  = Nccs/block_size + 1;
 
 
+//    cudaBindTexture(0,dcc_tex,d_ccs,sizeof(int)*3*Nccs);
     /*
     bool *d_redo2;
     static const size_t size = Np*sizeof(bool);
@@ -194,6 +204,8 @@ if(code!=cudaSuccess)
     code = cudaGetLastError();
 if(code!=cudaSuccess)
     printf("testCircumcenters GPUassert: %s \n", cudaGetErrorString(code));
+
+  //  cudaUnbindTexture(dcc_tex);
 /*
    code = cudaMemcpy(bt,d_redo2,size,cudaMemcpyDeviceToHost);
 

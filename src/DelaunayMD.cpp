@@ -266,6 +266,9 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     if(resetCCidx)
         {
         cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
+        fullTriangulation();
+        return;
+/*
         GPUArray<int> newNeighs;
         newNeighs.resize(neighMax*N);
         Index2D new_idx(neighMax,N);
@@ -287,6 +290,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
             };
         neighs.swap(newNeighs);
         n_idx=Index2D(neighMax,N);
+*/
         };
 
     //now, edit the right entries of the neighborlist and neighbor size list
