@@ -150,7 +150,7 @@ int main(int argc, char*argv[])
         };
     t2=clock();
     float movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
-    cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat << "  edits per frame" << endl;
+    cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat*numpts << " particle  edits per frame" << endl;
 
     delmd.writeTriangulation(output2);
 
