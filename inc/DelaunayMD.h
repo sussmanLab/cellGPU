@@ -61,6 +61,7 @@ class DelaunayMD
         void resetDelLocPoints();
         void updateCellList();
         void reportCellList();
+        void reportPos(int i);
 
         //construct complete triangulation
         void fullTriangulation();

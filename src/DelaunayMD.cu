@@ -127,7 +127,7 @@ __global__ void gpu_move_particles_kernel(float2 *d_points,
         return;
     d_points[idx].x += d_disp[idx].x;
     d_points[idx].y += d_disp[idx].y;
-    Box.putInBox(d_points[idx]);
+    Box.putInBoxReal(d_points[idx]);
     return;
     };
 

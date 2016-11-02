@@ -43,6 +43,7 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
         float y =EPSILON+boxy/(dbl)(randmax+1)* (dbl)(rand()%randmax);
         h_points.data[ii].x=x;
         h_points.data[ii].y=y;
+        printf("%i; {%f,%f}\n",ii,x,y);
         };
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
@@ -71,6 +72,7 @@ void DelaunayMD::initialize(int n)
     N = n;
     float boxsize = sqrt(N);
     Box.setSquare(boxsize,boxsize);
+    printf("Boxsize is %f\n",boxsize);
 
     //set circumcenter array size
     circumcenters.resize(6*N);
@@ -128,9 +130,13 @@ void DelaunayMD::reportCellList()
             cout << h_idx.data[clpos] << "   ";
             };
         cout << endl;
-
         };
+    };
 
+void DelaunayMD::reportPos(int i)
+    {
+    ArrayHandle<float2> hp(points,access_location::host,access_mode::read);
+    printf("particle %i\t{%f,%f}\n",i,hp.data[i].x,hp.data[i].y);
     };
 
 void DelaunayMD::movePoints(GPUArray<float2> &displacements)

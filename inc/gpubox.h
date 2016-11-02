@@ -47,6 +47,7 @@ struct gpubox
         HOSTDEVICE void setSquare(float x, float y);
         HOSTDEVICE void setGeneral(float a, float b,float c, float d);
 
+        HOSTDEVICE void putInBoxReal(float2 &p1);
         HOSTDEVICE void putInBox(float2 &vp);
         HOSTDEVICE void Trans(const float2 &p1, float2 &pans);
         HOSTDEVICE void invTrans(const float2 &p1, float2 &pans);
@@ -96,6 +97,14 @@ void gpubox::invTrans(const float2 &p1, float2 &pans)
     {
     pans.x = xi11*p1.x + xi12*p1.y;
     pans.y = xi21*p1.x + xi22*p1.y;
+    };
+
+void gpubox::putInBoxReal(float2 &p1)
+    {//assume real space entries. Moves p1 by disp, and puts it back in box
+    float2 vP;
+    invTrans(p1,vP);
+    putInBox(vP);
+    Trans(vP,p1);
     };
 
 void gpubox::putInBox(float2 &vp)

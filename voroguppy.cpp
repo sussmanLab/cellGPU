@@ -88,6 +88,9 @@ void rnddisp(GPUArray<float2> &disps, int N,float scale)
         h_d.data[i].x=x;
         h_d.data[i].y=y;
         };
+
+printf("displacing particle 0 by {%f,%f}\n",h_d.data[0].x,h_d.data[0].y);
+
     };
 
 int main(int argc, char*argv[])
@@ -128,12 +131,16 @@ int main(int argc, char*argv[])
 
     GPUArray<float2> ds;
     t1=clock();
+    int reppart=1;
+    delmd.reportPos(reppart);
     for (int tt = 0; tt < testRepeat; ++tt)
         {
         cout << "Starting loop " <<tt << endl;
         rnddisp(ds,numpts,0.1);
+        delmd.reportPos(reppart);
         delmd.movePoints(ds);
-        delmd.testAndRepairTriangulation();
+        delmd.reportPos(reppart);
+//        delmd.testAndRepairTriangulation();
 
 
         };
