@@ -359,5 +359,15 @@ void DelaunayMD::testAndRepairTriangulation()
     repairTriangulation(NeedsFixing);
     };
 
+void DelaunayMD::writeTriangulation(ofstream &outfile)
+    {
+    ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+    ArrayHandle<int> cc(circumcenters,access_location::host,access_mode::read);
+    outfile << N <<endl;
+    for (int ii = 0; ii < N ; ++ii)
+        outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
+    for (int ii = 0; ii < 2*N; ++ii)
+        outfile << cc.data[3*ii] <<"\t" <<cc.data[3*ii+1]<<"\t"<<cc.data[3*ii+2]<<endl;
+    };
 
 

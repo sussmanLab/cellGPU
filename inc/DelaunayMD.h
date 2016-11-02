@@ -77,6 +77,8 @@ class DelaunayMD
         void repairTriangulation(vector<int> &fixlist);
         void testAndRepairTriangulation();
 
+        //write triangulation to text file
+        void writeTriangulation(ofstream &outfile);
 
 
         //old functions

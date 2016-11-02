@@ -117,7 +117,15 @@ int main(int argc, char*argv[])
                        abort();
         };
     clock_t t1,t2;
-    
+    char fname1[256];
+    char fname2[256];
+    sprintf(fname1,"DT1.txt");
+    sprintf(fname2,"DT2.txt");
+    ofstream output1(fname1);
+    output1.precision(8);
+    ofstream output2(fname2);
+    output2.precision(8);
+
     bool gpu = chooseGPU(USE_GPU);
     if (!gpu) return 0;
     cudaSetDevice(USE_GPU);
@@ -125,14 +133,15 @@ int main(int argc, char*argv[])
     DelaunayMD delmd;
     delmd.initialize(numpts);
     delmd.updateCellList();
-        delmd.testAndRepairTriangulation();
+    delmd.testAndRepairTriangulation();
+    delmd.writeTriangulation(output1);
    
     GPUArray<float2> ds;
     ds.resize(numpts);
     t1=clock();
     for (int tt = 0; tt < testRepeat; ++tt)
         {
-//        cout << "Starting loop " <<tt << endl;
+        if (tt % 100 ==0) cout << "Starting loop " <<tt << endl;
         rnddisp(ds,numpts,err);
         delmd.movePoints(ds);
         delmd.testAndRepairTriangulation();
@@ -143,6 +152,7 @@ int main(int argc, char*argv[])
     float movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat << "  edits per frame" << endl;
 
+    delmd.writeTriangulation(output2);
 
 
 //    delmd.reportCellList();
