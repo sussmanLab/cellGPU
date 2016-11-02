@@ -62,6 +62,7 @@ class DelaunayMD
         void updateCellList();
         void reportCellList();
         void reportPos(int i);
+        void touchPoints(){ArrayHandle<float2> h(points,access_location::host,access_mode::readwrite);};
 
         //construct complete triangulation
         void fullTriangulation();

@@ -43,7 +43,7 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
         float y =EPSILON+boxy/(dbl)(randmax+1)* (dbl)(rand()%randmax);
         h_points.data[ii].x=x;
         h_points.data[ii].y=y;
-        printf("%i; {%f,%f}\n",ii,x,y);
+//        printf("%i; {%f,%f}\n",ii,x,y);
         };
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
@@ -72,7 +72,6 @@ void DelaunayMD::initialize(int n)
     N = n;
     float boxsize = sqrt(N);
     Box.setSquare(boxsize,boxsize);
-    printf("Boxsize is %f\n",boxsize);
 
     //set circumcenter array size
     circumcenters.resize(6*N);
@@ -109,8 +108,8 @@ void DelaunayMD::updateCellList()
     cudaError_t code1 = cudaGetLastError();
     if(code1!=cudaSuccess)
         printf("cell list preliminary computation GPUassert: %s \n", cudaGetErrorString(code1));
-    //celllist.computeGPU(points);
-    celllist.compute(points);
+    celllist.computeGPU(points);
+    //celllist.compute(points);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("cell list computation GPUassert: %s \n", cudaGetErrorString(code));
@@ -223,7 +222,6 @@ void DelaunayMD::getCircumcenterIndices()
             };
 
         };
-    cout << cidx << " total circumcenters" << endl;
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("getCCIndices GPUassert: %s \n", cudaGetErrorString(code));
@@ -279,12 +277,12 @@ void DelaunayMD::testAndRepairTriangulation()
         {
         if (h_repair.data[nn] == 1)
             {
-            cout << nn << " needs fixin'" << endl;
+            cout << nn << ", ";
             h_repair.data[nn]=0;
             };
 
         };
-
+    cout << endl;
 
     repairTriangulation(NeedsFixing);
     };

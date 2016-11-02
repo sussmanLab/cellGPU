@@ -88,12 +88,14 @@ void cellListGPU::setGridSize(dbl a)
 
 void cellListGPU::resetCellSizes()
     {
+    //set all cell sizes to zero
     totalCells=xsize*ysize;
     cell_sizes.resize(totalCells);
     ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::overwrite);
     for (int cc = 0; cc < totalCells; ++cc)
         h_cell_sizes.data[cc]=0;
 
+    //set all cell indexes to zero
     cell_list_indexer = Index2D(Nmax,totalCells);
     idxs.resize(cell_list_indexer.getNumElements());
     ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::overwrite);
@@ -294,7 +296,6 @@ void cellListGPU::computeGPU(GPUArray<float2> &points)
         {
         //cout << "computing cell list on the gpu with Nmax = " << Nmax << endl;
         resetCellSizes();
-
         //scope for arrayhandles
         if (true)
             {
@@ -305,9 +306,10 @@ void cellListGPU::computeGPU(GPUArray<float2> &points)
             ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_assist(assist,access_location::device,access_mode::readwrite);
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("cell list data handles GPUassert: %s \n", cudaGetErrorString(code));
+
+cudaError_t code = cudaGetLastError();
+if(code!=cudaSuccess)
+    printf("cell list data handles GPUassert: %s \n", cudaGetErrorString(code));
 
             //call the gpu function
             gpu_compute_cell_list(d_pt.data,        //particle positions...broken
@@ -342,9 +344,11 @@ void cellListGPU::computeGPU(GPUArray<float2> &points)
 */
             ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
     //        ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::read);
-    cudaError_t code2 = cudaGetLastError();
-    if(code2!=cudaSuccess)
-        printf("cell list first comp GPUassert: %s \n", cudaGetErrorString(code2));
+
+            
+cudaError_t code2 = cudaGetLastError();
+if(code2!=cudaSuccess)
+    printf("cell list first comp GPUassert: %s \n", cudaGetErrorString(code2));
 
             for (int cc = 0; cc < totalCells; ++cc)
                 {
