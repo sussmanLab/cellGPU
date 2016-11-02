@@ -238,6 +238,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     repPerFrame += ((float) fixes/(float)N);
     if (fixes == 0) return;
 //    cout << "about to repair " << fixes << " points" << endl;
+    resetDelLocPoints();
 
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
 
@@ -295,11 +296,14 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         int pidx = fixlist[nn];
         int imax = allneighs[nn].size();
         neighnum.data[pidx] = imax;
+//        cout << " particle " << pidx << " neighs = " << imax << endl;
         for (int ii = 0; ii < imax; ++ii)
             {
             int idxpos = n_idx(ii,pidx);
             ns.data[idxpos] = allneighs[nn][ii];
+//            cout << ns.data[idxpos] << "    ";
             };
+//        cout << endl;
         };
 
     getCircumcenterIndices();
