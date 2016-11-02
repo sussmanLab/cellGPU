@@ -132,8 +132,8 @@ int main(int argc, char*argv[])
     t1=clock();
     for (int tt = 0; tt < testRepeat; ++tt)
         {
-        cout << "Starting loop " <<tt << endl;
-        rnddisp(ds,numpts,0.001);
+//        cout << "Starting loop " <<tt << endl;
+        rnddisp(ds,numpts,err);
         delmd.movePoints(ds);
         delmd.testAndRepairTriangulation();
 
@@ -141,7 +141,7 @@ int main(int argc, char*argv[])
         };
     t2=clock();
     float movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
-    cout << "move time (data transfer) ~ " << movetime << " per frame" << endl;
+    cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat << "  edits per frame" << endl;
 
 
 

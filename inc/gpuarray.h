@@ -155,6 +155,10 @@ template<class T> class GPUArray
         //! = operator
         GPUArray& operator=(const GPUArray& rhs);
 
+        //! Swap the pointers in two GPUArrays
+        inline void swap(GPUArray& from);
+
+
         //! Get the number of elements
         unsigned int getNumElements() const
             {
@@ -351,6 +355,36 @@ template<class T> GPUArray<T>& GPUArray<T>::operator=(const GPUArray& rhs)
 
     return *this;
     }
+
+
+/* from GPUArray to swap \a this with
+
+    a.swap(b) will result in the equivalent of:
+    \code
+GPUArray c(a);
+a = b;
+b = c;
+    \endcode
+
+    But it will be done in a super-efficent way by just swapping the internal pointers, thus avoiding all the expensive
+    memory deallocations/allocations and copies using the copy constructor and assignment operator.
+*/
+template<class T> void GPUArray<T>::swap(GPUArray& from)
+    {
+    // this may work, but really shouldn't be done when aquired
+    //assert(!m_acquired && !from.m_acquired);
+    //assert(&from != this);
+
+    std::swap(m_num_elements, from.m_num_elements);
+    std::swap(m_acquired, from.m_acquired);
+    std::swap(m_data_location, from.m_data_location);
+#ifdef ENABLE_CUDA
+    std::swap(d_data, from.d_data);
+    std::swap(m_mapped, from.m_mapped);
+#endif
+    std::swap(h_data, from.h_data);
+    }
+
 
 
 template<class T> void GPUArray<T>::allocate()

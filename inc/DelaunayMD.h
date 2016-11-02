@@ -41,6 +41,7 @@ class DelaunayMD
 
     public:
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
+        float repPerFrame;
 
 
         //constructors

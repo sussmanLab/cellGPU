@@ -65,6 +65,9 @@ void DelaunayMD::resetDelLocPoints()
 
 void DelaunayMD::initialize(int n)
     {
+    //assorted
+    neighMax = 0;
+    repPerFrame = 0.0;
     //set cellsize to about unity
     cellsize = 1.25;
 
@@ -230,6 +233,76 @@ void DelaunayMD::getCircumcenterIndices()
 
 void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     {
+    int fixes = fixlist.size();
+    //if there is nothing to fix, skip this routing (and its expensive memory accesses)
+    repPerFrame += ((float) fixes/(float)N);
+    if (fixes == 0) return;
+//    cout << "about to repair " << fixes << " points" << endl;
+
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
+
+    //First, retriangulate the target points, and check if the neighbor list needs to be reset 
+    //(if neighMax changes)
+    //
+    //overwrite the first fixes elements of allneighs to save on vector costs, or something?
+    vector<vector<int> > allneighs(fixes);
+    bool resetCCidx = false;
+    for (int ii = 0; ii < fixes; ++ii)
+        {
+        int pidx = fixlist[ii];
+        vector<int> neighTemp;
+        delLoc.getNeighbors(pidx,neighTemp);
+        allneighs[ii]=neighTemp;
+        if(neighTemp.size() > neighMax)
+            {
+            neighMax = neighTemp.size();
+            resetCCidx = true;
+            };
+        };
+    
+    //if needed, regenerate the "neighs" structure...hopefully don't do this too much
+    //Also, think about occasionally shrinking the list if it is much too big?
+    if(resetCCidx)
+        {
+        cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
+        GPUArray<int> newNeighs;
+        newNeighs.resize(neighMax*N);
+        Index2D new_idx(neighMax,N);
+        //provide a context for the Handles
+        if(true)
+            {
+            ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
+            ArrayHandle<int> n_ns(newNeighs,access_location::host,access_mode::overwrite);     
+            for (int nn = 0; nn < N; ++nn)
+                {
+                int imax = neighnum.data[nn];
+                for (int ii = 0; ii < imax; ++ii)
+                    {
+                    int old_idxpos = n_idx(ii,nn);
+                    int new_idxpos = new_idx(ii,nn);
+                    n_ns.data[new_idxpos] = ns.data[old_idxpos];
+                    };
+                };
+            };
+        neighs.swap(newNeighs);
+        n_idx=Index2D(neighMax,N);
+        };
+
+    //now, edit the right entries of the neighborlist and neighbor size list
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
+    for (int nn = 0; nn < fixes; ++nn)
+        {
+        int pidx = fixlist[nn];
+        int imax = allneighs[nn].size();
+        neighnum.data[pidx] = imax;
+        for (int ii = 0; ii < imax; ++ii)
+            {
+            int idxpos = n_idx(ii,pidx);
+            ns.data[idxpos] = allneighs[nn][ii];
+            };
+        };
+
+    getCircumcenterIndices();
     };
 
 void DelaunayMD::testTriangulation()
@@ -273,17 +346,16 @@ void DelaunayMD::testAndRepairTriangulation()
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("testAndRepair preliminary GPUassert: %s \n", cudaGetErrorString(code));
+
     for (int nn = 0; nn < N; ++nn)
         {
         if (h_repair.data[nn] == 1)
             {
-            cout << nn << ", ";
-            h_repair.data[nn]=0;
+            NeedsFixing.push_back(nn);
+            h_repair.data[nn] = 0;
             };
 
         };
-    cout << endl;
-
     repairTriangulation(NeedsFixing);
     };
 
