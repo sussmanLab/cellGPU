@@ -74,13 +74,15 @@ void cellListGPU::setGridSize(dbl a)
 
     boxsize = b11/xsize;
 
-    xsize = (int)floor(b11/boxsize);
-    ysize = (int)floor(b22/boxsize);
+    xsize = (int)ceil(b11/boxsize);
+    ysize = (int)ceil(b22/boxsize);
+    //printf("Box: (%f,%f)... boxsize: %f... x,y = (%i,%i)",b11,b22,boxsize,xsize,ysize);
 
     totalCells = xsize*ysize;
     cell_sizes.resize(totalCells); //number of elements in each cell...initialize to zero
 
     cell_indexer = Index2D(xsize,ysize);
+    //cout << "Cell size is " << xsize*ysize << endl;
     //estimate Nmax
     Nmax = ceil(Np/totalCells)+1;
     resetCellSizes();
@@ -348,7 +350,19 @@ if(code!=cudaSuccess)
             
 cudaError_t code2 = cudaGetLastError();
 if(code2!=cudaSuccess)
+    {
+    ArrayHandle<float2> h_pt(points,access_location::host,access_mode::read);
+    for (int ii = 0; ii < Np; ++ii)
+        {
+        if (h_pt.data[ii].x <= 0) cout <<h_pt.data[ii].x << endl;
+        };
+    for (int ii = 0; ii < Np; ++ii)
+        {
+        if (h_pt.data[ii].y <= 0) cout <<h_pt.data[ii].y << endl;
+        };
+    cout.flush();
     printf("cell list first comp GPUassert: %s \n", cudaGetErrorString(code2));
+    };
 
             for (int cc = 0; cc < totalCells; ++cc)
                 {

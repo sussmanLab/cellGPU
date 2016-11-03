@@ -47,7 +47,10 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
         };
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
+        {
         printf("randomizePos GPUassert: %s \n", cudaGetErrorString(code));
+        throw std::exception();
+        };
     };
 
 void DelaunayMD::resetDelLocPoints()
@@ -100,7 +103,10 @@ void DelaunayMD::initialize(int n)
     fullTriangulation();
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
+        {
         printf("delMD initialization GPUassert: %s \n", cudaGetErrorString(code));
+        throw std::exception();
+        };
     };
 
 void DelaunayMD::updateCellList()
@@ -111,12 +117,21 @@ void DelaunayMD::updateCellList()
 
     cudaError_t code1 = cudaGetLastError();
     if(code1!=cudaSuccess)
+        {
         printf("cell list preliminary computation GPUassert: %s \n", cudaGetErrorString(code1));
+        throw std::exception();
+        };
+
+
     celllist.computeGPU(points);
     //celllist.compute(points);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
+        {
         printf("cell list computation GPUassert: %s \n", cudaGetErrorString(code));
+        throw std::exception();
+        };
+
     };
 
 void DelaunayMD::reportCellList()
@@ -149,7 +164,11 @@ void DelaunayMD::movePoints(GPUArray<float2> &displacements)
     gpu_move_particles(d_p.data,d_d.data,N,Box);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
+        {
         printf("movePoints GPUassert: %s \n", cudaGetErrorString(code));
+        throw std::exception();
+        };
+
     };
 
 void DelaunayMD::fullTriangulation()
@@ -194,7 +213,11 @@ void DelaunayMD::fullTriangulation()
 
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
+        {
         printf("FullTriangulation  GPUassert: %s \n", cudaGetErrorString(code));
+        throw std::exception();
+        };
+
 
 
     getCircumcenterIndices();
@@ -231,7 +254,11 @@ void DelaunayMD::getCircumcenterIndices()
 //    if (cidx != 2*N) fullTriangulation();
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
+        {
         printf("getCCIndices GPUassert: %s \n", cudaGetErrorString(code));
+        throw std::exception();
+        };
+
     };
 
 
@@ -363,7 +390,10 @@ void DelaunayMD::testAndRepairTriangulation()
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
+        {
         printf("testAndRepair preliminary GPUassert: %s \n", cudaGetErrorString(code));
+        throw std::exception();
+        };
 
     //add the index and all of its' neighbors
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);

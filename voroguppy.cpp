@@ -126,13 +126,14 @@ int main(int argc, char*argv[])
     ofstream output2(fname2);
     output2.precision(8);
 
+
     bool gpu = chooseGPU(USE_GPU);
     if (!gpu) return 0;
     cudaSetDevice(USE_GPU);
 
     DelaunayMD delmd;
     delmd.initialize(numpts);
-    delmd.updateCellList();
+//    delmd.updateCellList();
     delmd.testAndRepairTriangulation();
     delmd.writeTriangulation(output1);
     if(numpts < 550) delmd.setCPU();
