@@ -135,6 +135,7 @@ int main(int argc, char*argv[])
     delmd.updateCellList();
     delmd.testAndRepairTriangulation();
     delmd.writeTriangulation(output1);
+    if(numpts < 550) delmd.setCPU();
    
     GPUArray<float2> ds;
     ds.resize(numpts);
@@ -160,7 +161,8 @@ int main(int argc, char*argv[])
         delmd.movePoints(ds);
         cout << "points moved" << endl; cout.flush();
         delmd.testAndRepairTriangulation();
-  */      cout << "triangulation repaired" << endl; cout.flush();
+        cout << "triangulation repaired" << endl; cout.flush();
+*/
 
 //    delmd.fullTriangulation();
     delmd.writeTriangulation(output2);

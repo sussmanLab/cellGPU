@@ -65,6 +65,7 @@ void DelaunayMD::resetDelLocPoints()
 
 void DelaunayMD::initialize(int n)
     {
+    GPUcompute = true;
     //assorted
     neighMax = 0;
     repPerFrame = 0.0;
@@ -271,29 +272,6 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
         fullTriangulation();
         return;
-/*
-        GPUArray<int> newNeighs;
-        newNeighs.resize(neighMax*N);
-        Index2D new_idx(neighMax,N);
-        //provide a context for the Handles
-        if(true)
-            {
-            ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
-            ArrayHandle<int> n_ns(newNeighs,access_location::host,access_mode::overwrite);     
-            for (int nn = 0; nn < N; ++nn)
-                {
-                int imax = neighnum.data[nn];
-                for (int ii = 0; ii < imax; ++ii)
-                    {
-                    int old_idxpos = n_idx(ii,nn);
-                    int new_idxpos = new_idx(ii,nn);
-                    n_ns.data[new_idxpos] = ns.data[old_idxpos];
-                    };
-                };
-            };
-        neighs.swap(newNeighs);
-        n_idx=Index2D(neighMax,N);
-*/
         };
 
     //now, edit the right entries of the neighborlist and neighbor size list
@@ -347,29 +325,47 @@ void DelaunayMD::testTriangulation()
                            );
     };
 
+void DelaunayMD::testTriangulationCPU()
+    {
+    resetDelLocPoints();
+
+
+
+    ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
+    
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
+
+    for (int nn = 0; nn < N; ++nn)
+        {
+        vector<int> neighbors;
+        for (int ii = 0; ii < neighnum.data[nn];++ii)
+                {
+                int idxpos = n_idx(ii,nn);
+                neighbors.push_back(ns.data[idxpos]);
+                };
+        
+        bool good = delLoc.testPointTriangulation(nn,neighbors,false);
+        if(!good) h_repair.data[nn]=1;
+        };
+
+    };
+
 
 void DelaunayMD::testAndRepairTriangulation()
     {
 
-    testTriangulation();
+    if(GPUcompute)
+        testTriangulation();
+    else
+        testTriangulationCPU();
     vector<int> NeedsFixing;
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("testAndRepair preliminary GPUassert: %s \n", cudaGetErrorString(code));
-/*
-    for (int nn = 0; nn < N; ++nn)
-        {
-        if (h_repair.data[nn] == 1)
-            {
-            NeedsFixing.push_back(nn);
-            h_repair.data[nn] = 0;
-            };
 
-        };
-    repairTriangulation(NeedsFixing);
-*/
-    //add the index and all of its' neighbors?
+    //add the index and all of its' neighbors
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
     for (int nn = 0; nn < N; ++nn)

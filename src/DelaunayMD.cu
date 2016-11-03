@@ -73,7 +73,7 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     float2 ptnew,toCenter;
     int wcheck = ceil(rad/boxsize);
 //
-    if (wcheck >= 3) badParticle = true;
+//    if (wcheck >= 3) badParticle = true;
 //
     if(wcheck > xsize/2) wcheck = xsize/2;
     rad = rad*rad+1e-6;
@@ -81,7 +81,7 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
         {
         for (int jj = -wcheck; jj <= wcheck; ++jj)
             {
-if(badParticle) continue;
+//if(badParticle) continue;
             int cx = (ib+ii);
             if(cx < 0) cx += xsize;
             if(cx >= xsize) cx -= xsize;
@@ -104,7 +104,7 @@ if(badParticle) continue;
                     if (newidx != i1 && newidx != i2 && newidx !=i3)
                         {
                         badParticle = true;
-//                        d_repair[newidx] = 1;
+                        d_repair[newidx] = 1;
                         };
                     };
 

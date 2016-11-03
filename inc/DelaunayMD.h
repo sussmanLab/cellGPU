@@ -39,6 +39,8 @@ class DelaunayMD
         //repair is a vector of zeros (everything is fine) and ones (that index needs to be repaired)
         GPUArray<int> repair;
 
+        bool GPUcompute;
+
     public:
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
         float repPerFrame;
@@ -65,6 +67,9 @@ class DelaunayMD
         void reportPos(int i);
         void touchPoints(){ArrayHandle<float2> h(points,access_location::host,access_mode::readwrite);};
 
+        //only use the CPU:
+        void setCPU(){GPUcompute = false;};
+
         //construct complete triangulation
         void fullTriangulation();
 
@@ -74,6 +79,7 @@ class DelaunayMD
         //Test the current neigh list to see if it is still a valid triangulation
         //If it isn't, fix it on the cpu
         void testTriangulation();
+        void testTriangulationCPU(); //force CPU-based computation
         void repairTriangulation(vector<int> &fixlist);
         void testAndRepairTriangulation();
 
