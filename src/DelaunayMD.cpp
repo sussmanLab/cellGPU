@@ -153,6 +153,7 @@ void DelaunayMD::movePoints(GPUArray<float2> &displacements)
 
 void DelaunayMD::fullTriangulation()
     {
+    resetDelLocPoints();
     cout << "Resetting complete triangulation" << endl;
     //get neighbors of each cell in CW order
     neigh_num.resize(N);
@@ -225,6 +226,8 @@ void DelaunayMD::getCircumcenterIndices()
             };
 
         };
+//    cout << "Number of ccs processed : " << cidx << endl;
+//    if (cidx != 2*N) fullTriangulation();
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("getCCIndices GPUassert: %s \n", cudaGetErrorString(code));
@@ -354,7 +357,7 @@ void DelaunayMD::testAndRepairTriangulation()
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("testAndRepair preliminary GPUassert: %s \n", cudaGetErrorString(code));
-
+/*
     for (int nn = 0; nn < N; ++nn)
         {
         if (h_repair.data[nn] == 1)
@@ -365,6 +368,26 @@ void DelaunayMD::testAndRepairTriangulation()
 
         };
     repairTriangulation(NeedsFixing);
+*/
+    //add the index and all of its' neighbors?
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
+    for (int nn = 0; nn < N; ++nn)
+        {
+        if (h_repair.data[nn] == 1)
+            {
+            NeedsFixing.push_back(nn);
+            h_repair.data[nn] = 0;
+            for (int ii = 0; ii < neighnum.data[nn];++ii)
+                {
+                int idxpos = n_idx(ii,nn);
+                NeedsFixing.push_back(ns.data[idxpos]);
+                };
+            };
+        };
+       sort(NeedsFixing.begin(),NeedsFixing.end());
+       NeedsFixing.erase(unique(NeedsFixing.begin(),NeedsFixing.end() ),NeedsFixing.end() );
+       repairTriangulation(NeedsFixing);
     };
 
 void DelaunayMD::writeTriangulation(ofstream &outfile)

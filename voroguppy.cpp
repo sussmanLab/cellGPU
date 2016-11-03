@@ -141,18 +141,30 @@ int main(int argc, char*argv[])
     t1=clock();
     for (int tt = 0; tt < testRepeat; ++tt)
         {
-        if (tt % 100 ==0) cout << "Starting loop " <<tt << endl;
+        if (tt % 100 ==0) 
+            {
+            cout << "Starting loop " <<tt << endl;
+            //delmd.fullTriangulation();
+            };
         rnddisp(ds,numpts,err);
         delmd.movePoints(ds);
         delmd.testAndRepairTriangulation();
-
 
         };
     t2=clock();
     float movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat*numpts << " particle  edits per frame" << endl;
+/*
+        rnddisp(ds,numpts,err);
+        cout << "displacements generated " << endl; cout.flush();
+        delmd.movePoints(ds);
+        cout << "points moved" << endl; cout.flush();
+        delmd.testAndRepairTriangulation();
+  */      cout << "triangulation repaired" << endl; cout.flush();
 
+//    delmd.fullTriangulation();
     delmd.writeTriangulation(output2);
+        cout << "triangulation written" << endl; cout.flush();
 
 
 //    delmd.reportCellList();

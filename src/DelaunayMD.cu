@@ -68,18 +68,20 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     Circumcircle(vz,vz,pt1.x,pt1.y,pt2.x,pt2.y,
                     Q.x,Q.y,rad);
 
-    syncthreads();
-
     //look through cells for other particles
     bool badParticle = false;
     float2 ptnew,toCenter;
     int wcheck = ceil(rad/boxsize);
+//
+    if (wcheck >= 3) badParticle = true;
+//
     if(wcheck > xsize/2) wcheck = xsize/2;
-    rad = rad*rad;
+    rad = rad*rad+1e-6;
     for (int ii = -wcheck; ii <= wcheck; ++ii)
         {
         for (int jj = -wcheck; jj <= wcheck; ++jj)
             {
+if(badParticle) continue;
             int cx = (ib+ii);
             if(cx < 0) cx += xsize;
             if(cx >= xsize) cx -= xsize;
@@ -102,7 +104,7 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
                     if (newidx != i1 && newidx != i2 && newidx !=i3)
                         {
                         badParticle = true;
-                        d_repair[newidx] = 1;
+//                        d_repair[newidx] = 1;
                         };
                     };
 
@@ -114,8 +116,8 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     if (badParticle)
         {
         d_repair[i1] = 1;
-        d_repair[i2] = 1;
-        d_repair[i3] = 1;
+ //       d_repair[i2] = 1;
+ //       d_repair[i3] = 1;
         };
 
     return;
@@ -161,7 +163,7 @@ bool gpu_test_circumcenters(int *d_repair,
     if (Nccs < 128) block_size = 32;
     unsigned int nblocks  = Nccs/block_size + 1;
 
-
+//    cout << "Number of ccs to check: " << Nccs << endl;
 //    cudaBindTexture(0,dcc_tex,d_ccs,sizeof(int)*3*Nccs);
     /*
     bool *d_redo2;
