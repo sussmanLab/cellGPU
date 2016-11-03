@@ -52,8 +52,8 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     float2 v = d_pt[i1];
     float vz = 0.0;
     int ib,jb;
-    ib=floor(v.x/boxsize);
-    jb=floor(v.y/boxsize);
+    ib=floorf(v.x/boxsize);
+    jb=floorf(v.y/boxsize);
 
     float2 p1real = d_pt[i2];
     float2 p2real = d_pt[i3];
@@ -71,7 +71,7 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     //look through cells for other particles
     bool badParticle = false;
     float2 ptnew,toCenter;
-    int wcheck = ceil(rad/boxsize);
+    int wcheck = ceilf(rad/boxsize);
 //
 //    if (wcheck >= 3) badParticle = true;
 //
