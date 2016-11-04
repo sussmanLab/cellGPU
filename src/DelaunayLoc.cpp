@@ -298,7 +298,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
         rads.push_back(radius*1.00);
         };
 
-    float EPS = 0.1;
+    float EPS = 0.01;
     for (int nn = 5; nn < DTring.size(); ++nn)
         {
         int q =quadrant(DTring[nn].x,DTring[nn].y);

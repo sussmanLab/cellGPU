@@ -81,7 +81,7 @@ void DelaunayMD::initialize(int n)
     Box.setSquare(boxsize,boxsize);
 
     //set circumcenter array size
-    circumcenters.resize(6*N);
+    circumcenters.resize(6*(N+10));
 
     //set particle positions (randomly)
     points.resize(N);
@@ -222,7 +222,16 @@ void DelaunayMD::fullTriangulation()
 
     if(totaln != 6*N)
         {
-        printf("CPU neighbor creation failed to match topology!\n");
+        printf("CPU neighbor creation failed to match topology! NN = %i \n",totaln);
+        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+        for (int ii = 0; ii < N; ++ii)
+            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
+        char fn[256];
+        sprintf(fn,"failed.txt");
+        ofstream output(fn);
+        getCircumcenterIndices();
+        writeTriangulation(output);
+            
         throw std::exception();
         };
 
@@ -254,8 +263,8 @@ void DelaunayMD::getCircumcenterIndices()
 
             if (nn < n1 && nn < n2)
                 {
-                if (fail) {cidx +=1;continue;};
-                if (cidx == 2*N) fail = true;
+//                if (fail) {cidx +=1;continue;};
+//                if (cidx == 2*N) fail = true;
                 h_ccs.data[3*cidx] = nn;
                 h_ccs.data[3*cidx+1] = n1;
                 h_ccs.data[3*cidx+2] = n2;
@@ -264,17 +273,17 @@ void DelaunayMD::getCircumcenterIndices()
             };
 
         };
-    if (totaln != 6*N || fail || cidx > 3*N) fullTriangulation();
-    //cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
-    if(totaln != 6*N || fail)
+  //  if (totaln != 6*N || fail || cidx > 3*N) fullTriangulation();
+//    cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
+    if(totaln != 6*N || cidx != 2*N|| fail)
         {
-        fullTriangulation();
+//        fullTriangulation();
         char fn[256];
         sprintf(fn,"failed.txt");
         ofstream output(fn);
-        //writeTriangulation(output);
-        //printf("getCCs failed to match topology\n");
-//        throw std::exception();
+        writeTriangulation(output);
+        printf("getCCs failed to match topology, %i out of %i ccs, %i out of %i neighs \n",cidx,2*N,totaln,6*N);
+        throw std::exception();
         };
     //cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
     cudaError_t code = cudaGetLastError();
@@ -445,11 +454,23 @@ void DelaunayMD::writeTriangulation(ofstream &outfile)
     {
     ArrayHandle<float2> p(points,access_location::host,access_mode::read);
     ArrayHandle<int> cc(circumcenters,access_location::host,access_mode::read);
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
     outfile << N <<endl;
     for (int ii = 0; ii < N ; ++ii)
         outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
     for (int ii = 0; ii < 2*N; ++ii)
         outfile << cc.data[3*ii] <<"\t" <<cc.data[3*ii+1]<<"\t"<<cc.data[3*ii+2]<<endl;
+    for (int ii = 0; ii < N; ++ii)
+        {
+        int imax = neighnum.data[ii];
+        for (int nn = 0; nn < imax; ++nn)
+            {
+            int idxpos = n_idx(nn,ii);
+            outfile << ns.data[idxpos] << "\t";
+            };
+        outfile << endl;
+        };
     };
 
 

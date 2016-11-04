@@ -139,7 +139,7 @@ int main(int argc, char*argv[])
     delmd.writeTriangulation(output1);
     if(numpts < 550) delmd.setCPU();
    
-    GPUArray<float2> ds;
+    GPUArray<float2> ds,ps;
     ds.resize(numpts);
     t1=clock();
     for (int tt = 0; tt < testRepeat; ++tt)

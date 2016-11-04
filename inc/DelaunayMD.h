@@ -45,7 +45,7 @@ class DelaunayMD
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
         float repPerFrame;
 
-
+        void getPoints(GPUArray<float2> &ps){ps = points;};
         //constructors
         DelaunayMD(){triangulated=false;cellsize=2.0;};
         //constructor via a vector of point objects
