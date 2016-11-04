@@ -75,6 +75,14 @@ struct Matrix2x2
                             };
 
 
+        HOSTDEVICE friend float2 operator*(const float2 &v, const Matrix2x2 &m)
+                            {
+                            float2 temp;
+                            temp.x = v.x*m.x11 + v.y*m.x21;
+                            temp.y = v.x*m.x12 + v.y*m.x22;
+                            return temp;
+                            };
+
         HOSTDEVICE friend float2 operator*(const Matrix2x2 &m, const float2 &v)
                             {
                             float2 temp;

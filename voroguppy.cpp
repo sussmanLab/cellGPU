@@ -177,6 +177,8 @@ int main(int argc, char*argv[])
     float2 vv;vv.x=1.0;vv.y=2.0;
     Id = dyad(vv,vv)*dyad(vv,vv)+3.0*Id;
     printf("(%f,%f,%f,%f)\n",Id.x11,Id.x12,Id.x21,Id.x22);
+    vv = Id*vv;
+    printf("(%f,%f)\n",vv.x,vv.y);
 
 //    delmd.reportCellList();
 /*
