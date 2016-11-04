@@ -29,6 +29,7 @@
 //comment this definition out to compile on cuda-free systems
 #define ENABLE_CUDA
 
+#include "Matrix.h"
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "gpucell.h"
@@ -169,6 +170,13 @@ int main(int argc, char*argv[])
     delmd.writeTriangulation(output2);
         cout << "triangulation written" << endl; cout.flush();
 
+
+    //play with matrix
+    Matrix2x2 Id;
+    printf("(%f,%f,%f,%f)\n",Id.x11,Id.x12,Id.x21,Id.x22);
+    float2 vv;vv.x=1.0;vv.y=2.0;
+    Id = dyad(vv,vv)*dyad(vv,vv)+3.0*Id;
+    printf("(%f,%f,%f,%f)\n",Id.x11,Id.x12,Id.x21,Id.x22);
 
 //    delmd.reportCellList();
 /*
