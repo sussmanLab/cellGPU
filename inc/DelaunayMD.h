@@ -78,7 +78,7 @@ class DelaunayMD
         void globalTriangulation();
 
         //construct circumcenters structure from neighbor list
-        void getCircumcenterIndices();
+        void getCircumcenterIndices(bool secondtime=false);
 
         //Test the current neigh list to see if it is still a valid triangulation
         //If it isn't, fix it on the cpu

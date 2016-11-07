@@ -194,10 +194,9 @@ int main(int argc, char*argv[])
     DelaunayMD delmd;
     delmd.initialize(numpts);
 //    delmd.updateCellList();
-    delmd.globalTriangulation();
 
 
-    delmd.testAndRepairTriangulation();
+//    delmd.testAndRepairTriangulation();
     delmd.writeTriangulation(output1);
 //    if(numpts < 550) delmd.setCPU();
    
@@ -206,13 +205,15 @@ int main(int argc, char*argv[])
     t1=clock();
     for (int tt = 0; tt < testRepeat; ++tt)
         {
-        if (tt % 100 ==0) 
+        if (tt % 1000 ==0) 
             {
             cout << "Starting loop " <<tt << endl;
             //delmd.fullTriangulation();
             };
-        delmd.repel(ds,err);
-    //    rnddisp(ds,numpts,err);
+        if(tt%2 == 0)
+            delmd.repel(ds,err);
+        else
+            rnddisp(ds,numpts,err);
         delmd.movePoints(ds);
         delmd.testAndRepairTriangulation();
 

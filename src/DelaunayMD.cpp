@@ -105,7 +105,7 @@ void DelaunayMD::initialize(int n)
     resetDelLocPoints();
 
     //make a full triangulation
-    fullTriangulation();
+    globalTriangulation();
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         {
@@ -408,7 +408,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     if(resetCCidx)
         {
         cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
-        fullTriangulation();
+        globalTriangulation();
         return;
         };
 
