@@ -1,6 +1,6 @@
 using namespace std;
 #define dbl float
-#define EPSILON 1e-12
+#define EPSILON 1e-16
 
 #include <cmath>
 #include "omp.h"

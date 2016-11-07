@@ -76,7 +76,7 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
 //    if (wcheck >= 3) badParticle = true;
 //
     if(wcheck > xsize/2) wcheck = xsize/2;
-    rad = rad*rad+1e-6;
+    rad = rad*rad;
     for (int ii = -wcheck; ii <= wcheck; ++ii)
         {
         for (int jj = -wcheck; jj <= wcheck; ++jj)

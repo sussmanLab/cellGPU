@@ -39,8 +39,8 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
     ArrayHandle<float2> h_points(points,access_location::host, access_mode::overwrite);
     for (int ii = 0; ii < N; ++ii)
         {
-        float x =EPSILON+boxx/(dbl)(randmax+1)* (dbl)(rand()%randmax);
-        float y =EPSILON+boxy/(dbl)(randmax+1)* (dbl)(rand()%randmax);
+        float x =EPSILON+boxx/(float)(randmax+1)* (float)(rand()%randmax);
+        float y =EPSILON+boxy/(float)(randmax+1)* (float)(rand()%randmax);
         h_points.data[ii].x=x;
         h_points.data[ii].y=y;
 //        printf("%i; {%f,%f}\n",ii,x,y);
@@ -443,6 +443,7 @@ void DelaunayMD::testAndRepairTriangulation()
                 {
                 int idxpos = n_idx(ii,nn);
                 NeedsFixing.push_back(ns.data[idxpos]);
+//                printf("testing %i\t ",ns.data[idxpos]);
                 };
             };
         };

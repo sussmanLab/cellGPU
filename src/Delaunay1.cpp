@@ -1,6 +1,6 @@
 using namespace std;
 #define dbl float
-#define EPSILON 1e-12
+#define EPSILON 1e-16
 
 #include <cmath>
 #include <algorithm>
@@ -154,7 +154,7 @@ void DelaunayNP::naiveBowyerWatson()
                 {
                 triangle tr(DT.triangles[jj].i,DT.triangles[jj].j,DT.triangles[jj].k);
                 incircle = Circumcircle(Xp,  sortmap[tr.i].first, sortmap[tr.j].first,  sortmap[tr.k].first,c,rad);
-                if (c.x+rad + EPSILON < xp) complete[jj]=true;
+                if (c.x+rad < xp) complete[jj]=true;
                 if (incircle)
                     {
                     edge E1(DT.triangles[jj].i,DT.triangles[jj].j);
