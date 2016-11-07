@@ -40,6 +40,7 @@ class DelaunayMD
         GPUArray<int> repair;
 
         bool GPUcompute;
+        int timestep;
 
     public:
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
@@ -86,6 +87,9 @@ class DelaunayMD
         //write triangulation to text file
         void writeTriangulation(ofstream &outfile);
 
+
+        //soft-sphere repulsion....for testing
+        void repel(GPUArray<float2> &disp,float eps);
 
         //old functions
         void setPoints(std::vector<pt> &points);

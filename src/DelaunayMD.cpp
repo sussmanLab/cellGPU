@@ -68,6 +68,7 @@ void DelaunayMD::resetDelLocPoints()
 
 void DelaunayMD::initialize(int n)
     {
+    timestep = 0;
     GPUcompute = true;
     //assorted
     neighMax = 0;
@@ -282,8 +283,8 @@ void DelaunayMD::getCircumcenterIndices()
         sprintf(fn,"failed.txt");
         ofstream output(fn);
         writeTriangulation(output);
-        printf("getCCs failed to match topology, %i out of %i ccs, %i out of %i neighs \n",cidx,2*N,totaln,6*N);
-        throw std::exception();
+        printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*N,totaln,6*N);
+//        throw std::exception();
         };
     //cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
     cudaError_t code = cudaGetLastError();
@@ -415,7 +416,7 @@ void DelaunayMD::testTriangulationCPU()
 
 void DelaunayMD::testAndRepairTriangulation()
     {
-
+    timestep +=1;
     if(GPUcompute)
         testTriangulation();
     else
@@ -473,4 +474,35 @@ void DelaunayMD::writeTriangulation(ofstream &outfile)
         };
     };
 
+void DelaunayMD::repel(GPUArray<float2> &disp,float eps)
+    {
+    ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+    ArrayHandle<float2> dd(disp,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
+    float2 ftot;ftot.x=0.0;ftot.y=0.0;
+    for (int ii = 0; ii < N; ++ii)
+        {
+        float2 dtot;dtot.x=0.0;dtot.y=0.0;
+        float2 posi = p.data[ii];
+        int imax = neighnum.data[ii];
+        for (int nn = 0; nn < imax; ++nn)
+            {
+            int idxpos = n_idx(nn,ii);
+            float2 posj = p.data[ns.data[idxpos]];
+            float2 d;
+            Box.minDist(posi,posj,d);
 
+            float norm = sqrt(d.x*d.x+d.y*d.y);
+            if (norm < 1)
+                {
+                dtot.x-=2*eps*d.x*(1.0-1.0/norm);
+                dtot.y-=2*eps*d.y*(1.0-1.0/norm);
+                };
+            };
+        dd.data[ii]=dtot;
+        ftot.x+=dtot.x;
+        ftot.y+=dtot.y;
+        };
+//    printf("Total force = (%f,%f)\n",ftot.x,ftot.y);
+    };
