@@ -785,7 +785,8 @@ void DelaunayTri::fullPeriodicTriangulation(vector<float> &points, box &Box, vec
  //       ntemp.erase(unique(ntemp.begin(),ntemp.end() ), ntemp.end() );
 
         int nenum = ntemp.size();
-        pt pa(points[2*ii],points[2*ii]+1);
+        pt pa(points[2*ii],points[2*ii+1]);
+//        printf("\n\npoint %i: (%f,%f)",ii,pa.x,pa.y);
         CWorder.resize(nenum);
         for (int nn = 0; nn < nenum; ++nn)
             {
@@ -793,13 +794,20 @@ void DelaunayTri::fullPeriodicTriangulation(vector<float> &points, box &Box, vec
             pt md;
             Box.minDist(pb,pa,md);
             CWorder[nn].first = atan2(md.y,md.x);
+//            printf("%i :(%f, %f)\t",ntemp[nn],md.x,md.y);
             CWorder[nn].second = ntemp[nn];
             };
+//        printf("\n");
         sort(CWorder.begin(),CWorder.begin()+CWorder.size());
         CWorder.erase(unique(CWorder.begin(),CWorder.end() ), CWorder.end() );
+        sort(CWorder.begin(),CWorder.begin()+CWorder.size());
         ntemp.resize(CWorder.size());
         for (int nn = 0; nn < CWorder.size(); ++nn)
+            {
+//            printf("(%i, %f)\t",CWorder[nn].second,CWorder[nn].first);
             ntemp[nn] = CWorder[nn].second;
+            };
+//        printf("\n");
         allneighs[ii]=ntemp;
         ntot += CWorder.size();
         };

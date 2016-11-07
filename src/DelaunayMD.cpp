@@ -275,8 +275,9 @@ void DelaunayMD::globalTriangulation()
         if (allneighs[nn].size() > nmax) nmax= allneighs[nn].size();
         h_repair.data[nn]=0;
         };
-    neighMax = nmax; cout << "new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
+    neighMax = nmax; cout << "global new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
     neighs.resize(neighMax*N);
+    n_idx = Index2D(neighMax,N);
 
     //store data in gpuarray
     n_idx = Index2D(neighMax,N);
@@ -293,30 +294,21 @@ void DelaunayMD::globalTriangulation()
             };
         };
 
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        {
-        printf("FullTriangulation  GPUassert: %s \n", cudaGetErrorString(code));
-        throw std::exception();
-        };
+    getCircumcenterIndices();
 
     if(totaln != 6*N)
         {
-        printf("CPU neighbor creation failed to match topology! NN = %i \n",totaln);
+        printf("global CPU neighbor failed! NN = %i\n",totaln);
 //        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
 //        for (int ii = 0; ii < N; ++ii)
 //            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
         char fn[256];
         sprintf(fn,"failed.txt");
         ofstream output(fn);
-        getCircumcenterIndices();
         writeTriangulation(output);
-            
         throw std::exception();
         };
 
-
-    getCircumcenterIndices();
     };
 
 
@@ -343,7 +335,7 @@ void DelaunayMD::getCircumcenterIndices()
             int ne2 = jj + 1;
             if (jj == nmax-1)  ne2=0;
             int n2 = ns.data[n_idx(ne2,nn)];
-
+//if(nn == 20 || n1 ==20 || n2 == 20) printf("%i %i %i\n",nn,n1,n2);
             if (nn < n1 && nn < n2)
                 {
 //                if (fail) {cidx +=1;continue;};
@@ -365,8 +357,11 @@ void DelaunayMD::getCircumcenterIndices()
         ofstream output(fn);
         writeTriangulation(output);
         printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*N,totaln,6*N);
-        throw std::exception();
+        globalTriangulation();
+//        throw std::exception();
         };
+
+
     //cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
