@@ -194,6 +194,9 @@ int main(int argc, char*argv[])
     DelaunayMD delmd;
     delmd.initialize(numpts);
 //    delmd.updateCellList();
+    delmd.globalTriangulation();
+
+
     delmd.testAndRepairTriangulation();
     delmd.writeTriangulation(output1);
 //    if(numpts < 550) delmd.setCPU();

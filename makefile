@@ -50,7 +50,7 @@ obj/DelaunayCheckGPU.o:src/DelaunayCheckGPU.cpp obj/DelaunayCheckGPU.cu.o
 obj/DelaunayMD.cu.o:src/DelaunayMD.cu
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
-obj/DelaunayMD.o:src/DelaunayMD.cpp obj/DelaunayMD.cu.o
+obj/DelaunayMD.o:src/DelaunayMD.cpp obj/DelaunayMD.cu.o $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
 obj/DelaunayTri.o:src/DelaunayTri.cpp obj/triangle.o

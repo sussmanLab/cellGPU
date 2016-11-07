@@ -24,6 +24,7 @@ class DelaunayMD
         float cellsize;
         cellListGPU celllist;
         gpubox Box;
+        box CPUbox;
         
         DelaunayLoc delLoc;
 
@@ -71,8 +72,10 @@ class DelaunayMD
         //only use the CPU:
         void setCPU(){GPUcompute = false;};
 
-        //construct complete triangulation
+        //construct complete triangulation point-by-point
         void fullTriangulation();
+        //resort to a method that globally constructs the triangulation
+        void globalTriangulation();
 
         //construct circumcenters structure from neighbor list
         void getCircumcenterIndices();

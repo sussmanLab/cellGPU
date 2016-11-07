@@ -678,6 +678,179 @@ void DelaunayTri::getTriangulation9()
 
     };
 
+
+
+
+
+void DelaunayTri::fullPeriodicTriangulation(vector<float> &points, box &Box, vector< vector< int> > &allneighs)
+    {
+    struct triangulateio in, mid, out, vorout;
+
+    /* Define input points of the 9-sheeted point set  */
+    dbl b11,b12,b21,b22;
+    Box.getBoxDims(b11,b12,b21,b22);
+    int np = points.size()/2;
+
+
+//    allneighs.clear();
+//    allneighs.resize(np);
+
+    int numpts = 9*np;
+    in.numberofpoints = numpts;
+    in.numberofpointattributes = 1;
+    in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
+    for (int xx = -1; xx <= 1; ++xx)
+        {
+        for (int yy = -1; yy <= 1;++yy)
+            {
+            for (int ii = 0; ii < points.size(); ++ii)
+                {
+                int idx = ((yy+1)+3*(xx+1))*np*2+ii;
+                if (ii % 2 ==0)
+                    in.pointlist[idx]=points[ii]+xx*b11;
+                if (ii % 2 ==1)
+                    in.pointlist[idx]=points[ii]+yy*b22;
+                };
+            }
+        };
+
+    in.pointattributelist = (REAL *) malloc(in.numberofpoints *
+            in.numberofpointattributes *
+            sizeof(REAL));
+    for (int ii = 0; ii < numpts; ++ii)
+        in.pointattributelist[ii]= 0.0;
+
+    in.pointmarkerlist = (int *) malloc(in.numberofpoints * sizeof(int));
+    for (int ii = 0; ii < numpts; ++ii)
+        in.pointmarkerlist[ii]= 0.0;
+
+    in.numberofsegments = 0;
+    in.numberofholes = 0;
+    in.numberofregions = 1;
+    in.regionlist = (REAL *) malloc(in.numberofregions * 4 * sizeof(REAL));
+
+    in.regionlist[0] = 0.5;
+    in.regionlist[1] = 5.0;
+    in.regionlist[2] = 7.0;            /* Regional attribute (for whole mesh). */
+    in.regionlist[3] = 0.1;          /* Area constraint that will not be used. */
+
+
+    mid.pointlist = (REAL *) NULL;            /* Not needed if -N switch used. */
+    mid.pointattributelist = (REAL *) NULL;
+    mid.pointmarkerlist = (int *) NULL; /* Not needed if -N or -B switch used. */
+    mid.trianglelist = (int *) NULL;          /* Not needed if -E switch used. */
+    mid.triangleattributelist = (REAL *) NULL;
+    mid.neighborlist = (int *) NULL;         /* Needed only if -n switch used. */
+    mid.segmentlist = (int *) NULL;
+    mid.segmentmarkerlist = (int *) NULL;
+    mid.edgelist = (int *) NULL;             /* Needed only if -e switch used. */
+    mid.edgemarkerlist = (int *) NULL;   /* Needed if -e used and -B not used. */
+
+    vorout.pointlist = (REAL *) NULL;        /* Needed only if -v switch used. */
+    vorout.pointattributelist = (REAL *) NULL;
+    vorout.edgelist = (int *) NULL;          /* Needed only if -v switch used. */
+    vorout.normlist = (REAL *) NULL;         /* Needed only if -v switch used. */
+
+    /* Triangulate the points.  Switches are chosen to read and write a  */
+    /*   PSLG (p), preserve the convex hull (c), number everything from  */
+    /*   zero (z), assign a regional attribute to each element (A), and  */
+    /*   produce an edge list (e), a Voronoi diagram (v), and a triangle */
+    /*   neighbor list (n).                                              */
+
+    
+    //FIRST, find al edges in the main sheet or crossing the main sheet's boundary
+    triangulate("zeQ", &in, &mid, &vorout);
+    for (int ee =0; ee < mid.numberofedges; ++ee)
+        {
+        int i1, i2;
+        i1 = mid.edgelist[2*ee];
+        i2 = mid.edgelist[ee*2+1];
+        if((i1 >= 4*np && i1 < 5*np) || (i2 >= 4*np && i2 < 5*np))
+            {
+            i1 = i1 % np;
+            i2 = i2 % np;
+            if(i1==i2) continue;
+            allneighs[i1].push_back(i2);
+            allneighs[i2].push_back(i1);
+            };
+        };
+
+
+    //NEXT, sort all neighbors so they are in CW order
+    vector< pair <float, int> >CWorder;
+    int ntot = 0;
+    for (int ii = 0; ii < np; ++ii)
+        {
+        vector<int> ntemp = allneighs[ii];
+ //       ntemp.erase(unique(ntemp.begin(),ntemp.end() ), ntemp.end() );
+
+        int nenum = ntemp.size();
+        pt pa(points[2*ii],points[2*ii]+1);
+        CWorder.resize(nenum);
+        for (int nn = 0; nn < nenum; ++nn)
+            {
+            pt pb(points[2*ntemp[nn]],points[2*ntemp[nn]+1]);
+            pt md;
+            Box.minDist(pb,pa,md);
+            CWorder[nn].first = atan2(md.y,md.x);
+            CWorder[nn].second = ntemp[nn];
+            };
+        sort(CWorder.begin(),CWorder.begin()+CWorder.size());
+        CWorder.erase(unique(CWorder.begin(),CWorder.end() ), CWorder.end() );
+        ntemp.resize(CWorder.size());
+        for (int nn = 0; nn < CWorder.size(); ++nn)
+            ntemp[nn] = CWorder[nn].second;
+        allneighs[ii]=ntemp;
+        ntot += CWorder.size();
+        };
+//printf("%i total neighbors in global set\n",ntot);
+    mid.trianglearealist = (REAL *) malloc(mid.numberoftriangles * sizeof(REAL));
+    mid.trianglearealist[0] = 3.0;
+    mid.trianglearealist[1] = 1.0;
+
+
+    out.pointlist = (REAL *) NULL;            /* Not needed if -N switch used. */
+    out.pointattributelist = (REAL *) NULL;
+    out.trianglelist = (int *) NULL;          /* Not needed if -E switch used. */
+    out.triangleattributelist = (REAL *) NULL;
+
+
+    free(in.pointlist);
+    free(in.pointattributelist);
+    free(in.pointmarkerlist);
+    free(in.regionlist);
+    free(mid.pointlist);
+    free(mid.pointattributelist);
+    free(mid.pointmarkerlist);
+    free(mid.trianglelist);
+    free(mid.triangleattributelist);
+    free(mid.trianglearealist);
+    free(mid.neighborlist);
+    free(mid.segmentlist);
+    free(mid.segmentmarkerlist);
+    free(mid.edgelist);
+    free(mid.edgemarkerlist);
+    free(vorout.pointlist);
+    free(vorout.pointattributelist);
+    free(vorout.edgelist);
+    free(vorout.normlist);
+    free(out.pointlist);
+    free(out.pointattributelist);
+    free(out.trianglelist);
+    free(out.triangleattributelist);
+
+    };
+
+
+
+
+
+
+
+
+
+
+
 void DelaunayTri::testDel(int numpts, int tmax,bool verbose)
     {
     cout << "Timing Shewchuk's Triangle (9-sheeted)..." << endl;

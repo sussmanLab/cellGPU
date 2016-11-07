@@ -1,6 +1,8 @@
 using namespace std;
 #define EPSILON 1e-12
 #define dbl float
+#define REAL double
+#define ANSI_DECLARATIONS
 #define ENABLE_CUDA
 
 #include <cmath>
@@ -28,6 +30,7 @@ using namespace std;
 #include "gpucell.cuh"
 #include "gpucell.h"
 
+#include "DelaunayTri.h"
 #include "DelaunayMD.cuh"
 #include "DelaunayMD.h"
 
@@ -80,6 +83,7 @@ void DelaunayMD::initialize(int n)
     N = n;
     float boxsize = sqrt(N);
     Box.setSquare(boxsize,boxsize);
+    CPUbox.setSquare(boxsize,boxsize);
 
     //set circumcenter array size
     circumcenters.resize(6*(N+10));
@@ -239,6 +243,84 @@ void DelaunayMD::fullTriangulation()
 
     getCircumcenterIndices();
     };
+
+
+void DelaunayMD::globalTriangulation()
+    {
+    cout << "Resetting complete triangulation globally" << endl;
+
+    //get neighbors of each cell in CW order from the Triangle interface
+    vector<float> psnew(2*N);
+    ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        psnew[2*ii] = h_points.data[ii].x;
+        psnew[2*ii+1]=h_points.data[ii].y;
+        };
+    vector< vector<int> > allneighs(N);
+    DelaunayTri delTri;
+    delTri.fullPeriodicTriangulation(psnew,CPUbox,allneighs);
+
+    neigh_num.resize(N);
+
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
+
+    int totaln = 0;
+    int nmax = 0;
+    for(int nn = 0; nn < N; ++nn)
+        {
+        neighnum.data[nn] = allneighs[nn].size();
+        totaln += allneighs[nn].size();
+        if (allneighs[nn].size() > nmax) nmax= allneighs[nn].size();
+        h_repair.data[nn]=0;
+        };
+    neighMax = nmax; cout << "new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
+    neighs.resize(neighMax*N);
+
+    //store data in gpuarray
+    n_idx = Index2D(neighMax,N);
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
+
+    for (int nn = 0; nn < N; ++nn)
+        {
+        int imax = neighnum.data[nn];
+        for (int ii = 0; ii < imax; ++ii)
+            {
+            int idxpos = n_idx(ii,nn);
+            ns.data[idxpos] = allneighs[nn][ii];
+//printf("particle %i (%i,%i)\n",nn,idxpos,allneighs[nn][ii]);
+            };
+        };
+
+    cudaError_t code = cudaGetLastError();
+    if(code!=cudaSuccess)
+        {
+        printf("FullTriangulation  GPUassert: %s \n", cudaGetErrorString(code));
+        throw std::exception();
+        };
+
+    if(totaln != 6*N)
+        {
+        printf("CPU neighbor creation failed to match topology! NN = %i \n",totaln);
+//        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+//        for (int ii = 0; ii < N; ++ii)
+//            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
+        char fn[256];
+        sprintf(fn,"failed.txt");
+        ofstream output(fn);
+        getCircumcenterIndices();
+        writeTriangulation(output);
+            
+        throw std::exception();
+        };
+
+
+    getCircumcenterIndices();
+    };
+
+
+
 
 void DelaunayMD::getCircumcenterIndices()
     {

@@ -154,7 +154,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
     DTring.clear();
     DTringIdx.clear();
 
-    int reduceSize = 15;
+    int reduceSize = 30;
 //reduceSize = 100;
     DTring.reserve(2*reduceSize); DTringIdx.reserve(2*reduceSize);
     pt vc(0.0,0.0);
