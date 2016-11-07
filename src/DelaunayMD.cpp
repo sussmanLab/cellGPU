@@ -294,7 +294,7 @@ void DelaunayMD::globalTriangulation()
             };
         };
 
-    getCircumcenterIndices();
+    getCircumcenterIndices(true);
 
     if(totaln != 6*N)
         {
@@ -306,7 +306,7 @@ void DelaunayMD::globalTriangulation()
         sprintf(fn,"failed.txt");
         ofstream output(fn);
         writeTriangulation(output);
-        throw std::exception();
+//        throw std::exception();
         };
 
     };
@@ -314,7 +314,7 @@ void DelaunayMD::globalTriangulation()
 
 
 
-void DelaunayMD::getCircumcenterIndices()
+void DelaunayMD::getCircumcenterIndices(bool secondtime)
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
@@ -348,9 +348,10 @@ void DelaunayMD::getCircumcenterIndices()
             };
 
         };
+    NumCircumCenters = cidx;
   //  if (totaln != 6*N || fail || cidx > 3*N) fullTriangulation();
 //    cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
-    if(totaln != 6*N || cidx != 2*N|| fail)
+    if((totaln != 6*N || cidx != 2*N) && !secondtime)
         {
         char fn[256];
         sprintf(fn,"failed.txt");
