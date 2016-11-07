@@ -231,7 +231,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
                 {
                 if (repeat) continue;
                 rr=rads[qq];
-                rr = rr*rr+EPSILON;
+                rr = rr*rr;
                 Box.minDist(disp,Q0[qq],tocenter);
                 //if(tocenter.norm()<rads[qq])
                 if(tocenter.x*tocenter.x+tocenter.y*tocenter.y<rr)
@@ -301,7 +301,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
         rads.push_back(radius*1.00);
         };
 
-    float EPS = 0.01;
+    float EPS = 0.005;
     for (int nn = 5; nn < DTring.size(); ++nn)
         {
         int q =quadrant(DTring[nn].x,DTring[nn].y);

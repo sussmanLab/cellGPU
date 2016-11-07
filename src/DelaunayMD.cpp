@@ -224,9 +224,9 @@ void DelaunayMD::fullTriangulation()
     if(totaln != 6*N)
         {
         printf("CPU neighbor creation failed to match topology! NN = %i \n",totaln);
-        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
-        for (int ii = 0; ii < N; ++ii)
-            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
+//        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+//        for (int ii = 0; ii < N; ++ii)
+//            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
         char fn[256];
         sprintf(fn,"failed.txt");
         ofstream output(fn);
@@ -278,7 +278,6 @@ void DelaunayMD::getCircumcenterIndices()
 //    cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
     if(totaln != 6*N || cidx != 2*N|| fail)
         {
-//        fullTriangulation();
         char fn[256];
         sprintf(fn,"failed.txt");
         ofstream output(fn);
@@ -501,9 +500,12 @@ void DelaunayMD::repel(GPUArray<float2> &disp,float eps)
                 dtot.y-=2*eps*d.y*(1.0-1.0/norm);
                 };
             };
+        int randmax = 1000000;
+        float xrand = eps*0.1*(-0.5+1.0/(dbl)randmax* (dbl)(rand()%randmax));
+        float yrand = eps*0.1*(-0.5+1.0/(dbl)randmax* (dbl)(rand()%randmax));
         dd.data[ii]=dtot;
-        ftot.x+=dtot.x;
-        ftot.y+=dtot.y;
+        ftot.x+=dtot.x+xrand;
+        ftot.y+=dtot.y+yrand;
         };
 //    printf("Total force = (%f,%f)\n",ftot.x,ftot.y);
     };
