@@ -189,7 +189,7 @@ void DelaunayMD::fullTriangulation()
     for(int nn = 0; nn < N; ++nn)
         {
         vector<int> neighTemp;
-        delLoc.getNeighbors(nn,neighTemp);
+        delLoc.getNeighborsTri(nn,neighTemp);
         allneighs[nn]=neighTemp;
         neighnum.data[nn] = neighTemp.size();
         totaln += neighTemp.size();
@@ -284,7 +284,7 @@ void DelaunayMD::getCircumcenterIndices()
         ofstream output(fn);
         writeTriangulation(output);
         printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*N,totaln,6*N);
-//        throw std::exception();
+        throw std::exception();
         };
     //cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
     cudaError_t code = cudaGetLastError();

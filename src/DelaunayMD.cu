@@ -116,8 +116,8 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     if (badParticle)
         {
         d_repair[i1] = 1;
- //       d_repair[i2] = 1;
- //       d_repair[i3] = 1;
+        d_repair[i2] = 1;
+        d_repair[i3] = 1;
         };
 
     return;
