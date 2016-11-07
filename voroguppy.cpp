@@ -132,6 +132,65 @@ int main(int argc, char*argv[])
     if (!gpu) return 0;
     cudaSetDevice(USE_GPU);
 
+
+/*
+
+
+    float boxa = sqrt(numpts);
+
+    box Bx(boxa,boxa);
+    gpubox BxGPU(boxa,boxa);
+    dbl bx,bxx,by,byy;
+    Bx.getBoxDims(bx,bxx,byy,by);
+    cout << "Box:" << bx << " " <<bxx << " " <<byy<< " "<< by << endl;
+
+
+    vector<float> ps2(2*numpts);
+    dbl maxx = 0.0;
+    int randmax = 1000000;
+    for (int i=0;i<numpts;++i)
+        {
+        float x =EPSILON+boxa/(dbl)randmax* (dbl)(rand()%randmax);
+        float y =EPSILON+boxa/(dbl)randmax* (dbl)(rand()%randmax);
+        ps2[i*2]=x;
+        ps2[i*2+1]=y;
+        cout <<i << "  {"<<x<<","<<y<<"},";
+        };
+//    cout << endl << maxx << endl;
+    cout << endl << endl;
+
+    //simple testing
+    DelaunayTri dtri(ps2);
+    dtri.getTriangulation();
+    vector<int> nes;
+    dtri.getNeighbors(ps2,31,nes);
+    dtri.getNeighbors(ps2,21,nes);
+
+    DelaunayLoc del(ps2,Bx);
+    del.initialize(1.5);
+    vector<int> neighs;
+    DelaunayCell cell;
+    del.triangulatePoint(31,neighs,cell,false);
+    cout << " DelLoc neighbors:" << endl;
+    for (int ii = 0; ii < neighs.size(); ++ii)
+        printf("%i \t",neighs[ii]);
+    printf("\n");
+    del.triangulatePoint(21,neighs,cell,false);
+    cout << " DelLoc neighbors:" << endl;
+    for (int ii = 0; ii < neighs.size(); ++ii)
+        printf("%i \t",neighs[ii]);
+    printf("\n");
+
+    del.getNeighborsTri(21,neighs);
+    cout << " DelLoc neighbors:" << endl;
+    for (int ii = 0; ii < neighs.size(); ++ii)
+        printf("%i \t",neighs[ii]);
+    printf("\n");
+
+
+*/
+
+
     DelaunayMD delmd;
     delmd.initialize(numpts);
 //    delmd.updateCellList();
@@ -158,6 +217,13 @@ int main(int argc, char*argv[])
     t2=clock();
     float movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat*numpts << " particle  edits per frame" << endl;
+//    delmd.fullTriangulation();
+    delmd.writeTriangulation(output2);
+
+
+
+
+
 /*
         rnddisp(ds,numpts,err);
         cout << "displacements generated " << endl; cout.flush();
@@ -167,8 +233,6 @@ int main(int argc, char*argv[])
         cout << "triangulation repaired" << endl; cout.flush();
 */
 
-//    delmd.fullTriangulation();
-    delmd.writeTriangulation(output2);
 
 
 //        cout << "triangulation written" << endl; cout.flush();

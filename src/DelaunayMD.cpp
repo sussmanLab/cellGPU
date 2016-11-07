@@ -318,7 +318,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         {
         int pidx = fixlist[ii];
         vector<int> neighTemp;
-        delLoc.getNeighbors(pidx,neighTemp);
+        delLoc.getNeighborsTri(pidx,neighTemp);
         allneighs[ii]=neighTemp;
         if(neighTemp.size() > neighMax)
             {

@@ -1,5 +1,7 @@
 using namespace std;
+#define ANSI_DECLARATIONS
 #define dbl float
+#define REAL double
 #define EPSILON 1e-16
 
 #include <cmath>
@@ -17,6 +19,7 @@ using namespace std;
 #include <sys/time.h>
 
 #include "DelaunayLoc.h"
+#include "DelaunayTri.h"
 //#include "functions.h"
 //#include "structures.h"
 
@@ -348,6 +351,39 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
     candidates = DTring.size();
     };
 
+void DelaunayLoc::getNeighborsTri(int i, vector<int> &neighbors)
+    {
+    DelaunayCell DCell;
+    //first, get candidate 1-ring
+    vector<int> DTringIdx;
+    vector<pt> DTring;
+    getOneRingCandidate(i,DTringIdx,DTring);
+
+
+    //call another algorithm to triangulate the candidate set
+    DelaunayTri delTri;
+    delTri.getNeighbors(DTring, 0, neighbors);
+
+    DCell.setSize(neighbors.size());
+    for(int ii = 0; ii < DCell.n; ++ii)
+        DCell.Dneighs[ii]=DTring[neighbors[ii]];
+
+    DCell.getCW();
+
+    //convert neighbors to global indices,
+    //and store the neighbor indexes in clockwise order
+    vector<int> nidx;nidx.reserve(neighbors.size());
+    for (int nn = 0; nn < neighbors.size(); ++nn)
+        {
+        int localidx = neighbors[DCell.CWorder[nn].second];
+        nidx.push_back(DTringIdx[localidx]);
+        };
+    for (int nn = 0; nn < neighbors.size(); ++nn)
+        {
+        neighbors[nn] = nidx[nn];
+        };
+
+    };
 
 
 void DelaunayLoc::getNeighbors(int i, vector<int> &neighbors)

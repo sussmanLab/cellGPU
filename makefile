@@ -60,7 +60,7 @@ obj/DelaunayTri.o:src/DelaunayTri.cpp obj/triangle.o
 obj/Delaunay1.o:src/Delaunay1.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
-obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o
+obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o $(EXT_OBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
 obj/voroguppy.o:voroguppy.cpp
