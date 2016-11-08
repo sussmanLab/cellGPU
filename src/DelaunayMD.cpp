@@ -531,7 +531,11 @@ void DelaunayMD::testAndRepairTriangulation()
         };
        sort(NeedsFixing.begin(),NeedsFixing.end());
        NeedsFixing.erase(unique(NeedsFixing.begin(),NeedsFixing.end() ),NeedsFixing.end() );
-       repairTriangulation(NeedsFixing);
+
+       if(NeedsFixing.size()>(N/2))
+           globalTriangulation();
+       else
+           repairTriangulation(NeedsFixing);
     };
 
 void DelaunayMD::writeTriangulation(ofstream &outfile)

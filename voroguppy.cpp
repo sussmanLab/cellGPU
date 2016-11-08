@@ -198,7 +198,7 @@ int main(int argc, char*argv[])
 
 //    delmd.testAndRepairTriangulation();
     delmd.writeTriangulation(output1);
-//    if(numpts < 550) delmd.setCPU();
+    if(numpts < 600) delmd.setCPU();
    
     GPUArray<float2> ds,ps;
     ds.resize(numpts);
