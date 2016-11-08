@@ -247,6 +247,7 @@ void DelaunayMD::fullTriangulation()
 
 void DelaunayMD::globalTriangulation(bool verbose)
     {
+    GlobalFixes +=1;
     if(verbose)
         cout << "Resetting complete triangulation globally" << endl;
 
