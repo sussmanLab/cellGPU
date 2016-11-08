@@ -14,7 +14,7 @@ using namespace std;
 
 class DelaunayMD
     {
-    private:
+    protected:
         GPUArray<float2> points;      //vector of particle positions
 
         std::vector<pt> pts;          //vector of points to triangulate

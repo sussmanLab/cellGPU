@@ -135,7 +135,8 @@ int main(int argc, char*argv[])
 
 
 
-    SPV2D spv(numpts);
+    SPV2D spv(numpts,1.0,4.0);
+    for (int tt = 0; tt < testRepeat; ++tt) spv.performTimestep();
 
 
 /*
