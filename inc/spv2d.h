@@ -13,7 +13,7 @@ using namespace std;
 
 #include "DelaunayMD.h"
 
-class SPV2D
+class SPV2D : public DelaunayMD
     {
     private:
         GPUArray<float2> points;      //vector of particle positions

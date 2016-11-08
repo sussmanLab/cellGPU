@@ -23,7 +23,7 @@ all:build
 
 build: delGPU.out
 
-OBJS= obj/voroguppy.o obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/gpucell.o obj/DelaunayCheckGPU.o obj/DelaunayMD.o obj/spv.o
+OBJS= obj/voroguppy.o obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/gpucell.o obj/DelaunayCheckGPU.o obj/DelaunayMD.o obj/spv2d.o
 
 EXT_OBJS = obj/triangle.o
 
@@ -54,7 +54,7 @@ obj/DelaunayMD.cu.o:src/DelaunayMD.cu
 obj/DelaunayMD.o:src/DelaunayMD.cpp obj/DelaunayMD.cu.o $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
-obj/spv.o:src/spv.cpp obj/DelaunayMD.o
+obj/spv2d.o:src/spv2d.cpp obj/DelaunayMD.o
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
 obj/DelaunayTri.o:src/DelaunayTri.cpp obj/triangle.o

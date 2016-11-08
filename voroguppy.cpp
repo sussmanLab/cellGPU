@@ -36,6 +36,7 @@
 
 #include "DelaunayCheckGPU.h"
 #include "DelaunayMD.h"
+#include "spv2d.h"
 
 
 
@@ -133,6 +134,10 @@ int main(int argc, char*argv[])
     cudaSetDevice(USE_GPU);
 
 
+
+    SPV2D spv(numpts);
+
+
 /*
 
 
@@ -190,6 +195,7 @@ int main(int argc, char*argv[])
 
 */
 
+    /*
 
     DelaunayMD delmd;
     delmd.initialize(numpts);
@@ -246,7 +252,7 @@ int main(int argc, char*argv[])
 
     delmd.writeTriangulation(output2);
 
-
+    */
 
 
 

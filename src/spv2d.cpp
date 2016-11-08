@@ -8,9 +8,10 @@ using namespace std;
 #define ANSI_DECLARATIONS
 #define ENABLE_CUDA
 
-#include "spv.h"
+#include "spv2d.h"
 
 SPV2D::SPV2D(int n)
     {
-    printf("%i",n);
+    printf("Initializing %i cells with random positions in a square box\n",n);
+    initialize(n);
     };
