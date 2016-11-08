@@ -222,6 +222,28 @@ int main(int argc, char*argv[])
     float movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat*numpts << " particle  edits per frame" << endl;
 //    delmd.fullTriangulation();
+
+    t1=clock();
+    for (int tt = 0; tt < testRepeat; ++tt)
+        {
+        if (tt % 1000 ==0) 
+            {
+            cout << "Starting loop " <<tt << endl;
+            //delmd.fullTriangulation();
+            };
+        if(tt%2 == 0)
+            delmd.repel(ds,err);
+        else
+            rnddisp(ds,numpts,err);
+        delmd.movePoints(ds);
+        delmd.testAndRepairTriangulation();
+
+        };
+    t2=clock();
+    movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
+    cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << delmd.GlobalFixes << " calls to the global triangulation routine." << endl;
+
+
     delmd.writeTriangulation(output2);
 
 

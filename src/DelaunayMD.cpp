@@ -245,9 +245,10 @@ void DelaunayMD::fullTriangulation()
     };
 
 
-void DelaunayMD::globalTriangulation()
+void DelaunayMD::globalTriangulation(bool verbose)
     {
-    cout << "Resetting complete triangulation globally" << endl;
+    if(verbose)
+        cout << "Resetting complete triangulation globally" << endl;
 
     //get neighbors of each cell in CW order from the Triangle interface
     vector<float> psnew(2*N);
@@ -275,7 +276,9 @@ void DelaunayMD::globalTriangulation()
         if (allneighs[nn].size() > nmax) nmax= allneighs[nn].size();
         h_repair.data[nn]=0;
         };
-    neighMax = nmax; cout << "global new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
+    neighMax = nmax;
+    if(verbose)
+        cout << "global new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
     neighs.resize(neighMax*N);
     n_idx = Index2D(neighMax,N);
 
@@ -302,10 +305,10 @@ void DelaunayMD::globalTriangulation()
 //        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
 //        for (int ii = 0; ii < N; ++ii)
 //            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
-        char fn[256];
-        sprintf(fn,"failed.txt");
-        ofstream output(fn);
-        writeTriangulation(output);
+//        char fn[256];
+//        sprintf(fn,"failed.txt");
+//        ofstream output(fn);
+//        writeTriangulation(output);
 //        throw std::exception();
         };
 
@@ -314,7 +317,7 @@ void DelaunayMD::globalTriangulation()
 
 
 
-void DelaunayMD::getCircumcenterIndices(bool secondtime)
+void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
@@ -353,11 +356,12 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime)
 //    cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
     if((totaln != 6*N || cidx != 2*N) && !secondtime)
         {
-        char fn[256];
-        sprintf(fn,"failed.txt");
-        ofstream output(fn);
-        writeTriangulation(output);
-        printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*N,totaln,6*N);
+ //       char fn[256];
+//        sprintf(fn,"failed.txt");
+//        ofstream output(fn);
+//        writeTriangulation(output);
+        if(verbose)
+            printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*N,totaln,6*N);
         globalTriangulation();
 //        throw std::exception();
         };

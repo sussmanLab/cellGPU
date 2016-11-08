@@ -47,6 +47,7 @@ class DelaunayMD
     public:
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
         float repPerFrame;
+        int GlobalFixes;
 
         void getPoints(GPUArray<float2> &ps){ps = points;};
         //constructors
@@ -76,10 +77,10 @@ class DelaunayMD
         //construct complete triangulation point-by-point
         void fullTriangulation();
         //resort to a method that globally constructs the triangulation
-        void globalTriangulation();
+        void globalTriangulation(bool verbose = false);
 
         //construct circumcenters structure from neighbor list
-        void getCircumcenterIndices(bool secondtime=false);
+        void getCircumcenterIndices(bool secondtime=false,bool verbose = false);
 
         //Test the current neigh list to see if it is still a valid triangulation
         //If it isn't, fix it on the cpu
