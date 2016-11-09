@@ -10,6 +10,7 @@ using namespace std;
 #include "vector_types.h"
 #include "vector_functions.h"
 
+#include "Matrix.h"   
 #include "cu_functions.h"
 
 #include "DelaunayMD.h"

@@ -51,6 +51,12 @@ struct Matrix2x2
                             {
                             set(a*x11,a*x12,a*x21,a*x22);
                             };
+        HOSTDEVICE friend Matrix2x2 operator*(const Matrix2x2 &m,const float a)
+                            {
+                            Matrix2x2 temp(m);
+                            temp*=a;
+                            return temp;
+                            };
         HOSTDEVICE friend Matrix2x2 operator*(const float a, const Matrix2x2 &m)
                             {
                             Matrix2x2 temp(m);
@@ -74,7 +80,23 @@ struct Matrix2x2
                             return temp;
                             };
 
+        //Matrix subtraction
+        HOSTDEVICE void operator-=(const Matrix2x2 &m2)
+                            {
+                            set(x11-m2.x11,
+                                x12-m2.x12,
+                                x21-m2.x21,
+                                x22-m2.x22
+                               );
+                            };
+        HOSTDEVICE friend Matrix2x2 operator-(const Matrix2x2 &m1,const Matrix2x2 &m2)
+                            {
+                            Matrix2x2 temp(m1);
+                            temp-=m2;
+                            return temp;
+                            };
 
+        //matrix-vector multiplication
         HOSTDEVICE friend float2 operator*(const float2 &v, const Matrix2x2 &m)
                             {
                             float2 temp;
@@ -91,6 +113,11 @@ struct Matrix2x2
                             return temp;
                             };
 
+        //utility
+        HOSTDEVICE void show()
+            {
+            printf("{%f,%f,%f,%f}\n",x11,x12,x21,x22);
+            };
     };
 
 HOSTDEVICE Matrix2x2 dyad(float2 &v1, float2 &v2)

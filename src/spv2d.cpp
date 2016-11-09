@@ -98,23 +98,49 @@ void SPV2D::computeSPVForceCPU(int i)
         ns[nn]=h_n.data[n_idx(nn,i)];
 
 
-    //compute base set of voronoi points
+    //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
     vector<float2> voro(neigh);
+    vector<Matrix2x2> dhdri(neigh);
+    Matrix2x2 Id;
     float2 circumcent;
     float2 origin; origin.x = 0.; origin.y=0.;
-    float2 nnext,nlast;
+    float2 rij,rik;
     float2 nnextp,nlastp;
+    float2 rjk;
     float2 pi = h_p.data[i];
 
     nlastp = h_p.data[ns[ns.size()-1]];
-    Box.minDist(nlastp,pi,nlast);
+    Box.minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
         nnextp = h_p.data[ns[nn]];
-        Box.minDist(nnextp,pi,nnext);
-        Circumcenter(origin,nlast,nnext,circumcent);
+        Box.minDist(nnextp,pi,rik);
+        Circumcenter(origin,rij,rik,circumcent);
         voro[nn] = circumcent;
-        nlast=nnext;
+        rjk.x =rik.x-rij.x;
+        rjk.y =rik.y-rij.y;
+
+        float2 dbDdri,dgDdri,dDdriOD,z;
+        float betaD = -dot(rik,rik)*dot(rij,rjk);
+        float gammaD = dot(rij,rij)*dot(rik,rjk);
+        float cp = rij.x*rjk.y - rij.y*rjk.x;
+        float D = 2*cp*cp;
+
+        z.x = betaD*rij.x+gammaD*rik.x;
+        z.y = betaD*rij.y+gammaD*rik.y;
+
+        dbDdri.x = 2*dot(rij,rik)*rik.x+dot(rik,rik)*rjk.x;
+        dbDdri.y = 2*dot(rij,rik)*rik.y+dot(rik,rik)*rjk.y;
+
+        dgDdri.x = -2*dot(rik,rjk)*rij.x-dot(rij,rij)*rjk.x;
+        dgDdri.y = -2*dot(rik,rjk)*rij.y-dot(rij,rij)*rjk.y;
+
+        dDdriOD.x = (-2.0*rjk.y)/cp;
+        dDdriOD.y = (2.0*rjk.x)/cp;
+
+        dhdri[nn] = Id+1.0/D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
+
+        rij=rik;
         };
 
     float2 vlast,vnext;

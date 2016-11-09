@@ -87,6 +87,11 @@ __device__ inline void Circumcircle(float x1, float y1, float x2, float y2, floa
     return;
     };
 
+HOSTDEVICE float dot(float2 p1,float2 p2)
+    {
+    return p1.x*p2.x+p1.y*p2.y;
+    };
+
 __device__ inline float norm(float2 p)
     {
     return sqrt(p.x*p.x+p.y*p.y);
