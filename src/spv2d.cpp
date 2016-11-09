@@ -160,17 +160,69 @@ void SPV2D::computeSPVForceCPU(int i)
     h_AP.data[i].x = Varea;
     h_AP.data[i].y = Vperi;
 
+    //start calculating forces
+    float2 forceSum;
+    forceSum.x=0.0;forceSum.y=0.0;
+    float KA = 1.0;
+    float KP = 1.0;
+
+    float Adiff = KA*(Varea - h_APpref.data[i].x);
+    float Pdiff = KP*(Vperi - h_APpref.data[i].y);
+
+    //first, let's do the self-term, dE_i/dr_i
+    float2 vcur;
+    vlast = voro[neigh-1];
+    for(int nn = 0; nn < neigh; ++nn)
+        {
+        vcur = voro[nn];
+        vnext = voro[(nn+1)%neigh];
+        float2 dEidv,dAidv,dPidv;
+        dAidv.x = 0.5*(vlast.y-vnext.y);
+        dAidv.y = 0.5*(vnext.x-vlast.x);
+
+        float2 dlast,dnext;
+        dlast.x = vlast.x-vcur.x;
+        dlast.y=vlast.y-vcur.y;
+
+        float dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+
+        dnext.x = vcur.x-vnext.x;
+        dnext.y = vcur.y-vnext.y;
+        float dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+
+        dPidv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+        dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+
+        dEidv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x;
+        dEidv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y;
+
+        float2 temp = dEidv*dhdri[nn];
+        forceSum.x+= -temp.x;
+        forceSum.y+= -temp.y;
+
+        vlast=vcur;
+        };
+
+
+
+    h_f.data[i].x=forceSum.x;
+    h_f.data[i].y=forceSum.y;
+
     };
 
 
 
-void SPV2D::meanArea()
+void SPV2D::meanForce()
     {
-    ArrayHandle<float2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    float Am = 0.0;
+    ArrayHandle<float2> h_f(forces,access_location::host,access_mode::read);
+    float fx = 0.0;
+    float fy = 0.0;
     for (int i = 0; i < N; ++i)
-        Am += h_AP.data[i].x/N;
-    printf("Mean area = %f\n" ,Am);
+        {
+        fx += h_f.data[i].x/N;
+        fy += h_f.data[i].y/N;
+        };
+    printf("Mean force = (%f,%f)\n" ,fx,fy);
 
     };
 

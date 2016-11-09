@@ -50,7 +50,7 @@ class SPV2D : public DelaunayMD
 
 
         //testing functions...
-        void meanArea();
+        void meanForce();
     };
 
 
