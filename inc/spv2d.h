@@ -47,10 +47,12 @@ class SPV2D : public DelaunayMD
         void performTimestep();
 
         void computeSPVForceCPU(int i);
+        void computeGeometryCPU();
 
 
         //testing functions...
         void meanForce();
+        void meanArea();
     };
 
 

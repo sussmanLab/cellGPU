@@ -73,10 +73,67 @@ void SPV2D::performTimestep()
 
     };
 
+void SPV2D::computeGeometryCPU()
+    {
+    for (int i = 0; i < N; ++i)
+        {
+        printf("cell %i:\n",i);
+        //read in all the data we'll need
+        ArrayHandle<float2> h_p(points,access_location::host,access_mode::read);
+        ArrayHandle<float2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
+
+        ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
+        ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
+
+        //get Delaunay neighbors of the cell
+        int neigh = h_nn.data[i];
+        vector<int> ns(neigh);
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            ns[nn]=h_n.data[n_idx(nn,i)];
+            };
+
+        //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
+        vector<float2> voro(neigh);
+        float2 circumcent;
+        float2 origin; origin.x = 0.; origin.y=0.;
+        float2 nnextp,nlastp;
+        float2 pi = h_p.data[i];
+        float2 rij, rik;
+
+        nlastp = h_p.data[ns[ns.size()-1]];
+        Box.minDist(nlastp,pi,rij);
+        for (int nn = 0; nn < neigh;++nn)
+            {
+            nnextp = h_p.data[ns[nn]];
+            Box.minDist(nnextp,pi,rik);
+            Circumcenter(origin,rij,rik,circumcent);
+            voro[nn] = circumcent;
+            rij=rik;
+            };
+
+        float2 vlast,vnext,vother;
+        //compute Area and perimeter
+        float Varea = 0.0;
+        float Vperi = 0.0;
+        vlast = voro[neigh-1];
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            vnext=voro[nn];
+            Varea += TriangleArea(vlast,vnext);
+            float dx = vlast.x-vnext.x;
+            float dy = vlast.y-vnext.y;
+            Vperi += sqrt(dx*dx+dy*dy);
+            vlast=vnext;
+            };
+        h_AP.data[i].x = Varea;
+        h_AP.data[i].y = Vperi;
+        };
+    };
 
 void SPV2D::computeSPVForceCPU(int i)
     {
-    printf("cell %i: \n",i);
+ //   printf("cell %i: \n",i);
     //for testing these routines...
     vector <int> test;
     DelaunayCell celltest;
@@ -85,7 +142,7 @@ void SPV2D::computeSPVForceCPU(int i)
     //read in all the data we'll need
     ArrayHandle<float2> h_p(points,access_location::host,access_mode::read);
     ArrayHandle<float2> h_f(forces,access_location::host,access_mode::readwrite);
-    ArrayHandle<float2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
+    ArrayHandle<float2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<float2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
 
     ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
@@ -97,7 +154,7 @@ void SPV2D::computeSPVForceCPU(int i)
     for (int nn = 0; nn < neigh; ++nn)
         {
         ns[nn]=h_n.data[n_idx(nn,i)];
-        printf("%i - ",ns[nn]);
+   //     printf("%i - ",ns[nn]);
         };
 
     //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
@@ -146,21 +203,7 @@ void SPV2D::computeSPVForceCPU(int i)
         };
 
     float2 vlast,vnext,vother;
-    //compute Area and perimeter
-    float Varea = 0.0;
-    float Vperi = 0.0;
     vlast = voro[neigh-1];
-    for (int nn = 0; nn < neigh; ++nn)
-        {
-        vnext=voro[nn];
-        Varea += TriangleArea(vlast,vnext);
-        float dx = vlast.x-vnext.x;
-        float dy = vlast.y-vnext.y;
-        Vperi += sqrt(dx*dx+dy*dy);
-        vlast=vnext;
-        };
-    h_AP.data[i].x = Varea;
-    h_AP.data[i].y = Vperi;
 
     //start calculating forces
     float2 forceSum;
@@ -168,8 +211,10 @@ void SPV2D::computeSPVForceCPU(int i)
     float KA = 1.0;
     float KP = 1.0;
 
-    float Adiff = KA*(Varea - h_APpref.data[i].x);
-    float Pdiff = KP*(Vperi - h_APpref.data[i].y);
+    float Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
+    float Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
+
+//    printf("cell %i: %f, %f\n",i,h_AP.data[i].x,h_APpref.data[i].x);
 
     float2 vcur;
     vlast = voro[neigh-1];
@@ -198,12 +243,13 @@ void SPV2D::computeSPVForceCPU(int i)
         dEidv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x;
         dEidv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y;
 
-        float2 temp = dEidv*dhdri[nn];
-        forceSum.x+= -temp.x;
-        forceSum.y+= -temp.y;
 
+        //
+        //
         //now let's compute the other terms...first we need to find the third voronoi
         //position that v_cur is connected to
+        //
+        //
         int baseNeigh = ns[nn];
         int other_idx = nn - 1;
         if (other_idx < 0) other_idx += neigh;
@@ -219,26 +265,26 @@ void SPV2D::computeSPVForceCPU(int i)
         float2 nn1 = h_p.data[baseNeigh];
         float2 no1 = h_p.data[DT_other_idx];
 
-        printf("%i - %i - %i\n",otherNeigh,baseNeigh,DT_other_idx);
 
         float2 r1,r2,r3;
         Box.minDist(nl1,pi,r1);
         Box.minDist(nn1,pi,r2);
-        Box.minDist(no1,pi,r2);
+        Box.minDist(no1,pi,r3);
 
         Circumcenter(r1,r2,r3,vother);
         if(vother.x*vother.x+vother.y*vother.y > 10)
+//        if(true)
             {
-        printf("vother %i-%i = (%f,%f)\n",baseNeigh,otherNeigh,vother.x,vother.y);
-            printf("Big voro_other:\n");
-            printf("(%f,%f), (%f,%f), (%f,%f)\n",r1.x,r1.y,r2.x,r2.y,r3.x,r3.y);
+//        printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
+//            printf("Big voro_other:\n");
+//            printf("(%f,%f), (%f,%f), (%f,%f)\n",r1.x,r1.y,r2.x,r2.y,r3.x,r3.y);
 
             };
 
-        float Akdiff = KA*(Varea - h_APpref.data[baseNeigh].x);
-        float Pkdiff = KP*(Vperi - h_APpref.data[baseNeigh].y);
-        float Ajdiff = KA*(Varea - h_APpref.data[otherNeigh].x);
-        float Pjdiff = KP*(Vperi - h_APpref.data[otherNeigh].y);
+        float Akdiff = KA*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
+        float Pkdiff = KP*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
+        float Ajdiff = KA*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].x);
+        float Pjdiff = KP*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].y);
 
         float2 dEkdv,dAkdv,dPkdv;
         dAkdv.x = 0.5*(vnext.y-vother.y);
@@ -270,17 +316,23 @@ void SPV2D::computeSPVForceCPU(int i)
         dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
         dEjdv.x = 2.0*Ajdiff*dAjdv.x + 2.0*Pjdiff*dPjdv.x;
-        dEkdv.y = 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y;
+        dEjdv.y = 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y;
 
+        float2 temp = dEidv*dhdri[nn];
+        forceSum.x -= temp.x;
+        forceSum.y -= temp.y;
 
         temp = dEkdv*dhdri[nn];
-        forceSum.x+= -temp.x;
-        forceSum.y+= -temp.y;
-        temp = dEjdv*dhdri[nn];
-        forceSum.x+= -temp.x;
-        forceSum.y+= -temp.y;
-//        printf("%i; %i - %i\n",i,baseNeigh,DT_other_idx);
+        forceSum.x -= temp.x;
+        forceSum.y -= temp.y;
 
+        temp = dEjdv*dhdri[nn];
+        forceSum.x -= temp.x;
+        forceSum.y -= temp.y;
+
+  //      printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
+
+    //    printf("%f\t %f\t %f\t %f\t %f\t %f\t\n",Adiff,Akdiff,Ajdiff,Pdiff,Pkdiff,Pjdiff);
         vlast=vcur;
         };
 
@@ -288,9 +340,22 @@ void SPV2D::computeSPVForceCPU(int i)
 
     h_f.data[i].x=forceSum.x;
     h_f.data[i].y=forceSum.y;
-    printf("total force on cell: (%f,%f)\n",forceSum.x,forceSum.y);
+//    printf("total force on cell: (%f,%f)\n",forceSum.x,forceSum.y);
     };
 
+
+
+void SPV2D::meanArea()
+    {
+    ArrayHandle<float2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    float fx = 0.0;
+    for (int i = 0; i < N; ++i)
+        {
+        fx += h_AP.data[i].x/N;
+        };
+    printf("Mean area = %f\n" ,fx);
+
+    };
 
 
 void SPV2D::meanForce()
@@ -300,8 +365,8 @@ void SPV2D::meanForce()
     float fy = 0.0;
     for (int i = 0; i < N; ++i)
         {
-        fx += h_f.data[i].x/N;
-        fy += h_f.data[i].y/N;
+        fx += h_f.data[i].x;
+        fy += h_f.data[i].y;
         };
     printf("Mean force = (%f,%f)\n" ,fx,fy);
 
