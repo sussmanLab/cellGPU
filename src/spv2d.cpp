@@ -95,8 +95,10 @@ void SPV2D::computeSPVForceCPU(int i)
     int neigh = h_nn.data[i];
     vector<int> ns(neigh);
     for (int nn = 0; nn < neigh; ++nn)
+        {
         ns[nn]=h_n.data[n_idx(nn,i)];
-
+        printf("%i - ",ns[nn]);
+        };
 
     //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
     vector<float2> voro(neigh);
@@ -143,7 +145,7 @@ void SPV2D::computeSPVForceCPU(int i)
         rij=rik;
         };
 
-    float2 vlast,vnext;
+    float2 vlast,vnext,vother;
     //compute Area and perimeter
     float Varea = 0.0;
     float Vperi = 0.0;
@@ -169,11 +171,11 @@ void SPV2D::computeSPVForceCPU(int i)
     float Adiff = KA*(Varea - h_APpref.data[i].x);
     float Pdiff = KP*(Vperi - h_APpref.data[i].y);
 
-    //first, let's do the self-term, dE_i/dr_i
     float2 vcur;
     vlast = voro[neigh-1];
     for(int nn = 0; nn < neigh; ++nn)
         {
+        //first, let's do the self-term, dE_i/dr_i
         vcur = voro[nn];
         vnext = voro[(nn+1)%neigh];
         float2 dEidv,dAidv,dPidv;
@@ -200,6 +202,85 @@ void SPV2D::computeSPVForceCPU(int i)
         forceSum.x+= -temp.x;
         forceSum.y+= -temp.y;
 
+        //now let's compute the other terms...first we need to find the third voronoi
+        //position that v_cur is connected to
+        int baseNeigh = ns[nn];
+        int other_idx = nn - 1;
+        if (other_idx < 0) other_idx += neigh;
+        int otherNeigh = ns[other_idx];
+        int neigh2 = h_nn.data[baseNeigh];
+        int DT_other_idx;
+        for (int n2 = 0; n2 < neigh2; ++n2)
+            {
+            int testPoint = h_n.data[n_idx(n2,baseNeigh)];
+            if(testPoint == otherNeigh) DT_other_idx = h_n.data[n_idx((n2+1)%neigh2,baseNeigh)];
+            };
+        float2 nl1 = h_p.data[otherNeigh];
+        float2 nn1 = h_p.data[baseNeigh];
+        float2 no1 = h_p.data[DT_other_idx];
+
+        printf("%i - %i - %i\n",otherNeigh,baseNeigh,DT_other_idx);
+
+        float2 r1,r2,r3;
+        Box.minDist(nl1,pi,r1);
+        Box.minDist(nn1,pi,r2);
+        Box.minDist(no1,pi,r2);
+
+        Circumcenter(r1,r2,r3,vother);
+        if(vother.x*vother.x+vother.y*vother.y > 10)
+            {
+        printf("vother %i-%i = (%f,%f)\n",baseNeigh,otherNeigh,vother.x,vother.y);
+            printf("Big voro_other:\n");
+            printf("(%f,%f), (%f,%f), (%f,%f)\n",r1.x,r1.y,r2.x,r2.y,r3.x,r3.y);
+
+            };
+
+        float Akdiff = KA*(Varea - h_APpref.data[baseNeigh].x);
+        float Pkdiff = KP*(Vperi - h_APpref.data[baseNeigh].y);
+        float Ajdiff = KA*(Varea - h_APpref.data[otherNeigh].x);
+        float Pjdiff = KP*(Vperi - h_APpref.data[otherNeigh].y);
+
+        float2 dEkdv,dAkdv,dPkdv;
+        dAkdv.x = 0.5*(vnext.y-vother.y);
+        dAkdv.y = 0.5*(vother.x-vnext.x);
+
+        dlast.x = vnext.x-vcur.x;
+        dlast.y=vnext.y-vcur.y;
+        dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+        dnext.x = vcur.x-vother.x;
+        dnext.y = vcur.y-vother.y;
+        dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+
+        dPkdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+        dPkdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+        dEkdv.x = 2.0*Akdiff*dAkdv.x + 2.0*Pkdiff*dPkdv.x;
+        dEkdv.y = 2.0*Akdiff*dAkdv.y + 2.0*Pkdiff*dPkdv.y;
+
+        float2 dEjdv,dAjdv,dPjdv;
+        dAjdv.x = 0.5*(vother.y-vlast.y);
+        dAjdv.y = 0.5*(vlast.x-vother.x);
+
+        dlast.x = vother.x-vcur.x;
+        dlast.y=vother.y-vcur.y;
+        dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+        dnext.x = vcur.x-vlast.x;
+        dnext.y = vcur.y-vlast.y;
+        dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+
+        dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+        dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+        dEjdv.x = 2.0*Ajdiff*dAjdv.x + 2.0*Pjdiff*dPjdv.x;
+        dEkdv.y = 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y;
+
+
+        temp = dEkdv*dhdri[nn];
+        forceSum.x+= -temp.x;
+        forceSum.y+= -temp.y;
+        temp = dEjdv*dhdri[nn];
+        forceSum.x+= -temp.x;
+        forceSum.y+= -temp.y;
+//        printf("%i; %i - %i\n",i,baseNeigh,DT_other_idx);
+
         vlast=vcur;
         };
 
@@ -207,7 +288,7 @@ void SPV2D::computeSPVForceCPU(int i)
 
     h_f.data[i].x=forceSum.x;
     h_f.data[i].y=forceSum.y;
-
+    printf("total force on cell: (%f,%f)\n",forceSum.x,forceSum.y);
     };
 
 
