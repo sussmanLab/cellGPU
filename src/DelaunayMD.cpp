@@ -78,6 +78,7 @@ void DelaunayMD::initialize(int n)
     repPerFrame = 0.0;
     //set cellsize to about unity
     cellsize = 1.25;
+    GlobalFixes = 0;
 
     //set particle number and box
     N = n;
@@ -396,7 +397,6 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     //overwrite the first fixes elements of allneighs to save on vector costs, or something?
     vector<vector<int> > allneighs(fixes);
     bool resetCCidx = false;
-    int oldnmax = neighMax;
     for (int ii = 0; ii < fixes; ++ii)
         {
         int pidx = fixlist[ii];
@@ -414,7 +414,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     //Also, think about occasionally shrinking the list if it is much too big?
     if(resetCCidx)
         {
-        cout << "Resetting the neighbor structure... new Nmax = "<<neighMax <<  " old was " << oldnmax << endl;
+        cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
         globalTriangulation();
         return;
         };

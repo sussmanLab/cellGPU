@@ -27,7 +27,6 @@ SPV2D::SPV2D(int n,float A0, float P0)
 
 void SPV2D::Initialize(int n)
     {
-    setModuliUniform(1.0,1.0);
     setv0(0.05);
     setDeltaT(0.01);
     setDr(1.);
@@ -42,17 +41,6 @@ void SPV2D::Initialize(int n)
         {
         float theta = 2.0*PI/(float)(randmax)* (float)(rand()%randmax);
         h_cd.data[ii] = theta;
-        };
-    };
-
-void SPV2D::setModuliUniform(float KA, float KP)
-    {
-    Moduli.resize(N);
-    ArrayHandle<float2> h_m(Moduli,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        h_m.data[ii].x = KA;
-        h_m.data[ii].y = KP;
         };
     };
 
@@ -203,7 +191,6 @@ void SPV2D::computeSPVForceCPU(int i)
     ArrayHandle<float2> h_f(forces,access_location::host,access_mode::readwrite);
     ArrayHandle<float2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<float2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
-    ArrayHandle<float2> h_moduli(Moduli,access_location::host,access_mode::read);
 
     ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
@@ -339,10 +326,10 @@ void SPV2D::computeSPVForceCPU(int i)
 
             };
 
-        float Akdiff = h_moduli.data[baseNeigh].x*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
-        float Pkdiff = h_moduli.data[baseNeigh].y*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
-        float Ajdiff = h_moduli.data[otherNeigh].x*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].x);
-        float Pjdiff = h_moduli.data[otherNeigh].y*(h_AP.data[otherNeigh].y - h_APpref.data[otherNeigh].y);
+        float Akdiff = KA*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
+        float Pkdiff = KP*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
+        float Ajdiff = KA*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].x);
+        float Pjdiff = KP*(h_AP.data[otherNeigh].y - h_APpref.data[otherNeigh].y);
 
         float2 dEkdv,dAkdv,dPkdv;
         dAkdv.x = 0.5*(vnext.y-vother.y);

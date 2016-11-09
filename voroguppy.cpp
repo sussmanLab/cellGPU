@@ -136,6 +136,9 @@ int main(int argc, char*argv[])
 
 
     SPV2D spv(numpts,1.0,4.0);
+
+
+
     spv.writeTriangulation(output1);
     spv.setDeltaT(err);
     spv.setv0(0.02);
