@@ -136,7 +136,9 @@ int main(int argc, char*argv[])
 
 
     SPV2D spv(numpts,1.0,4.0);
-    spv.setCPU();
+    spv.computeGeometryCPU();
+    for (int ii = 0; ii < numpts; ++ii) spv.computeSPVForceCPU(ii);
+    spv.meanForce();
     for (int tt = 0; tt < testRepeat; ++tt) spv.performTimestep();
 
     spv.computeGeometryCPU();

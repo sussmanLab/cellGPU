@@ -77,7 +77,7 @@ void SPV2D::computeGeometryCPU()
     {
     for (int i = 0; i < N; ++i)
         {
-        printf("cell %i:\n",i);
+//        printf("cell %i:\n",i);
         //read in all the data we'll need
         ArrayHandle<float2> h_p(points,access_location::host,access_mode::read);
         ArrayHandle<float2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
@@ -240,8 +240,6 @@ void SPV2D::computeSPVForceCPU(int i)
         dPidv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-        dEidv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x;
-        dEidv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y;
 
 
         //
@@ -284,7 +282,7 @@ void SPV2D::computeSPVForceCPU(int i)
         float Akdiff = KA*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
         float Pkdiff = KP*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
         float Ajdiff = KA*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].x);
-        float Pjdiff = KP*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].y);
+        float Pjdiff = KP*(h_AP.data[otherNeigh].y - h_APpref.data[otherNeigh].y);
 
         float2 dEkdv,dAkdv,dPkdv;
         dAkdv.x = 0.5*(vnext.y-vother.y);
@@ -299,8 +297,6 @@ void SPV2D::computeSPVForceCPU(int i)
 
         dPkdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPkdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
-        dEkdv.x = 2.0*Akdiff*dAkdv.x + 2.0*Pkdiff*dPkdv.x;
-        dEkdv.y = 2.0*Akdiff*dAkdv.y + 2.0*Pkdiff*dPkdv.y;
 
         float2 dEjdv,dAjdv,dPjdv;
         dAjdv.x = 0.5*(vother.y-vlast.y);
@@ -315,6 +311,11 @@ void SPV2D::computeSPVForceCPU(int i)
 
         dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+
+        dEidv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x;
+        dEidv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y;
+        dEkdv.x = 2.0*Akdiff*dAkdv.x + 2.0*Pkdiff*dPkdv.x;
+        dEkdv.y = 2.0*Akdiff*dAkdv.y + 2.0*Pkdiff*dPkdv.y;
         dEjdv.x = 2.0*Ajdiff*dAjdv.x + 2.0*Pjdiff*dPjdv.x;
         dEjdv.y = 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y;
 
@@ -330,9 +331,9 @@ void SPV2D::computeSPVForceCPU(int i)
         forceSum.x -= temp.x;
         forceSum.y -= temp.y;
 
-  //      printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
+//        printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
 
-    //    printf("%f\t %f\t %f\t %f\t %f\t %f\t\n",Adiff,Akdiff,Ajdiff,Pdiff,Pkdiff,Pjdiff);
+//        printf("%f\t %f\t %f\t %f\t %f\t %f\t\n",Adiff,Akdiff,Ajdiff,Pdiff,Pkdiff,Pjdiff);
         vlast=vcur;
         };
 
