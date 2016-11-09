@@ -136,21 +136,44 @@ int main(int argc, char*argv[])
 
 
     SPV2D spv(numpts,1.0,4.0);
-    spv.computeGeometryCPU();
-    for (int ii = 0; ii < numpts; ++ii) spv.computeSPVForceCPU(ii);
-    spv.meanForce();
-    for (int tt = 0; tt < testRepeat; ++tt) spv.performTimestep();
+    spv.writeTriangulation(output1);
+    spv.setDeltaT(err);
+    spv.setv0(0.02);
+    t1=clock();
+    for(int ii = 0; ii < testRepeat; ++ii)
+        {
+        if(ii%100 ==0) printf("timestep %i\n",ii);
+        spv.performTimestep();
+        };
+    t2=clock();
+    float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
+    cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
 
-    spv.computeGeometryCPU();
+    t1=clock();
+    for(int ii = 0; ii < testRepeat; ++ii)
+        {
+        if(ii%100 ==0) printf("timestep %i\n",ii);
+        spv.performTimestep();
+        };
+    t2=clock();
+    steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
+    cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/2./testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
+    spv.writeTriangulation(output2);
 
-    for (int ii = 0; ii < numpts; ++ii) spv.computeSPVForceCPU(ii);
-    spv.meanForce();
-    spv.meanArea();
+
     //spv.computeGeometryCPU();
     //for (int ii = 0; ii < numpts; ++ii) spv.computeSPVForceCPU(ii);
     //spv.meanForce();
-    spv.writeTriangulation(output1);
+    //for (int tt = 0; tt < testRepeat; ++tt) spv.performTimestep();
 
+    //spv.computeGeometryCPU();
+
+    //for (int ii = 0; ii < numpts; ++ii) spv.computeSPVForceCPU(ii);
+    //spv.meanForce();
+    //spv.meanArea();
+    //spv.computeGeometryCPU();
+    //for (int ii = 0; ii < numpts; ++ii) spv.computeSPVForceCPU(ii);
+    //spv.meanForce();
 
 /*
 
@@ -283,15 +306,6 @@ int main(int argc, char*argv[])
 
 //        cout << "triangulation written" << endl; cout.flush();
 
-
-    //play with matrix
-    Matrix2x2 Id;
-    printf("(%f,%f,%f,%f)\n",Id.x11,Id.x12,Id.x21,Id.x22);
-    float2 vv;vv.x=1.0;vv.y=2.0;
-    Id = dyad(vv,vv)*dyad(vv,vv)+3.0*Id;
-    printf("(%f,%f,%f,%f)\n",Id.x11,Id.x12,Id.x21,Id.x22);
-    vv = Id*vv;
-    printf("(%f,%f)\n",vv.x,vv.y);
 
 //    delmd.reportCellList();
 /*

@@ -27,19 +27,32 @@ SPV2D::SPV2D(int n,float A0, float P0)
 
 void SPV2D::Initialize(int n)
     {
+    setModuliUniform(1.0,1.0);
+    setv0(0.05);
     setDeltaT(0.01);
     setDr(1.);
     initialize(n);
     forces.resize(n);
     AreaPeri.resize(n);
     cellDirectors.resize(n);
-    ArrayHandle<float2> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
+    displacements.resize(n);
+    ArrayHandle<float> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
     int randmax = 100000000;
     for (int ii = 0; ii < N; ++ii)
         {
-        float theta = PI/(float)(randmax)* (float)(rand()%randmax);
-        h_cd.data[ii].x = cos(theta);
-        h_cd.data[ii].y = sin(theta);
+        float theta = 2.0*PI/(float)(randmax)* (float)(rand()%randmax);
+        h_cd.data[ii] = theta;
+        };
+    };
+
+void SPV2D::setModuliUniform(float KA, float KP)
+    {
+    Moduli.resize(N);
+    ArrayHandle<float2> h_m(Moduli,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_m.data[ii].x = KA;
+        h_m.data[ii].y = KP;
         };
     };
 
@@ -54,21 +67,67 @@ void SPV2D::setCellPreferencesUniform(float A0, float P0)
         };
     };
 
-void SPV2D::computeSPVForces()
+
+void SPV2D::performTimestep()
     {
+    if(GPUcompute)
+        performTimestepGPU();
+    else
+        performTimestepCPU();
+    };
+
+void SPV2D::calculateDispCPU()
+    {
+    ArrayHandle<float2> h_f(forces,access_location::host,access_mode::read);
+    ArrayHandle<float> h_cd(cellDirectors,access_location::host,access_mode::readwrite);
+    ArrayHandle<float2> h_disp(displacements,access_location::host,access_mode::overwrite);
+
+    random_device rd;
+    mt19937 gen(rd());
+    normal_distribution<> normal(0.0,sqrt(2.0*deltaT*Dr));
+    for (int ii = 0; ii < N; ++ii)
+        {
+        float dx,dy;
+        float directorx = cos(h_cd.data[ii]);
+        float directory = sin(h_cd.data[ii]);
+
+        dx= deltaT*(v0*directorx+h_f.data[ii].x);
+        dy= deltaT*(v0*directory+h_f.data[ii].y);
+        h_disp.data[ii].x = dx;
+        h_disp.data[ii].y = dy;
+
+        //rotate each director a bit
+        h_cd.data[ii] +=normal(gen);
+        };
+
+    //vector of displacements is forces*timestep + v0's*timestep
 
 
     };
 
-void SPV2D::performTimestep()
+void SPV2D::performTimestepCPU()
     {
-    computeSPVForces();
-    //vector of displacements is forces*timestep + v0's*timestep
-    GPUArray<float2> ds; ds.resize(N);
-    repel(ds,1e-3);
+    computeGeometryCPU();
+    for (int ii = 0; ii < N; ++ii)
+        computeSPVForceCPU(ii);
 
-    movePoints(ds);
-    //need to re-write a new movepoints that moves points and rotates cell directors
+    calculateDispCPU();
+
+
+    movePoints(displacements);
+    testAndRepairTriangulation();
+    };
+
+void SPV2D::performTimestepGPU()
+    {
+    computeGeometryCPU();
+    for (int ii = 0; ii < N; ++ii)
+        computeSPVForceCPU(ii);
+
+    calculateDispCPU();
+
+
+    movePoints(displacements);
     testAndRepairTriangulation();
 
     };
@@ -144,6 +203,7 @@ void SPV2D::computeSPVForceCPU(int i)
     ArrayHandle<float2> h_f(forces,access_location::host,access_mode::readwrite);
     ArrayHandle<float2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<float2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<float2> h_moduli(Moduli,access_location::host,access_mode::read);
 
     ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
@@ -279,10 +339,10 @@ void SPV2D::computeSPVForceCPU(int i)
 
             };
 
-        float Akdiff = KA*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
-        float Pkdiff = KP*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
-        float Ajdiff = KA*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].x);
-        float Pjdiff = KP*(h_AP.data[otherNeigh].y - h_APpref.data[otherNeigh].y);
+        float Akdiff = h_moduli.data[baseNeigh].x*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
+        float Pkdiff = h_moduli.data[baseNeigh].y*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
+        float Ajdiff = h_moduli.data[otherNeigh].x*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].x);
+        float Pjdiff = h_moduli.data[otherNeigh].y*(h_AP.data[otherNeigh].y - h_APpref.data[otherNeigh].y);
 
         float2 dEkdv,dAkdv,dPkdv;
         dAkdv.x = 0.5*(vnext.y-vother.y);
@@ -320,16 +380,16 @@ void SPV2D::computeSPVForceCPU(int i)
         dEjdv.y = 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y;
 
         float2 temp = dEidv*dhdri[nn];
-        forceSum.x -= temp.x;
-        forceSum.y -= temp.y;
+        forceSum.x += temp.x;
+        forceSum.y += temp.y;
 
         temp = dEkdv*dhdri[nn];
-        forceSum.x -= temp.x;
-        forceSum.y -= temp.y;
+        forceSum.x += temp.x;
+        forceSum.y += temp.y;
 
         temp = dEjdv*dhdri[nn];
-        forceSum.x -= temp.x;
-        forceSum.y -= temp.y;
+        forceSum.x += temp.x;
+        forceSum.y += temp.y;
 
 //        printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
 
@@ -344,6 +404,11 @@ void SPV2D::computeSPVForceCPU(int i)
 //    printf("total force on cell: (%f,%f)\n",forceSum.x,forceSum.y);
     };
 
+void SPV2D::computeSPVForcesGPU()
+    {
+
+
+    };
 
 
 void SPV2D::meanArea()

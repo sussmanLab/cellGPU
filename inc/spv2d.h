@@ -6,6 +6,7 @@ using namespace std;
 
 #include <stdio.h>
 #include <cmath>
+#include <random>
 #include "cuda_runtime.h"
 #include "vector_types.h"
 #include "vector_functions.h"
@@ -21,12 +22,16 @@ class SPV2D : public DelaunayMD
 //        GPUArray<float2> points;      //vector of particle positions
         float deltaT;
         float Dr;
+        float v0;
 
         GPUArray<float2> AreaPeriPreferences;
         GPUArray<float2> AreaPeri;
+        GPUArray<float2> Moduli;//(KA,KP)
         
-        GPUArray<float2> cellDirectors;
+        GPUArray<float> cellDirectors;
         GPUArray<float2> forces;
+        GPUArray<float2> displacements;
+
 
     public:
         //initialize with random positions in a square box
@@ -39,15 +44,21 @@ class SPV2D : public DelaunayMD
 
         //set and get
         void setDeltaT(float dt){deltaT = dt;};
-        void setDr(float dr){Dr = Dr;};
+        void setv0(float v0new){v0 = v0new;};
+        void setDr(float dr){Dr = dr;};
         void setCellPreferencesUniform(float A0, float P0);
+        void setModuliUniform(float KA, float KP);
 
         //cell-dynamics related functions
-        void computeSPVForces();
         void performTimestep();
+        void performTimestepCPU();
+        void performTimestepGPU();
 
-        void computeSPVForceCPU(int i);
         void computeGeometryCPU();
+        void computeSPVForceCPU(int i);
+        void calculateDispCPU();
+
+        void computeSPVForcesGPU();
 
 
         //testing functions...

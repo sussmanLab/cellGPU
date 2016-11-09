@@ -277,7 +277,7 @@ void DelaunayMD::globalTriangulation(bool verbose)
         if (allneighs[nn].size() > nmax) nmax= allneighs[nn].size();
         h_repair.data[nn]=0;
         };
-    neighMax = nmax;
+    neighMax = nmax+2;
     if(verbose)
         cout << "global new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
     neighs.resize(neighMax*N);
@@ -396,6 +396,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     //overwrite the first fixes elements of allneighs to save on vector costs, or something?
     vector<vector<int> > allneighs(fixes);
     bool resetCCidx = false;
+    int oldnmax = neighMax;
     for (int ii = 0; ii < fixes; ++ii)
         {
         int pidx = fixlist[ii];
@@ -413,7 +414,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     //Also, think about occasionally shrinking the list if it is much too big?
     if(resetCCidx)
         {
-        cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
+        cout << "Resetting the neighbor structure... new Nmax = "<<neighMax <<  " old was " << oldnmax << endl;
         globalTriangulation();
         return;
         };
