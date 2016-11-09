@@ -188,8 +188,8 @@ void SPV2D::computeSPVForceCPU(int i)
         z.x = betaD*rij.x+gammaD*rik.x;
         z.y = betaD*rij.y+gammaD*rik.y;
 
-        dbDdri.x = 2*dot(rij,rik)*rik.x+dot(rik,rik)*rjk.x;
-        dbDdri.y = 2*dot(rij,rik)*rik.y+dot(rik,rik)*rjk.y;
+        dbDdri.x = 2*dot(rij,rjk)*rik.x+dot(rik,rik)*rjk.x;
+        dbDdri.y = 2*dot(rij,rjk)*rik.y+dot(rik,rik)*rjk.y;
 
         dgDdri.x = -2*dot(rik,rjk)*rij.x-dot(rij,rij)*rjk.x;
         dgDdri.y = -2*dot(rik,rjk)*rij.y-dot(rij,rij)*rjk.y;
