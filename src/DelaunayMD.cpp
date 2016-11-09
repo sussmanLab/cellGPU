@@ -81,7 +81,7 @@ void DelaunayMD::initialize(int n)
 
     //set particle number and box
     N = n;
-    float boxsize = sqrt(N);
+    float boxsize = sqrt((float)N);
     Box.setSquare(boxsize,boxsize);
     CPUbox.setSquare(boxsize,boxsize);
 

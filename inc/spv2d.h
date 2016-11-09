@@ -5,18 +5,19 @@
 using namespace std;
 
 #include <stdio.h>
-
+#include <cmath>
 #include "cuda_runtime.h"
 #include "vector_types.h"
 #include "vector_functions.h"
 
+#include "cu_functions.h"
 
 #include "DelaunayMD.h"
 
 class SPV2D : public DelaunayMD
     {
     protected:
-        GPUArray<float2> points;      //vector of particle positions
+//        GPUArray<float2> points;      //vector of particle positions
         float deltaT;
         float Dr;
 
@@ -44,8 +45,15 @@ class SPV2D : public DelaunayMD
         void computeSPVForces();
         void performTimestep();
 
+        void computeSPVForceCPU(int i);
 
+
+        //testing functions...
+        void meanArea();
     };
+
+
+
 
 
 #endif

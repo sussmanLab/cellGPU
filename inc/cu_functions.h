@@ -1,8 +1,13 @@
 #ifndef CUFUNCTIONS_H
 #define CUFUNCTIONS_H
+#ifdef NVCC
+#define HOSTDEVICE __host__ __device__ inline
+#else
+#define HOSTDEVICE inline __attribute__((always_inline))
+#endif
 
 
-__host__ __device__ inline void Circumcenter(float2 x1, float2 x2, float2 x3, float2 &xc)
+HOSTDEVICE void Circumcenter(float2 x1, float2 x2, float2 x3, float2 &xc)
     {
     //Given coordinates (x1,y1),(x2,y2),(x3,y3), feeds the circumcenter to (xc,yc) along with the
     //circumcircle's radius, r.
@@ -103,6 +108,10 @@ __device__ inline int quadrant(dbl x, dbl y)
     return 2;
     };
 
-
+//calculate the area of a triangle with a vertex at the origin
+HOSTDEVICE float TriangleArea(float2 p1, float2 p2)
+    {
+    return abs(0.5*(p1.x*p2.y-p1.y*p2.x));
+    };
 
 #endif

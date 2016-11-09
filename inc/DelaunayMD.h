@@ -25,7 +25,7 @@ class DelaunayMD
         cellListGPU celllist;
         gpubox Box;
         box CPUbox;
-        
+
         DelaunayLoc delLoc;
 
         //neighbor lists
