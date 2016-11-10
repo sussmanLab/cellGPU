@@ -300,6 +300,10 @@ void DelaunayMD::globalTriangulation(bool verbose)
         };
 
     getCircumcenterIndices(true);
+//        char fn[256];
+//        sprintf(fn,"failed2.txt");
+//        ofstream output(fn);
+//        writeTriangulation(output);
 
     if(totaln != 6*N)
         {
@@ -307,10 +311,10 @@ void DelaunayMD::globalTriangulation(bool verbose)
 //        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
 //        for (int ii = 0; ii < N; ++ii)
 //            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
-//        char fn[256];
-//        sprintf(fn,"failed.txt");
-//        ofstream output(fn);
-//        writeTriangulation(output);
+        char fn[256];
+        sprintf(fn,"failed.txt");
+        ofstream output(fn);
+        writeTriangulation(output);
 //        throw std::exception();
         };
 
@@ -538,9 +542,9 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
        if (true) printf("repairing triangulation via %lu\n",NeedsFixing.size());
 
 //       if(NeedsFixing.size()>(N/2))
-  //         globalTriangulation();
-       else
-           repairTriangulation(NeedsFixing);
+           globalTriangulation();
+  //     else
+   //        repairTriangulation(NeedsFixing);
     };
 
 void DelaunayMD::writeTriangulation(ofstream &outfile)

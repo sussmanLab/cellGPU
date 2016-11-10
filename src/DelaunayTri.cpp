@@ -714,6 +714,18 @@ void DelaunayTri::fullPeriodicTriangulation(vector<float> &points, box &Box, vec
             }
         };
 
+    /*
+    float min = 10000000000;
+    float max = -100000000;
+    for (int ii = 0; ii < numpts*2; ++ii)
+        {
+        float val = in.pointlist[ii];
+        if (val < min) min = val;
+        if (val > max) max = val;
+        };
+    printf("triangle working with a point set with (min,max) = (%f,%f)\n",min,max);
+*/
+
     in.pointattributelist = (REAL *) malloc(in.numberofpoints *
             in.numberofpointattributes *
             sizeof(REAL));
@@ -759,7 +771,7 @@ void DelaunayTri::fullPeriodicTriangulation(vector<float> &points, box &Box, vec
 
     
     //FIRST, find al edges in the main sheet or crossing the main sheet's boundary
-    triangulate("zeQ", &in, &mid, &vorout);
+    triangulate("zeiQ", &in, &mid, &vorout);
     for (int ee =0; ee < mid.numberofedges; ++ee)
         {
         int i1, i2;

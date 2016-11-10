@@ -55,6 +55,8 @@ __global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
     float angleDiff = curand_normal(&randState)*sqrt(2.0*dt*Dr);
     d_directors[idx] += angleDiff;
 
+    float dx = dt*(v0*dirx + d_force[idx].x);
+if (idx == 0) printf("x-displacement = %e\n",dx);
     d_points[idx].x += dt*(v0*dirx + d_force[idx].x);
     d_points[idx].y += dt*(v0*diry + d_force[idx].y);
     Box.putInBoxReal(d_points[idx]);

@@ -309,9 +309,9 @@ void cellListGPU::computeGPU(GPUArray<float2> &points)
             ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_assist(assist,access_location::device,access_mode::readwrite);
 
-cudaError_t code = cudaGetLastError();
-if(code!=cudaSuccess)
-    printf("cell list data handles GPUassert: %s \n", cudaGetErrorString(code));
+            cudaError_t code = cudaGetLastError();
+            if(code!=cudaSuccess)
+                printf("cell list data handles GPUassert: %s \n", cudaGetErrorString(code));
 
             //call the gpu function
             gpu_compute_cell_list(d_pt.data,        //particle positions...broken
@@ -360,6 +360,8 @@ if(code2!=cudaSuccess)
         {
         if (h_pt.data[ii].y <= 0) cout <<h_pt.data[ii].y << endl;
         };
+    for (int cc = 0; cc < totalCells; ++cc)
+        cout << cc<<"   "  << h_cell_sizes.data[cc] << "  " << endl;
     cout.flush();
     printf("cell list first comp GPUassert: %s \n", cudaGetErrorString(code2));
     };
