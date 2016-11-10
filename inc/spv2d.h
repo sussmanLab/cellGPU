@@ -34,7 +34,7 @@ class SPV2D : public DelaunayMD
         GPUArray<float2> forces;
         GPUArray<float2> displacements;
 
-        int timestep;
+        int Timestep;
         curandState *devStates;
 
     public:

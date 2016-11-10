@@ -29,7 +29,7 @@ SPV2D::SPV2D(int n,float A0, float P0)
 
 void SPV2D::Initialize(int n)
     {
-    timestep = 0;
+    Timestep = 0;
     setv0(0.05);
     setDeltaT(0.01);
     setDr(1.);
@@ -97,7 +97,7 @@ void SPV2D::setCurandStates(int i)
 
 void SPV2D::performTimestep()
     {
-    timestep += 1;
+    Timestep += 1;
     if(GPUcompute)
         performTimestepGPU();
     else
@@ -117,7 +117,7 @@ void SPV2D::DisplacePointsAndRotate()
                             deltaT,
                             Dr,
                             v0,
-                            timestep,
+                            Timestep,
 //                            devStates,
                             Box);
 
@@ -163,12 +163,12 @@ void SPV2D::performTimestepCPU()
 
 
     movePoints(displacements);
-    testAndRepairTriangulation();
+    testAndRepairTriangulation(true);
     };
 
 void SPV2D::performTimestepGPU()
     {
-    printf("computing geometry for timestep %i\n",timestep);
+    printf("computing geometry for timestep %i\n",Timestep);
     computeGeometryCPU();
     printf("computing forces\n");
     for (int ii = 0; ii < N; ++ii)

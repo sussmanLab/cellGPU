@@ -87,7 +87,7 @@ class DelaunayMD
         void testTriangulation();
         void testTriangulationCPU(); //force CPU-based computation
         void repairTriangulation(vector<int> &fixlist);
-        void testAndRepairTriangulation();
+        void testAndRepairTriangulation(bool verb = false);
 
         //write triangulation to text file
         void writeTriangulation(ofstream &outfile);
