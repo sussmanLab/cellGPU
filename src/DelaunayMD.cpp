@@ -505,7 +505,7 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
     {
     timestep +=1;
 
-    if (true) printf("testing triangulation\n");
+    if (verb) printf("testing triangulation\n");
     if(GPUcompute)
         testTriangulation();
     else
@@ -539,12 +539,12 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
        sort(NeedsFixing.begin(),NeedsFixing.end());
        NeedsFixing.erase(unique(NeedsFixing.begin(),NeedsFixing.end() ),NeedsFixing.end() );
 
-       if (true) printf("repairing triangulation via %lu\n",NeedsFixing.size());
+       if (verb) printf("repairing triangulation via %lu\n",NeedsFixing.size());
 
-//       if(NeedsFixing.size()>(N/2))
-           globalTriangulation();
-  //     else
-   //        repairTriangulation(NeedsFixing);
+   //    if(NeedsFixing.size()>(N/2))
+   //        globalTriangulation();
+   //    else
+           repairTriangulation(NeedsFixing);
     };
 
 void DelaunayMD::writeTriangulation(ofstream &outfile)

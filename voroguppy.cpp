@@ -142,6 +142,19 @@ int main(int argc, char*argv[])
     spv.writeTriangulation(output1);
     spv.setDeltaT(err);
     spv.setv0(v0);
+    
+    t1=clock();
+        spv.computeGeometry();
+    t2=clock();
+    cout << "geometry timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
+    spv.meanArea();
+
+    t1=clock();
+        spv.computeGeometryCPU();
+    t2=clock();
+    cout << "geometryCPU timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
+ //   spv.meanArea();
+
 
     vector<int> cts(numpts);
     for (int ii = 0; ii < numpts; ++ii) cts[ii]=ii;
@@ -149,7 +162,7 @@ int main(int argc, char*argv[])
 
 
 
-    spv.performTimestep();
+//    spv.performTimestep();
     cout << "current q = " << spv.reportq() << endl;
 
     t1=clock();

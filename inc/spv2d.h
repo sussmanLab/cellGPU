@@ -25,6 +25,7 @@ class SPV2D : public DelaunayMD
         float Dr;
         float v0;
 
+        GPUArray<float2> VoronoiPoints;
         GPUArray<float2> AreaPeriPreferences;
         GPUArray<float2> AreaPeri;
         GPUArray<float2> Moduli;//(KA,KP)
@@ -65,6 +66,8 @@ class SPV2D : public DelaunayMD
         void performTimestep();
         void performTimestepCPU();
         void performTimestepGPU();
+
+        void computeGeometry();
 
         void computeGeometryCPU();
         void computeSPVForceCPU(int i);

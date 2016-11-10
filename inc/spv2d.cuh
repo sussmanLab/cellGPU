@@ -28,6 +28,16 @@ bool gpu_displace_and_rotate(
                     gpubox &Box
                     );
 
+bool gpu_compute_geometry(
+                    float2 *d_points,
+                    float2 *d_AP,
+                    float2 *d_voro,
+                    int    *d_nn,
+                    int    *d_n,
+                    int    N,
+                    Index2D &n_idx,
+                    gpubox &Box
+                    );
 
 
 #endif

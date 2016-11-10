@@ -168,21 +168,41 @@ void SPV2D::performTimestepCPU()
 
 void SPV2D::performTimestepGPU()
     {
-    printf("computing geometry for timestep %i\n",Timestep);
+//    printf("computing geometry for timestep %i\n",Timestep);
     computeGeometryCPU();
-    printf("computing forces\n");
+//    printf("computing forces\n");
     for (int ii = 0; ii < N; ++ii)
         computeSPVForceWithTensionsCPU(ii,0.3);
         //computeSPVForceCPU(ii);
 
-    printf("displacing particles\n");
+//    printf("displacing particles\n");
     DisplacePointsAndRotate();
 //    calculateDispCPU();
 
 
 //    movePoints(displacements);
-    printf("recomputing triangulation\n");
+//    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
+
+    };
+
+void SPV2D::computeGeometry()
+    {
+    VoronoiPoints.resize(neighs.getNumElements());
+    ArrayHandle<float2> d_p(points,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
+    ArrayHandle<float2> d_voro(VoronoiPoints,access_location::device,access_mode::overwrite);
+    ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
+    ArrayHandle<int> d_n(neighs,access_location::device,access_mode::read);
+
+    gpu_compute_geometry(
+                        d_p.data,
+                        d_AP.data,
+                        d_voro.data,
+                        d_nn.data,
+                        d_n.data,
+                        N, n_idx,Box);
+
 
     };
 
@@ -220,12 +240,13 @@ void SPV2D::computeGeometryCPU()
             {
             nnextp = h_p.data[ns[nn]];
             Box.minDist(nnextp,pi,rik);
+if(i == 40) printf(" cpu (%f,%f), (%f,%f), (%f,%f)\n",origin.x,origin.y,rij.x,rij.y,rik.x,rik.y);
             Circumcenter(origin,rij,rik,circumcent);
             voro[nn] = circumcent;
             rij=rik;
             };
 
-        float2 vlast,vnext,vother;
+        float2 vlast,vnext;
         //compute Area and perimeter
         float Varea = 0.0;
         float Vperi = 0.0;
@@ -728,6 +749,7 @@ void SPV2D::meanArea()
     float fx = 0.0;
     for (int i = 0; i < N; ++i)
         {
+//        printf("cell %i Area %f\n",i,h_AP.data[i].x);
         fx += h_AP.data[i].x/N;
         };
     printf("Mean area = %f\n" ,fx);
