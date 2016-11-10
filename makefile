@@ -27,7 +27,7 @@ OBJS= obj/voroguppy.o obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/gp
 
 EXT_OBJS = obj/triangle.o
 
-CUOBJS= obj/gpucell.cu.o obj/DelaunayCheckGPU.cu.o obj/DelaunayMD.cu.o
+CUOBJS= obj/gpucell.cu.o obj/DelaunayCheckGPU.cu.o obj/DelaunayMD.cu.o obj/spv2d.cu.o
 
 #for now, just compile triangle separately and copy the .o file to /obj directory
 #TRILIBDEFS = -DTRILIBRARY
@@ -54,7 +54,10 @@ obj/DelaunayMD.cu.o:src/DelaunayMD.cu
 obj/DelaunayMD.o:src/DelaunayMD.cpp obj/DelaunayMD.cu.o $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
-obj/spv2d.o:src/spv2d.cpp obj/DelaunayMD.o
+obj/spv2d.cu.o:src/spv2d.cu
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
+
+obj/spv2d.o:src/spv2d.cpp obj/DelaunayMD.o obj/spv2d.cu.o
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
 obj/DelaunayTri.o:src/DelaunayTri.cpp obj/triangle.o

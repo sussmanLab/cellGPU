@@ -8,6 +8,8 @@ using namespace std;
 #include <cmath>
 #include <random>
 #include "cuda_runtime.h"
+#include "curand.h"
+#include "curand_kernel.h"
 #include "vector_types.h"
 #include "vector_functions.h"
 
@@ -19,7 +21,6 @@ using namespace std;
 class SPV2D : public DelaunayMD
     {
     protected:
-//        GPUArray<float2> points;      //vector of particle positions
         float deltaT;
         float Dr;
         float v0;
@@ -33,8 +34,14 @@ class SPV2D : public DelaunayMD
         GPUArray<float2> forces;
         GPUArray<float2> displacements;
 
+        int timestep;
+        curandState *devStates;
 
     public:
+        ~SPV2D()
+            {
+            cudaFree(devStates);
+            };
         //initialize with random positions in a square box
         SPV2D(int n);
         //additionally set all cells to have uniform target A_0 and P_0 parameters
@@ -52,6 +59,8 @@ class SPV2D : public DelaunayMD
         void setCellType(vector<int> &types);
         void setModuliUniform(float KA, float KP);
 
+        void setCurandStates(int i);
+
         //cell-dynamics related functions
         void performTimestep();
         void performTimestepCPU();
@@ -62,7 +71,13 @@ class SPV2D : public DelaunayMD
         void computeSPVForceWithTensionsCPU(int i,float Gamma);
         void calculateDispCPU();
 
-        
+       
+        void DisplacePointsAndRotate();
+        //still need to write
+        //
+        ////for compute geo GPU...add new voro structure that matches the neighbor list, save voro points?
+        void computeGeometryGPU();
+
         void computeSPVForcesGPU();
 
 
@@ -73,6 +88,8 @@ class SPV2D : public DelaunayMD
         void meanForce();
         void meanArea();
         float reportq();
+
+        float triangletiming, forcetiming;
     };
 
 

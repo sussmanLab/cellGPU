@@ -11,6 +11,7 @@ using namespace std;
 #define PI 3.14159265358979323846
 
 #include "spv2d.h"
+#include "spv2d.cuh"
 
 SPV2D::SPV2D(int n)
     {
@@ -28,6 +29,7 @@ SPV2D::SPV2D(int n,float A0, float P0)
 
 void SPV2D::Initialize(int n)
     {
+    timestep = 0;
     setv0(0.05);
     setDeltaT(0.01);
     setDr(1.);
@@ -37,12 +39,14 @@ void SPV2D::Initialize(int n)
     cellDirectors.resize(n);
     displacements.resize(n);
     ArrayHandle<float> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
+
     int randmax = 100000000;
     for (int ii = 0; ii < N; ++ii)
         {
         float theta = 2.0*PI/(float)(randmax)* (float)(rand()%randmax);
         h_cd.data[ii] = theta;
         };
+    //setCurandStates(n);
     };
 
 void SPV2D::setCellPreferencesUniform(float A0, float P0)
@@ -76,13 +80,47 @@ void SPV2D::setCellType(vector<int> &types)
         };
     };
 
+/*
+void SPV2D::setCurandStates(int i)
+    {
+    gpu_init_curand(devStates,i,N);
+
+    };
+*/
+
+
+
+
+/////////////////
+//Dynamics
+/////////////////
 
 void SPV2D::performTimestep()
     {
+    timestep += 1;
     if(GPUcompute)
         performTimestepGPU();
     else
         performTimestepCPU();
+    };
+
+void SPV2D::DisplacePointsAndRotate()
+    {
+    ArrayHandle<float2> d_p(points,access_location::device,access_mode::readwrite);
+    ArrayHandle<float2> d_f(forces,access_location::device,access_mode::read);
+    ArrayHandle<float> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
+
+    gpu_displace_and_rotate(d_p.data,
+                            d_f.data,
+                            d_cd.data,
+                            N,
+                            deltaT,
+                            Dr,
+                            v0,
+                            timestep,
+//                            devStates,
+                            Box);
+
     };
 
 void SPV2D::calculateDispCPU()
@@ -130,15 +168,20 @@ void SPV2D::performTimestepCPU()
 
 void SPV2D::performTimestepGPU()
     {
+    printf("computing geometry for timestep %i\n",timestep);
     computeGeometryCPU();
+    printf("computing forces\n");
     for (int ii = 0; ii < N; ++ii)
         computeSPVForceWithTensionsCPU(ii,0.3);
         //computeSPVForceCPU(ii);
 
-    calculateDispCPU();
+    printf("displacing particles\n");
+    DisplacePointsAndRotate();
+//    calculateDispCPU();
 
 
-    movePoints(displacements);
+//    movePoints(displacements);
+    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
 
     };

@@ -1,5 +1,5 @@
-#ifndef __DTEST_CU__
-#define __DTEST_CU__
+#ifndef __DMD_CU__
+#define __DMD_CU__
 
 #define NVCC
 #define ENABLE_CUDA

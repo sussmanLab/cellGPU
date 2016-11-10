@@ -100,7 +100,8 @@ int main(int argc, char*argv[])
     int testRepeat = 5;
     double err = 0.1;
     float p0 = 4.0;
-    while((c=getopt(argc,argv,"n:g:m:s:r:b:x:y:z:p:t:e:")) != -1)
+    float v0 = 0.1;
+    while((c=getopt(argc,argv,"n:g:m:s:r:v:b:x:y:z:p:t:e:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
@@ -108,6 +109,7 @@ int main(int argc, char*argv[])
             case 'g': USE_GPU = atoi(optarg); break;
             case 'e': err = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
+            case 'v': v0 = atof(optarg); break;
             case '?':
                     if(optopt=='c')
                         std::cerr<<"Option -" << optopt << "requires an argument.\n";
@@ -137,20 +139,19 @@ int main(int argc, char*argv[])
 
 
     SPV2D spv(numpts,1.0,p0);
+    spv.writeTriangulation(output1);
     spv.setDeltaT(err);
-    spv.setv0(0.02);
-
+    spv.setv0(v0);
 
     vector<int> cts(numpts);
     for (int ii = 0; ii < numpts; ++ii) cts[ii]=ii;
-    spv.setCellType(cts);
+//    spv.setCellType(cts);
 
 
 
     spv.performTimestep();
     cout << "current q = " << spv.reportq() << endl;
 
-    spv.writeTriangulation(output1);
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
