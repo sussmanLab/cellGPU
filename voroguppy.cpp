@@ -99,7 +99,7 @@ int main(int argc, char*argv[])
     int c;
     int testRepeat = 5;
     double err = 0.1;
-
+    float p0 = 4.0;
     while((c=getopt(argc,argv,"n:g:m:s:r:b:x:y:z:p:t:e:")) != -1)
         switch(c)
         {
@@ -107,6 +107,7 @@ int main(int argc, char*argv[])
             case 't': testRepeat = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
             case 'e': err = atof(optarg); break;
+            case 'p': p0 = atof(optarg); break;
             case '?':
                     if(optopt=='c')
                         std::cerr<<"Option -" << optopt << "requires an argument.\n";
@@ -135,13 +136,21 @@ int main(int argc, char*argv[])
 
 
 
-    SPV2D spv(numpts,1.0,4.0);
-
-
-
-    spv.writeTriangulation(output1);
+    SPV2D spv(numpts,1.0,p0);
     spv.setDeltaT(err);
     spv.setv0(0.02);
+
+
+    vector<int> cts(numpts);
+    for (int ii = 0; ii < numpts; ++ii) cts[ii]=ii;
+    spv.setCellType(cts);
+
+
+
+    spv.performTimestep();
+    cout << "current q = " << spv.reportq() << endl;
+
+    spv.writeTriangulation(output1);
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
@@ -151,6 +160,7 @@ int main(int argc, char*argv[])
     t2=clock();
     float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
+    cout << "current q = " << spv.reportq() << endl;
 
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
@@ -161,6 +171,7 @@ int main(int argc, char*argv[])
     t2=clock();
     steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/2./testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
+    cout << "current q = " << spv.reportq() << endl;
     spv.writeTriangulation(output2);
 
 

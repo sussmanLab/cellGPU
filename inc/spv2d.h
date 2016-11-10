@@ -27,6 +27,7 @@ class SPV2D : public DelaunayMD
         GPUArray<float2> AreaPeriPreferences;
         GPUArray<float2> AreaPeri;
         GPUArray<float2> Moduli;//(KA,KP)
+        GPUArray<int> CellType;//(KA,KP)
         
         GPUArray<float> cellDirectors;
         GPUArray<float2> forces;
@@ -47,6 +48,8 @@ class SPV2D : public DelaunayMD
         void setv0(float v0new){v0 = v0new;};
         void setDr(float dr){Dr = dr;};
         void setCellPreferencesUniform(float A0, float P0);
+        void setCellTypeUniform(int i);
+        void setCellType(vector<int> &types);
         void setModuliUniform(float KA, float KP);
 
         //cell-dynamics related functions
@@ -56,14 +59,20 @@ class SPV2D : public DelaunayMD
 
         void computeGeometryCPU();
         void computeSPVForceCPU(int i);
+        void computeSPVForceWithTensionsCPU(int i,float Gamma);
         void calculateDispCPU();
 
+        
         void computeSPVForcesGPU();
+
+
+        //
 
 
         //testing functions...
         void meanForce();
         void meanArea();
+        float reportq();
     };
 
 
