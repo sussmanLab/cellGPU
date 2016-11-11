@@ -32,7 +32,7 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
                                           int *d_nn,
                                           int *d_n,
                                           int N,
-                                          Index2D &n_idx,
+                                          Index2D n_idx,
                                           gpubox Box
                                         )
     {
@@ -45,7 +45,8 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
     origin.x=0.0;origin.y=0.0;
     int neigh = d_nn[idx];
 
-//printf(" id %i neighs %i\n",idx,neigh);
+//printf(" id %i neighs %i\n",idx,  n_idx(neigh-1,idx));
+//    printf("id %i...n_idx(0,idx) %i.... point %i\n",idx,n_idx(0,idx),d_n[n_idx(0,idx)]);
 
     pi = d_points[idx];
     nlastp = d_points[ d_n[n_idx(neigh-1,idx)] ];
@@ -74,7 +75,6 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
         float dx = vlast.x - vnext.x;
         float dy = vlast.y - vnext.y;
         Vperi += sqrt(dx*dx+dy*dy);
-if (idx  == 40 ) printf("(%f,%f)\t\n",vlast.x,vlast.y);
         vlast=vnext;
         };
 

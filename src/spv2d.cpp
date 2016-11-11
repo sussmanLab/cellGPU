@@ -188,7 +188,7 @@ void SPV2D::performTimestepGPU()
 
 void SPV2D::computeGeometry()
     {
-    VoronoiPoints.resize(neighs.getNumElements());
+    VoronoiPoints.resize(n_idx.getNumElements());
     ArrayHandle<float2> d_p(points,access_location::device,access_mode::read);
     ArrayHandle<float2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
     ArrayHandle<float2> d_voro(VoronoiPoints,access_location::device,access_mode::overwrite);
@@ -240,7 +240,6 @@ void SPV2D::computeGeometryCPU()
             {
             nnextp = h_p.data[ns[nn]];
             Box.minDist(nnextp,pi,rik);
-if(i == 40) printf(" cpu (%f,%f), (%f,%f), (%f,%f)\n",origin.x,origin.y,rij.x,rij.y,rik.x,rik.y);
             Circumcenter(origin,rij,rik,circumcent);
             voro[nn] = circumcent;
             rij=rik;

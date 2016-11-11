@@ -144,12 +144,14 @@ int main(int argc, char*argv[])
     spv.setv0(v0);
     
     t1=clock();
+    for (int ii = 0; ii < testRepeat;++ii)
         spv.computeGeometry();
     t2=clock();
     cout << "geometry timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
     spv.meanArea();
 
     t1=clock();
+    for (int ii = 0; ii < testRepeat;++ii)
         spv.computeGeometryCPU();
     t2=clock();
     cout << "geometryCPU timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
