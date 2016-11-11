@@ -41,46 +41,45 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
     if (idx >= N)
         return;
 
-    float2 circumcenter, origin, nnextp, nlastp,pi,rij,rik;
+    float2 circumcenter, origin, nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
     origin.x=0.0;origin.y=0.0;
     int neigh = d_nn[idx];
-
-//printf(" id %i neighs %i\n",idx,  n_idx(neigh-1,idx));
-//    printf("id %i...n_idx(0,idx) %i.... point %i\n",idx,n_idx(0,idx),d_n[n_idx(0,idx)]);
+    float Varea = 0.0;
+    float Vperi= 0.0;
 
     pi = d_points[idx];
     nlastp = d_points[ d_n[n_idx(neigh-1,idx)] ];
+    nnextp = d_points[ d_n[n_idx(0,idx)] ];
     Box.minDist(nlastp,pi,rij);
-//printf("if %i , (%f,%f), (%f,%f), (%f,%f)\n",idx,pi.x,pi.y,nlastp.x,nlastp.y,rij.x,rij.y);
-    for (int nn = 0; nn < neigh; ++nn)
+    Box.minDist(nnextp,pi,rik);
+    Circumcenter(origin,rij,rik,circumcenter);
+    vfirst = circumcenter;
+    vlast = circumcenter;
+    d_voro[n_idx(0,idx)] = vlast;
+
+    for (int nn = 1; nn < neigh; ++nn)
         {
+        rij = rik;
         int nid = d_n[n_idx(nn,idx)];
         nnextp = d_points[ nid ];
         Box.minDist(nnextp,pi,rik);
-//printf("%i %i  gpu (%f,%f), (%f,%f), (%f,%f)\n",nn,nid,origin.x,origin.y,rij.x,rij.y,rik.x,rik.y);
         Circumcenter(origin,rij,rik,circumcenter);
+        vnext = circumcenter;
         d_voro[n_idx(nn,idx)] = circumcenter;
-        rij=rik;
-        };
 
-    //think about how to incorporate this into the loop above
-    float Varea = 0.0;
-    float Vperi= 0.0;
-    float2 vlast,vnext;
-    vlast = d_voro[n_idx(neigh-1,idx)];
-    for (int nn = 0; nn < neigh; ++nn)
-        {
-        vnext = d_voro[n_idx(nn,idx)];
         Varea += TriangleArea(vlast,vnext);
         float dx = vlast.x - vnext.x;
         float dy = vlast.y - vnext.y;
         Vperi += sqrt(dx*dx+dy*dy);
         vlast=vnext;
         };
+    Varea += TriangleArea(vlast,vfirst);
+    float dx = vlast.x - vfirst.x;
+    float dy = vlast.y - vfirst.y;
+    Vperi += sqrt(dx*dx+dy*dy);
 
     d_AP[idx].x=Varea;
     d_AP[idx].y=Vperi;
-//printf("last voro: (%f,%f); area,peri (%f,%f)\t\n",vnext.x,vnext.y,Varea,Vperi);
 
     return;
     };
