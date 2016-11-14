@@ -177,7 +177,8 @@ void SPV2D::performTimestepCPU()
 void SPV2D::performTimestepGPU()
     {
 //    printf("computing geometry for timestep %i\n",Timestep);
-    computeGeometry();
+    computeGeometryCPU();
+    //computeGeometry();
 //    printf("computing forces\n");
     for (int ii = 0; ii < N; ++ii)
         {

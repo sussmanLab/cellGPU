@@ -194,8 +194,8 @@ void DelaunayMD::fullTriangulation()
     for(int nn = 0; nn < N; ++nn)
         {
         vector<int> neighTemp;
-        delLoc.getNeighborsTri(nn,neighTemp);
-//        delLoc.getNeighbors(nn,neighTemp);
+//        delLoc.getNeighborsTri(nn,neighTemp);
+        delLoc.getNeighbors(nn,neighTemp);
         allneighs[nn]=neighTemp;
         neighnum.data[nn] = neighTemp.size();
         totaln += neighTemp.size();
@@ -254,12 +254,12 @@ void DelaunayMD::globalTriangulation(bool verbose)
         cout << "Resetting complete triangulation globally" << endl;
 
     //get neighbors of each cell in CW order from the Triangle interface
-    vector<double> psnew(2*N);
+    vector<float> psnew(2*N);
     ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
     for (int ii = 0; ii < N; ++ii)
         {
-        psnew[2*ii] = (double) h_points.data[ii].x;
-        psnew[2*ii+1]=(double) h_points.data[ii].y;
+        psnew[2*ii] =  h_points.data[ii].x;
+        psnew[2*ii+1]= h_points.data[ii].y;
         };
     vector< vector<int> > allneighs(N);
     DelaunayTri delTri;

@@ -160,13 +160,13 @@ int main(int argc, char*argv[])
         spv.computeSPVForceCPU(ii);
         };
     spv.reportForces();
-*/
+
     for(int ii = 0; ii < 100; ++ii)
         {
-        spv.performTimestep();
+    //    spv.performTimestep();
         };
 //    cout << "current q = " << spv.reportq() << endl;
-
+*/
     spv.writeTriangulation(output1);
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setDeltaT(err);
@@ -197,19 +197,13 @@ int main(int argc, char*argv[])
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
-    if(true)
-        {
-//        ArrayHandle<float2> h_p(spv.points,access_location::host,access_mode::read);
-       // ArrayHandle<float2> h_f(spv.forces,access_location::host,access_mode::read);
-       // printf("position (%f\t%f)   force (%f,%f)\n",h_p.data[3671].x,h_p.data[3671].y,h_f.data[3671].x,h_f.data[3671].y);
-        };
-        vector<int> nes;
+//        vector<int> nes;
 //        spv.delLoc.getNeighborsTri(602,nes);
 //        for (int jj = 0; jj < nes.size(); ++jj) printf("%i\t",nes[jj]);
 //        printf("\n");
         spv.performTimestep();
 
-        if(ii%500 ==0)
+        if(ii%100 ==0)
 //if(true)
             {
             spv.writeTriangulation(output2);

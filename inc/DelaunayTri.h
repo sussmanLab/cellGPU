@@ -36,7 +36,7 @@ class DelaunayTri
         void getNeighbors(vector<float> &points,int idx, vector<int> &neighs);
         void getNeighbors(vector<pt> &points,int idx, vector<int> &neighs);
 
-        void fullPeriodicTriangulation(vector<double> &points, box &Box,vector<vector <int> > &allneighs);
+        void fullPeriodicTriangulation(vector<float> &points, box &Box,vector<vector <int> > &allneighs);
 
         //simple unit test
         void testDel(int numpts,int tmax,bool verbose);
