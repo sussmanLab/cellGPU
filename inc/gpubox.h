@@ -112,15 +112,13 @@ void gpubox::putInBox(float2 &vp)
     while(vp.x < 0) vp.x +=1.0;
     while(vp.y < 0) vp.y +=1.0;
 
-    while(fabs(vp.x)>=1.0)
+    while(vp.x>=1.0)
         {
-        float sgn = (vp.x > 0) - (vp.x < 0);
-        vp.x = vp.x - sgn;
+        vp.x -= 1.0;
         };
-    while(fabs(vp.y)>=1.)
+    while(vp.y>=1.)
         {
-        float sgn = (vp.y > 0) - (vp.y < 0);
-        vp.y = vp.y - sgn;
+        vp.y -= 1.;
         };
     };
 

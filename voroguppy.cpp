@@ -182,7 +182,7 @@ int main(int argc, char*argv[])
         else
             cts[ii]=1;
         };
-//      spv.setCellType(cts);
+      spv.setCellType(cts);
 /*
     if(true)
         {
