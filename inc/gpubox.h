@@ -109,8 +109,8 @@ void gpubox::putInBoxReal(float2 &p1)
 
 void gpubox::putInBox(float2 &vp)
     {//acts on points in the virtual space
-    if(vp.x < 0) vp.x +=1.0;
-    if(vp.y < 0) vp.y +=1.0;
+    while(vp.x < 0) vp.x +=1.0;
+    while(vp.y < 0) vp.y +=1.0;
 
     while(fabs(vp.x)>=1.0)
         {

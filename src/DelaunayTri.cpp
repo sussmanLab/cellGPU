@@ -48,10 +48,13 @@ void DelaunayTri::getNeighbors(vector<pt> &points,int idx, vector<int> &neighs)
     in.numberofpoints = numpts;
     in.numberofpointattributes = 1;
     in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
+    int rm = 10000000;
     for (int ii = 0; ii < points.size(); ++ii)
         {
-        in.pointlist[2*ii]=points[ii].x;
-        in.pointlist[2*ii+1]=points[ii].y;
+        in.pointlist[2*ii]=(double) points[ii].x;
+        in.pointlist[2*ii+1]=(double) points[ii].y;
+//        in.pointlist[2*ii]=(double) points[ii].x + 1e-5*(rm*(dbl)(rand()%rm-0.5));
+  //      in.pointlist[2*ii+1]=(double) points[ii].y+ 1e-5*(rm*(dbl)(rand()%rm-0.5));
         };
 
     in.pointattributelist = (REAL *) malloc(in.numberofpoints *
@@ -107,7 +110,7 @@ void DelaunayTri::getNeighbors(vector<pt> &points,int idx, vector<int> &neighs)
 //    triangulate("pczAevnQ", &in, &mid, &vorout);
 //
 //  Here, get edges, quietly, and number from zero. incremental?
-    triangulate("zeQ", &in, &mid, &vorout);
+    triangulate("zeFQ", &in, &mid, &vorout);
 
 //    printf("%i points\n",mid.numberofpoints);
 //    printf("finding edges of point %i\n",idx);
@@ -682,7 +685,7 @@ void DelaunayTri::getTriangulation9()
 
 
 
-void DelaunayTri::fullPeriodicTriangulation(vector<float> &points, box &Box, vector< vector< int> > &allneighs)
+void DelaunayTri::fullPeriodicTriangulation(vector<double> &points, box &Box, vector< vector< int> > &allneighs)
     {
     struct triangulateio in, mid, out, vorout;
 

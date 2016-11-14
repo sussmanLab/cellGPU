@@ -15,7 +15,6 @@ using namespace std;
 class DelaunayMD
     {
     protected:
-        GPUArray<float2> points;      //vector of particle positions
 
         std::vector<pt> pts;          //vector of points to triangulate
         int N;                       //number of vertices
@@ -45,6 +44,7 @@ class DelaunayMD
         int timestep;
 
     public:
+        GPUArray<float2> points;      //vector of particle positions
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
         float repPerFrame;
         int GlobalFixes;

@@ -154,6 +154,7 @@ void SPV2D::calculateDispCPU()
 
 void SPV2D::performTimestepCPU()
     {
+    printf("On CPU branch \n");
     computeGeometryCPU();
     for (int ii = 0; ii < N; ++ii)
         computeSPVForceWithTensionsCPU(ii,0.3);
@@ -169,18 +170,18 @@ void SPV2D::performTimestepCPU()
 void SPV2D::performTimestepGPU()
     {
 //    printf("computing geometry for timestep %i\n",Timestep);
-    computeGeometryCPU();
+    computeGeometry();
 //    printf("computing forces\n");
     for (int ii = 0; ii < N; ++ii)
-        computeSPVForceWithTensionsCPU(ii,0.3);
+        {
         //computeSPVForceCPU(ii);
+        computeSPVForceWithTensionsCPU(ii,0.2);
+        };
 
-//    printf("displacing particles\n");
+ //   printf("displacing particles\n");
     DisplacePointsAndRotate();
-//    calculateDispCPU();
 
 
-//    movePoints(displacements);
 //    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
 

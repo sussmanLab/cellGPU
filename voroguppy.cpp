@@ -122,10 +122,15 @@ int main(int argc, char*argv[])
                        abort();
         };
     clock_t t1,t2;
+    char fname[256];
+    char fname0[256];
     char fname1[256];
     char fname2[256];
+    sprintf(fname0,"DT0.txt");
     sprintf(fname1,"DT1.txt");
     sprintf(fname2,"DT2.txt");
+    ofstream output0(fname0);
+    output0.precision(8);
     ofstream output1(fname1);
     output1.precision(8);
     ofstream output2(fname2);
@@ -138,46 +143,67 @@ int main(int argc, char*argv[])
 
 
 
-    SPV2D spv(numpts,1.0,p0);
+    SPV2D spv(numpts,1.0,4.0);
+    spv.writeTriangulation(output0);
+
+
+    for(int ii = 0; ii < 100; ++ii)
+        {
+        spv.performTimestep();
+        };
+//    cout << "current q = " << spv.reportq() << endl;
+
     spv.writeTriangulation(output1);
+    spv.setCellPreferencesUniform(1.0,p0);
     spv.setDeltaT(err);
     spv.setv0(v0);
-    
-    t1=clock();
-    for (int ii = 0; ii < testRepeat;++ii)
-        spv.computeGeometry();
-    t2=clock();
-    cout << "geometry timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
-    spv.meanArea();
 
-    t1=clock();
-    for (int ii = 0; ii < testRepeat;++ii)
-        spv.computeGeometryCPU();
-    t2=clock();
-    cout << "geometryCPU timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
- //   spv.meanArea();
 
 
     vector<int> cts(numpts);
-    for (int ii = 0; ii < numpts; ++ii) cts[ii]=ii;
-//    spv.setCellType(cts);
-
-
+    for (int ii = 0; ii < numpts; ++ii) 
+        {
+        if(ii < numpts/2)
+            cts[ii]=0;
+        else
+            cts[ii]=1;
+        };
+      spv.setCellType(cts);
+/*
+    if(true)
+        {
+        ArrayHandle<float2> h_p(spv.points,access_location::host,access_mode::read);
+        for (int ii = 0; ii < numpts; ++ii)
+            printf("(%f\t%f)\n",h_p.data[ii].x,h_p.data[ii].y);
+        };
+*/
 
 //    spv.performTimestep();
-    cout << "current q = " << spv.reportq() << endl;
 
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
-        if(ii%100 ==0) printf("timestep %i\n",ii);
         spv.performTimestep();
+
+        if(ii%100 ==0)
+            {
+            spv.writeTriangulation(output2);
+            printf("timestep %i\n",ii);
+            char fn[256];
+            sprintf(fn,"/hdd2/data/spv/bidisperse/DTg2%i.txt",ii);
+            ofstream outputc(fn);
+            output1.precision(8);
+            spv.writeTriangulation(outputc);
+            };
         };
     t2=clock();
     float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
     cout << "current q = " << spv.reportq() << endl;
 
+
+
+/*
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
@@ -188,8 +214,8 @@ int main(int argc, char*argv[])
     steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/2./testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
     cout << "current q = " << spv.reportq() << endl;
+*/
     spv.writeTriangulation(output2);
-
 
     //spv.computeGeometryCPU();
     //for (int ii = 0; ii < numpts; ++ii) spv.computeSPVForceCPU(ii);
@@ -205,6 +231,20 @@ int main(int argc, char*argv[])
     //for (int ii = 0; ii < numpts; ++ii) spv.computeSPVForceCPU(ii);
     //spv.meanForce();
 
+    /*
+    t1=clock();
+    for (int ii = 0; ii < testRepeat;++ii)
+        spv.computeGeometry();
+    t2=clock();
+    cout << "geometry timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
+    spv.meanArea();
+
+    t1=clock();
+    for (int ii = 0; ii < testRepeat;++ii)
+        spv.computeGeometryCPU();
+    t2=clock();
+    cout << "geometryCPU timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
+    */
 /*
 
 
@@ -272,8 +312,8 @@ int main(int argc, char*argv[])
 //    delmd.testAndRepairTriangulation();
     delmd.writeTriangulation(output1);
     if(numpts < 600) delmd.setCPU();
-   
     GPUArray<float2> ds,ps;
+   
     ds.resize(numpts);
     t1=clock();
     for (int tt = 0; tt < testRepeat; ++tt)
@@ -284,73 +324,7 @@ int main(int argc, char*argv[])
             //delmd.fullTriangulation();
             };
         if(tt%2 == 0)
-            delmd.repel(ds,err);
-        else
-            rnddisp(ds,numpts,err);
-        delmd.movePoints(ds);
-        delmd.testAndRepairTriangulation();
-
-        };
-    t2=clock();
-    float movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
-    cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << delmd.GlobalFixes << " calls to the global triangulation routine." << endl;
-//    delmd.fullTriangulation();
-
-    t1=clock();
-    for (int tt = 0; tt < testRepeat; ++tt)
-        {
-        if (tt % 1000 ==0) 
-            {
-            cout << "Starting loop " <<tt << endl;
-            //delmd.fullTriangulation();
-            };
-        if(tt%2 == 0)
-            delmd.repel(ds,err);
-        else
-            rnddisp(ds,numpts,err);
-        delmd.movePoints(ds);
-        delmd.testAndRepairTriangulation();
-
-        };
-    t2=clock();
-    movetime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
-    cout << "synthetic data time ~ " << movetime << " per frame; " << delmd.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << delmd.GlobalFixes << " calls to the global triangulation routine." << endl;
-
-
-    delmd.writeTriangulation(output2);
-
-    */
-
-
-
-/*
-        rnddisp(ds,numpts,err);
-        cout << "displacements generated " << endl; cout.flush();
-        delmd.movePoints(ds);
-        cout << "points moved" << endl; cout.flush();
-        delmd.testAndRepairTriangulation();
-        cout << "triangulation repaired" << endl; cout.flush();
-*/
-
-
-
-//        cout << "triangulation written" << endl; cout.flush();
-
-
-//    delmd.reportCellList();
-/*
-    float boxa = sqrt(numpts)+1.0;
-
-    box Bx(boxa,boxa);
-    gpubox BxGPU(boxa,boxa);
-    dbl bx,bxx,by,byy;
-    Bx.getBoxDims(bx,bxx,byy,by);
-    cout << "Box:" << bx << " " <<bxx << " " <<byy<< " "<< by << endl;
-
-
-    vector<float> ps2(2*numpts);
-    dbl maxx = 0.0;
-    int randmax = 1000000;
+            delmd.randmax = 1000000;
     for (int i=0;i<numpts;++i)
         {
         float x =EPSILON+boxa/(dbl)randmax* (dbl)(rand()%randmax);

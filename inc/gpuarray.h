@@ -555,7 +555,7 @@ template<class T> T* GPUArray<T>::acquire(const access_location::Enum location, 
                 m_data_location = data_location::host;
             else
                 {
-                throw std::runtime_error("Error acquiring data");
+                throw std::runtime_error("Error acquiring data3");
                 }
 
             return h_data;
@@ -585,7 +585,7 @@ template<class T> T* GPUArray<T>::acquire(const access_location::Enum location, 
                 }
             else
                 {
-                throw std::runtime_error("Error acquiring data");
+                throw std::runtime_error("Error acquiring data2");
                 }
 
             return h_data;
@@ -593,7 +593,7 @@ template<class T> T* GPUArray<T>::acquire(const access_location::Enum location, 
 #endif
         else
             {
-            throw std::runtime_error("Error acquiring data");
+            throw std::runtime_error("Error acquiring data1");
             return NULL;
             }
         }

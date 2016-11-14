@@ -194,7 +194,8 @@ void DelaunayMD::fullTriangulation()
     for(int nn = 0; nn < N; ++nn)
         {
         vector<int> neighTemp;
-        delLoc.getNeighborsTri(nn,neighTemp);
+//        delLoc.getNeighborsTri(nn,neighTemp);
+        delLoc.getNeighbors(nn,neighTemp);
         allneighs[nn]=neighTemp;
         neighnum.data[nn] = neighTemp.size();
         totaln += neighTemp.size();
@@ -253,12 +254,12 @@ void DelaunayMD::globalTriangulation(bool verbose)
         cout << "Resetting complete triangulation globally" << endl;
 
     //get neighbors of each cell in CW order from the Triangle interface
-    vector<float> psnew(2*N);
+    vector<double> psnew(2*N);
     ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
     for (int ii = 0; ii < N; ++ii)
         {
-        psnew[2*ii] = h_points.data[ii].x;
-        psnew[2*ii+1]=h_points.data[ii].y;
+        psnew[2*ii] = (double) h_points.data[ii].x;
+        psnew[2*ii+1]=(double) h_points.data[ii].y;
         };
     vector< vector<int> > allneighs(N);
     DelaunayTri delTri;
@@ -399,6 +400,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     //(if neighMax changes)
     //
     //overwrite the first fixes elements of allneighs to save on vector costs, or something?
+//cout << "getting neighbors of points to fix..." << endl;
     vector<vector<int> > allneighs(fixes);
     bool resetCCidx = false;
     for (int ii = 0; ii < fixes; ++ii)
@@ -439,7 +441,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
             };
 //        cout << endl;
         };
-
+//cout << "about to get cc indices" << endl; cout.flush();
     getCircumcenterIndices();
     };
 
@@ -504,7 +506,7 @@ void DelaunayMD::testTriangulationCPU()
 void DelaunayMD::testAndRepairTriangulation(bool verb)
     {
     timestep +=1;
-
+//verb = true;
     if (verb) printf("testing triangulation\n");
     if(GPUcompute)
         testTriangulation();
@@ -556,6 +558,7 @@ void DelaunayMD::writeTriangulation(ofstream &outfile)
     outfile << N <<endl;
     for (int ii = 0; ii < N ; ++ii)
         outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
+ /*
     for (int ii = 0; ii < 2*N; ++ii)
         outfile << cc.data[3*ii] <<"\t" <<cc.data[3*ii+1]<<"\t"<<cc.data[3*ii+2]<<endl;
     for (int ii = 0; ii < N; ++ii)
@@ -568,6 +571,7 @@ void DelaunayMD::writeTriangulation(ofstream &outfile)
             };
         outfile << endl;
         };
+    */
     };
 
 void DelaunayMD::repel(GPUArray<float2> &disp,float eps)
