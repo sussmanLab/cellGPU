@@ -76,12 +76,16 @@ void DelaunayLoc::initialize(dbl csize)
     clist.setCellSize(cellsize);
     clist.setPoints(pts);
     clist.setBox(Box);
+//    cout << "box set" << endl; cout.flush();
     dbl bx,bxx,by,byy;
 
     Box.getBoxDims(bx,bxx,byy,by);
 
+//    cout << " idx 3671: " <<pts[3671].x<<"   " << pts[3671].y << endl;
     clist.initialize();
+//    cout << " initialized cells" << endl; cout.flush();
     clist.construct();
+//    cout << " list constructed" << endl; cout.flush();
     };
 
 void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<pt> &P1)

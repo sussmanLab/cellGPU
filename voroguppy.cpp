@@ -100,8 +100,9 @@ int main(int argc, char*argv[])
     int testRepeat = 5;
     double err = 0.1;
     float p0 = 4.0;
+    float a0 = 1.0;
     float v0 = 0.1;
-    while((c=getopt(argc,argv,"n:g:m:s:r:v:b:x:y:z:p:t:e:")) != -1)
+    while((c=getopt(argc,argv,"n:g:m:s:r:a:v:b:x:y:z:p:t:e:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
@@ -109,6 +110,7 @@ int main(int argc, char*argv[])
             case 'g': USE_GPU = atoi(optarg); break;
             case 'e': err = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
+            case 'a': a0 = atof(optarg); break;
             case 'v': v0 = atof(optarg); break;
             case '?':
                     if(optopt=='c')
@@ -143,10 +145,22 @@ int main(int argc, char*argv[])
 
 
 
-    SPV2D spv(numpts,1.0,4.0);
+    SPV2D spv(numpts,1.0,p0);
     spv.writeTriangulation(output0);
-
-
+/*
+    char fn[256];
+    sprintf(fn,"/hdd2/repos/test.txt");
+    ifstream input(fn);
+    spv.readTriangulation(input);
+    spv.globalTriangulation();
+    spv.setCellPreferencesUniform(a0,p0);
+    spv.computeGeometry();
+    for (int ii = 0; ii < numpts; ++ii)
+        {
+        spv.computeSPVForceCPU(ii);
+        };
+    spv.reportForces();
+*/
     for(int ii = 0; ii < 100; ++ii)
         {
         spv.performTimestep();
@@ -168,7 +182,7 @@ int main(int argc, char*argv[])
         else
             cts[ii]=1;
         };
-      spv.setCellType(cts);
+//      spv.setCellType(cts);
 /*
     if(true)
         {
@@ -183,9 +197,20 @@ int main(int argc, char*argv[])
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
+    if(true)
+        {
+//        ArrayHandle<float2> h_p(spv.points,access_location::host,access_mode::read);
+       // ArrayHandle<float2> h_f(spv.forces,access_location::host,access_mode::read);
+       // printf("position (%f\t%f)   force (%f,%f)\n",h_p.data[3671].x,h_p.data[3671].y,h_f.data[3671].x,h_f.data[3671].y);
+        };
+        vector<int> nes;
+//        spv.delLoc.getNeighborsTri(602,nes);
+//        for (int jj = 0; jj < nes.size(); ++jj) printf("%i\t",nes[jj]);
+//        printf("\n");
         spv.performTimestep();
 
-        if(ii%100 ==0)
+        if(ii%500 ==0)
+//if(true)
             {
             spv.writeTriangulation(output2);
             printf("timestep %i\n",ii);

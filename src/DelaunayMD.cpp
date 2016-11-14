@@ -194,8 +194,8 @@ void DelaunayMD::fullTriangulation()
     for(int nn = 0; nn < N; ++nn)
         {
         vector<int> neighTemp;
-//        delLoc.getNeighborsTri(nn,neighTemp);
-        delLoc.getNeighbors(nn,neighTemp);
+        delLoc.getNeighborsTri(nn,neighTemp);
+//        delLoc.getNeighbors(nn,neighTemp);
         allneighs[nn]=neighTemp;
         neighnum.data[nn] = neighTemp.size();
         totaln += neighTemp.size();
@@ -547,6 +547,39 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
    //        globalTriangulation();
    //    else
            repairTriangulation(NeedsFixing);
+    };
+void DelaunayMD::readTriangulation(ifstream &infile)
+    {
+    string line;
+    getline(infile,line);
+    stringstream convert(line);
+    int nn;
+    convert >> nn;
+    cout << "Reading in " << nn << "points" << endl;
+    int idx = 0;
+    int ii = 0;
+    ArrayHandle<float2> p(points,access_location::host,access_mode::overwrite);
+    while(getline(infile,line))
+        {
+        float val = stof(line);
+        if (idx == 0)
+            {
+            p.data[ii].x=val;
+            idx +=1;
+            }
+        else
+            {
+            p.data[ii].y=val;
+            Box.putInBoxReal(p.data[ii]);
+            idx = 0;
+            ii += 1;
+            };
+        };
+//    ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+//    outfile << N <<endl;
+//    for (int ii = 0; ii < N ; ++ii)
+//        outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
+
     };
 
 void DelaunayMD::writeTriangulation(ofstream &outfile)

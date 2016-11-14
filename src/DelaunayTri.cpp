@@ -110,7 +110,7 @@ void DelaunayTri::getNeighbors(vector<pt> &points,int idx, vector<int> &neighs)
 //    triangulate("pczAevnQ", &in, &mid, &vorout);
 //
 //  Here, get edges, quietly, and number from zero. incremental?
-    triangulate("zeFQ", &in, &mid, &vorout);
+    triangulate("zeQ", &in, &mid, &vorout);
 
 //    printf("%i points\n",mid.numberofpoints);
 //    printf("finding edges of point %i\n",idx);

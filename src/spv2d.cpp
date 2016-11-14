@@ -106,6 +106,13 @@ void SPV2D::performTimestep()
 
 void SPV2D::DisplacePointsAndRotate()
     {
+    if (true)
+    {
+    ArrayHandle<float2> d_p(points,access_location::host,access_mode::read);
+    ArrayHandle<float2> d_f(forces,access_location::host,access_mode::read);
+//    printf ("(%f,%f)\t (%f,%f)\n", d_p.data[3671].x,d_p.data[3671].y,d_f.data[3671].x,d_f.data[3671].y);
+    };
+
     ArrayHandle<float2> d_p(points,access_location::device,access_mode::readwrite);
     ArrayHandle<float2> d_f(forces,access_location::device,access_mode::read);
     ArrayHandle<float> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
@@ -178,7 +185,7 @@ void SPV2D::performTimestepGPU()
         computeSPVForceWithTensionsCPU(ii,0.2);
         };
 
- //   printf("displacing particles\n");
+//    printf("displacing particles\n");
     DisplacePointsAndRotate();
 
 
@@ -319,6 +326,7 @@ void SPV2D::computeSPVForceCPU(int i)
         float cp = rij.x*rjk.y - rij.y*rjk.x;
         float D = 2*cp*cp;
 
+
         z.x = betaD*rij.x+gammaD*rik.x;
         z.y = betaD*rij.y+gammaD*rik.y;
 
@@ -392,6 +400,11 @@ void SPV2D::computeSPVForceCPU(int i)
             {
             int testPoint = h_n.data[n_idx(n2,baseNeigh)];
             if(testPoint == otherNeigh) DT_other_idx = h_n.data[n_idx((n2+1)%neigh2,baseNeigh)];
+            };
+        if(DT_other_idx == otherNeigh || DT_other_idx == baseNeigh)
+            {
+            printf("Triangulation problem \n");
+            throw std::exception();
             };
         float2 nl1 = h_p.data[otherNeigh];
         float2 nn1 = h_p.data[baseNeigh];
@@ -502,7 +515,8 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
     for (int nn = 0; nn < neigh; ++nn)
         {
         ns[nn]=h_n.data[n_idx(nn,i)];
-   //     printf("%i - ",ns[nn]);
+//        if (i == 602)
+//            printf("%i - ",ns[nn]);
         };
 
     //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
@@ -532,6 +546,7 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
         float gammaD = dot(rij,rij)*dot(rik,rjk);
         float cp = rij.x*rjk.y - rij.y*rjk.x;
         float D = 2*cp*cp;
+
 
         z.x = betaD*rij.x+gammaD*rik.x;
         z.y = betaD*rij.y+gammaD*rik.y;
@@ -592,7 +607,26 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
         dnext.x = vcur.x-vnext.x;
         dnext.y = vcur.y-vnext.y;
         float dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-
+/*
+        if(dnnorm < 1e-5)
+            {
+            printf("dn problem idx %i neighbor %i out of %i \n",i,nn,neigh);
+            printf("(%f,%f) \t (%f,%f)\n\n\n",vcur.x,vcur.y,vnext.x,vnext.y);
+            for(int nnn=0; nnn < neigh; ++nnn)
+                {
+                printf("%i (%f,%f)\t (%f,%f) \n",ns[nnn],voro[nnn].x,voro[nnn].y,h_p.data[ns[nnn]].x,h_p.data[ns[nnn]].y);
+                };
+            };
+        if(dlnorm < 1e-5)
+            {
+            printf("dl problem %i \n",i);
+            printf("(%f,%f) \t (%f,%f)\n\n\n",vlast.x,vlast.y,vcur.x,vcur.y);
+            for(int nnn=0; nnn < neigh; ++nnn)
+                {
+                printf("%i (%f,%f)\t (%f,%f) \n",ns[nnn],voro[nnn].x,voro[nnn].y,h_p.data[ns[nnn]].x,h_p.data[ns[nnn]].y);
+                };
+            };
+*/
         dPidv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
@@ -625,21 +659,12 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
         float2 nn1 = h_p.data[baseNeigh];
         float2 no1 = h_p.data[DT_other_idx];
 
-
         float2 r1,r2,r3;
         Box.minDist(nl1,pi,r1);
         Box.minDist(nn1,pi,r2);
         Box.minDist(no1,pi,r3);
 
         Circumcenter(r1,r2,r3,vother);
-        if(vother.x*vother.x+vother.y*vother.y > 10)
-//        if(true)
-            {
-//        printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
-//            printf("Big voro_other:\n");
-//            printf("(%f,%f), (%f,%f), (%f,%f)\n",r1.x,r1.y,r2.x,r2.y,r3.x,r3.y);
-
-            };
 
         float Akdiff = KA*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
         float Pkdiff = KP*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
@@ -756,6 +781,22 @@ void SPV2D::meanArea()
 
     };
 
+
+void SPV2D::reportForces()
+    {
+    ArrayHandle<float2> h_f(forces,access_location::host,access_mode::read);
+    ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+    float fx = 0.0;
+    float fy = 0.0;
+    for (int i = 0; i < N; ++i)
+        {
+        fx += h_f.data[i].x;
+        fy += h_f.data[i].y;
+        printf("cell %i: \t position (%f,%f)\t force (%f, %f)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
+
+        };
+
+    };
 
 void SPV2D::meanForce()
     {

@@ -13,7 +13,7 @@ HOSTDEVICE void Circumcenter(float2 x1, float2 x2, float2 x3, float2 &xc)
     //circumcircle's radius, r.
     //returns false if all three points are on a vertical line
     if(abs(x2.y-x1.y) < EPSILON && abs(x2.y-x3.y) < EPSILON) return;
-    dbl m1,m2,mx1,my1,mx2,my2;
+    double m1,m2,mx1,my1,mx2,my2;
 
     if(abs(x2.y-x1.y) < EPSILON)
         {

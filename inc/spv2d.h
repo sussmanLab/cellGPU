@@ -32,13 +32,14 @@ class SPV2D : public DelaunayMD
         GPUArray<int> CellType;//(KA,KP)
         
         GPUArray<float> cellDirectors;
-        GPUArray<float2> forces;
         GPUArray<float2> displacements;
 
         int Timestep;
         curandState *devStates;
 
     public:
+        GPUArray<float2> forces;
+
         ~SPV2D()
             {
             cudaFree(devStates);
@@ -88,6 +89,7 @@ class SPV2D : public DelaunayMD
 
 
         //testing functions...
+        void reportForces();
         void meanForce();
         void meanArea();
         float reportq();

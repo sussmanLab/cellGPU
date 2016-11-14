@@ -25,7 +25,6 @@ class DelaunayMD
         gpubox Box;
         box CPUbox;
 
-        DelaunayLoc delLoc;
 
         //neighbor lists
         GPUArray<int> neigh_num; 
@@ -44,6 +43,7 @@ class DelaunayMD
         int timestep;
 
     public:
+        DelaunayLoc delLoc;
         GPUArray<float2> points;      //vector of particle positions
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
         float repPerFrame;
@@ -91,6 +91,8 @@ class DelaunayMD
 
         //write triangulation to text file
         void writeTriangulation(ofstream &outfile);
+        //read positions from text file
+        void readTriangulation(ifstream &infile);
 
 
         //soft-sphere repulsion....for testing
