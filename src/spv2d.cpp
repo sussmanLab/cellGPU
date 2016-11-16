@@ -650,11 +650,16 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
         //
         //
         int neigh2 = h_nn.data[baseNeigh];
-        int DT_other_idx;
+        int DT_other_idx=-1;
         for (int n2 = 0; n2 < neigh2; ++n2)
             {
             int testPoint = h_n.data[n_idx(n2,baseNeigh)];
             if(testPoint == otherNeigh) DT_other_idx = h_n.data[n_idx((n2+1)%neigh2,baseNeigh)];
+            };
+        if(DT_other_idx == otherNeigh || DT_other_idx == baseNeigh || DT_other_idx == -1)
+            {
+            printf("Triangulation problem \n");
+            throw std::exception();
             };
         float2 nl1 = h_p.data[otherNeigh];
         float2 nn1 = h_p.data[baseNeigh];
