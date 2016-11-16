@@ -16,7 +16,7 @@
 #include "cuda_runtime.h"
 #include "vector_types.h"
 
-#define DIM 2
+//#define DIM 2
 #define dbl float
 #define REAL float // for triangle
 #define EPSILON 1e-12
@@ -25,6 +25,8 @@
 #include "Delaunay1.h"
 #include "DelaunayLoc.h"
 #include "DelaunayTri.h"
+
+#include "DelaunayCGAL.h"
 
 //comment this definition out to compile on cuda-free systems
 #define ENABLE_CUDA
@@ -124,6 +126,7 @@ int main(int argc, char*argv[])
                        abort();
         };
     clock_t t1,t2;
+
     char fname[256];
     char fname0[256];
     char fname1[256];
@@ -200,7 +203,7 @@ int main(int argc, char*argv[])
 */
 
 //    spv.performTimestep();
-
+/*
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
@@ -227,7 +230,7 @@ int main(int argc, char*argv[])
     cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
     cout << "current q = " << spv.reportq() << endl;
 
-
+*/
 
 /*
     t1=clock();
@@ -271,7 +274,7 @@ int main(int argc, char*argv[])
     t2=clock();
     cout << "geometryCPU timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
     */
-/*
+
 
 
     float boxa = sqrt(numpts);
@@ -292,12 +295,21 @@ int main(int argc, char*argv[])
         float y =EPSILON+boxa/(dbl)randmax* (dbl)(rand()%randmax);
         ps2[i*2]=x;
         ps2[i*2+1]=y;
-        cout <<i << "  {"<<x<<","<<y<<"},";
+//        cout <<i << "  {"<<x<<","<<y<<"},";
         };
 //    cout << endl << maxx << endl;
     cout << endl << endl;
 
     //simple testing
+    //
+    DelaunayCGAL dcgal;
+    t1=clock();
+    for (int jj = 0; jj < testRepeat; ++jj)
+        dcgal.Triangulate(ps2,boxa);
+    t2=clock();
+    float cgaltime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
+    cout <<endl << endl << "CGAL time  = " << cgaltime << endl;
+    //
     DelaunayTri dtri(ps2);
     dtri.getTriangulation();
     vector<int> nes;
@@ -326,7 +338,7 @@ int main(int argc, char*argv[])
     printf("\n");
 
 
-*/
+
 
     /*
 

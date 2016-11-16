@@ -8,8 +8,9 @@ CC := gcc
 LINK := g++ #-fPIC
 NVCC := nvcc
 
-INCLUDES = -I. -I./src/ -I./ext_src/ -I./inc/ -I$(CUDA_INC)
+INCLUDES = -I. -I./src/ -I./ext_src/ -I./inc/ -I$(CUDA_INC) -I/home/user/CGAL/CGAL-4.9/include
 LIB_CUDA = -L. -L$(CUDA_LIB) -L$(CUDA_LIB2) -lcuda -lcudart
+LIB_CGAL = -L/home/user/CGAL/CGAL-4.9/lib -lCGAL -lCGAL_Core -lgmp -lmpfr
 
 #common flags
 COMMONFLAGS += $(INCLUDES) -O3 -std=c++11 -g
@@ -23,7 +24,7 @@ all:build
 
 build: delGPU.out
 
-OBJS= obj/voroguppy.o obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/gpucell.o obj/DelaunayCheckGPU.o obj/DelaunayMD.o obj/spv2d.o
+OBJS= obj/voroguppy.o obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/DelaunayCGAL.o obj/gpucell.o obj/DelaunayCheckGPU.o obj/DelaunayMD.o obj/spv2d.o
 
 EXT_OBJS = obj/triangle.o
 
@@ -63,6 +64,8 @@ obj/spv2d.o:src/spv2d.cpp obj/DelaunayMD.o obj/spv2d.cu.o
 obj/DelaunayTri.o:src/DelaunayTri.cpp obj/triangle.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
+obj/DelaunayCGAL.o:src/DelaunayCGAL.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIB_CGAL) -o $@ -c $<
 
 obj/Delaunay1.o:src/Delaunay1.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
@@ -71,10 +74,10 @@ obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o $(EXT_OBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
 obj/voroguppy.o:voroguppy.cpp
-	$(NVCC) $(CXXFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
+	$(NVCC) $(CXXFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ -c $<
 
 delGPU.out: $(OBJS) $(CUOBJS) $(EXT_OBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ $+
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ $+
 
 run: build
 	./delGPU.out
