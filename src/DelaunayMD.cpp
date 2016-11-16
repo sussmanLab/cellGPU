@@ -202,7 +202,7 @@ void DelaunayMD::fullTriangulation()
         if (neighTemp.size() > nmax) nmax= neighTemp.size();
         h_repair.data[nn]=0;
         };
-    neighMax = nmax; cout << "new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
+    neighMax = nmax+1; cout << "new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
     neighs.resize(neighMax*N);
 
     //store data in gpuarray
@@ -279,7 +279,7 @@ void DelaunayMD::globalTriangulation(bool verbose)
         if (allneighs[nn].size() > nmax) nmax= allneighs[nn].size();
         h_repair.data[nn]=0;
         };
-    neighMax = nmax+2;
+    neighMax = nmax+1;
     if(verbose)
         cout << "global new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
     neighs.resize(neighMax*N);
@@ -316,7 +316,7 @@ void DelaunayMD::globalTriangulation(bool verbose)
         sprintf(fn,"failed.txt");
         ofstream output(fn);
         writeTriangulation(output);
-//        throw std::exception();
+        throw std::exception();
         };
 
     };
@@ -411,7 +411,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         allneighs[ii]=neighTemp;
         if(neighTemp.size() > neighMax)
             {
-            neighMax = neighTemp.size();
+            neighMax = neighTemp.size()+1;
             resetCCidx = true;
             };
         };

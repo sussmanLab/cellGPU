@@ -154,7 +154,7 @@ int main(int argc, char*argv[])
 
 
     SPV2D spv(numpts,1.0,p0);
-//    spv.writeTriangulation(output0);
+    spv.writeTriangulation(output0);
 /*
     //Compare force with output of Mattias' code
     char fn[256];
@@ -213,8 +213,8 @@ int main(int argc, char*argv[])
         if(ii%100 ==0)
 //if(true)
             {
-            spv.writeTriangulation(output2);
             printf("timestep %i\n",ii);
+//            spv.meanForce();
             char fn[256];
             sprintf(fn,"/hdd2/data/spv/bidisperse/DTg2%i.txt",ii);
             ofstream outputc(fn);
