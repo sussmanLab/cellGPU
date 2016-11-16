@@ -396,13 +396,13 @@ void SPV2D::computeSPVForceCPU(int i)
         if (other_idx < 0) other_idx += neigh;
         int otherNeigh = ns[other_idx];
         int neigh2 = h_nn.data[baseNeigh];
-        int DT_other_idx;
+        int DT_other_idx = -1;
         for (int n2 = 0; n2 < neigh2; ++n2)
             {
             int testPoint = h_n.data[n_idx(n2,baseNeigh)];
             if(testPoint == otherNeigh) DT_other_idx = h_n.data[n_idx((n2+1)%neigh2,baseNeigh)];
             };
-        if(DT_other_idx == otherNeigh || DT_other_idx == baseNeigh)
+        if(DT_other_idx == otherNeigh || DT_other_idx == baseNeigh || DT_other_idx == -1)
             {
             printf("Triangulation problem \n");
             throw std::exception();
@@ -460,8 +460,8 @@ void SPV2D::computeSPVForceCPU(int i)
         dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-        dEidv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x;
-        dEidv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y;
+        dEidv.x = 2.0*Adiff*dAidv.x  + 2.0*Pdiff*dPidv.x;
+        dEidv.y = 2.0*Adiff*dAidv.y  + 2.0*Pdiff*dPidv.y;
         dEkdv.x = 2.0*Akdiff*dAkdv.x + 2.0*Pkdiff*dPkdv.x;
         dEkdv.y = 2.0*Akdiff*dAkdv.y + 2.0*Pkdiff*dPkdv.y;
         dEjdv.x = 2.0*Ajdiff*dAjdv.x + 2.0*Pjdiff*dPjdv.x;
@@ -632,12 +632,12 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
         dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
         //individual line tensions
-        if(h_ct.data[i] != h_ct.data[otherNeigh])
-            {
-            dTidv.x += dnext.x/dnnorm;
-            dTidv.y += dnext.y/dnnorm;
-            };
         if(h_ct.data[i] != h_ct.data[baseNeigh])
+            {
+            dTidv.x -= dnext.x/dnnorm;
+            dTidv.y -= dnext.y/dnnorm;
+            };
+        if(h_ct.data[i] != h_ct.data[otherNeigh])
             {
             dTidv.x += dlast.x/dlnorm;
             dTidv.y += dlast.y/dlnorm;
@@ -809,7 +809,7 @@ void SPV2D::meanForce()
         fx += h_f.data[i].x;
         fy += h_f.data[i].y;
         };
-    printf("Mean force = (%f,%f)\n" ,fx,fy);
+    printf("Mean force = (%e,%e)\n" ,fx,fy);
 
     };
 
