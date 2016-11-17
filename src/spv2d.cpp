@@ -182,8 +182,8 @@ void SPV2D::performTimestepGPU()
 //    printf("computing forces\n");
     for (int ii = 0; ii < N; ++ii)
         {
-        //computeSPVForceCPU(ii);
-        computeSPVForceWithTensionsCPU(ii,0.2);
+        computeSPVForceCPU(ii);
+        //computeSPVForceWithTensionsCPU(ii,0.2);
         };
 
 //    printf("displacing particles\n");

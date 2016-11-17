@@ -474,7 +474,8 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         {
         int pidx = fixlist[ii];
         vector<int> neighTemp;
-        delLoc.getNeighborsTri(pidx,neighTemp);
+//        delLoc.getNeighborsTri(pidx,neighTemp);
+        delLoc.getNeighborsCGAL(pidx,neighTemp);
         allneighs[ii]=neighTemp;
         if(neighTemp.size() > neighMax)
             {
@@ -488,7 +489,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     if(resetCCidx)
         {
         cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
-        globalTriangulation();
+        globalTriangulationCGAL();
         return;
         };
 
@@ -611,12 +612,17 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
        if (verb) printf("repairing triangulation via %lu\n",NeedsFixing.size());
 
     //if there is nothing to fix, skip this routing (and its expensive memory accesses)
-   //    if(NeedsFixing.size()>(N/2))
-   if (NeedsFixing.size()>0)
-           globalTriangulationCGAL();
-   //    else
-   //        repairTriangulation(NeedsFixing);
+    if(NeedsFixing.size()>0)
+        {
+        if (NeedsFixing.size() > (N/2))
+            globalTriangulationCGAL();
+        else
+           repairTriangulation(NeedsFixing);
+        };
     };
+
+
+
 void DelaunayMD::readTriangulation(ifstream &infile)
     {
     string line;

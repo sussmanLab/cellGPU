@@ -27,64 +27,25 @@ void DelaunayCGAL::LocalTriangulation(vector<float> &points, vector<int> & neigh
     T.insert(V.begin(),V.end());
 
     Delaunay::Face_handle face;
-    int li;
-    LPoint p(points[62],points[63]);
+    int li=-1;
+    LPoint p(points[0],points[0]);
 
     face= T.locate(p);
     if (face->vertex(0)->info()==0) li = 0;
     if (face->vertex(1)->info()==0) li = 1;
     if (face->vertex(2)->info()==0) li = 2;
-//    cout << "face handle found...point zero is the " << li << "vertex " << endl;
 
     Delaunay::Vertex_handle vh = face->vertex(li);
     Delaunay::Vertex_circulator vc(vh,face);
     int base = vc->info();
-    //cout << base << endl;cout.flush();
     neighs.push_back(base);
     ++vc;
     while(vc->info() != base)
         {
-    //cout << vc->info() << endl;cout.flush();
-//        printf("%i\t",vc->info());
         neighs.push_back(vc->info());
         ++vc;
         };
-
-/*
-   T.locate(LPoint(points[0],points[1]),lt,li,fh);
-    cout << li << endl;cout.flush();
-
-    Delaunay::Vertex_handle vh = fh->vertex(li);
-    cout << li << endl;cout.flush();
-    Delaunay::Vertex_circulator vc(vh,fh);
-    cout << li << endl;cout.flush();
-        
-    int base = vc->info();
-    cout << base << endl;cout.flush();
-    neighs.push_back(base);
-    ++vc;
-    while(vc->info() != base)
-        {
-    cout << vc->info() << endl;cout.flush();
-        printf("%i\t",vc->info());
-        neighs.push_back(vc->info());
-        ++vc;
-        };
-    
-    */
-    
-    
-   /* 
-    for (Delaunay::Finite_faces_iterator fit = T.finite_faces_begin(); fit != T.finite_faces_end(); ++fit)
-        {
-        Delaunay::Face_handle fh = fit;
-        //cout << "T:\t"<< T.triangle(fh) << endl;
-//        cout << "v0:\t"<< T.triangle(fh)[0] << endl;
-//        cout << "v0idx:\t"<< fh->vertex(0)->info() << endl;
-        };
-*/
-
-
+    cout.flush();
 
     };
 
