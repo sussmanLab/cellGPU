@@ -106,7 +106,7 @@ void DelaunayMD::initialize(int n)
     resetDelLocPoints();
 
     //make a full triangulation
-    globalTriangulation();
+    globalTriangulationCGAL();
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         {
@@ -247,6 +247,76 @@ void DelaunayMD::fullTriangulation()
     };
 
 
+void DelaunayMD::globalTriangulationCGAL(bool verbose)
+    {
+    GlobalFixes +=1;
+    DelaunayCGAL dcgal;
+    vector<float> psnew(2*N);
+    ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        psnew[2*ii] =  h_points.data[ii].x;
+        psnew[2*ii+1]= h_points.data[ii].y;
+        };
+    float b1,b2,b3,b4;
+    Box.getBoxDims(b1,b2,b3,b4);
+    dcgal.PeriodicTriangulation(psnew,b1);
+
+
+    neigh_num.resize(N);
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
+
+    int totaln = 0;
+    int nmax = 0;
+    for(int nn = 0; nn < N; ++nn)
+        {
+        neighnum.data[nn] = dcgal.allneighs[nn].size();
+        totaln += dcgal.allneighs[nn].size();
+        if (dcgal.allneighs[nn].size() > nmax) nmax= dcgal.allneighs[nn].size();
+        h_repair.data[nn]=0;
+        };
+    neighMax = nmax+1;
+
+    if(verbose)
+        cout << "global new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
+    neighs.resize(neighMax*N);
+    n_idx = Index2D(neighMax,N);
+
+    //store data in gpuarray
+    n_idx = Index2D(neighMax,N);
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
+
+    for (int nn = 0; nn < N; ++nn)
+        {
+        int imax = neighnum.data[nn];
+        for (int ii = 0; ii < imax; ++ii)
+            {
+            int idxpos = n_idx(ii,nn);
+            ns.data[idxpos] = dcgal.allneighs[nn][ii];
+            };
+        };
+
+    getCircumcenterIndices(true);
+//        char fn[256];
+//        sprintf(fn,"failed2.txt");
+//        ofstream output(fn);
+//        writeTriangulation(output);
+
+    if(totaln != 6*N)
+        {
+        printf("global CPU neighbor failed! NN = %i\n",totaln);
+//        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+//        for (int ii = 0; ii < N; ++ii)
+//            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
+        char fn[256];
+        sprintf(fn,"failed.txt");
+        ofstream output(fn);
+        writeTriangulation(output);
+        throw std::exception();
+        };
+    };
+
 void DelaunayMD::globalTriangulation(bool verbose)
     {
     GlobalFixes +=1;
@@ -369,7 +439,7 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
 //        writeTriangulation(output);
         if(verbose)
             printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*N,totaln,6*N);
-        globalTriangulation();
+        globalTriangulationCGAL();
 //        throw std::exception();
         };
 
@@ -390,8 +460,6 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     int fixes = fixlist.size();
     //if there is nothing to fix, skip this routing (and its expensive memory accesses)
     repPerFrame += ((float) fixes/(float)N);
-    if (fixes == 0) return;
-//    cout << "about to repair " << fixes << " points" << endl;
     resetDelLocPoints();
 
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
@@ -544,9 +612,10 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
        if (verb) printf("repairing triangulation via %lu\n",NeedsFixing.size());
 
    //    if(NeedsFixing.size()>(N/2))
-   //        globalTriangulation();
+   if (NeedsFixing.size()>0)
+           globalTriangulationCGAL();
    //    else
-           repairTriangulation(NeedsFixing);
+   //        repairTriangulation(NeedsFixing);
     };
 void DelaunayMD::readTriangulation(ifstream &infile)
     {

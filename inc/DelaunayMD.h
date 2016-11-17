@@ -11,6 +11,7 @@ using namespace std;
 #include "indexer.h"
 
 #include "DelaunayLoc.h"
+#include "DelaunayCGAL.h"
 
 class DelaunayMD
     {
@@ -78,6 +79,7 @@ class DelaunayMD
         void fullTriangulation();
         //resort to a method that globally constructs the triangulation
         void globalTriangulation(bool verbose = false);
+        void globalTriangulationCGAL(bool verbose = false);
 
         //construct circumcenters structure from neighbor list
         void getCircumcenterIndices(bool secondtime=false,bool verbose = false);

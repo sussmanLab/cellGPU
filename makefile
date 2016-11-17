@@ -52,7 +52,7 @@ obj/DelaunayCheckGPU.o:src/DelaunayCheckGPU.cpp obj/DelaunayCheckGPU.cu.o
 obj/DelaunayMD.cu.o:src/DelaunayMD.cu
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
-obj/DelaunayMD.o:src/DelaunayMD.cpp obj/DelaunayMD.cu.o $(EXT_OBJS)
+obj/DelaunayMD.o:src/DelaunayMD.cpp obj/DelaunayMD.cu.o obj/DelaunayCGAL.o $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
 obj/spv2d.cu.o:src/spv2d.cu

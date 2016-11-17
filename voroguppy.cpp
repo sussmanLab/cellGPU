@@ -203,7 +203,7 @@ int main(int argc, char*argv[])
 */
 
 //    spv.performTimestep();
-/*
+
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
@@ -230,7 +230,7 @@ int main(int argc, char*argv[])
     cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
     cout << "current q = " << spv.reportq() << endl;
 
-*/
+
 
 /*
     t1=clock();
@@ -276,7 +276,7 @@ int main(int argc, char*argv[])
     */
 
 
-
+/*
     float boxa = sqrt(numpts);
 
     box Bx(boxa,boxa);
@@ -305,7 +305,7 @@ int main(int argc, char*argv[])
     DelaunayCGAL dcgal;
     t1=clock();
     for (int jj = 0; jj < testRepeat; ++jj)
-        dcgal.Triangulate(ps2,boxa);
+        dcgal.PeriodicTriangulation(ps2,boxa);
     t2=clock();
     float cgaltime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout <<endl << endl << "CGAL time  = " << cgaltime << endl;
@@ -323,12 +323,17 @@ int main(int argc, char*argv[])
     del.triangulatePoint(31,neighs,cell,false);
     cout << " DelLoc neighbors:" << endl;
     for (int ii = 0; ii < neighs.size(); ++ii)
+        {
         printf("%i \t",neighs[ii]);
+        };
     printf("\n");
-    del.triangulatePoint(21,neighs,cell,false);
+    del.triangulatePoint(46,neighs,cell,false);
     cout << " DelLoc neighbors:" << endl;
     for (int ii = 0; ii < neighs.size(); ++ii)
+        {
         printf("%i \t",neighs[ii]);
+        printf("(%f,%f) \n",ps2[2*neighs[ii]],ps2[2*neighs[ii]+1]);
+        };
     printf("\n");
 
     del.getNeighborsTri(21,neighs);
@@ -338,7 +343,7 @@ int main(int argc, char*argv[])
     printf("\n");
 
 
-
+*/
 
     /*
 
