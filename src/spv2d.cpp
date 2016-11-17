@@ -275,6 +275,7 @@ void SPV2D::computeGeometryCPU()
 
 void SPV2D::computeSPVForceCPU(int i)
     {
+    float Pthreshold = 1e-8;
  //   printf("cell %i: \n",i);
     //for testing these routines...
     vector <int> test;
@@ -379,6 +380,10 @@ void SPV2D::computeSPVForceCPU(int i)
         dnext.x = vcur.x-vnext.x;
         dnext.y = vcur.y-vnext.y;
         float dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        if(dnnorm < Pthreshold)
+            dnnorm = Pthreshold;
+        if(dlnorm < Pthreshold)
+            dlnorm = Pthreshold;
 
         dPidv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
@@ -442,6 +447,10 @@ void SPV2D::computeSPVForceCPU(int i)
         dnext.x = vcur.x-vother.x;
         dnext.y = vcur.y-vother.y;
         dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        if(dnnorm < Pthreshold)
+            dnnorm = Pthreshold;
+        if(dlnorm < Pthreshold)
+            dlnorm = Pthreshold;
 
         dPkdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPkdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
@@ -456,6 +465,10 @@ void SPV2D::computeSPVForceCPU(int i)
         dnext.x = vcur.x-vlast.x;
         dnext.y = vcur.y-vlast.y;
         dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        if(dnnorm < Pthreshold)
+            dnnorm = Pthreshold;
+        if(dlnorm < Pthreshold)
+            dlnorm = Pthreshold;
 
         dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
@@ -492,8 +505,9 @@ void SPV2D::computeSPVForceCPU(int i)
 //    printf("total force on cell: (%f,%f)\n",forceSum.x,forceSum.y);
     };
 
-void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
+void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma,bool verbose)
     {
+    float Pthreshold = 1e-8;
  //   printf("cell %i: \n",i);
     //for testing these routines...
     vector <int> test;
@@ -608,26 +622,10 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
         dnext.x = vcur.x-vnext.x;
         dnext.y = vcur.y-vnext.y;
         float dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-/*
-        if(dnnorm < 1e-5)
-            {
-            printf("dn problem idx %i neighbor %i out of %i \n",i,nn,neigh);
-            printf("(%f,%f) \t (%f,%f)\n\n\n",vcur.x,vcur.y,vnext.x,vnext.y);
-            for(int nnn=0; nnn < neigh; ++nnn)
-                {
-                printf("%i (%f,%f)\t (%f,%f) \n",ns[nnn],voro[nnn].x,voro[nnn].y,h_p.data[ns[nnn]].x,h_p.data[ns[nnn]].y);
-                };
-            };
-        if(dlnorm < 1e-5)
-            {
-            printf("dl problem %i \n",i);
-            printf("(%f,%f) \t (%f,%f)\n\n\n",vlast.x,vlast.y,vcur.x,vcur.y);
-            for(int nnn=0; nnn < neigh; ++nnn)
-                {
-                printf("%i (%f,%f)\t (%f,%f) \n",ns[nnn],voro[nnn].x,voro[nnn].y,h_p.data[ns[nnn]].x,h_p.data[ns[nnn]].y);
-                };
-            };
-*/
+        if(dnnorm < Pthreshold)
+            dnnorm = Pthreshold;
+        if(dlnorm < Pthreshold)
+            dlnorm = Pthreshold;
         dPidv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
@@ -689,6 +687,10 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
         dnext.x = vcur.x-vother.x;
         dnext.y = vcur.y-vother.y;
         dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        if(dnnorm < Pthreshold)
+            dnnorm = Pthreshold;
+        if(dlnorm < Pthreshold)
+            dlnorm = Pthreshold;
 
         dPkdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPkdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
@@ -716,6 +718,10 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
         dnext.x = vcur.x-vlast.x;
         dnext.y = vcur.y-vlast.y;
         dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        if(dnnorm < Pthreshold)
+            dnnorm = Pthreshold;
+        if(dlnorm < Pthreshold)
+            dlnorm = Pthreshold;
 
         dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
@@ -753,6 +759,11 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma)
         forceSum.x += temp.x;
         forceSum.y += temp.y;
 
+        if(verbose)
+            {
+            printf("idx %i; baseNeigh %i; otherNeigh %i; DT_other_idx %i\n",i,baseNeigh,otherNeigh,DT_other_idx);
+            printf("%f  %f   %f   \n%f  %f    %f\n   %f    %f    %f\n",dAidv.x,dPidv.x,dTidv.x,dAkdv.x, dPkdv.x,dTkdv.x,dAjdv.x,dPjdv.x,dTjdv.x);
+            };
 //        printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
 
 //        printf("%f\t %f\t %f\t %f\t %f\t %f\t\n",Adiff,Akdiff,Ajdiff,Pdiff,Pkdiff,Pjdiff);
@@ -798,8 +809,9 @@ void SPV2D::reportForces()
         {
         fx += h_f.data[i].x;
         fy += h_f.data[i].y;
-        printf("cell %i: \t position (%f,%f)\t force (%f, %f)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
-
+//
+        if (isnan(h_f.data[i].x) || isnan(h_f.data[i].y))
+          printf("cell %i: \t position (%f,%f)\t force (%f, %f)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
         };
 
     };

@@ -72,10 +72,10 @@ class SPV2D : public DelaunayMD
 
         void computeGeometryCPU();
         void computeSPVForceCPU(int i);
-        void computeSPVForceWithTensionsCPU(int i,float Gamma);
+        void computeSPVForceWithTensionsCPU(int i,float Gamma,bool verbose = false);
         void calculateDispCPU();
 
-       
+
         void DisplacePointsAndRotate();
         //still need to write
         //

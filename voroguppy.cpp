@@ -246,6 +246,13 @@ int main(int argc, char*argv[])
 */
     spv.writeTriangulation(output2);
 
+    spv.reportForces();
+    spv.computeGeometry();
+    for(int ii = 0; ii < numpts; ++ii)
+        spv.computeSPVForceWithTensionsCPU(ii,0.2);
+    printf("next frame\n");
+    spv.reportForces();
+//    spv.computeSPVForceWithTensionsCPU(1865,0.2,true);
     //spv.computeGeometryCPU();
     //for (int ii = 0; ii < numpts; ++ii) spv.computeSPVForceCPU(ii);
     //spv.meanForce();

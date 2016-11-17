@@ -458,7 +458,6 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
 void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     {
     int fixes = fixlist.size();
-    //if there is nothing to fix, skip this routing (and its expensive memory accesses)
     repPerFrame += ((float) fixes/(float)N);
     resetDelLocPoints();
 
@@ -611,6 +610,7 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
 
        if (verb) printf("repairing triangulation via %lu\n",NeedsFixing.size());
 
+    //if there is nothing to fix, skip this routing (and its expensive memory accesses)
    //    if(NeedsFixing.size()>(N/2))
    if (NeedsFixing.size()>0)
            globalTriangulationCGAL();
