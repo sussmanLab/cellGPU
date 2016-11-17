@@ -20,6 +20,7 @@ using namespace std;
 
 #include "DelaunayLoc.h"
 #include "DelaunayTri.h"
+#include "DelaunayCGAL.h"
 //#include "functions.h"
 //#include "structures.h"
 
@@ -353,6 +354,51 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
     DTring.swap(newRing);
     DTringIdx.swap(newRingIdx);
     candidates = DTring.size();
+    };
+
+void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
+    {
+    //first, get candidate 1-ring
+    vector<int> DTringIdx;
+    vector<pt> DTring;
+    getOneRingCandidate(i,DTringIdx,DTring);
+
+    //call another algorithm to triangulate the candidate set
+    DelaunayCGAL delcgal;
+    vector<float> pnts(DTring.size()*2);
+    for (int ii = 0; ii < DTring.size(); ++ii)
+        {
+        pnts[2*ii] = DTring[ii].x;
+        pnts[2*ii+1] = DTring[ii].y;
+        };
+    delcgal.LocalTriangulation(pnts, neighbors);
+
+    for (int nn = 0; nn < neighbors.size(); ++nn)
+        neighbors[nn] = DTringIdx[neighbors[nn]];
+
+
+/*
+    DelaunayCell DCell;
+
+    DCell.setSize(neighbors.size());
+    for(int ii = 0; ii < DCell.n; ++ii)
+        DCell.Dneighs[ii]=DTring[neighbors[ii]];
+
+    DCell.getCW();
+
+    //convert neighbors to global indices,
+    //and store the neighbor indexes in clockwise order
+    vector<int> nidx;nidx.reserve(neighbors.size());
+    for (int nn = 0; nn < neighbors.size(); ++nn)
+        {
+        int localidx = neighbors[DCell.CWorder[nn].second];
+        nidx.push_back(DTringIdx[localidx]);
+        };
+    for (int nn = 0; nn < neighbors.size(); ++nn)
+        {
+        neighbors[nn] = nidx[nn];
+        };
+*/
     };
 
 void DelaunayLoc::getNeighborsTri(int i, vector<int> &neighbors)

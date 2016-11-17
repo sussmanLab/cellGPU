@@ -219,7 +219,7 @@ int main(int argc, char*argv[])
             printf("timestep %i\n",ii);
 //            spv.meanForce();
             char fn[256];
-            sprintf(fn,"/hdd2/data/spv/bidisperse/DTg2%i.txt",ii);
+            sprintf(fn,"/hdd2/data/spv/bidisperse/DTg0%i.txt",ii);
             ofstream outputc(fn);
             output1.precision(8);
             spv.writeTriangulation(outputc);
@@ -282,8 +282,8 @@ int main(int argc, char*argv[])
     cout << "geometryCPU timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
     */
 
-
 /*
+
     float boxa = sqrt(numpts);
 
     box Bx(boxa,boxa);
@@ -316,6 +316,9 @@ int main(int argc, char*argv[])
     t2=clock();
     float cgaltime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout <<endl << endl << "CGAL time  = " << cgaltime << endl;
+    vector<int> cnes;
+    dcgal.LocalTriangulation(ps2,cnes);
+
     //
     DelaunayTri dtri(ps2);
     dtri.getTriangulation();
@@ -343,14 +346,19 @@ int main(int argc, char*argv[])
         };
     printf("\n");
 
-    del.getNeighborsTri(21,neighs);
+    del.getNeighborsTri(0,neighs);
+    cout << " DelLoc neighbors:" << endl;
+    for (int ii = 0; ii < neighs.size(); ++ii)
+        printf("%i \t",neighs[ii]);
+    printf("\n");
+    del.getNeighborsCGAL(0,neighs);
     cout << " DelLoc neighbors:" << endl;
     for (int ii = 0; ii < neighs.size(); ++ii)
         printf("%i \t",neighs[ii]);
     printf("\n");
 
-
 */
+
 
     /*
 
