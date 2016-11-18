@@ -163,14 +163,16 @@ int main(int argc, char*argv[])
 
     spv.writeTriangulation(output0);
 
-/*
+
     //Compare force with output of Mattias' code
+    /*
     char fn[256];
     sprintf(fn,"/hdd2/repos/test.txt");
     ifstream input(fn);
     spv.readTriangulation(input);
     spv.globalTriangulation();
-*/
+    spv.allDelSets();
+
 
     spv.setCellPreferencesUniform(a0,p0);
     spv.computeGeometry();
@@ -182,6 +184,7 @@ int main(int argc, char*argv[])
     t2=clock();
     spv.reportForces();
     cout << "GPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl << endl;
+    spv.meanForce();
     spv.meanForce();
 
 
@@ -207,6 +210,7 @@ int main(int argc, char*argv[])
 //    cout << "current q = " << spv.reportq() << endl;
 
     spv.writeTriangulation(output1);
+*/
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setDeltaT(err);
     spv.setv0(v0);
@@ -226,7 +230,7 @@ int main(int argc, char*argv[])
 //    spv.performTimestep();
 
     t1=clock();
-    for(int ii = 0; ii < testRepeat-1; ++ii)
+    for(int ii = 0; ii < testRepeat; ++ii)
         {
 //        vector<int> nes;
 //        spv.delLoc.getNeighborsTri(602,nes);

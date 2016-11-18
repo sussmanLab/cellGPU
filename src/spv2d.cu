@@ -205,7 +205,7 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     float2 temp = dEdv*dhdr;
     d_forceSets[n_idx(nn,pidx)] = temp;
 
-    if(pidx == 0) printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",dAidv.x,dAidv.y,dAkdv.x,dAkdv.y,dAjdv.x,dAjdv.y);
+//    if(pidx == 0) printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",dPidv.x,dPidv.y,dPkdv.x,dPkdv.y,dPjdv.x,dPjdv.y);
     //if(pidx == 0) printf("%i %f %f\n",nn,temp.x,temp.y);
 //    if(pidx == 0) printf("%f\t%f\t%f\t%f\n",dhdr.x11,dhdr.x12,dhdr.x21,dhdr.x22);
 
