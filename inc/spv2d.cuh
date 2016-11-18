@@ -47,6 +47,7 @@ bool gpu_force_sets(
                     int4   *d_delSets,
                     int    *d_detOther,
                     float2 *d_forceSets,
+                    float2 *d_forces,
                     float  KA,
                     float  KP,
                     int    N,

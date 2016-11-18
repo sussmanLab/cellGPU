@@ -27,6 +27,32 @@ __global__ void init_curand_kernel(unsigned long seed, curandState *state)
     };
 */
 
+__global__ void gpu_sum_forces_kernel(float2 *d_forceSets,
+                                      float2 *d_forces,
+                                      int    *d_nn,
+                                      int     N,
+                                      Index2D n_idx
+                                     )
+    {
+    // read in the particle that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+    
+    int neigh = d_nn[idx];
+    float2 temp;
+    temp.x=0.0;temp.y=0.0;
+    for (int nn = 0; nn < neigh; ++nn)
+        {
+        float2 val = d_forceSets[n_idx(nn,idx)];
+        temp.x+=val.x;
+        temp.y+=val.y;
+        };
+
+    d_forces[idx]=temp;
+
+    };
+
 
 __global__ void gpu_force_sets_kernel(float2      *d_points,
                                           int     *d_nn,
@@ -104,9 +130,10 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     Circumcenter(rij,rik,pno,vother);
 
 
-    float2 dEidv,dAidv,dPidv;
-    float2 dEjdv,dAjdv,dPjdv;
-    float2 dEkdv,dAkdv,dPkdv;
+    float2 dAidv,dPidv;
+    float2 dAjdv,dPjdv;
+    float2 dAkdv,dPkdv;
+    float2 dEdv;
     float2 dlast, dnext;
     float  dlnorm,dnnorm;
 
@@ -158,6 +185,25 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
+    float Aid, Pid, Akd, Pkd, Ajd, Pjd;
+    
+    Aid = KA*(d_AP[pidx].x - d_APpref[pidx].x);
+    Pid = KA*(d_AP[pidx].y - d_APpref[pidx].y);
+    Akd = KA*(d_AP[neighs.z].x - d_APpref[neighs.z].x);
+    Pkd = KA*(d_AP[neighs.z].y - d_APpref[neighs.z].y);
+    Ajd = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
+    Pjd = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
+    
+    dEdv.x  = 2.0*Aid*dAidv.x +2.0*Pid*dPidv.x;
+    dEdv.x += 2.0*Akd*dAkdv.x +2.0*Pkd*dPkdv.x;
+    dEdv.x += 2.0*Ajd*dAjdv.x +2.0*Pjd*dPjdv.x;
+
+    dEdv.y  = 2.0*Aid*dAidv.y +2.0*Pid*dPidv.y;
+    dEdv.y += 2.0*Akd*dAkdv.y +2.0*Pkd*dPkdv.y;
+    dEdv.y += 2.0*Ajd*dAjdv.y +2.0*Pjd*dPjdv.y;
+
+    float2 temp = dEdv*dhdr;
+    d_forceSets[n_idx(nn,pidx)] = temp;
 
     return;
     };
@@ -364,6 +410,7 @@ bool gpu_force_sets(float2 *d_points,
                     int4   *d_delSets,
                     int    *d_delOther,
                     float2 *d_forceSets,
+                    float2 *d_forces,
                     float  KA,
                     float  KP,
                     int    N,
@@ -397,6 +444,23 @@ bool gpu_force_sets(float2 *d_points,
     code = cudaGetLastError();
     if(code!=cudaSuccess)
     printf("forceSets GPUassert: %s \n", cudaGetErrorString(code));
+
+    cudaDeviceSynchronize();
+    //Now sum the forces
+    if (computations < 128) block_size = 32;
+    nblocks = N/block_size + 1;
+
+    gpu_sum_forces_kernel<<<nblocks,block_size>>>(
+                                            d_forceSets,
+                                            d_forces,
+                                            d_nn,
+                                            N,
+                                            n_idx
+            );
+
+    if(code!=cudaSuccess)
+    printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
+
 
     return cudaSuccess;
     };

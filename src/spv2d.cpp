@@ -303,6 +303,7 @@ void SPV2D::computeSPVForcesGPU()
     ArrayHandle<int4> d_delSets(delSets,access_location::device,access_mode::read);
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<float2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
+    ArrayHandle<float2> d_forces(forces,access_location::device,access_mode::overwrite);
 
 
     float KA = 1.0;
@@ -315,6 +316,7 @@ void SPV2D::computeSPVForcesGPU()
                     d_delSets.data,
                     d_delOther.data,
                     d_forceSets.data,
+                    d_forces.data,
                     KA,
                     KP,
                     N,neighMax,n_idx,Box);
@@ -909,7 +911,7 @@ void SPV2D::reportForces()
         fx += h_f.data[i].x;
         fy += h_f.data[i].y;
 //
-        if (isnan(h_f.data[i].x) || isnan(h_f.data[i].y))
+//        if (isnan(h_f.data[i].x) || isnan(h_f.data[i].y))
           printf("cell %i: \t position (%f,%f)\t force (%f, %f)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
         };
 

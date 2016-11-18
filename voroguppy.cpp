@@ -162,6 +162,7 @@ int main(int argc, char*argv[])
 
 
     spv.writeTriangulation(output0);
+
 /*
     //Compare force with output of Mattias' code
     char fn[256];
@@ -169,26 +170,42 @@ int main(int argc, char*argv[])
     ifstream input(fn);
     spv.readTriangulation(input);
     spv.globalTriangulation();
+*/
+
     spv.setCellPreferencesUniform(a0,p0);
     spv.computeGeometry();
       spv.setCellType(cts);
-    for (int ii = 0; ii < numpts; ++ii)
-        {
-        //spv.computeSPVForceCPU(ii);
-        spv.computeSPVForceWithTensionsCPU(ii,.2);
-        };
-    spv.reportForces();
-    cout << "current q = " << spv.reportq() << endl;
+    cout << " GPU computation " << endl;
+    t1=clock();
+    for (int tt = 0; tt < testRepeat; ++tt)
+        spv.computeSPVForcesGPU();
+    t2=clock();
+    cout << "GPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl;
+//    spv.reportForces();
     spv.meanForce();
 
 
+    cout << " CPU computation " << endl;
+    t1=clock();
+    for (int tt = 0; tt < testRepeat; ++tt)
+        {
+    for (int ii = 0; ii < numpts; ++ii)
+        {
+        spv.computeSPVForceCPU(ii);
+        //spv.computeSPVForceWithTensionsCPU(ii,.2);
+        };
+//    spv.reportForces();
+        }
+    t2=clock();
+    cout << "GPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl;
+    spv.meanForce();
 
     for(int ii = 0; ii < 100; ++ii)
         {
     //    spv.performTimestep();
         };
 //    cout << "current q = " << spv.reportq() << endl;
-*/
+
     spv.writeTriangulation(output1);
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setDeltaT(err);
