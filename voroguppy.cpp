@@ -218,6 +218,10 @@ int main(int argc, char*argv[])
 
     //cts is currently 0 for first half, 1 for second half
     spv.setCellType(cts);
+    for(int ii = 0; ii < 100; ++ii)
+        {
+        spv.performTimestep();
+        };
 /*
     if(true)
         {

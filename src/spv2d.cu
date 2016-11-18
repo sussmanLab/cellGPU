@@ -48,6 +48,8 @@ __global__ void gpu_sum_forces_kernel(float2 *d_forceSets,
         temp.x+=val.x;
         temp.y+=val.y;
         };
+//    if(!::isfinite(temp.x)) temp.x = 0.;
+//    if(!::isfinite(temp.y)) temp.y = 0.;
 
     d_forces[idx]=temp;
 
