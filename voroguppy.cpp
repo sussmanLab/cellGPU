@@ -14,6 +14,7 @@
 
 //#include "cuda.h"
 #include "cuda_runtime.h"
+#include "cuda_profiler_api.h"
 #include "vector_types.h"
 
 //#define DIM 2
@@ -232,7 +233,7 @@ int main(int argc, char*argv[])
 */
 
 //    spv.performTimestep();
-
+cudaProfilerStart();
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
@@ -245,20 +246,21 @@ int main(int argc, char*argv[])
         if(ii%100 ==0)
 //if(true)
             {
-            printf("timestep %i\n",ii);
+//            printf("timestep %i\n",ii);
 //            spv.meanForce();
-            char fn[256];
-            sprintf(fn,"/hdd2/data/spv/bidisperse/DTg0%i.txt",ii);
-            ofstream outputc(fn);
-            output1.precision(8);
-            spv.writeTriangulation(outputc);
+//            char fn[256];
+//            sprintf(fn,"/hdd2/data/spv/bidisperse/DTg0%i.txt",ii);
+//            ofstream outputc(fn);
+//            output1.precision(8);
+//            spv.writeTriangulation(outputc);
             };
         };
     t2=clock();
+cudaProfilerStop();
     float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
     cout << "current q = " << spv.reportq() << endl;
-
+    spv.meanForce();
 
     float cgaltime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
     cout << endl << "force time  = " << spv.forcetiming/(float)CLOCKS_PER_SEC/testRepeat << endl;

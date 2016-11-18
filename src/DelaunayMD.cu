@@ -38,22 +38,15 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
         return;
 
     //the indices of particles forming the circumcircle
-    int i1,i2,i3;
-    //
-    //i1=tex1Dfetch(dcc_tex,3*idx);
-    //i2=tex1Dfetch(dcc_tex,3*idx+1);
-    //i3=tex1Dfetch(dcc_tex,3*idx+2);
-    //
-    i1 = d_circumcircles[3*idx];
-    i2 = d_circumcircles[3*idx+1];
-    i3 = d_circumcircles[3*idx+2];
+    int i1 = d_circumcircles[3*idx];
+    int i2 = d_circumcircles[3*idx+1];
+    int i3 = d_circumcircles[3*idx+2];
 
     //the vertex we will take to be the origin, and its cell position
     float2 v = d_pt[i1];
     float vz = 0.0;
-    int ib,jb;
-    ib=floorf(v.x/boxsize);
-    jb=floorf(v.y/boxsize);
+    int ib=floorf(v.x/boxsize);
+    int jb=floorf(v.y/boxsize);
 
     float2 p1real = d_pt[i2];
     float2 p2real = d_pt[i3];
