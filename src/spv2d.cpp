@@ -30,6 +30,7 @@ SPV2D::SPV2D(int n,float A0, float P0)
 void SPV2D::Initialize(int n)
     {
     Timestep = 0;
+    triangletiming = 0.0; forcetiming = 0.0;
     setv0(0.05);
     setDeltaT(0.01);
     setDr(1.);
@@ -47,6 +48,16 @@ void SPV2D::Initialize(int n)
         h_cd.data[ii] = theta;
         };
     //setCurandStates(n);
+    allDelSets();
+    };
+
+void SPV2D::allDelSets()
+    {
+    delSets.resize(neighMax*N);
+    delOther.resize(neighMax*N);
+    forceSets.resize(neighMax*N);
+    for (int ii = 0; ii < N; ++ii)
+        getDelSets(ii);
     };
 
 void SPV2D::setCellPreferencesUniform(float A0, float P0)
@@ -88,7 +99,55 @@ void SPV2D::setCurandStates(int i)
     };
 */
 
+/////////////////
+//Utility
+/////////////////
 
+void SPV2D::getDelSets(int i)
+    {
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
+    ArrayHandle<int4> ds(delSets,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> dother(delOther,access_location::host,access_mode::readwrite);
+
+    int iNeighs = neighnum.data[i];
+    int nm2,nm1,n1,n2;
+    if (iNeighs>3)
+
+    nm2 = ns.data[n_idx(iNeighs-3,i)];
+    nm1 = ns.data[n_idx(iNeighs-2,i)];
+    n1 = ns.data[n_idx(iNeighs-1,i)];
+
+    for (int nn = 0; nn < iNeighs; ++nn)
+        {
+        n2 = ns.data[n_idx(nn,i)];
+        int nextNeighs = neighnum.data[n1];
+        for (int nn2 = 0; nn2 < nextNeighs; ++nn2)
+            {
+            int testPoint = ns.data[n_idx(nn2,n1)];
+            if(testPoint == nm1)
+                {
+                dother.data[n_idx(nn,i)] = ns.data[n_idx((nn2+1)%nextNeighs,n1)];
+                break;
+                };
+            };
+        ds.data[n_idx(nn,i)].x= nm2;
+        ds.data[n_idx(nn,i)].y= nm1;
+        ds.data[n_idx(nn,i)].z= n1;
+        ds.data[n_idx(nn,i)].w= n2;
+
+        nm2=nm1;
+        nm1=n1;
+        n1=n2;
+        };
+/*
+    for (int nn = 0; nn < iNeighs; ++nn)
+        {
+        printf("%i  %i   %i   %i   ;  %i \n",ds.data[n_idx(nn,i)].x,ds.data[n_idx(nn,i)].y, ds.data[n_idx(nn,i)].z,ds.data[n_idx(nn,i)].w,dother.data[n_idx(nn,i)]);
+
+        };
+*/
+    };
 
 
 /////////////////
@@ -176,15 +235,24 @@ void SPV2D::performTimestepCPU()
 
 void SPV2D::performTimestepGPU()
     {
+    clock_t t1,t2;
 //    printf("computing geometry for timestep %i\n",Timestep);
-    computeGeometryCPU();
-    //computeGeometry();
+    //computeGeometryCPU();
+    t1=clock();
+    computeGeometry();
+    t2=clock();
+    triangletiming += (t2-t1);
 //    printf("computing forces\n");
+    t1=clock();
     for (int ii = 0; ii < N; ++ii)
         {
         computeSPVForceCPU(ii);
         //computeSPVForceWithTensionsCPU(ii,0.2);
         };
+    computeSPVForcesGPU();    
+    t2=clock();
+    forcetiming += t2-t1;
+    t1=clock();
 
 //    printf("displacing particles\n");
     DisplacePointsAndRotate();
@@ -192,6 +260,17 @@ void SPV2D::performTimestepGPU()
 
 //    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
+
+    //maintain the auxilliary lists for computing forces
+    if(delSets.getNumElements()!=neighMax*N)
+        allDelSets();
+    else
+        {
+        for (int jj = 0;jj < NeedsFixing.size(); ++jj)
+            getDelSets(jj);
+        };
+    t2=clock();
+    triangletiming += (t2-t1);
 
     };
 
@@ -212,6 +291,33 @@ void SPV2D::computeGeometry()
                         d_n.data,
                         N, n_idx,Box);
 
+
+    };
+
+void SPV2D::computeSPVForcesGPU()
+    {
+    ArrayHandle<float2> d_p(points,access_location::device,access_mode::read);
+    ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_AP(AreaPeri,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
+    ArrayHandle<int4> d_delSets(delSets,access_location::device,access_mode::read);
+    ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
+
+
+    float KA = 1.0;
+    float KP = 1.0;
+    gpu_force_sets(
+                    d_p.data,
+                    d_nn.data,
+                    d_AP.data,
+                    d_APpref.data,
+                    d_delSets.data,
+                    d_delOther.data,
+                    d_forceSets.data,
+                    KA,
+                    KP,
+                    N,neighMax,n_idx,Box);
 
     };
 
@@ -775,13 +881,6 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma,bool verbose)
     h_f.data[i].x=forceSum.x;
     h_f.data[i].y=forceSum.y;
 //    printf("total force on cell: (%f,%f)\n",forceSum.x,forceSum.y);
-    };
-
-
-void SPV2D::computeSPVForcesGPU()
-    {
-
-
     };
 
 

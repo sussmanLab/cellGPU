@@ -39,6 +39,7 @@ class DelaunayMD
 
         //repair is a vector of zeros (everything is fine) and ones (that index needs to be repaired)
         GPUArray<int> repair;
+        vector<int> NeedsFixing;
 
         bool GPUcompute;
         int timestep;

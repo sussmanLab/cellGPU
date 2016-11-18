@@ -39,6 +39,21 @@ bool gpu_compute_geometry(
                     gpubox &Box
                     );
 
+bool gpu_force_sets(
+                    float2 *d_points,
+                    int    *d_nn,
+                    float2 *d_AP,
+                    float2 *d_APpref,
+                    int4   *d_delSets,
+                    int    *d_detOther,
+                    float2 *d_forceSets,
+                    float  KA,
+                    float  KP,
+                    int    N,
+                    int    neighMax,
+                    Index2D &n_idx,
+                    gpubox &Box
+                    );
 
 #endif
 

@@ -580,7 +580,7 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
         testTriangulation();
     else
         testTriangulationCPU();
-    vector<int> NeedsFixing;
+    NeedsFixing.clear();
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)

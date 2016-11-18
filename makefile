@@ -15,7 +15,7 @@ LIB_CGAL = -L/home/user/CGAL/CGAL-4.9/lib -lCGAL -lCGAL_Core -lgmp -lmpfr
 #common flags
 COMMONFLAGS += $(INCLUDES) -O3 -std=c++11 -g
 NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo #-Xptxas -dlcm=ca#-G
-CXXFLAGS += $(COMMONFLAGS)
+CXXFLAGS += $(COMMONFLAGS) -frounding-math
 CXXFLAGS += -w
 CFLAGS += $(COMMONFLAGS)
 
@@ -74,7 +74,7 @@ obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o $(EXT_OBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
 obj/voroguppy.o:voroguppy.cpp
-	$(NVCC) $(CXXFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ -c $<
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ -c $<
 
 delGPU.out: $(OBJS) $(CUOBJS) $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ $+

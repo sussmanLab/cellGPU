@@ -157,6 +157,10 @@ int main(int argc, char*argv[])
 
 
     SPV2D spv(numpts,1.0,p0);
+
+    spv.getDelSets(19);
+
+
     spv.writeTriangulation(output0);
 /*
     //Compare force with output of Mattias' code
@@ -231,6 +235,9 @@ int main(int argc, char*argv[])
     cout << "current q = " << spv.reportq() << endl;
 
 
+    float cgaltime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
+    cout << endl << "force time  = " << spv.forcetiming/(float)CLOCKS_PER_SEC/testRepeat << endl;
+    cout << "other time  = " << spv.triangletiming/(float)CLOCKS_PER_SEC/testRepeat << endl;
 
 /*
     t1=clock();

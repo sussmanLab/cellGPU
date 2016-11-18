@@ -7,6 +7,7 @@ using namespace std;
 #include <stdio.h>
 #include <cmath>
 #include <random>
+#include <sys/time.h>
 #include "cuda_runtime.h"
 #include "curand.h"
 #include "curand_kernel.h"
@@ -37,6 +38,12 @@ class SPV2D : public DelaunayMD
         int Timestep;
         curandState *devStates;
 
+        //delSet.data[n_idx(nn,i)] are four consecutive delaunay neighbors, orientationally ordered, of point i (for use in computing forces on GPU)
+        GPUArray<int4> delSets;
+        //delOther.daata[n_idx(nn,i)] contains the index of the "other" delaunay neighbor. i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
+        GPUArray<int> delOther;
+        GPUArray<float2> forceSets;
+
     public:
         GPUArray<float2> forces;
 
@@ -63,26 +70,28 @@ class SPV2D : public DelaunayMD
 
         void setCurandStates(int i);
 
+        //utility
+        void getDelSets(int i);
+        void allDelSets();
+
         //cell-dynamics related functions
         void performTimestep();
         void performTimestepCPU();
         void performTimestepGPU();
 
-        void computeGeometry();
 
+        //CPU functions
         void computeGeometryCPU();
         void computeSPVForceCPU(int i);
         void computeSPVForceWithTensionsCPU(int i,float Gamma,bool verbose = false);
         void calculateDispCPU();
 
 
+        //GPU functions
         void DisplacePointsAndRotate();
-        //still need to write
-        //
-        ////for compute geo GPU...add new voro structure that matches the neighbor list, save voro points?
-        void computeGeometryGPU();
-
+        void computeGeometry();
         void computeSPVForcesGPU();
+
 
 
         //
