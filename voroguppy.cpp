@@ -180,8 +180,8 @@ int main(int argc, char*argv[])
     for (int tt = 0; tt < testRepeat; ++tt)
         spv.computeSPVForcesGPU();
     t2=clock();
-    cout << "GPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl;
-//    spv.reportForces();
+    spv.reportForces();
+    cout << "GPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl << endl;
     spv.meanForce();
 
 
@@ -194,10 +194,10 @@ int main(int argc, char*argv[])
         spv.computeSPVForceCPU(ii);
         //spv.computeSPVForceWithTensionsCPU(ii,.2);
         };
-//    spv.reportForces();
+    spv.reportForces();
         }
     t2=clock();
-    cout << "GPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl;
+    cout << "CPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl << endl << endl << endl;
     spv.meanForce();
 
     for(int ii = 0; ii < 100; ++ii)
@@ -226,7 +226,7 @@ int main(int argc, char*argv[])
 //    spv.performTimestep();
 
     t1=clock();
-    for(int ii = 0; ii < testRepeat; ++ii)
+    for(int ii = 0; ii < testRepeat-1; ++ii)
         {
 //        vector<int> nes;
 //        spv.delLoc.getNeighborsTri(602,nes);

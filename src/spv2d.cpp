@@ -592,17 +592,21 @@ void SPV2D::computeSPVForceCPU(int i)
         forceSum.x += temp.x;
         forceSum.y += temp.y;
 
-        temp = dEkdv*dhdri[nn];
-        forceSum.x += temp.x;
-        forceSum.y += temp.y;
+        float2 temp2 = dEkdv*dhdri[nn];
+        forceSum.x += temp2.x;
+        forceSum.y += temp2.y;
 
-        temp = dEjdv*dhdri[nn];
-        forceSum.x += temp.x;
-        forceSum.y += temp.y;
+        float2 temp3 = dEjdv*dhdri[nn];
+        forceSum.x += temp3.x;
+        forceSum.y += temp3.y;
 
 //        printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
 
 //        printf("%f\t %f\t %f\t %f\t %f\t %f\t\n",Adiff,Akdiff,Ajdiff,Pdiff,Pkdiff,Pjdiff);
+        if (i ==0)
+            printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",dAidv.x,dAidv.y,dAkdv.x,dAkdv.y,dAjdv.x,dAjdv.y);
+            //    printf("%f\t%f\t%f\t%f\n",dhdri[nn].x11,dhdri[nn].x12,dhdri[nn].x21,dhdri[nn].x22);
+//            printf("%i %f %f\n",nn,temp.x+temp2.x+temp3.x,temp.y+temp2.y+temp3.y);
         vlast=vcur;
         };
 
@@ -912,6 +916,7 @@ void SPV2D::reportForces()
         fy += h_f.data[i].y;
 //
 //        if (isnan(h_f.data[i].x) || isnan(h_f.data[i].y))
+        if(i == 0)
           printf("cell %i: \t position (%f,%f)\t force (%f, %f)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
         };
 

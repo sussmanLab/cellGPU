@@ -124,7 +124,7 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     //finally, compute all of the forces
     float2 origin; origin.x = 0.0;origin.y=0.0;
     float2 vlast,vcur,vnext,vother;
-    Circumcenter(origin,pn2,rij,vlast);
+    Circumcenter(origin,pnm2,rij,vlast);
     Circumcenter(origin,rij,rik,vcur);
     Circumcenter(origin,rik,pn2,vnext);
     Circumcenter(rij,rik,pno,vother);
@@ -204,6 +204,10 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
 
     float2 temp = dEdv*dhdr;
     d_forceSets[n_idx(nn,pidx)] = temp;
+
+    if(pidx == 0) printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",dAidv.x,dAidv.y,dAkdv.x,dAkdv.y,dAjdv.x,dAjdv.y);
+    //if(pidx == 0) printf("%i %f %f\n",nn,temp.x,temp.y);
+//    if(pidx == 0) printf("%f\t%f\t%f\t%f\n",dhdr.x11,dhdr.x12,dhdr.x21,dhdr.x22);
 
     return;
     };
