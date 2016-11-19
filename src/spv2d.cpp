@@ -261,13 +261,16 @@ void SPV2D::performTimestepGPU()
 //    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
 
-    //maintain the auxilliary lists for computing forces
-    if(delSets.getNumElements()!=neighMax*N)
-        allDelSets();
-    else
+    if(Fails == 1)
         {
-        for (int jj = 0;jj < NeedsFixing.size(); ++jj)
-            getDelSets(NeedsFixing[jj]);
+        //maintain the auxilliary lists for computing forces
+        if(delSets.getNumElements()!=neighMax*N)
+            allDelSets();
+        else
+            {
+            for (int jj = 0;jj < NeedsFixing.size(); ++jj)
+                getDelSets(NeedsFixing[jj]);
+            };  
         };
     t2=clock();
     triangletiming += (t2-t1);
