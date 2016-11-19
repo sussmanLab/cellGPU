@@ -540,7 +540,8 @@ void DelaunayMD::testTriangulation()
                            celllist.getBoxsize(),
                            Box,
                            celllist.cell_indexer,
-                           celllist.cell_list_indexer
+                           celllist.cell_list_indexer,
+                           Fails
                            );
     };
 
@@ -580,41 +581,40 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
         testTriangulation();
     else
         testTriangulationCPU();
-    NeedsFixing.clear();
-    ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
+    if(Fails == 1)
         {
-        printf("testAndRepair preliminary GPUassert: %s \n", cudaGetErrorString(code));
-        throw std::exception();
-        };
-
-    //add the index and all of its' neighbors
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
-    for (int nn = 0; nn < N; ++nn)
-        {
-        if (h_repair.data[nn] == 1)
+        NeedsFixing.clear();
+        ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
+        cudaError_t code = cudaGetLastError();
+        if(code!=cudaSuccess)
             {
-            NeedsFixing.push_back(nn);
-            h_repair.data[nn] = 0;
-            for (int ii = 0; ii < neighnum.data[nn];++ii)
+            printf("testAndRepair preliminary GPUassert: %s \n", cudaGetErrorString(code));
+            throw std::exception();
+            };
+
+        //add the index and all of its' neighbors
+        ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
+        for (int nn = 0; nn < N; ++nn)
+            {
+            if (h_repair.data[nn] == 1)
                 {
-                int idxpos = n_idx(ii,nn);
-                NeedsFixing.push_back(ns.data[idxpos]);
-//                printf("testing %i\t ",ns.data[idxpos]);
+                NeedsFixing.push_back(nn);
+                h_repair.data[nn] = 0;
+                for (int ii = 0; ii < neighnum.data[nn];++ii)
+                    {
+                    int idxpos = n_idx(ii,nn);
+                    NeedsFixing.push_back(ns.data[idxpos]);
+//                    printf("testing %i\t ",ns.data[idxpos]);
+                    };
                 };
             };
-        };
-       sort(NeedsFixing.begin(),NeedsFixing.end());
-       NeedsFixing.erase(unique(NeedsFixing.begin(),NeedsFixing.end() ),NeedsFixing.end() );
+        sort(NeedsFixing.begin(),NeedsFixing.end());
+        NeedsFixing.erase(unique(NeedsFixing.begin(),NeedsFixing.end() ),NeedsFixing.end() );
 
-       if (verb) printf("repairing triangulation via %lu\n",NeedsFixing.size());
+        if (verb) printf("repairing triangulation via %lu\n",NeedsFixing.size());
 
-    //if there is nothing to fix, skip this routing (and its expensive memory accesses)
-    if(NeedsFixing.size()>0)
-        {
-        if (NeedsFixing.size() > (N/2))
+        if (NeedsFixing.size() > (N/6))
             globalTriangulationCGAL();
         else
            repairTriangulation(NeedsFixing);

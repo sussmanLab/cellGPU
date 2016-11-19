@@ -37,6 +37,8 @@ class DelaunayMD
         int neighMax;
         int NumCircumCenters;
 
+        int Fails;
+
         //repair is a vector of zeros (everything is fine) and ones (that index needs to be repaired)
         GPUArray<int> repair;
         vector<int> NeedsFixing;

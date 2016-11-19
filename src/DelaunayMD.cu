@@ -29,7 +29,8 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
                                               float boxsize,
                                               gpubox Box,
                                               Index2D ci,
-                                              Index2D cli
+                                              Index2D cli,
+                                              int *anyFail
                                               )
     {
     // read in the particle that belongs to this thread
@@ -108,6 +109,7 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
 
     if (badParticle)
         {
+        *anyFail = 1;
         d_repair[i1] = 1;
         d_repair[i2] = 1;
         d_repair[i3] = 1;
@@ -149,12 +151,42 @@ bool gpu_test_circumcenters(int *d_repair,
                             float boxsize,
                             gpubox &Box,
                             Index2D &ci,
-                            Index2D &cli)
+                            Index2D &cli,
+                            int &fail)
     {
     cudaError_t code;
     unsigned int block_size = 128;
     if (Nccs < 128) block_size = 32;
     unsigned int nblocks  = Nccs/block_size + 1;
+    
+    fail = 0;
+    int *anyFail;
+    cudaMalloc((void**)&anyFail,sizeof(int));
+    cudaMemcpy(anyFail,&fail,sizeof(int),cudaMemcpyHostToDevice);
+
+    code = cudaGetLastError();
+if(code!=cudaSuccess)
+    printf("testCircumcenters preliminary GPUassert: %s \n", cudaGetErrorString(code));
+
+    gpu_test_circumcenters_kernel<<<nblocks,block_size>>>(
+                            d_repair,
+                       //     d_redo2,
+                            d_ccs,
+                            d_pt,
+                            d_cell_sizes,
+                            d_idx,
+                            Nccs,
+                            xsize,
+                            ysize,
+                            boxsize,
+                            Box,
+                            ci,
+                            cli,
+                            anyFail
+                            );
+    cudaMemcpy(&fail,anyFail,sizeof(int),cudaMemcpyDeviceToHost);
+    cudaFree(anyFail);
+    
 
 //    cout << "Number of ccs to check: " << Nccs << endl;
 //    cudaBindTexture(0,dcc_tex,d_ccs,sizeof(int)*3*Nccs);
@@ -177,25 +209,6 @@ if(code!=cudaSuccess)
     printf("3 GPUassert: %s \n", cudaGetErrorString(code));
 
 */
-    code = cudaGetLastError();
-if(code!=cudaSuccess)
-    printf("testCircumcenters preliminary GPUassert: %s \n", cudaGetErrorString(code));
-
-    gpu_test_circumcenters_kernel<<<nblocks,block_size>>>(
-                            d_repair,
-                       //     d_redo2,
-                            d_ccs,
-                            d_pt,
-                            d_cell_sizes,
-                            d_idx,
-                            Nccs,
-                            xsize,
-                            ysize,
-                            boxsize,
-                            Box,
-                            ci,
-                            cli
-                            );
     code = cudaGetLastError();
 if(code!=cudaSuccess)
     printf("testCircumcenters GPUassert: %s \n", cudaGetErrorString(code));

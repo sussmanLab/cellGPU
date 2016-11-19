@@ -24,7 +24,8 @@ bool gpu_test_circumcenters(
                             float boxsize,
                             gpubox &Box,
                             Index2D &ci,
-                            Index2D &cli
+                            Index2D &cli,
+                            int &fail
                             );
 
 

@@ -101,16 +101,18 @@ int main(int argc, char*argv[])
     int USE_GPU = 0;
     int c;
     int testRepeat = 5;
+    int initSteps = 100;
     double err = 0.1;
     float p0 = 4.0;
     float a0 = 1.0;
     float v0 = 0.1;
-    while((c=getopt(argc,argv,"n:g:m:s:r:a:v:b:x:y:z:p:t:e:")) != -1)
+    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
             case 't': testRepeat = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
+            case 'i': initSteps = atoi(optarg); break;
             case 'e': err = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
@@ -219,7 +221,7 @@ int main(int argc, char*argv[])
 
     //cts is currently 0 for first half, 1 for second half
     spv.setCellType(cts);
-    for(int ii = 0; ii < 100; ++ii)
+    for(int ii = 0; ii < initSteps; ++ii)
         {
         spv.performTimestep();
         };
@@ -263,8 +265,8 @@ cudaProfilerStop();
     spv.meanForce();
 
     float cgaltime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
-    cout << endl << "force time  = " << spv.forcetiming/(float)CLOCKS_PER_SEC/testRepeat << endl;
-    cout << "other time  = " << spv.triangletiming/(float)CLOCKS_PER_SEC/testRepeat << endl;
+    cout << endl << "force time  = " << spv.forcetiming/(float)CLOCKS_PER_SEC/(initSteps+testRepeat) << endl;
+    cout << "other time  = " << spv.triangletiming/(float)CLOCKS_PER_SEC/(initSteps+testRepeat) << endl;
 
 /*
     t1=clock();
