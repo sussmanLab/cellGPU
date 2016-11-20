@@ -81,6 +81,7 @@ class SPV2D : public DelaunayMD
         //utility
         void getDelSets(int i);
         void allDelSets();
+        void centerCells();
 
         //cell-dynamics related functions
         void performTimestep();

@@ -249,16 +249,17 @@ cudaProfilerStart();
 //        printf("\n");
         spv.performTimestep();
 
-        if(ii%100 ==0)
+        if(ii%10 ==0)
 //if(true)
             {
-//            printf("timestep %i\n",ii);
-//            spv.meanForce();
-//            char fn[256];
-//            sprintf(fn,"/hdd2/data/spv/bidisperse/DTg0%i.txt",ii);
-//            ofstream outputc(fn);
-//            output1.precision(8);
-//            spv.writeTriangulation(outputc);
+            printf("timestep %i\n",ii);
+            spv.centerCells();
+            spv.meanForce();
+            char fn[256];
+            sprintf(fn,"/home/daniel/data/DTg0%i.txt",ii);
+            ofstream outputc(fn);
+            outputc.precision(8);
+            spv.writeTriangulation(outputc);
             };
         };
     t2=clock();

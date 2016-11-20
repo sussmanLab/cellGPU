@@ -187,6 +187,33 @@ void SPV2D::DisplacePointsAndRotate()
 
     };
 
+void SPV2D::centerCells()
+    {
+    ArrayHandle<float2> h_p(points,access_location::host,access_mode::read);
+    float x11,x12,x21,x22;
+    Box.getBoxDims(x11,x12,x21,x22);
+    float xcm, ycm;
+    xcm = 0.0; ycm = 0,0;
+    for (int ii = 0; ii < N; ++ii)
+        {
+        float2 pos = h_p.data[ii];
+        xcm+=pos.x;
+        ycm+=pos.y;
+        };
+    xcm /= (float)N;
+    ycm /= (float)N;
+    if(true)
+        {
+        ArrayHandle<float2> h_disp(displacements,access_location::host,access_mode::overwrite);
+        for (int ii = 0; ii < N; ++ii)
+            {
+            h_disp.data[ii].x = -(xcm-x11*0.5);
+            h_disp.data[ii].y = -(ycm-x22*0.5);
+            };
+        };
+    movePoints(displacements);
+    };
+
 void SPV2D::calculateDispCPU()
     {
     ArrayHandle<float2> h_f(forces,access_location::host,access_mode::read);
