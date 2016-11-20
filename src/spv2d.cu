@@ -485,7 +485,7 @@ __global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
         return;
 
     curandState_t randState;
-    curand_init(seed,//seed first
+    curand_init(seed*idx,//seed first
                 0,   // sequence -- only important for multiple cores
                 0,   //offset. advance by sequence by 1 plus this value
                 &randState);
@@ -494,6 +494,7 @@ __global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
     float diry = sinf(d_directors[idx]);
     //float angleDiff = curand_normal(&states[idx])*sqrt(2.0*dt*Dr);
     float angleDiff = curand_normal(&randState)*sqrt(2.0*dt*Dr);
+//    printf("%f\n",angleDiff);
     d_directors[idx] += angleDiff;
 
  //   float dx = dt*(v0*dirx + d_force[idx].x);
