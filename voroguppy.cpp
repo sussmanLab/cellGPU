@@ -101,7 +101,7 @@ int main(int argc, char*argv[])
     int USE_GPU = 0;
     int c;
     int testRepeat = 5;
-    int initSteps = 100;
+    int initSteps = 0;
     double err = 0.1;
     float p0 = 4.0;
     float a0 = 1.0;

@@ -74,7 +74,7 @@ obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o $(EXT_OBJS)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
 obj/voroguppy.o:voroguppy.cpp
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ -c $<
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
 delGPU.out: $(OBJS) $(CUOBJS) $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ $+
