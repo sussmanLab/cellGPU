@@ -171,57 +171,9 @@ int main(int argc, char*argv[])
     spv.writeTriangulation(output0);
 
 
-    //Compare force with output of Mattias' code
-    /*
-    char fn[256];
-    sprintf(fn,"/hdd2/repos/test.txt");
-    ifstream input(fn);
-    spv.readTriangulation(input);
-    spv.globalTriangulation();
-    spv.allDelSets();
-
-
-    spv.setCellPreferencesUniform(a0,p0);
-    spv.computeGeometry();
-      spv.setCellType(cts);
-    cout << " GPU computation " << endl;
-    t1=clock();
-    for (int tt = 0; tt < testRepeat; ++tt)
-        spv.computeSPVForcesGPU();
-    t2=clock();
-    spv.reportForces();
-    cout << "GPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl << endl;
-    spv.meanForce();
-    spv.meanForce();
-
-
-    cout << " CPU computation " << endl;
-    t1=clock();
-    for (int tt = 0; tt < testRepeat; ++tt)
-        {
-    for (int ii = 0; ii < numpts; ++ii)
-        {
-        spv.computeSPVForceCPU(ii);
-        //spv.computeSPVForceWithTensionsCPU(ii,.2);
-        };
-    spv.reportForces();
-        }
-    t2=clock();
-    cout << "CPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl << endl << endl << endl;
-    spv.meanForce();
-
-    for(int ii = 0; ii < 100; ++ii)
-        {
-    //    spv.performTimestep();
-        };
-//    cout << "current q = " << spv.reportq() << endl;
-
-    spv.writeTriangulation(output1);
-*/
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setDeltaT(err);
     spv.setv0(v0);
-
 
     //cts is currently 0 for first half, 1 for second half
     spv.setCellType(cts);
@@ -239,6 +191,7 @@ int main(int argc, char*argv[])
 */
 
 //    spv.performTimestep();
+    printf("Finished with initialization\n");
 cudaProfilerStart();
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
@@ -247,20 +200,21 @@ cudaProfilerStart();
 //        spv.delLoc.getNeighborsTri(602,nes);
 //        for (int jj = 0; jj < nes.size(); ++jj) printf("%i\t",nes[jj]);
 //        printf("\n");
-        spv.performTimestep();
 
         if(ii%10 ==0)
 //if(true)
             {
             printf("timestep %i\n",ii);
-            spv.centerCells();
-            spv.meanForce();
-            char fn[256];
-            sprintf(fn,"/home/daniel/data/DTg0%i.txt",ii);
-            ofstream outputc(fn);
-            outputc.precision(8);
-            spv.writeTriangulation(outputc);
+//            spv.centerCells();
+//            spv.meanForce();
+            spv.deltaAngle();
+//            char fn[256];
+//            sprintf(fn,"/home/daniel/data/DTg0%i.txt",ii);
+//            ofstream outputc(fn);
+//            outputc.precision(8);
+//            spv.writeTriangulation(outputc);
             };
+        spv.performTimestep();
         };
     t2=clock();
 cudaProfilerStop();
@@ -316,6 +270,53 @@ cudaProfilerStop();
     t2=clock();
     cout << "geometryCPU timing ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC << endl;
     */
+    //Compare force with output of Mattias' code
+    /*
+    char fn[256];
+    sprintf(fn,"/hdd2/repos/test.txt");
+    ifstream input(fn);
+    spv.readTriangulation(input);
+    spv.globalTriangulation();
+    spv.allDelSets();
+
+
+    spv.setCellPreferencesUniform(a0,p0);
+    spv.computeGeometry();
+      spv.setCellType(cts);
+    cout << " GPU computation " << endl;
+    t1=clock();
+    for (int tt = 0; tt < testRepeat; ++tt)
+        spv.computeSPVForcesGPU();
+    t2=clock();
+    spv.reportForces();
+    cout << "GPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl << endl;
+    spv.meanForce();
+    spv.meanForce();
+
+
+    cout << " CPU computation " << endl;
+    t1=clock();
+    for (int tt = 0; tt < testRepeat; ++tt)
+        {
+    for (int ii = 0; ii < numpts; ++ii)
+        {
+        spv.computeSPVForceCPU(ii);
+        //spv.computeSPVForceWithTensionsCPU(ii,.2);
+        };
+    spv.reportForces();
+        }
+    t2=clock();
+    cout << "CPU force ~ " << (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat << " per frame; " <<  endl << endl << endl << endl;
+    spv.meanForce();
+
+    for(int ii = 0; ii < 100; ++ii)
+        {
+    //    spv.performTimestep();
+        };
+//    cout << "current q = " << spv.reportq() << endl;
+
+    spv.writeTriangulation(output1);
+*/
 
 /*
 

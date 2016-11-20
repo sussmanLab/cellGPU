@@ -36,6 +36,7 @@ class SPV2D : public DelaunayMD
         GPUArray<int> CellType;//(KA,KP)
 
         GPUArray<float> cellDirectors;
+        GPUArray<float> cellDirectors_initial;// for testing
         GPUArray<float2> displacements;
 
         int Timestep;
@@ -112,6 +113,7 @@ class SPV2D : public DelaunayMD
         void meanForce();
         void meanArea();
         float reportq();
+        void deltaAngle();
 
         float triangletiming, forcetiming;
     };

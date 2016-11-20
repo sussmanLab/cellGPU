@@ -40,14 +40,17 @@ void SPV2D::Initialize(int n)
     forces.resize(n);
     AreaPeri.resize(n);
     cellDirectors.resize(n);
+    cellDirectors_initial.resize(n);
     displacements.resize(n);
     ArrayHandle<float> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
+    ArrayHandle<float> h_cdi(cellDirectors_initial,access_location::host, access_mode::overwrite);
 
     int randmax = 100000000;
     for (int ii = 0; ii < N; ++ii)
         {
         float theta = 2.0*PI/(float)(randmax)* (float)(rand()%randmax);
         h_cd.data[ii] = theta;
+        h_cdi.data[ii] = theta;
         };
     //setCurandStates(n);
     allDelSets();
@@ -245,7 +248,7 @@ void SPV2D::calculateDispCPU()
 
 void SPV2D::performTimestepCPU()
     {
-    printf("On CPU branch \n");
+//    printf("On CPU branch \n");
     computeGeometryCPU();
     if(useTension)
         {
@@ -261,7 +264,7 @@ void SPV2D::performTimestepCPU()
     calculateDispCPU();
 
     movePoints(displacements);
-    testAndRepairTriangulation(true);
+    testAndRepairTriangulation(false);
     };
 
 void SPV2D::performTimestepGPU()
@@ -1013,5 +1016,20 @@ float SPV2D::reportq()
         q += P / sqrt(A);
         };
     return q/(float)N;
+    };
+
+void SPV2D::deltaAngle()
+    {
+    ArrayHandle<float> h_cd(cellDirectors,access_location::host, access_mode::read);
+    ArrayHandle<float> h_cdi(cellDirectors_initial,access_location::host, access_mode::read);
+    float dA = 0;
+    for (int ii = 0; ii < N; ++ii)
+        {
+        dA += (h_cd.data[ii]-h_cdi.data[ii])* (h_cd.data[ii]-h_cdi.data[ii]);
+        };
+    dA/=(float)N;
+    printf("timestep, dA^2 = (%i,%f)\n",Timestep,dA);
+
+
     };
 
