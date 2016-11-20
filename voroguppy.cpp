@@ -99,6 +99,7 @@ int main(int argc, char*argv[])
 {
     int numpts = 200;
     int USE_GPU = 0;
+    int USE_TENSION = 0;
     int c;
     int testRepeat = 5;
     int initSteps = 0;
@@ -106,14 +107,17 @@ int main(int argc, char*argv[])
     float p0 = 4.0;
     float a0 = 1.0;
     float v0 = 0.1;
+    float gamma = 0.0;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
             case 't': testRepeat = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
+            case 'x': USE_TENSION = atoi(optarg); break;
             case 'i': initSteps = atoi(optarg); break;
             case 'e': err = atof(optarg); break;
+            case 's': gamma = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
             case 'v': v0 = atof(optarg); break;
@@ -160,8 +164,8 @@ int main(int argc, char*argv[])
 
 
     SPV2D spv(numpts,1.0,p0);
-
-    spv.getDelSets(19);
+    spv.setTension(gamma);
+    if(USE_TENSION != 0) spv.setUseTension(true);
 
 
     spv.writeTriangulation(output0);

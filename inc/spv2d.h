@@ -67,7 +67,7 @@ class SPV2D : public DelaunayMD
         void setv0(float v0new){v0 = v0new;};
         void setDr(float dr){Dr = dr;};
 
-        void setGamma(float g){gamma = g;};
+        void setTension(float g){gamma = g;};
         void setUseTension(bool u){useTension = u;};
 
 

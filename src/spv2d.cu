@@ -230,6 +230,7 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
     unsigned int tidx = blockDim.x * blockIdx.x + threadIdx.x;
     if (tidx >= computations)
         return;
+
     //which particle are we evaluating, and which neighbor
     int pidx = tidx / neighMax;
     int nn = tidx - pidx*neighMax;
@@ -242,14 +243,14 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
     float2 pi   = d_points[pidx];
 
     int4 neighs = d_delSets[n_idx(nn,pidx)];
+    int neighOther = d_delOther[n_idx(nn,pidx)];
     float2 pnm2,rij, rik,pn2,pno;
-//if(true)    printf("tidx:%i,   pidx:%i,   nm %i,  %i %i %i %i \n",tidx,pidx,neighMax,neighs.x,neighs.y,neighs.z,neighs.w);
 
     Box.minDist(d_points[neighs.x],pi,pnm2);
     Box.minDist(d_points[neighs.y],pi,rij);
     Box.minDist(d_points[neighs.z],pi,rik);
     Box.minDist(d_points[neighs.w],pi,pn2);
-    Box.minDist(d_points[d_delOther[n_idx(nn,pidx)]],pi,pno);
+    Box.minDist(d_points[neighOther],pi,pno);
 
     //first, compute the derivative of the main voro point w/r/t pidx's position
     //pnm1 is rij, pn1 is rik
@@ -288,16 +289,21 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
     Circumcenter(rij,rik,pno,vother);
 
 
-    float2 dAidv,dPidv;
-    float2 dAjdv,dPjdv;
-    float2 dAkdv,dPkdv;
+    float2 dAdv,dPdv,dTdv;
     float2 dEdv;
+    float  Adiff, Pdiff;
     float2 dlast, dnext;
     float  dlnorm,dnnorm;
-
+    bool Tik = false;
+    bool Tij = false;
+    bool Tjk = false;
+    if (d_cellTypes[pidx] != d_cellTypes[neighs.z]) Tik = true;
+    if (d_cellTypes[pidx] != d_cellTypes[neighs.y]) Tij = true;
+    if (d_cellTypes[neighs.z] != d_cellTypes[neighs.y]) Tjk = true;
+//neighs.z is "baseNeigh" of cpu routing... neighs.y is "otherNeigh"....neighOther is "DT_other_idx"
     //self terms
-    dAidv.x = 0.5*(vlast.y-vnext.y);
-    dAidv.y = 0.5*(vnext.x-vlast.x);
+    dAdv.x = 0.5*(vlast.y-vnext.y);
+    dAdv.y = 0.5*(vnext.x-vlast.x);
     dlast.x = vlast.x-vcur.x;
     dlast.y=vlast.y-vcur.y;
     dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
@@ -308,12 +314,29 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
         dnnorm = THRESHOLD;
     if(dlnorm < THRESHOLD)
         dlnorm = THRESHOLD;
-    dPidv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dTdv.x = 0.0; dTdv.y = 0.0;
+    if(Tik)
+        {
+        dTdv.x -= dnext.x/dnnorm;
+        dTdv.y -= dnext.y/dnnorm;
+        };
+    if(Tij)
+        {
+        dTdv.x += dlast.x/dlnorm;
+        dTdv.y += dlast.y/dlnorm;
+        };
+
+    Adiff = KA*(d_AP[pidx].x - d_APpref[pidx].x);
+    Pdiff = KA*(d_AP[pidx].y - d_APpref[pidx].y);
+
+    dEdv.x  = 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x + gamma*dTdv.x;
+    dEdv.y  = 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y + gamma*dTdv.y;
 
     //other terms...k first...
-    dAkdv.x = 0.5*(vnext.y-vother.y);
-    dAkdv.y = 0.5*(vother.x-vnext.x);
+    dAdv.x = 0.5*(vnext.y-vother.y);
+    dAdv.y = 0.5*(vother.x-vnext.x);
     dlast.x = vnext.x-vcur.x;
     dlast.y=vnext.y-vcur.y;
     dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
@@ -324,12 +347,28 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
         dnnorm = THRESHOLD;
     if(dlnorm < THRESHOLD)
         dlnorm = THRESHOLD;
-    dPkdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPkdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    Adiff = KA*(d_AP[neighs.z].x - d_APpref[neighs.z].x);
+    Pdiff = KA*(d_AP[neighs.z].y - d_APpref[neighs.z].y);
+    dTdv.x = 0.0; dTdv.y = 0.0;
+    if(Tik)
+        {
+        dTdv.x += dlast.x/dlnorm;
+        dTdv.y += dlast.y/dlnorm;
+        };
+    if(Tjk)
+        {
+        dTdv.x -= dnext.x/dnnorm;
+        dTdv.y -= dnext.y/dnnorm;
+        };
+
+    dEdv.x  += 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x + gamma*dTdv.x;
+    dEdv.y  += 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y + gamma*dTdv.y;
 
     //...and then j
-    dAjdv.x = 0.5*(vother.y-vlast.y);
-    dAjdv.y = 0.5*(vlast.x-vother.x);
+    dAdv.x = 0.5*(vother.y-vlast.y);
+    dAdv.y = 0.5*(vlast.x-vother.x);
     dlast.x = vother.x-vcur.x;
     dlast.y=vother.y-vcur.y;
     dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
@@ -340,32 +379,26 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
         dnnorm = THRESHOLD;
     if(dlnorm < THRESHOLD)
         dlnorm = THRESHOLD;
-    dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
+    Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
+    dTdv.x = 0.0; dTdv.y = 0.0;
+    if(Tij)
+        {
+        dTdv.x -= dnext.x/dnnorm;
+        dTdv.y -= dnext.y/dnnorm;
+        };
+    if(Tjk)
+        {
+        dTdv.x += dlast.x/dlnorm;
+        dTdv.y += dlast.y/dlnorm;
+        };
 
-    float Aid, Pid, Akd, Pkd, Ajd, Pjd;
-    
-    Aid = KA*(d_AP[pidx].x - d_APpref[pidx].x);
-    Pid = KA*(d_AP[pidx].y - d_APpref[pidx].y);
-    Akd = KA*(d_AP[neighs.z].x - d_APpref[neighs.z].x);
-    Pkd = KA*(d_AP[neighs.z].y - d_APpref[neighs.z].y);
-    Ajd = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
-    Pjd = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
-    
-    dEdv.x  = 2.0*Aid*dAidv.x +2.0*Pid*dPidv.x;
-    dEdv.x += 2.0*Akd*dAkdv.x +2.0*Pkd*dPkdv.x;
-    dEdv.x += 2.0*Ajd*dAjdv.x +2.0*Pjd*dPjdv.x;
+    dEdv.x  += 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x + gamma*dTdv.x;
+    dEdv.y  += 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y + gamma*dTdv.y;
 
-    dEdv.y  = 2.0*Aid*dAidv.y +2.0*Pid*dPidv.y;
-    dEdv.y += 2.0*Akd*dAkdv.y +2.0*Pkd*dPkdv.y;
-    dEdv.y += 2.0*Ajd*dAjdv.y +2.0*Pjd*dPjdv.y;
-
-    float2 temp = dEdv*dhdr;
-    d_forceSets[n_idx(nn,pidx)] = temp;
-
-//    if(pidx == 0) printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",dPidv.x,dPidv.y,dPkdv.x,dPkdv.y,dPjdv.x,dPjdv.y);
-    //if(pidx == 0) printf("%i %f %f\n",nn,temp.x,temp.y);
-//    if(pidx == 0) printf("%f\t%f\t%f\t%f\n",dhdr.x11,dhdr.x12,dhdr.x21,dhdr.x22);
+    d_forceSets[n_idx(nn,pidx)] = dEdv*dhdr;
 
     return;
     };
