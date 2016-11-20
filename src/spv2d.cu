@@ -281,6 +281,7 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
 __global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
                                           float2 *d_force,
                                           float *d_directors,
+                         //                 float2 *d_displacements,
                                           int N,
                                           float dt,
                                           float Dr,
@@ -309,8 +310,13 @@ __global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
 
  //   float dx = dt*(v0*dirx + d_force[idx].x);
 //if (idx == 0) printf("x-displacement = %e\n",dx);
+//    float f = dt*(v0*dirx + d_force[idx].x);
     d_points[idx].x += dt*(v0*dirx + d_force[idx].x);
+//    d_displacements[idx].x = f;
+
+//    f = dt*(v0*diry + d_force[idx].y);
     d_points[idx].y += dt*(v0*diry + d_force[idx].y);
+//    d_displacements[idx].y = f;
     Box.putInBoxReal(d_points[idx]);
     return;
     };
@@ -376,6 +382,7 @@ bool gpu_compute_geometry(float2 *d_points,
 bool gpu_displace_and_rotate(float2 *d_points,
                         float2 *d_force,
                         float  *d_directors,
+  //                      float2 *d_displacements,
                         int N,
                         float dt,
                         float Dr,
@@ -394,6 +401,7 @@ bool gpu_displace_and_rotate(float2 *d_points,
                                                 d_points,
                                                 d_force,
                                                 d_directors,
+    //                                            d_displacements,
                                                 N,
                                                 dt,
                                                 Dr,

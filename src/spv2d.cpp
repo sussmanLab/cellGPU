@@ -165,20 +165,16 @@ void SPV2D::performTimestep()
 
 void SPV2D::DisplacePointsAndRotate()
     {
-    if (true)
-    {
-    ArrayHandle<float2> d_p(points,access_location::host,access_mode::read);
-    ArrayHandle<float2> d_f(forces,access_location::host,access_mode::read);
-//    printf ("(%f,%f)\t (%f,%f)\n", d_p.data[3671].x,d_p.data[3671].y,d_f.data[3671].x,d_f.data[3671].y);
-    };
 
     ArrayHandle<float2> d_p(points,access_location::device,access_mode::readwrite);
     ArrayHandle<float2> d_f(forces,access_location::device,access_mode::read);
     ArrayHandle<float> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
+//    ArrayHandle<float2> d_disp(displacements,access_location::device,access_mode::overwrite);
 
     gpu_displace_and_rotate(d_p.data,
                             d_f.data,
                             d_cd.data,
+//                            d_disp.data,
                             N,
                             deltaT,
                             Dr,

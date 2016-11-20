@@ -19,6 +19,7 @@ bool gpu_displace_and_rotate(
                     float2 *d_points,
                     float2 *d_force,
                     float  *directors,
+//                    float2  *displacements,
                     int N,
                     float dt,
                     float Dr,
