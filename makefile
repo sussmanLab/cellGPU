@@ -14,7 +14,7 @@ LIB_CGAL = -L/home/user/CGAL/CGAL-4.9/lib -lCGAL -lCGAL_Core -lgmp -lmpfr
 
 #common flags
 COMMONFLAGS += $(INCLUDES) -O3 -std=c++11 -g
-NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo #-Xptxas -dlcm=ca#-G
+NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo -Wno-deprecated-gpu-targets#-Xptxas -dlcm=ca#-G
 CXXFLAGS += $(COMMONFLAGS) -frounding-math
 CXXFLAGS += -w
 CFLAGS += $(COMMONFLAGS)

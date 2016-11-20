@@ -29,6 +29,8 @@ SPV2D::SPV2D(int n,float A0, float P0)
 
 void SPV2D::Initialize(int n)
     {
+    gamma = 0.;
+    useTension = false;
     Timestep = 0;
     triangletiming = 0.0; forcetiming = 0.0;
     setv0(0.05);
@@ -218,12 +220,18 @@ void SPV2D::performTimestepCPU()
     {
     printf("On CPU branch \n");
     computeGeometryCPU();
-    for (int ii = 0; ii < N; ++ii)
-        computeSPVForceWithTensionsCPU(ii,0.3);
-        //computeSPVForceCPU(ii);
+    if(useTension)
+        {
+        for (int ii = 0; ii < N; ++ii)
+            computeSPVForceWithTensionsCPU(ii,gamma);
+        }
+    else
+        {
+        for (int ii = 0; ii < N; ++ii)
+            computeSPVForceCPU(ii);
+        };
 
     calculateDispCPU();
-
 
     movePoints(displacements);
     testAndRepairTriangulation(true);
@@ -233,19 +241,16 @@ void SPV2D::performTimestepGPU()
     {
     clock_t t1,t2;
 //    printf("computing geometry for timestep %i\n",Timestep);
-    //computeGeometryCPU();
     t1=clock();
     computeGeometry();
     t2=clock();
     triangletiming += (t2-t1);
 //    printf("computing forces\n");
     t1=clock();
-//    for (int ii = 0; ii < N; ++ii)
-        {
-//        computeSPVForceCPU(ii);
-        //computeSPVForceWithTensionsCPU(ii,0.2);
-        };
-    computeSPVForcesGPU();    
+    if(useTension)
+        computeSPVForcesWithTensionsGPU();
+    else
+        computeSPVForcesGPU();    
     t2=clock();
     forcetiming += t2-t1;
     t1=clock();
@@ -321,6 +326,39 @@ void SPV2D::computeSPVForcesGPU()
                     N,neighMax,n_idx,Box);
 
     };
+
+void SPV2D::computeSPVForcesWithTensionsGPU()
+    {
+    ArrayHandle<float2> d_p(points,access_location::device,access_mode::read);
+    ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_AP(AreaPeri,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
+    ArrayHandle<int4> d_delSets(delSets,access_location::device,access_mode::read);
+    ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
+    ArrayHandle<float2> d_forces(forces,access_location::device,access_mode::overwrite);
+    ArrayHandle<int> d_ct(CellType,access_location::device,access_mode::read);
+
+
+    float KA = 1.0;
+    float KP = 1.0;
+    gpu_force_sets_tensions(
+                    d_p.data,
+                    d_nn.data,
+                    d_AP.data,
+                    d_APpref.data,
+                    d_delSets.data,
+                    d_delOther.data,
+                    d_forceSets.data,
+                    d_forces.data,
+                    d_ct.data,
+                    KA,
+                    KP,
+                    gamma,
+                    N,neighMax,n_idx,Box);
+
+    };
+
 
 void SPV2D::computeGeometryCPU()
     {
@@ -616,7 +654,7 @@ void SPV2D::computeSPVForceCPU(int i)
 //    printf("total force on cell: (%f,%f)\n",forceSum.x,forceSum.y);
     };
 
-void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma,bool verbose)
+void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
     {
     float Pthreshold = 1e-8;
  //   printf("cell %i: \n",i);
@@ -849,14 +887,14 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,float Gamma,bool verbose)
             };
 
 
-        dEidv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x + Gamma*dTidv.x;
-        dEidv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y + Gamma*dTidv.y;
+        dEidv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x + gamma*dTidv.x;
+        dEidv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y + gamma*dTidv.y;
 
-        dEkdv.x = 2.0*Akdiff*dAkdv.x + 2.0*Pkdiff*dPkdv.x + Gamma*dTkdv.x;
-        dEkdv.y = 2.0*Akdiff*dAkdv.y + 2.0*Pkdiff*dPkdv.y + Gamma*dTkdv.y;
+        dEkdv.x = 2.0*Akdiff*dAkdv.x + 2.0*Pkdiff*dPkdv.x + gamma*dTkdv.x;
+        dEkdv.y = 2.0*Akdiff*dAkdv.y + 2.0*Pkdiff*dPkdv.y + gamma*dTkdv.y;
 
-        dEjdv.x = 2.0*Ajdiff*dAjdv.x + 2.0*Pjdiff*dPjdv.x + Gamma*dTjdv.x;
-        dEjdv.y = 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y + Gamma*dTjdv.y;
+        dEjdv.x = 2.0*Ajdiff*dAjdv.x + 2.0*Pjdiff*dPjdv.x + gamma*dTjdv.x;
+        dEjdv.y = 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y + gamma*dTjdv.y;
 
         float2 temp = dEidv*dhdri[nn];
         forceSum.x += temp.x;

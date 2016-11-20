@@ -57,5 +57,23 @@ bool gpu_force_sets(
                     gpubox &Box
                     );
 
+bool gpu_force_sets_tensions(
+                    float2 *d_points,
+                    int    *d_nn,
+                    float2 *d_AP,
+                    float2 *d_APpref,
+                    int4   *d_delSets,
+                    int    *d_detOther,
+                    float2 *d_forceSets,
+                    float2 *d_forces,
+                    int    *d_cellTypes,
+                    float  KA,
+                    float  KP,
+                    float  gamma,
+                    int    N,
+                    int    neighMax,
+                    Index2D &n_idx,
+                    gpubox &Box
+                    );
 #endif
 
