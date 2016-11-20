@@ -207,7 +207,7 @@ cudaProfilerStart();
             printf("timestep %i\n",ii);
 //            spv.centerCells();
 //            spv.meanForce();
-            spv.deltaAngle();
+//            spv.deltaAngle();
             char fn[256];
             sprintf(fn,"/home/daniel/data/DTg0%i.txt",ii);
             ofstream outputc(fn);

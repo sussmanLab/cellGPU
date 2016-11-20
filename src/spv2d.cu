@@ -502,7 +502,7 @@ __global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
 //    float f = dt*(v0*dirx + d_force[idx].x);
     d_points[idx].x += dt*(v0*dirx + d_force[idx].x);
 //    d_displacements[idx].x = f;
-
+//printf("%e\t", dt*(v0*dirx + d_force[idx].x));
 //    f = dt*(v0*diry + d_force[idx].y);
     d_points[idx].y += dt*(v0*diry + d_force[idx].y);
 //    d_displacements[idx].y = f;
