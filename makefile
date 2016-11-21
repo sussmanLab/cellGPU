@@ -70,8 +70,8 @@ obj/DelaunayCGAL.o:src/DelaunayCGAL.cpp
 obj/Delaunay1.o:src/Delaunay1.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
-obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o $(EXT_OBJS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
+obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o obj/DelaunayCGAL.o $(EXT_OBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIB_CGAL) -o $@ -c $<
 
 obj/voroguppy.o:voroguppy.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<

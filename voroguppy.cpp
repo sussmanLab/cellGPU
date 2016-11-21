@@ -27,7 +27,7 @@
 #include "DelaunayLoc.h"
 #include "DelaunayTri.h"
 
-#include "DelaunayCGAL.h"
+//#include "DelaunayCGAL.h"
 
 //comment this definition out to compile on cuda-free systems
 #define ENABLE_CUDA

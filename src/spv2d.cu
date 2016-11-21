@@ -485,7 +485,8 @@ __global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
         return;
 
     curandState_t randState;
-    curand_init(seed*idx,//seed first
+    //seed is timestep, so seed*N+idx
+    curand_init(seed*N+idx,//seed first
                 0,   // sequence -- only important for multiple cores
                 0,   //offset. advance by sequence by 1 plus this value
                 &randState);
