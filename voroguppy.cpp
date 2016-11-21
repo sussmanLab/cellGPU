@@ -137,7 +137,7 @@ int main(int argc, char*argv[])
     output2.precision(8);
 
     char dataname[256];
-    sprintf(dataname,"/hdd2/data/spv/test.nc");
+    sprintf(dataname,"/hdd2/data/spv/Ellipse_N%i_p%.2f_g%.2f.nc",numpts,p0,gamma);
     SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
     vector<int> cts(numpts);
@@ -175,12 +175,17 @@ int main(int argc, char*argv[])
 
     printf("Finished with initialization\n");
 
+    printf("Setting cells within the central ellipse to different type, applying tension...\n");
+    spv.setCellTypeEllipse(0.25,2.0);
+    spv.setUseTension(true);
+    spv.setTension(gamma);
+
 cudaProfilerStart();
     t1=clock();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
 
-        if(ii%10 ==0)
+        if(ii%100 ==0)
             {
             printf("timestep %i\n",ii);
             ncdat.WriteState(spv);
