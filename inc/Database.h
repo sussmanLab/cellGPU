@@ -143,7 +143,7 @@ int SPVDatabase::GetCurrentRec()
 void SPVDatabase::WriteState(STATE &s, float time, int rec)
 {
     if(rec<0)   rec = recDim->size();
-    if (time < 0) time = rec;
+    if (time < 0) time = s.Timestep*s.deltaT;
 
     std::vector<float> boxdat(4,0.0);
     float x11,x12,x21,x22;

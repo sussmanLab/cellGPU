@@ -185,7 +185,7 @@ cudaProfilerStart();
     for(int ii = 0; ii < testRepeat; ++ii)
         {
 
-        if(ii%100 ==0)
+        if(ii%10000 ==0)
             {
             printf("timestep %i\n",ii);
             ncdat.WriteState(spv);

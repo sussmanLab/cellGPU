@@ -22,7 +22,6 @@ using namespace std;
 class SPV2D : public DelaunayMD
     {
     protected:
-        float deltaT;
         float Dr;
         float v0;
 
@@ -37,7 +36,6 @@ class SPV2D : public DelaunayMD
         GPUArray<float> cellDirectors_initial;// for testing
         GPUArray<float2> displacements;
 
-        int Timestep;
         curandState *devStates;
 
         //delSet.data[n_idx(nn,i)] are four consecutive delaunay neighbors, orientationally ordered, of point i (for use in computing forces on GPU)
@@ -48,6 +46,8 @@ class SPV2D : public DelaunayMD
         GPUArray<float2> forceSets;
 
     public:
+        int Timestep;
+        float deltaT;
         GPUArray<int> CellType;
         GPUArray<float> cellDirectors;
         GPUArray<float2> forces;
