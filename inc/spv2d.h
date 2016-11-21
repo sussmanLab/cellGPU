@@ -33,7 +33,6 @@ class SPV2D : public DelaunayMD
         GPUArray<float2> AreaPeriPreferences;
         GPUArray<float2> AreaPeri;
         GPUArray<float2> Moduli;//(KA,KP)
-        GPUArray<int> CellType;//(KA,KP)
 
         GPUArray<float> cellDirectors_initial;// for testing
         GPUArray<float2> displacements;
@@ -49,6 +48,7 @@ class SPV2D : public DelaunayMD
         GPUArray<float2> forceSets;
 
     public:
+        GPUArray<int> CellType;
         GPUArray<float> cellDirectors;
         GPUArray<float2> forces;
 
@@ -74,9 +74,13 @@ class SPV2D : public DelaunayMD
 
 
         void setCellPreferencesUniform(float A0, float P0);
+        void setModuliUniform(float KA, float KP);
+
         void setCellTypeUniform(int i);
         void setCellType(vector<int> &types);
-        void setModuliUniform(float KA, float KP);
+
+        //sets particles within an ellipse to type 0, outside to type 1. frac is fraction of area for the ellipse to take up, aspectRatio is (r_x/r_y)
+        void setCellTypeEllipse(float frac, float aspectRatio);
 
         void setCurandStates(int i);
 

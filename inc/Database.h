@@ -46,7 +46,7 @@ private:
     typedef SPV2D STATE;
     int Nv; // number of vertices in delaunay triangulation
     NcDim *recDim, *NvDim, *dofDim, *boxDim, *unitDim;
-    NcVar *posVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var;
+    NcVar *posVar, *typeVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var;
 
     int Current;
 
@@ -108,6 +108,7 @@ void SPVDatabase::SetDimVar()
     timeVar          = File.add_var("time",     ncFloat,recDim, unitDim);
     means0Var          = File.add_var("means0",     ncFloat,recDim, unitDim);
     posVar          = File.add_var("pos",       ncFloat,recDim, dofDim);
+    typeVar          = File.add_var("type",         ncInt,recDim, NvDim );
     directorVar          = File.add_var("director",         ncFloat,recDim, NvDim );
     BoxMatrixVar    = File.add_var("BoxMatrix", ncFloat,recDim, boxDim);
 }
@@ -122,6 +123,7 @@ void SPVDatabase::GetDimVar()
     unitDim = File.get_dim("unit");
     //Get the variables
     posVar          = File.get_var("pos");
+    typeVar          = File.get_var("type");
     directorVar          = File.get_var("director");
     means0Var          = File.get_var("means0");
     BoxMatrixVar    = File.get_var("BoxMatrix");
@@ -153,11 +155,13 @@ void SPVDatabase::WriteState(STATE &s, float time, int rec)
 
     std::vector<float> posdat(2*Nv);
     std::vector<float> directordat(Nv);
+    std::vector<int> typedat(Nv);
     int idx = 0;
     float means0=0.0;
 
     ArrayHandle<float2> h_p(s.points,access_location::host,access_mode::read);
     ArrayHandle<float> h_cd(s.cellDirectors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_ct(s.CellType,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Nv; ++ii)
         {
@@ -169,6 +173,7 @@ void SPVDatabase::WriteState(STATE &s, float time, int rec)
         posdat[(2*idx)] = px;
         posdat[(2*idx)+1] = py;
         directordat[ii] = h_cd.data[ii];
+        typedat[ii] = h_ct.data[ii];
         idx +=1;
         };
 //    means0 = means0/Nv;
@@ -178,6 +183,7 @@ void SPVDatabase::WriteState(STATE &s, float time, int rec)
     means0Var      ->put_rec(&means0,      rec);
     timeVar      ->put_rec(&time,      rec);
     posVar      ->put_rec(&posdat[0],     rec);
+    typeVar       ->put_rec(&typedat[0],      rec);
     directorVar       ->put_rec(&directordat[0],      rec);
     BoxMatrixVar->put_rec(&boxdat[0],     rec);
     File.sync();

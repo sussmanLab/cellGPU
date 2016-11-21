@@ -96,6 +96,31 @@ void SPV2D::setCellType(vector<int> &types)
         };
     };
 
+void SPV2D::setCellTypeEllipse(float frac, float aspectRatio)
+    {
+    float x11,x12,x21,x22;
+    Box.getBoxDims(x11,x12,x21,x22);
+    float xc = x11*0.5;
+    float yc = x22*0.5;
+
+    float ry = sqrt(x11*x22*frac/(3.14159*aspectRatio));
+    float rx = aspectRatio*ry;
+
+    CellType.resize(N);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    ArrayHandle<float2> h_p(points,access_location::host,access_mode::read);
+
+    for (int ii = 0; ii < N; ++ii)
+        {
+        float px = h_p.data[ii].x;
+        float py = h_p.data[ii].y;
+        float test = (px-xc)*(px-xc)/(rx*rx) + (py-yc)*(py-yc)/(ry*ry);
+        if (test <=1.0)
+            h_ct.data[ii] = 0;
+        else
+            h_ct.data[ii] = 1;
+        };
+    };
 /*
 void SPV2D::setCurandStates(int i)
     {
