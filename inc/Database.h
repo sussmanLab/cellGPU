@@ -5,7 +5,9 @@
 #include <netcdfcpp.h>
 #include <string>
 #include "vector_types.h"
-#include "spv2d.h"
+//#include "DelaunayMD.h"
+
+
 
 
 using namespace std;
@@ -32,26 +34,25 @@ BaseDatabase::BaseDatabase(string fn, NcFile::FileMode mode)
 }
 
 
-
 /////////////////////////////////////////////////////////////////////////////////
 //class for a state database for a 2d delaunay triangulation
 //the box dimensions are stored, the 2d unwrapped coordinate of the delaunay vertices,
 //and the shape index parameter for each vertex
 /////////////////////////////////////////////////////////////////////////////////
 
-class TriangulationDatabase : public BaseDatabase
+class SPVDatabase : public BaseDatabase
 {
 private:
-    typedef DelaunayMD STATE;
+    typedef SPV2D STATE;
     int Nv; // number of vertices in delaunay triangulation
     NcDim *recDim, *NvDim, *dofDim, *boxDim, *unitDim;
-    NcVar *posVar, *s0Var, *BoxMatrixVar, *timeVar, *means0Var;
+    NcVar *posVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var;
 
     int Current;
 
 
 public:
-    TriangulationDatabase(int np, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
+    SPVDatabase(int np, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
 
 private:
     void SetDimVar();
@@ -61,7 +62,7 @@ public:
     void SetCurrentRec(int r);
     int  GetCurrentRec();
 
-    void WriteState(STATE const &c, double time = -1.0, int rec=-1);
+    void WriteState(STATE &c, float time = -1.0, int rec=-1);
     void ReadState(STATE &c, int rec);
     void ReadNextState(STATE &c);
 };
@@ -71,7 +72,7 @@ public:
 //////////////////////////////   IMPLEMENTATION   ///////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 
-TriangulationDatabase::TriangulationDatabase(int np, string fn, NcFile::FileMode mode)
+SPVDatabase::SPVDatabase(int np, string fn, NcFile::FileMode mode)
     : BaseDatabase(fn,mode),
       Nv(np),
       Current(0)
@@ -94,7 +95,7 @@ TriangulationDatabase::TriangulationDatabase(int np, string fn, NcFile::FileMode
         };
 }
 
-void TriangulationDatabase::SetDimVar()
+void SPVDatabase::SetDimVar()
 {
     //Set the dimensions
     recDim = File.add_dim("rec");
@@ -104,14 +105,14 @@ void TriangulationDatabase::SetDimVar()
     unitDim = File.add_dim("unit",1);
 
     //Set the variables
-    timeVar          = File.add_var("time",     ncDouble,recDim, unitDim);
-    means0Var          = File.add_var("means0",     ncDouble,recDim, unitDim);
-    posVar          = File.add_var("pos",       ncDouble,recDim, dofDim);
-    s0Var          = File.add_var("s0",         ncDouble,recDim, NvDim );
-    BoxMatrixVar    = File.add_var("BoxMatrix", ncDouble,recDim, boxDim);
+    timeVar          = File.add_var("time",     ncFloat,recDim, unitDim);
+    means0Var          = File.add_var("means0",     ncFloat,recDim, unitDim);
+    posVar          = File.add_var("pos",       ncFloat,recDim, dofDim);
+    directorVar          = File.add_var("director",         ncFloat,recDim, NvDim );
+    BoxMatrixVar    = File.add_var("BoxMatrix", ncFloat,recDim, boxDim);
 }
 
-void TriangulationDatabase::GetDimVar()
+void SPVDatabase::GetDimVar()
 {
     //Get the dimensions
     recDim = File.get_dim("rec");
@@ -121,64 +122,69 @@ void TriangulationDatabase::GetDimVar()
     unitDim = File.get_dim("unit");
     //Get the variables
     posVar          = File.get_var("pos");
-    s0Var          = File.get_var("s0");
+    directorVar          = File.get_var("director");
     means0Var          = File.get_var("means0");
     BoxMatrixVar    = File.get_var("BoxMatrix");
     timeVar    = File.get_var("time");
 }
 
-void TriangulationDatabase::SetCurrentRec(int r)
+void SPVDatabase::SetCurrentRec(int r)
 {
     Current = r;
 }
 
-int TriangulationDatabase::GetCurrentRec()
+int SPVDatabase::GetCurrentRec()
 {
     return Current;
 }
 
-void TriangulationDatabase::WriteState(STATE const &s, double time, int rec)
+void SPVDatabase::WriteState(STATE &s, float time, int rec)
 {
     if(rec<0)   rec = recDim->size();
     if (time < 0) time = rec;
 
-    std::vector<double> boxdat(4,0.0);
-//    boxdat[0] = s._box.xDimension();
-//    boxdat[3] = s._box.yDimension();
-    std::vector<double> posdat(2*Nv);
-    std::vector<double> s0dat(Nv);
+    std::vector<float> boxdat(4,0.0);
+    float x11,x12,x21,x22;
+    s.Box.getBoxDims(x11,x12,x21,x22);
+    boxdat[0]=x11;
+    boxdat[1]=x12;
+    boxdat[2]=x21;
+    boxdat[3]=x22;
+
+    std::vector<float> posdat(2*Nv);
+    std::vector<float> directordat(Nv);
     int idx = 0;
-    double means0=0.0;
+    float means0=0.0;
 
     ArrayHandle<float2> h_p(s.points,access_location::host,access_mode::read);
+    ArrayHandle<float> h_cd(s.cellDirectors,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Nv; ++ii)
         {
 //        double px = c->positionNotInBox().x();
 //        double py = c->positionNotInBox().y();
 //        double s0 = (c->perimeter()) / sqrt(c->area());
-        double px = h_p.data[ii].x;
-        double py = h_p.data[ii].y;
-        double s0 = 0.0;
+        float px = h_p.data[ii].x;
+        float py = h_p.data[ii].y;
         posdat[(2*idx)] = px;
         posdat[(2*idx)+1] = py;
-        s0dat[idx] = s0;
-        means0+=s0;
+        directordat[ii] = h_cd.data[ii];
         idx +=1;
         };
-    means0 = means0/Nv;
+//    means0 = means0/Nv;
+    means0 = s.reportq();
 
     //Write all the data
     means0Var      ->put_rec(&means0,      rec);
     timeVar      ->put_rec(&time,      rec);
     posVar      ->put_rec(&posdat[0],     rec);
-    s0Var       ->put_rec(&s0dat[0],      rec);
+    directorVar       ->put_rec(&directordat[0],      rec);
     BoxMatrixVar->put_rec(&boxdat[0],     rec);
     File.sync();
 }
 
 //overwrites a tissue that needs to have the correct number of cells when passed to this function
-void TriangulationDatabase::ReadState(STATE &t, int rec)
+void SPVDatabase::ReadState(STATE &t, int rec)
 {
     GetDimVar();
 
@@ -206,13 +212,6 @@ void TriangulationDatabase::ReadState(STATE &t, int rec)
 
 }
 
-/*
-
-
-
-
-
-*/
 
 
 #endif

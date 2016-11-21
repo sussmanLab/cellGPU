@@ -35,7 +35,6 @@ class SPV2D : public DelaunayMD
         GPUArray<float2> Moduli;//(KA,KP)
         GPUArray<int> CellType;//(KA,KP)
 
-        GPUArray<float> cellDirectors;
         GPUArray<float> cellDirectors_initial;// for testing
         GPUArray<float2> displacements;
 
@@ -46,9 +45,11 @@ class SPV2D : public DelaunayMD
         GPUArray<int4> delSets;
         //delOther.daata[n_idx(nn,i)] contains the index of the "other" delaunay neighbor. i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
         GPUArray<int> delOther;
+        //interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
         GPUArray<float2> forceSets;
 
     public:
+        GPUArray<float> cellDirectors;
         GPUArray<float2> forces;
 
         ~SPV2D()

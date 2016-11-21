@@ -42,6 +42,7 @@
 #include "spv2d.h"
 
 
+#include "Database.h"
 
 using namespace std;
 using namespace voroguppy;
@@ -148,8 +149,12 @@ int main(int argc, char*argv[])
     ofstream output2(fname2);
     output2.precision(8);
 
+    char dataname[256];
+    sprintf(dataname,"/hdd2/data/spv/test.nc");
+    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
+
     vector<int> cts(numpts);
-    for (int ii = 0; ii < numpts; ++ii) 
+    for (int ii = 0; ii < numpts; ++ii)
         {
         if(ii < numpts/2)
             cts[ii]=0;
@@ -205,14 +210,15 @@ cudaProfilerStart();
 //if(true)
             {
             printf("timestep %i\n",ii);
+            ncdat.WriteState(spv);
 //            spv.centerCells();
 //            spv.meanForce();
 //            spv.deltaAngle();
-            char fn[256];
-            sprintf(fn,"/home/daniel/data/DTg0%i.txt",ii);
-            ofstream outputc(fn);
-            outputc.precision(8);
-            spv.writeTriangulation(outputc);
+//            char fn[256];
+//            sprintf(fn,"/home/daniel/data/DTg0%i.txt",ii);
+//            ofstream outputc(fn);
+//            outputc.precision(8);
+//            spv.writeTriangulation(outputc);
             };
         spv.performTimestep();
         };

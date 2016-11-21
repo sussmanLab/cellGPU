@@ -23,8 +23,6 @@ class DelaunayMD
 
         float cellsize;
         cellListGPU celllist;
-        gpubox Box;
-        box CPUbox;
 
 
         //neighbor lists
@@ -47,6 +45,8 @@ class DelaunayMD
         int timestep;
 
     public:
+        gpubox Box;
+        box CPUbox;
         DelaunayLoc delLoc;
         GPUArray<float2> points;      //vector of particle positions
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
