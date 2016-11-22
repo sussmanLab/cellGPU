@@ -35,9 +35,11 @@ void SPV2D::Initialize(int n)
     particleExclusions=false;
     Timestep = 0;
     triangletiming = 0.0; forcetiming = 0.0;
-    setv0Dr(0.05,1.0);
     setDeltaT(0.01);
     initialize(n);
+
+
+    setv0Dr(0.05,1.0);
     forces.resize(n);
     external_forces.resize(n);
     AreaPeri.resize(n);
@@ -45,6 +47,10 @@ void SPV2D::Initialize(int n)
     cellDirectors.resize(n);
     cellDirectors_initial.resize(n);
     displacements.resize(n);
+
+    vector<int> baseEx(n,0);
+    setExclusions(baseEx);
+    particleExclusions=false;
 
 
     ArrayHandle<float> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
@@ -130,11 +136,14 @@ void SPV2D::setCellTypeEllipse(float frac, float aspectRatio)
 void SPV2D::setv0Dr(float v0new,float drnew)
     {
     Motility.resize(N);
-    ArrayHandle<float2> h_mot(Motility,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
+    if (true)
         {
-        h_mot.data[ii].x = v0new;
-        h_mot.data[ii].y = drnew;
+        ArrayHandle<float2> h_mot(Motility,access_location::host,access_mode::overwrite);
+        for (int ii = 0; ii < N; ++ii)
+            {
+            h_mot.data[ii].x = v0new;
+            h_mot.data[ii].y = drnew;
+            };
         };
     };
 void SPV2D::setCellMotility(vector<float> &v0s,vector<float> &drs)
@@ -348,7 +357,7 @@ void SPV2D::performTimestepGPU()
     triangletiming += (t2-t1);
 //    printf("computing forces\n");
     t1=clock();
-    cudaProfilerStart();
+//    cudaProfilerStart();
     if(useTension)
         computeSPVForceSetsWithTensionsGPU();
     else
@@ -369,7 +378,7 @@ void SPV2D::performTimestepGPU()
 
 //    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
-    cudaProfilerStop();
+//    cudaProfilerStop();
 
     if(Fails == 1)
         {

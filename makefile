@@ -14,7 +14,7 @@ LIB_CGAL = -L/home/user/CGAL/CGAL-4.9/lib -lCGAL -lCGAL_Core -lgmp -lmpfr
 LIB_NETCDF = -lnetcdf_c++ -lnetcdf
 
 #common flags
-COMMONFLAGS += $(INCLUDES) -O3 -std=c++11 -g
+COMMONFLAGS += $(INCLUDES) -O3 -std=c++11 -g -DCGAL_DISABLE_ROUNDING_MATH_CHECK
 NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo -Wno-deprecated-gpu-targets #-Xptxas -dlcm=ca#-G
 CXXFLAGS += $(COMMONFLAGS)
 CXXFLAGS += -w -frounding-math
@@ -23,9 +23,11 @@ CFLAGS += $(COMMONFLAGS) -frounding-math
 #target rules
 all:build
 
-build: delGPU.out
+build: delGPU.out ellipse.out
 
-OBJS= obj/voroguppy.o obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/DelaunayCGAL.o obj/gpucell.o obj/DelaunayCheckGPU.o obj/DelaunayMD.o obj/spv2d.o
+PROG_OBJS= obj/runellipse.o obj/voroguppy.o
+
+CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/DelaunayCGAL.o obj/gpucell.o obj/DelaunayCheckGPU.o obj/DelaunayMD.o obj/spv2d.o
 
 EXT_OBJS = obj/triangle.o
 
@@ -77,12 +79,18 @@ obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o obj/DelaunayCGAL.o $(EXT_O
 obj/voroguppy.o:voroguppy.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
 
-delGPU.out: $(OBJS) $(CUOBJS) $(EXT_OBJS)
+obj/runellipse.o:runellipse.cpp
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
+
+ellipse.out: obj/runellipse.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
+
+delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 run: build
 	./delGPU.out
 
 clean:
-	rm -f $(OBJS) $(CUOBJS) delGPU.out
+	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) delGPU.out
 

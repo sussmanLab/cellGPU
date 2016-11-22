@@ -162,6 +162,7 @@ void SPVDatabase::WriteState(STATE &s, float time, int rec)
     ArrayHandle<float2> h_p(s.points,access_location::host,access_mode::read);
     ArrayHandle<float> h_cd(s.cellDirectors,access_location::host,access_mode::read);
     ArrayHandle<int> h_ct(s.CellType,access_location::host,access_mode::read);
+    ArrayHandle<int> h_ex(s.exclusions,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Nv; ++ii)
         {
@@ -173,7 +174,10 @@ void SPVDatabase::WriteState(STATE &s, float time, int rec)
         posdat[(2*idx)] = px;
         posdat[(2*idx)+1] = py;
         directordat[ii] = h_cd.data[ii];
-        typedat[ii] = h_ct.data[ii];
+        if(h_ex.data[ii] == 0)
+            typedat[ii] = h_ct.data[ii];
+        else
+            typedat[ii] = h_ct.data[ii]-5;
         idx +=1;
         };
 //    means0 = means0/Nv;

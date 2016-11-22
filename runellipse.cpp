@@ -44,7 +44,6 @@
 
 #include "Database.h"
 
-
 using namespace std;
 using namespace voroguppy;
 
@@ -133,18 +132,17 @@ int main(int argc, char*argv[])
     if (!gpu) return 0;
     cudaSetDevice(USE_GPU);
 
+
+
     char dataname[256];
-    sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
-
-
+    sprintf(dataname,"/hdd2/data/spv/Ellipse_N%i_p%.2f_v%.2f_g%.2f.nc",numpts,p0,v0,gamma);
+    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
     SPV2D spv(numpts,1.0,p0);
 
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
 
-    cudaProfilerStart();
 
     for(int ii = 0; ii < initSteps; ++ii)
         {
@@ -153,18 +151,22 @@ int main(int argc, char*argv[])
 
     printf("Finished with initialization\n");
 
+    printf("Setting cells within the central ellipse to different type, applying tension...\n");
+    spv.setCellTypeEllipse(0.25,2.0);
+    spv.setUseTension(true);
+    spv.setTension(gamma);
 
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
-        if(ii%100 ==0)
+        if(ii%10000 ==0)
             {
             printf("timestep %i\n",ii);
+            ncdat.WriteState(spv);
             };
         spv.performTimestep();
         };
-    cudaProfilerStop();
     t2=clock();
     float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
