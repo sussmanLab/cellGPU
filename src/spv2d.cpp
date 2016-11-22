@@ -33,9 +33,8 @@ void SPV2D::Initialize(int n)
     useTension = false;
     Timestep = 0;
     triangletiming = 0.0; forcetiming = 0.0;
-    setv0(0.05);
+    setv0Dr(0.05,1.0);
     setDeltaT(0.01);
-    setDr(1.);
     initialize(n);
     forces.resize(n);
     AreaPeri.resize(n);
@@ -121,6 +120,29 @@ void SPV2D::setCellTypeEllipse(float frac, float aspectRatio)
             h_ct.data[ii] = 1;
         };
     };
+
+void SPV2D::setv0Dr(float v0new,float drnew)
+    {
+    Motility.resize(N);
+    ArrayHandle<float2> h_mot(Motility,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_mot.data[ii].x = v0new;
+        h_mot.data[ii].y = drnew;
+        };
+    };
+void SPV2D::setCellMotility(vector<float> &v0s,vector<float> &drs)
+    {
+    Motility.resize(N);
+    ArrayHandle<float2> h_mot(Motility,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_mot.data[ii].x = v0s[ii];
+        h_mot.data[ii].y = drs[ii];
+        };
+    };
+
+
 /*
 void SPV2D::setCurandStates(int i)
     {
@@ -199,16 +221,14 @@ void SPV2D::DisplacePointsAndRotate()
     ArrayHandle<float2> d_p(points,access_location::device,access_mode::readwrite);
     ArrayHandle<float2> d_f(forces,access_location::device,access_mode::read);
     ArrayHandle<float> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
-//    ArrayHandle<float2> d_disp(displacements,access_location::device,access_mode::overwrite);
+    ArrayHandle<float2> d_motility(Motility,access_location::device,access_mode::read);
 
     gpu_displace_and_rotate(d_p.data,
                             d_f.data,
                             d_cd.data,
-//                            d_disp.data,
+                            d_motility.data,
                             N,
                             deltaT,
-                            Dr,
-                            v0,
                             Timestep,
 //                            devStates,
                             Box);
@@ -379,7 +399,6 @@ void SPV2D::computeSPVForceSetsGPU()
     ArrayHandle<int4> d_delSets(delSets,access_location::device,access_mode::read);
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<float2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
-    ArrayHandle<float2> d_forces(forces,access_location::device,access_mode::overwrite);
 
 
     float KA = 1.0;
@@ -392,7 +411,6 @@ void SPV2D::computeSPVForceSetsGPU()
                     d_delSets.data,
                     d_delOther.data,
                     d_forceSets.data,
-                    d_forces.data,
                     KA,
                     KP,
                     N,neighMax,n_idx,Box);
@@ -408,7 +426,6 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
     ArrayHandle<int4> d_delSets(delSets,access_location::device,access_mode::read);
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<float2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
-    ArrayHandle<float2> d_forces(forces,access_location::device,access_mode::overwrite);
     ArrayHandle<int> d_ct(CellType,access_location::device,access_mode::read);
 
 
@@ -422,7 +439,6 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
                     d_delSets.data,
                     d_delOther.data,
                     d_forceSets.data,
-                    d_forces.data,
                     d_ct.data,
                     KA,
                     KP,

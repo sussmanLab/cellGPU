@@ -29,9 +29,10 @@ class SPV2D : public DelaunayMD
         bool useTension;
 
         GPUArray<float2> VoronoiPoints;
-        GPUArray<float2> AreaPeriPreferences;
-        GPUArray<float2> AreaPeri;
+        GPUArray<float2> AreaPeriPreferences;//(A0,P0) for each cell
+        GPUArray<float2> AreaPeri;//(current A,P) for each cell
         GPUArray<float2> Moduli;//(KA,KP)
+        GPUArray<float2> Motility;//(v0,Dr) for each cell
 
         GPUArray<float> cellDirectors_initial;// for testing
         GPUArray<float2> displacements;
@@ -51,6 +52,9 @@ class SPV2D : public DelaunayMD
         GPUArray<int> CellType;
         GPUArray<float> cellDirectors;
         GPUArray<float2> forces;
+    
+        //"exclusiosn" zero out the force on a cell...the external force needed to do this is stored in external_forces
+        GPUArray<float2> external_forces;
 
         ~SPV2D()
             {
@@ -66,8 +70,8 @@ class SPV2D : public DelaunayMD
 
         //set and get
         void setDeltaT(float dt){deltaT = dt;};
-        void setv0(float v0new){v0 = v0new;};
-        void setDr(float dr){Dr = dr;};
+        ///the following set uniform motilities...for individual choices use setCellMotility
+        void setv0Dr(float v0new,float drnew);
 
         void setTension(float g){gamma = g;};
         void setUseTension(bool u){useTension = u;};
@@ -78,6 +82,8 @@ class SPV2D : public DelaunayMD
 
         void setCellTypeUniform(int i);
         void setCellType(vector<int> &types);
+
+        void setCellMotility(vector<float> &v0s,vector<float> &drs);
 
         //sets particles within an ellipse to type 0, outside to type 1. frac is fraction of area for the ellipse to take up, aspectRatio is (r_x/r_y)
         void setCellTypeEllipse(float frac, float aspectRatio);

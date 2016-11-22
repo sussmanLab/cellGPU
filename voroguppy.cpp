@@ -162,7 +162,7 @@ int main(int argc, char*argv[])
 
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setDeltaT(err);
-    spv.setv0(v0);
+    spv.setv0Dr(v0,1.0);
 
     //cts is currently 0 for first half, 1 for second half
 
