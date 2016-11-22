@@ -92,7 +92,7 @@ int main(int argc, char*argv[])
     int tSteps = 5;
     int initSteps = 0;
 
-    double dt = 0.1;
+    float dt = 0.1;
     float p0 = 4.0;
     float a0 = 1.0;
     float v0 = 0.1;
@@ -126,9 +126,6 @@ int main(int argc, char*argv[])
         };
     clock_t t1,t2;
 
-    char dataname[256];
-    sprintf(dataname,"/hdd2/data/spv/Ellipse_N%i_p%.2f_v%.2f_g%.2f.nc",numpts,p0,v0,gamma);
-    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
 
     bool gpu = chooseGPU(USE_GPU);
@@ -137,6 +134,9 @@ int main(int argc, char*argv[])
 
 
 
+    char dataname[256];
+    sprintf(dataname,"/hdd2/data/spv/Ellipse_N%i_p%.2f_v%.2f_g%.2f.nc",numpts,p0,v0,gamma);
+    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
     SPV2D spv(numpts,1.0,p0);
 
     spv.setCellPreferencesUniform(1.0,p0);
