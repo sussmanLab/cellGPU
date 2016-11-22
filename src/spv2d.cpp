@@ -303,9 +303,12 @@ void SPV2D::performTimestepGPU()
 //    printf("computing forces\n");
     t1=clock();
     if(useTension)
-        computeSPVForcesWithTensionsGPU();
+        computeSPVForceSetsWithTensionsGPU();
     else
-        computeSPVForcesGPU();    
+        computeSPVForceSetsGPU();
+
+    sumForceSets();
+
     t2=clock();
     forcetiming += t2-t1;
     t1=clock();
@@ -353,7 +356,21 @@ void SPV2D::computeGeometry()
 
     };
 
-void SPV2D::computeSPVForcesGPU()
+void SPV2D::sumForceSets()
+    {
+
+    ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_forceSets(forceSets,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_forces(forces,access_location::device,access_mode::overwrite);
+
+    gpu_sum_force_sets(
+                    d_forceSets.data,
+                    d_forces.data,
+                    d_nn.data,
+                    N,n_idx);
+    };
+
+void SPV2D::computeSPVForceSetsGPU()
     {
     ArrayHandle<float2> d_p(points,access_location::device,access_mode::read);
     ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
@@ -379,10 +396,10 @@ void SPV2D::computeSPVForcesGPU()
                     KA,
                     KP,
                     N,neighMax,n_idx,Box);
-
     };
 
-void SPV2D::computeSPVForcesWithTensionsGPU()
+
+void SPV2D::computeSPVForceSetsWithTensionsGPU()
     {
     ArrayHandle<float2> d_p(points,access_location::device,access_mode::read);
     ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
@@ -411,6 +428,7 @@ void SPV2D::computeSPVForcesWithTensionsGPU()
                     KP,
                     gamma,
                     N,neighMax,n_idx,Box);
+
 
     };
 

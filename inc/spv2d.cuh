@@ -75,5 +75,13 @@ bool gpu_force_sets_tensions(
                     Index2D &n_idx,
                     gpubox &Box
                     );
+
+bool gpu_sum_force_sets(
+                    float2 *d_forceSets,
+                    float2 *d_forces,
+                    int    *d_nn,
+                    int     N,
+                    Index2D &n_idx
+                    );
 #endif
 

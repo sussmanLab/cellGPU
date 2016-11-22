@@ -649,10 +649,20 @@ bool gpu_force_sets(float2 *d_points,
     if(code!=cudaSuccess)
     printf("forceSets GPUassert: %s \n", cudaGetErrorString(code));
 
-    cudaDeviceSynchronize();
-    //Now sum the forces
-    if (computations < 128) block_size = 32;
-    nblocks = N/block_size + 1;
+    return cudaSuccess;
+    };
+
+bool gpu_sum_force_sets(
+                        float2 *d_forceSets,
+                        float2 *d_forces,
+                        int    *d_nn,
+                        int     N,
+                        Index2D &n_idx
+                        )
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
 
     gpu_sum_forces_kernel<<<nblocks,block_size>>>(
                                             d_forceSets,
@@ -661,13 +671,17 @@ bool gpu_force_sets(float2 *d_points,
                                             N,
                                             n_idx
             );
+    cudaError_t code = cudaGetLastError();
 
     if(code!=cudaSuccess)
     printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
 
 
     return cudaSuccess;
+
     };
+
+
 
 bool gpu_force_sets_tensions(float2 *d_points,
                     int    *d_nn,
@@ -714,23 +728,6 @@ bool gpu_force_sets_tensions(float2 *d_points,
     code = cudaGetLastError();
     if(code!=cudaSuccess)
     printf("forceSets GPUassert: %s \n", cudaGetErrorString(code));
-
-    cudaDeviceSynchronize();
-    //Now sum the forces
-    if (computations < 128) block_size = 32;
-    nblocks = N/block_size + 1;
-
-    gpu_sum_forces_kernel<<<nblocks,block_size>>>(
-                                            d_forceSets,
-                                            d_forces,
-                                            d_nn,
-                                            N,
-                                            n_idx
-            );
-
-    if(code!=cudaSuccess)
-    printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
-
 
     return cudaSuccess;
     };

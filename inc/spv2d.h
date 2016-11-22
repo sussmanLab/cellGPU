@@ -105,8 +105,9 @@ class SPV2D : public DelaunayMD
         //GPU functions
         void DisplacePointsAndRotate();
         void computeGeometry();
-        void computeSPVForcesGPU();
-        void computeSPVForcesWithTensionsGPU();
+        void computeSPVForceSetsGPU();
+        void computeSPVForceSetsWithTensionsGPU();
+        void sumForceSets();
 
 
 
