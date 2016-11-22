@@ -55,6 +55,45 @@ __global__ void gpu_sum_forces_kernel(float2 *d_forceSets,
 
     };
 
+__global__ void gpu_sum_forces_with_exclusions_kernel(float2 *d_forceSets,
+                                      float2 *d_forces,
+                                      float2 *d_external_forces,
+                                      int    *d_exes,
+                                      int    *d_nn,
+                                      int     N,
+                                      Index2D n_idx
+                                     )
+    {
+    // read in the particle that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+    
+    int neigh = d_nn[idx];
+    float2 temp;
+    temp.x=0.0;temp.y=0.0;
+    for (int nn = 0; nn < neigh; ++nn)
+        {
+        float2 val = d_forceSets[n_idx(nn,idx)];
+        temp.x+=val.x;
+        temp.y+=val.y;
+        };
+//    if(!::isfinite(temp.x)) temp.x = 0.;
+//    if(!::isfinite(temp.y)) temp.y = 0.;
+    if (d_exes[idx] ==0)
+        {
+        d_forces[idx]=temp;
+        d_external_forces[idx] = make_float2(0.0,0.0);
+        }
+    else
+        {
+        d_forces[idx]=make_float2(0.0,0.0);
+        d_external_forces[idx] = make_float2(-temp.x,-temp.y);
+        };
+
+    };
+
+
 
 __global__ void gpu_force_sets_kernel(float2      *d_points,
                                           int     *d_nn,
@@ -647,34 +686,6 @@ bool gpu_force_sets(float2 *d_points,
     return cudaSuccess;
     };
 
-bool gpu_sum_force_sets(
-                        float2 *d_forceSets,
-                        float2 *d_forces,
-                        int    *d_nn,
-                        int     N,
-                        Index2D &n_idx
-                        )
-    {
-    unsigned int block_size = 128;
-    if (N < 128) block_size = 32;
-    unsigned int nblocks  = N/block_size + 1;
-
-    gpu_sum_forces_kernel<<<nblocks,block_size>>>(
-                                            d_forceSets,
-                                            d_forces,
-                                            d_nn,
-                                            N,
-                                            n_idx
-            );
-    cudaError_t code = cudaGetLastError();
-
-    if(code!=cudaSuccess)
-    printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
-
-
-    return cudaSuccess;
-
-    };
 
 
 
@@ -726,6 +737,60 @@ bool gpu_force_sets_tensions(float2 *d_points,
     return cudaSuccess;
     };
 
+bool gpu_sum_force_sets(
+                        float2 *d_forceSets,
+                        float2 *d_forces,
+                        int    *d_nn,
+                        int     N,
+                        Index2D &n_idx
+                        )
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
+
+    gpu_sum_forces_kernel<<<nblocks,block_size>>>(
+                                            d_forceSets,
+                                            d_forces,
+                                            d_nn,
+                                            N,
+                                            n_idx
+            );
+    cudaError_t code = cudaGetLastError();
+    if(code!=cudaSuccess)
+    printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
+    return cudaSuccess;
+    };
+
+
+bool gpu_sum_force_sets_with_exclusions(
+                        float2 *d_forceSets,
+                        float2 *d_forces,
+                        float2 *d_external_forces,
+                        int    *d_exes,
+                        int    *d_nn,
+                        int     N,
+                        Index2D &n_idx
+                        )
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
+
+    gpu_sum_forces_with_exclusions_kernel<<<nblocks,block_size>>>(
+                                            d_forceSets,
+                                            d_forces,
+                                            d_external_forces,
+                                            d_exes,
+                                            d_nn,
+                                            N,
+                                            n_idx
+            );
+    cudaError_t code = cudaGetLastError();
+    if(code!=cudaSuccess)
+    printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
+    return cudaSuccess;
+    };
 
 
 #endif

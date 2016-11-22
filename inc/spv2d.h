@@ -27,6 +27,7 @@ class SPV2D : public DelaunayMD
 
         float gamma; //value of inter-cell surface tension
         bool useTension;
+        bool particleExclusions;
 
         GPUArray<float2> VoronoiPoints;
         GPUArray<float2> AreaPeriPreferences;//(A0,P0) for each cell
@@ -37,7 +38,7 @@ class SPV2D : public DelaunayMD
         GPUArray<float> cellDirectors_initial;// for testing
         GPUArray<float2> displacements;
 
-        curandState *devStates;
+//        curandState *devStates;
 
         //delSet.data[n_idx(nn,i)] are four consecutive delaunay neighbors, orientationally ordered, of point i (for use in computing forces on GPU)
         GPUArray<int4> delSets;
@@ -55,10 +56,11 @@ class SPV2D : public DelaunayMD
     
         //"exclusiosn" zero out the force on a cell...the external force needed to do this is stored in external_forces
         GPUArray<float2> external_forces;
+        GPUArray<int> exclusions;
 
         ~SPV2D()
             {
-            cudaFree(devStates);
+  //          cudaFree(devStates);
             };
         //initialize with random positions in a square box
         SPV2D(int n);
@@ -90,6 +92,9 @@ class SPV2D : public DelaunayMD
 
         void setCurandStates(int i);
 
+        //set exclusions...if a particle is excluded (ex[idx]=1) then its force is zeroed out (the external force to do this is stored in excluded_forces) and its motility is set to zero
+        void setExclusions(vector<int> &exes);
+
         //utility
         void getDelSets(int i);
         void allDelSets();
@@ -114,6 +119,7 @@ class SPV2D : public DelaunayMD
         void computeSPVForceSetsGPU();
         void computeSPVForceSetsWithTensionsGPU();
         void sumForceSets();
+        void sumForceSetsWithExclusions();
 
 
 

@@ -79,5 +79,19 @@ bool gpu_sum_force_sets(
                     int     N,
                     Index2D &n_idx
                     );
+
+bool gpu_sum_force_sets_with_exclusions(
+                    float2 *d_forceSets,
+                    float2 *d_forces,
+                    float2 *d_external_forces,
+                    int    *d_exes,
+                    int    *d_nn,
+                    int     N,
+                    Index2D &n_idx
+                    );
+
+
+
+
 #endif
 

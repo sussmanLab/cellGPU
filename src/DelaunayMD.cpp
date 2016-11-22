@@ -46,7 +46,7 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
         float y =EPSILON+boxy/(float)(randmax+1)* (float)(rand()%randmax);
         h_points.data[ii].x=x;
         h_points.data[ii].y=y;
-//        printf("%i; {%f,%f}\n",ii,x,y);
+    //    printf("%i; {%f,%f}\n",ii,x,y);
         };
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)

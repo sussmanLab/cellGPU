@@ -15,10 +15,10 @@ LIB_NETCDF = -lnetcdf_c++ -lnetcdf
 
 #common flags
 COMMONFLAGS += $(INCLUDES) -O3 -std=c++11 -g
-NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo -Wno-deprecated-gpu-targets#-Xptxas -dlcm=ca#-G
-CXXFLAGS += $(COMMONFLAGS) -frounding-math
-CXXFLAGS += -w
-CFLAGS += $(COMMONFLAGS)
+NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo -Wno-deprecated-gpu-targets #-Xptxas -dlcm=ca#-G
+CXXFLAGS += $(COMMONFLAGS)
+CXXFLAGS += -w -frounding-math
+CFLAGS += $(COMMONFLAGS) -frounding-math
 
 #target rules
 all:build

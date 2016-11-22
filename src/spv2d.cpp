@@ -31,16 +31,21 @@ void SPV2D::Initialize(int n)
     {
     gamma = 0.;
     useTension = false;
+    particleExclusions=false;
     Timestep = 0;
     triangletiming = 0.0; forcetiming = 0.0;
     setv0Dr(0.05,1.0);
     setDeltaT(0.01);
     initialize(n);
     forces.resize(n);
+    external_forces.resize(n);
     AreaPeri.resize(n);
+    
     cellDirectors.resize(n);
     cellDirectors_initial.resize(n);
     displacements.resize(n);
+
+
     ArrayHandle<float> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
     ArrayHandle<float> h_cdi(cellDirectors_initial,access_location::host, access_mode::overwrite);
 
@@ -143,6 +148,26 @@ void SPV2D::setCellMotility(vector<float> &v0s,vector<float> &drs)
     };
 
 
+void SPV2D::setExclusions(vector<int> &exes)
+    {
+    particleExclusions=true;
+    external_forces.resize(N);
+    exclusions.resize(N);
+    ArrayHandle<float2> h_mot(Motility,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_ex(exclusions,access_location::host,access_mode::overwrite);
+
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_ex.data[ii] = 0;
+        if( exes[ii] == 1)
+            {
+            //set v0 to zero and Dr to zero
+            h_mot.data[ii].x = 0.0;
+            h_mot.data[ii].y = 0.0;
+            h_ex.data[ii] = 1;
+            };
+        };
+    };
 /*
 void SPV2D::setCurandStates(int i)
     {
@@ -327,7 +352,10 @@ void SPV2D::performTimestepGPU()
     else
         computeSPVForceSetsGPU();
 
-    sumForceSets();
+    if(!particleExclusions)
+        sumForceSets();
+    else
+        sumForceSetsWithExclusions();
 
     t2=clock();
     forcetiming += t2-t1;
@@ -389,6 +417,27 @@ void SPV2D::sumForceSets()
                     d_nn.data,
                     N,n_idx);
     };
+
+
+void SPV2D::sumForceSetsWithExclusions()
+    {
+
+    ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_forceSets(forceSets,access_location::device,access_mode::read);
+    ArrayHandle<float2> d_forces(forces,access_location::device,access_mode::overwrite);
+    ArrayHandle<float2> d_external_forces(external_forces,access_location::device,access_mode::overwrite);
+    ArrayHandle<int> d_exes(exclusions,access_location::device,access_mode::read);
+
+    gpu_sum_force_sets_with_exclusions(
+                    d_forceSets.data,
+                    d_forces.data,
+                    d_external_forces.data,
+                    d_exes.data,
+                    d_nn.data,
+                    N,n_idx);
+    };
+
+
 
 void SPV2D::computeSPVForceSetsGPU()
     {
