@@ -5,3 +5,4 @@
 *.txt
 callgrind*
 *.dsym
+*.sh
