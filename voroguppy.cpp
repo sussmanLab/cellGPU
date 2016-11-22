@@ -89,10 +89,10 @@ int main(int argc, char*argv[])
     int USE_GPU = 0;
     int USE_TENSION = 0;
     int c;
-    int testRepeat = 5;
+    int tSteps = 5;
     int initSteps = 0;
 
-    double err = 0.1;
+    double dt = 0.1;
     float p0 = 4.0;
     float a0 = 1.0;
     float v0 = 0.1;
@@ -103,12 +103,12 @@ int main(int argc, char*argv[])
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
-            case 't': testRepeat = atoi(optarg); break;
+            case 't': tSteps = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
             case 'x': USE_TENSION = atoi(optarg); break;
             case 'i': initSteps = atoi(optarg); break;
             case 'z': program_switch = atoi(optarg); break;
-            case 'e': err = atof(optarg); break;
+            case 'e': dt = atof(optarg); break;
             case 's': gamma = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
@@ -141,7 +141,7 @@ int main(int argc, char*argv[])
 
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
-    spv.setDeltaT(err);
+    spv.setDeltaT(dt);
 
 
     for(int ii = 0; ii < initSteps; ++ii)
@@ -157,7 +157,7 @@ int main(int argc, char*argv[])
     spv.setTension(gamma);
 
     t1=clock();
-    for(int ii = 0; ii < testRepeat; ++ii)
+    for(int ii = 0; ii < tSteps; ++ii)
         {
 
         if(ii%10000 ==0)
@@ -168,13 +168,13 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
     t2=clock();
-    float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/testRepeat;
-    cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/testRepeat*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
+    float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/tSteps;
+    cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
     cout << "current q = " << spv.reportq() << endl;
     spv.meanForce();
 
-    cout << endl << "force time  = " << spv.forcetiming/(float)CLOCKS_PER_SEC/(initSteps+testRepeat) << endl;
-    cout << "other time  = " << spv.triangletiming/(float)CLOCKS_PER_SEC/(initSteps+testRepeat) << endl;
+    cout << endl << "force time  = " << spv.forcetiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
+    cout << "other time  = " << spv.triangletiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
 
 
