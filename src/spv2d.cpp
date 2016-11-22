@@ -12,6 +12,7 @@ using namespace std;
 
 #include "spv2d.h"
 #include "spv2d.cuh"
+#include "cuda_profiler_api.h"
 
 SPV2D::SPV2D(int n)
     {
@@ -40,7 +41,7 @@ void SPV2D::Initialize(int n)
     forces.resize(n);
     external_forces.resize(n);
     AreaPeri.resize(n);
-    
+
     cellDirectors.resize(n);
     cellDirectors_initial.resize(n);
     displacements.resize(n);
@@ -347,6 +348,7 @@ void SPV2D::performTimestepGPU()
     triangletiming += (t2-t1);
 //    printf("computing forces\n");
     t1=clock();
+    cudaProfilerStart();
     if(useTension)
         computeSPVForceSetsWithTensionsGPU();
     else
@@ -367,6 +369,7 @@ void SPV2D::performTimestepGPU()
 
 //    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
+    cudaProfilerStop();
 
     if(Fails == 1)
         {
@@ -377,7 +380,7 @@ void SPV2D::performTimestepGPU()
             {
             for (int jj = 0;jj < NeedsFixing.size(); ++jj)
                 getDelSets(NeedsFixing[jj]);
-            };  
+            };
         };
     t2=clock();
     triangletiming += (t2-t1);
