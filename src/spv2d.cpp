@@ -169,7 +169,7 @@ void SPV2D::setExclusions(vector<int> &exes)
     for (int ii = 0; ii < N; ++ii)
         {
         h_ex.data[ii] = 0;
-        if( exes[ii] == 1)
+        if( exes[ii] != 0)
             {
             //set v0 to zero and Dr to zero
             h_mot.data[ii].x = 0.0;

@@ -46,13 +46,13 @@ private:
     typedef SPV2D STATE;
     int Nv; // number of vertices in delaunay triangulation
     NcDim *recDim, *NvDim, *dofDim, *boxDim, *unitDim;
-    NcVar *posVar, *typeVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var;
-
+    NcVar *posVar, *typeVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var,*exVar;
+    bool exclusions;
     int Current;
 
 
 public:
-    SPVDatabase(int np, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
+    SPVDatabase(int np, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly,bool excluded = false);
 
 private:
     void SetDimVar();
@@ -72,10 +72,11 @@ public:
 //////////////////////////////   IMPLEMENTATION   ///////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 
-SPVDatabase::SPVDatabase(int np, string fn, NcFile::FileMode mode)
+SPVDatabase::SPVDatabase(int np, string fn, NcFile::FileMode mode, bool exclude)
     : BaseDatabase(fn,mode),
       Nv(np),
-      Current(0)
+      Current(0),
+      exclusions(exclude)
 {
     switch(Mode)
         {
@@ -111,6 +112,8 @@ void SPVDatabase::SetDimVar()
     typeVar          = File.add_var("type",         ncInt,recDim, NvDim );
     directorVar          = File.add_var("director",         ncFloat,recDim, NvDim );
     BoxMatrixVar    = File.add_var("BoxMatrix", ncFloat,recDim, boxDim);
+    if(exclusions)
+        exVar          = File.add_var("externalForce",       ncFloat,recDim, dofDim);
 }
 
 void SPVDatabase::GetDimVar()
@@ -128,6 +131,8 @@ void SPVDatabase::GetDimVar()
     means0Var          = File.get_var("means0");
     BoxMatrixVar    = File.get_var("BoxMatrix");
     timeVar    = File.get_var("time");
+    if(exclusions)
+        exVar = File.get_var("externalForce");
 }
 
 void SPVDatabase::SetCurrentRec(int r)
@@ -166,9 +171,6 @@ void SPVDatabase::WriteState(STATE &s, float time, int rec)
 
     for (int ii = 0; ii < Nv; ++ii)
         {
-//        double px = c->positionNotInBox().x();
-//        double py = c->positionNotInBox().y();
-//        double s0 = (c->perimeter()) / sqrt(c->area());
         float px = h_p.data[ii].x;
         float py = h_p.data[ii].y;
         posdat[(2*idx)] = px;
@@ -190,6 +192,22 @@ void SPVDatabase::WriteState(STATE &s, float time, int rec)
     typeVar       ->put_rec(&typedat[0],      rec);
     directorVar       ->put_rec(&directordat[0],      rec);
     BoxMatrixVar->put_rec(&boxdat[0],     rec);
+    if(exclusions)
+        {
+        ArrayHandle<float2> h_ef(s.external_forces,access_location::host,access_mode::read);
+        std::vector<float> exdat(2*Nv);
+        int id = 0;
+        for (int ii = 0; ii < Nv; ++ii)
+            {
+            float px = h_ef.data[ii].x;
+            float py = h_ef.data[ii].y;
+            exdat[(2*id)] = px;
+            exdat[(2*id)+1] = py;
+            id +=1;
+            };
+        exVar      ->put_rec(&exdat[0],     rec);
+        };
+
     File.sync();
 }
 
