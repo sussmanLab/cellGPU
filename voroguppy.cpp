@@ -137,7 +137,7 @@ int main(int argc, char*argv[])
     output2.precision(8);
 
     char dataname[256];
-    sprintf(dataname,"/hdd2/data/spv/Ellipse_N%i_p%.2f_g%.2f.nc",numpts,p0,gamma);
+    sprintf(dataname,"/hdd2/data/spv/Ellipse_N%i_p%.2f_v%.2f_g%.2f.nc",numpts,p0,v0,gamma);
     SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
     vector<int> cts(numpts);
