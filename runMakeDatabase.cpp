@@ -138,7 +138,7 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"/hdd2/data/spv/MSD/monodisperse_N%i_p%.2f_v%.2f_Dr%.2f.nc",numpts,p0,v0,Dr);
-    SPVDatabase ncdat(numpts,dataname,NcFile::Replace,true);
+    SPVDatabase ncdat(numpts,dataname,NcFile::Replace,false);
     SPV2D spv(numpts,1.0,p0);
 
     spv.setv0Dr(v0,Dr);
@@ -165,8 +165,12 @@ int main(int argc, char*argv[])
             {
             printf(" step %i\n",ii);
             ncdat.WriteState(spv);
-            nextSave = (int)round(pow(pow(10.0,0.2),logSaveIdx));
-            logSaveIdx +=1;
+            nextSave = (int)round(pow(pow(10.0,0.05),logSaveIdx));
+            while(nextSave == ii)
+                {
+                logSaveIdx +=1;
+                nextSave = (int)round(pow(pow(10.0,0.05),logSaveIdx));
+                };
 
             };
         spv.performTimestep();
