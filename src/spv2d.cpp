@@ -352,7 +352,7 @@ void SPV2D::performTimestepGPU()
     clock_t t1,t2;
 //    printf("computing geometry for timestep %i\n",Timestep);
     t1=clock();
-    computeGeometry();
+    computeGeometryGPU();
     t2=clock();
     triangletiming += (t2-t1);
     gputiming += (t2-t1);
@@ -400,19 +400,19 @@ void SPV2D::performTimestepGPU()
     cputiming += (t2-t1);
     };
 
-void SPV2D::computeGeometry()
+void SPV2D::computeGeometryGPU()
     {
-    VoronoiPoints.resize(n_idx.getNumElements());
+    //VoronoiPoints.resize(n_idx.getNumElements());
     ArrayHandle<float2> d_p(points,access_location::device,access_mode::read);
     ArrayHandle<float2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
-    ArrayHandle<float2> d_voro(VoronoiPoints,access_location::device,access_mode::overwrite);
+    //ArrayHandle<float2> d_voro(VoronoiPoints,access_location::device,access_mode::overwrite);
     ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
     ArrayHandle<int> d_n(neighs,access_location::device,access_mode::read);
 
     gpu_compute_geometry(
                         d_p.data,
                         d_AP.data,
-                        d_voro.data,
+     //                   d_voro.data,
                         d_nn.data,
                         d_n.data,
                         N, n_idx,Box);

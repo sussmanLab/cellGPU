@@ -447,7 +447,7 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
 
 __global__ void gpu_compute_geometry_kernel(float2 *d_points,
                                           float2 *d_AP,
-                                          float2 *d_voro,
+                           //               float2 *d_voro,
                                           int *d_nn,
                                           int *d_n,
                                           int N,
@@ -474,7 +474,7 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
     Circumcenter(origin,rij,rik,circumcenter);
     vfirst = circumcenter;
     vlast = circumcenter;
-    d_voro[n_idx(0,idx)] = vlast;
+//    d_voro[n_idx(0,idx)] = vlast;
 
     for (int nn = 1; nn < neigh; ++nn)
         {
@@ -484,7 +484,7 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
         Box.minDist(nnextp,pi,rik);
         Circumcenter(origin,rij,rik,circumcenter);
         vnext = circumcenter;
-        d_voro[n_idx(nn,idx)] = circumcenter;
+  //      d_voro[n_idx(nn,idx)] = circumcenter;
 
         Varea += TriangleArea(vlast,vnext);
         float dx = vlast.x - vnext.x;
@@ -576,7 +576,7 @@ bool gpu_init_curand(curandState *states,
 
 bool gpu_compute_geometry(float2 *d_points,
                         float2   *d_AP,
-                        float2   *d_voro,
+                //        float2   *d_voro,
                         int      *d_nn,
                         int      *d_n,
                         int      N,
@@ -592,7 +592,7 @@ bool gpu_compute_geometry(float2 *d_points,
     gpu_compute_geometry_kernel<<<nblocks,block_size>>>(
                                                 d_points,
                                                 d_AP,
-                                                d_voro,
+                  //                              d_voro,
                                                 d_nn,
                                                 d_n,
                                                 N,
