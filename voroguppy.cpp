@@ -144,7 +144,6 @@ int main(int argc, char*argv[])
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
 
-    cudaProfilerStart();
 
     for(int ii = 0; ii < initSteps; ++ii)
         {
@@ -152,9 +151,12 @@ int main(int argc, char*argv[])
         };
 
     printf("Finished with initialization\n");
+    cout << "current q = " << spv.reportq() << endl;
+    spv.meanForce();
 
 
     t1=clock();
+    cudaProfilerStart();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
@@ -167,12 +169,10 @@ int main(int argc, char*argv[])
     cudaProfilerStop();
     t2=clock();
     float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/tSteps;
-    cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
-    cout << "current q = " << spv.reportq() << endl;
-    spv.meanForce();
+    cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
 
-    cout << endl << "force time  = " << spv.forcetiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
-    cout << "other time  = " << spv.triangletiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
+    cout << endl << "GPU time  = " << spv.gputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
+    cout << "CPU time  = " << spv.cputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
 
 

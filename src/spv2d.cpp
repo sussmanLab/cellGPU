@@ -355,6 +355,7 @@ void SPV2D::performTimestepGPU()
     computeGeometry();
     t2=clock();
     triangletiming += (t2-t1);
+    gputiming += (t2-t1);
 //    printf("computing forces\n");
     t1=clock();
 //    cudaProfilerStart();
@@ -370,16 +371,20 @@ void SPV2D::performTimestepGPU()
 
     t2=clock();
     forcetiming += t2-t1;
+    gputiming += (t2-t1);
     t1=clock();
 
 //    printf("displacing particles\n");
     DisplacePointsAndRotate();
+    t2=clock();
+    gputiming += (t2-t1);
 
 
 //    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
 //    cudaProfilerStop();
 
+    t1=clock();
     if(Fails == 1)
         {
         //maintain the auxilliary lists for computing forces
@@ -392,8 +397,7 @@ void SPV2D::performTimestepGPU()
             };
         };
     t2=clock();
-    triangletiming += (t2-t1);
-
+    cputiming += (t2-t1);
     };
 
 void SPV2D::computeGeometry()

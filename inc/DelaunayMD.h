@@ -50,7 +50,9 @@ class DelaunayMD
         DelaunayLoc delLoc;
         GPUArray<float2> points;      //vector of particle positions
         float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
+        float gputiming,cputiming;
         float repPerFrame;
+        int skippedFrames;
         int GlobalFixes;
 
         void getPoints(GPUArray<float2> &ps){ps = points;};
