@@ -89,7 +89,7 @@ void DelaunayMD::initialize(int n)
     CPUbox.setSquare(boxsize,boxsize);
 
     //set circumcenter array size
-    circumcenters.resize(6*(N+10));
+    circumcenters.resize(2*(N+10));
 
     //set particle positions (randomly)
     points.resize(N);
@@ -400,7 +400,7 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
-    ArrayHandle<int> h_ccs(circumcenters,access_location::host,access_mode::overwrite);
+    ArrayHandle<int3> h_ccs(circumcenters,access_location::host,access_mode::overwrite);
 
     int totaln = 0;
     int cidx = 0;
@@ -422,9 +422,9 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
                 {
 //                if (fail) {cidx +=1;continue;};
 //                if (cidx == 2*N) fail = true;
-                h_ccs.data[3*cidx] = nn;
-                h_ccs.data[3*cidx+1] = n1;
-                h_ccs.data[3*cidx+2] = n2;
+                h_ccs.data[cidx].x = nn;
+                h_ccs.data[cidx].y = n1;
+                h_ccs.data[cidx].z = n2;
                 cidx+=1;
                 };
             };
@@ -527,7 +527,7 @@ void DelaunayMD::testTriangulation()
     ArrayHandle<int> d_c_idx(celllist.idxs,access_location::device,access_mode::read);
 
     ArrayHandle<int> d_repair(repair,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_ccs(circumcenters,access_location::device,access_mode::read);
+    ArrayHandle<int3> d_ccs(circumcenters,access_location::device,access_mode::read);
 
     int NumCircumCenters = N*2;
     gpu_test_circumcenters(d_repair.data,
@@ -679,7 +679,7 @@ void DelaunayMD::readTriangulation(ifstream &infile)
 void DelaunayMD::writeTriangulation(ofstream &outfile)
     {
     ArrayHandle<float2> p(points,access_location::host,access_mode::read);
-    ArrayHandle<int> cc(circumcenters,access_location::host,access_mode::read);
+//    ArrayHandle<int> cc(circumcenters,access_location::host,access_mode::read);
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
     outfile << N <<endl;

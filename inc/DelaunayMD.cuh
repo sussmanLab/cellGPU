@@ -13,7 +13,7 @@ using namespace voroguppy;
 
 bool gpu_test_circumcenters(
                             int *d_repair,
-                            int *d_ccs,
+                            int3 *d_ccs,
                             int Nccs,
                             float2 *d_pt,
                             unsigned int *d_cell_sizes,

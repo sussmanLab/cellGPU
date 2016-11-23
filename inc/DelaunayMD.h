@@ -30,7 +30,7 @@ class DelaunayMD
         GPUArray<int> neighs;
         Index2D n_idx;
         //circumcenter lists
-        GPUArray<int> circumcenters;
+        GPUArray<int3> circumcenters;
 
         int neighMax;
         int NumCircumCenters;

@@ -19,7 +19,7 @@
 //texture<int,1,cudaReadModeElementType> dcc_tex;
 //
 __global__ void gpu_test_circumcenters_kernel(int *d_repair,
-                                              int *d_circumcircles,
+                                              int3 *d_circumcircles,
                                               float2 *d_pt,
                                               unsigned int *d_cell_sizes,
                                               int *d_cell_idx,
@@ -39,18 +39,20 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
         return;
 
     //the indices of particles forming the circumcircle
+/*
     int i1 = d_circumcircles[3*idx];
     int i2 = d_circumcircles[3*idx+1];
     int i3 = d_circumcircles[3*idx+2];
-
+*/
+    int3 i1 = d_circumcircles[idx];
     //the vertex we will take to be the origin, and its cell position
-    float2 v = d_pt[i1];
+    float2 v = d_pt[i1.x];
     float vz = 0.0;
     int ib=floorf(v.x/boxsize);
     int jb=floorf(v.y/boxsize);
 
-    float2 p1real = d_pt[i2];
-    float2 p2real = d_pt[i3];
+    float2 p1real = d_pt[i1.y];
+    float2 p2real = d_pt[i1.z];
 
     float2 pt1,pt2;
     Box.minDist(p1real,v,pt1);
@@ -95,7 +97,7 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
                 //if it's in the circumcircle, check that its not one of the three points
                 if(toCenter.x*toCenter.x+toCenter.y*toCenter.y < rad)
                     {
-                    if (newidx != i1 && newidx != i2 && newidx !=i3)
+                    if (newidx != i1.x && newidx != i1.y && newidx !=i1.z)
                         {
                         badParticle = true;
                         d_repair[newidx] = 1;
@@ -110,9 +112,9 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     if (badParticle)
         {
         *anyFail = 1;
-        d_repair[i1] = 1;
-        d_repair[i2] = 1;
-        d_repair[i3] = 1;
+        d_repair[i1.x] = 1;
+        d_repair[i1.y] = 1;
+        d_repair[i1.z] = 1;
         };
 
     return;
@@ -140,7 +142,7 @@ __global__ void gpu_move_particles_kernel(float2 *d_points,
 
 
 bool gpu_test_circumcenters(int *d_repair,
-                            int *d_ccs,
+                            int3 *d_ccs,
                             int Nccs,
                             float2 *d_pt,
                             unsigned int *d_cell_sizes,
