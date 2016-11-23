@@ -2,6 +2,9 @@
 CUDA_INC = /usr/local/cuda/includes
 CUDA_LIB = /usr/local/cuda/lib64
 CUDA_LIB2 = /usr/local/cuda/lib
+#CUDA_INC = /usr/local/cuda-8.0/includes
+#CUDA_LIB = /usr/local/cuda-8.0/lib64
+#CUDA_LIB2 = /usr/local/cuda-8.0/lib
 
 CXX := g++
 CC := gcc
@@ -15,7 +18,7 @@ LIB_NETCDF = -lnetcdf_c++ -lnetcdf
 
 #common flags
 COMMONFLAGS += $(INCLUDES) -std=c++11 -g -DCGAL_DISABLE_ROUNDING_MATH_CHECK
-NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo -Wno-deprecated-gpu-targets -Xptxas -O0#-dlcm=ca#-G
+NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo -Wno-deprecated-gpu-targets -O3 -Xptxas -fmad=false#-O0#-dlcm=ca#-G
 CXXFLAGS += $(COMMONFLAGS)
 CXXFLAGS += -w -frounding-math -O3
 CFLAGS += $(COMMONFLAGS) -frounding-math
