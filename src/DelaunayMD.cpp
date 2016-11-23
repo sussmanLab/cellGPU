@@ -108,6 +108,7 @@ void DelaunayMD::initialize(int n)
     resetDelLocPoints();
 
     //make a full triangulation
+    FullFails = 1;
     globalTriangulationCGAL();
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
@@ -252,6 +253,7 @@ void DelaunayMD::fullTriangulation()
 void DelaunayMD::globalTriangulationCGAL(bool verbose)
     {
     GlobalFixes +=1;
+    FullFails = 1;
     DelaunayCGAL dcgal;
     vector<float> psnew(2*N);
     ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
