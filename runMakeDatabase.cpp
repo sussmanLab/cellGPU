@@ -137,7 +137,8 @@ int main(int argc, char*argv[])
 
 
     char dataname[256];
-    sprintf(dataname,"/hdd2/data/spv/MSD/monodisperse_N%i_p%.2f_v%.2f_Dr%.2f.nc",numpts,p0,v0,Dr);
+    printf("Initializing a system with N= %i, p0 = %.2f, v0 = %.2f, Dr = %.3f\n",numpts,p0,v0,Dr);
+    sprintf(dataname,"/hdd2/data/spv/MSD/monodisperse_N%i_p%.2f_v%.2f_Dr%.3f.nc",numpts,p0,v0,Dr);
     SPVDatabase ncdat(numpts,dataname,NcFile::Replace,false);
     SPV2D spv(numpts,1.0,p0);
 
