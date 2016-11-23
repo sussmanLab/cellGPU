@@ -33,8 +33,8 @@ __global__ void gpu_compute_cell_list_kernel(float2 *d_pt,
 
     float2 pos = d_pt[idx];
 
-    int ibin = min(xsize-1,(int)floor(pos.x/boxsize));
-    int jbin = min(xsize-1,(int)floor(pos.y/boxsize));
+    int ibin = max(0,min(xsize-1,(int)floor(pos.x/boxsize)));
+    int jbin = max(0,min(xsize-1,(int)floor(pos.y/boxsize)));
     int bin = ci(ibin,jbin);
     //if (bin > xsize*ysize) printf("(%f,%f) -- (%i,%i) in bin %i out of %i... %f \n",pos.x,pos.y,ibin,jbin,bin,xsize*ysize,boxsize);
 

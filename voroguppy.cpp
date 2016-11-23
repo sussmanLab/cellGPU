@@ -145,6 +145,7 @@ int main(int argc, char*argv[])
     spv.setDeltaT(dt);
 
 
+    printf("starting initialization\n");
     for(int ii = 0; ii < initSteps; ++ii)
         {
         spv.performTimestep();

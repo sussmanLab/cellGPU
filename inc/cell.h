@@ -85,8 +85,8 @@ if (idx >= cells.size() || idx < 0)
 int grid::posToCellIdx(dbl x, dbl y)
     {
     int cell_idx = 0;
-    int binx = min(cellnumx-1,(int)floor(x/cellsize));
-    int biny = min(cellnumx-1,(int)floor(y/cellsize));
+    int binx = max(0,min(cellnumx-1,(int)floor(x/cellsize)));
+    int biny = max(0,min(cellnumx-1,(int)floor(y/cellsize)));
     cell_idx += binx;
     cell_idx += cellnumx*(biny);
     return cell_idx;

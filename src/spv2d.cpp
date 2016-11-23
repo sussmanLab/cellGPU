@@ -388,7 +388,7 @@ void SPV2D::performTimestepGPU()
     if(Fails == 1)
         {
         //maintain the auxilliary lists for computing forces
-        if(delSets.getNumElements()!=neighMax*N)
+        if(FullFails)
             allDelSets();
         else
             {

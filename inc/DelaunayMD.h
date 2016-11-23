@@ -36,6 +36,7 @@ class DelaunayMD
         int NumCircumCenters;
 
         int Fails;
+        int FullFails;
 
         //repair is a vector of zeros (everything is fine) and ones (that index needs to be repaired)
         GPUArray<int> repair;

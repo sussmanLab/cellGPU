@@ -630,9 +630,15 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
         if (verb) printf("repairing triangulation via %lu\n",NeedsFixing.size());
 
         if (NeedsFixing.size() > (N/6))
+            {
+            FullFails = 1;
             globalTriangulationCGAL();
+            }
         else
-           repairTriangulation(NeedsFixing);
+            {
+            FullFails = 0; 
+            repairTriangulation(NeedsFixing);
+            };
         t2=clock();
         cputiming+= t2-t1;
         }
