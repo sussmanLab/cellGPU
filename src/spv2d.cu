@@ -125,7 +125,7 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     pi   = d_points[pidx];
 
     neighs = d_delSets[n_idx(nn,pidx)];
-if(neighs.x >= computations/neighMax   || neighs.y >= computations/neighMax || neighs.z >= computations/neighMax || neighs.w >= computations/neighMax)    printf("tidx:%i,   pidx:%i,   neigh %i /  %i; pNeigh %i,  %i %i %i %i \n",tidx,pidx,nn,neighMax,pNeighbors, neighs.x,neighs.y,neighs.z,neighs.w);
+//if(neighs.x >= computations/neighMax   || neighs.y >= computations/neighMax || neighs.z >= computations/neighMax || neighs.w >= computations/neighMax)    printf("tidx:%i,   pidx:%i,   neigh %i /  %i; pNeigh %i,  %i %i %i %i \n",tidx,pidx,nn,neighMax,pNeighbors, neighs.x,neighs.y,neighs.z,neighs.w);
 
     Box.minDist(d_points[neighs.x],pi,pnm2);
     Box.minDist(d_points[neighs.y],pi,rij);

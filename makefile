@@ -26,9 +26,9 @@ CFLAGS += $(COMMONFLAGS) -frounding-math
 #target rules
 all:build
 
-build: delGPU.out ellipse.out plates.out
+build: delGPU.out ellipse.out plates.out database.out
 
-PROG_OBJS= obj/runellipse.o obj/voroguppy.o obj/runplates.o
+PROG_OBJS= obj/runellipse.o obj/voroguppy.o obj/runplates.o obj/runMakeDatabase.o
 
 CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/DelaunayCGAL.o obj/gpucell.o obj/DelaunayCheckGPU.o obj/DelaunayMD.o obj/spv2d.o
 
@@ -90,6 +90,12 @@ obj/runellipse.o:runellipse.cpp
 
 obj/runplates.o:runplates.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
+
+obj/runMakeDatabase.o:runMakeDatabase.cpp
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
+
+database.out: obj/runMakeDatabase.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 plates.out: obj/runplates.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+

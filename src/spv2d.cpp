@@ -199,18 +199,9 @@ void SPV2D::getDelSets(int i)
 
     int iNeighs = neighnum.data[i];
     int nm2,nm1,n1,n2;
-    if (iNeighs>3)
-        {
-        nm2 = ns.data[n_idx(iNeighs-3,i)];
-        nm1 = ns.data[n_idx(iNeighs-2,i)];
-        n1 = ns.data[n_idx(iNeighs-1,i)];
-        }
-    else
-        {
-        nm2 = ns.data[n_idx(0,i)];
-        nm1 = ns.data[n_idx(1,i)];
-        n1 = ns.data[n_idx(2,i)];
-        };
+    nm2 = ns.data[n_idx(iNeighs-3,i)];
+    nm1 = ns.data[n_idx(iNeighs-2,i)];
+    n1 = ns.data[n_idx(iNeighs-1,i)];
 
     for (int nn = 0; nn < iNeighs; ++nn)
         {
