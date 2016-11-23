@@ -29,7 +29,7 @@ class SPV2D : public DelaunayMD
         bool useTension;
         bool particleExclusions;
 
-        GPUArray<float2> VoronoiPoints;
+//        GPUArray<float2> VoronoiPoints;
         GPUArray<float2> AreaPeriPreferences;//(A0,P0) for each cell
         GPUArray<float2> AreaPeri;//(current A,P) for each cell
         GPUArray<float2> Moduli;//(KA,KP)
