@@ -122,10 +122,11 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     if(nn >=pNeighbors)
         return;
     //Great...access the four Delaunay neighbors and the relevant fifth point
-    float2 pi   = d_points[pidx];
+    float2 pi, pnm2,rij, rik,pn2,pno; 
+    int4 neighs;
+    pi   = d_points[pidx];
 
-    int4 neighs = d_delSets[n_idx(nn,pidx)];
-    float2 pnm2,rij, rik,pn2,pno;
+    neighs = d_delSets[n_idx(nn,pidx)];
 //if(true)    printf("tidx:%i,   pidx:%i,   nm %i,  %i %i %i %i \n",tidx,pidx,neighMax,neighs.x,neighs.y,neighs.z,neighs.w);
 
     Box.minDist(d_points[neighs.x],pi,pnm2);
@@ -522,8 +523,8 @@ __global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
         return;
 
     curandState_t randState;
-    //seed is timestep, so seed*N+idx
-    curand_init(seed*N+idx,//seed first
+                    //seed passed is timestep*N
+    curand_init(seed+idx,//seed first
                 0,   // sequence -- only important for multiple cores
                 0,   //offset. advance by sequence by 1 plus this value
                 &randState);
@@ -614,7 +615,7 @@ bool gpu_displace_and_rotate(float2 *d_points,
                         float2 *d_motility,
                         int N,
                         float dt,
-                        int seed,
+                        int timestep,
   //                      curandState *states,
                         gpubox &Box
                         )
@@ -631,7 +632,7 @@ bool gpu_displace_and_rotate(float2 *d_points,
                                                 d_motility,
                                                 N,
                                                 dt,
-                                                seed,
+                                                timestep*N,
     //                                            states,
                                                 Box
                                                 );

@@ -133,9 +133,9 @@ int main(int argc, char*argv[])
     if (!gpu) return 0;
     cudaSetDevice(USE_GPU);
 
-//    char dataname[256];
-//    sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
+    char dataname[256];
+    sprintf(dataname,"/hdd2/data/spv/test.nc");
+    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
 
     SPV2D spv(numpts,1.0,p0);
@@ -175,7 +175,17 @@ int main(int argc, char*argv[])
     cout << endl << "GPU time  = " << spv.gputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
     cout << "CPU time  = " << spv.cputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
-
+    ncdat.WriteState(spv);
+    
+    spv.computeGeometryGPU();
+    spv.computeSPVForceSetsGPU();
+    spv.sumForceSets();
+    printf("<q> = %f\n",spv.reportq());
+    spv.meanForce();
+    spv.reportForces();
+    spv.reportDirectors();
+    spv.DisplacePointsAndRotate();
+    spv.reportDirectors();
 
     return 0;
 };

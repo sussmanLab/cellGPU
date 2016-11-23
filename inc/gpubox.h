@@ -50,7 +50,7 @@ struct gpubox
         HOSTDEVICE void putInBoxReal(float2 &p1);
         HOSTDEVICE void putInBox(float2 &vp);
         HOSTDEVICE void Trans(const float2 &p1, float2 &pans);
-        HOSTDEVICE void invTrans(const float2 &p1, float2 &pans);
+        HOSTDEVICE void invTrans(const float2 p1, float2 &pans);
         HOSTDEVICE void minDist(const float2 &p1, const float2 &p2, float2 &pans);
 
         HOSTDEVICE void move(float2 &p1, const float2 &disp);
@@ -93,7 +93,7 @@ void gpubox::Trans(const float2 &p1, float2 &pans)
     pans.y = x21*p1.x + x22*p1.y;
     };
 
-void gpubox::invTrans(const float2 &p1, float2 &pans)
+void gpubox::invTrans(const float2 p1, float2 &pans)
     {
     pans.x = xi11*p1.x + xi12*p1.y;
     pans.y = xi21*p1.x + xi22*p1.y;

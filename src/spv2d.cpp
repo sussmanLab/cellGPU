@@ -359,10 +359,10 @@ void SPV2D::performTimestepGPU()
 //    printf("computing forces\n");
     t1=clock();
 //    cudaProfilerStart();
-    if(useTension)
-        computeSPVForceSetsWithTensionsGPU();
-    else
+    if(!useTension)
         computeSPVForceSetsGPU();
+    else
+        computeSPVForceSetsWithTensionsGPU();
 
     if(!particleExclusions)
         sumForceSets();
@@ -1094,6 +1094,26 @@ void SPV2D::meanArea()
 
     };
 
+void SPV2D::reportDirectors()
+    {
+    ArrayHandle<float> h_cd(cellDirectors,access_location::host,access_mode::read);
+    float fx = 0.0;
+    float fy = 0.0;
+    float min = 10000;
+    float max = -10000;
+    for (int i = 0; i < N; ++i)
+        {
+        if (h_cd.data[i] >max)
+            max = h_cd.data[i];
+        if (h_cd.data[i] < min)
+            min = h_cd.data[i];
+        if (isnan(h_cd.data[i]))
+          printf("cell %i: t director (%f)\n",i,h_cd.data[i]);
+        };
+    printf("min/max director : (%f,%f)\n",min,max);
+
+    };
+
 
 void SPV2D::reportForces()
     {
@@ -1101,15 +1121,26 @@ void SPV2D::reportForces()
     ArrayHandle<float2> p(points,access_location::host,access_mode::read);
     float fx = 0.0;
     float fy = 0.0;
+    float min = 10000;
+    float max = -10000;
     for (int i = 0; i < N; ++i)
         {
+        if (h_f.data[i].y >max)
+            max = h_f.data[i].y;
+        if (h_f.data[i].x >max)
+            max = h_f.data[i].x;
+        if (h_f.data[i].y < min)
+            min = h_f.data[i].y;
+        if (h_f.data[i].x < min)
+            min = h_f.data[i].x;
         fx += h_f.data[i].x;
         fy += h_f.data[i].y;
 //
-//        if (isnan(h_f.data[i].x) || isnan(h_f.data[i].y))
+        if (isnan(h_f.data[i].x) || isnan(h_f.data[i].y))
 //        if(i == N-1)
           printf("cell %i: \t position (%f,%f)\t force (%f, %f)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
         };
+    printf("min/max force : (%f,%f)\n",min,max);
 
     };
 

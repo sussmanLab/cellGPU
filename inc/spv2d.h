@@ -128,6 +128,7 @@ class SPV2D : public DelaunayMD
 
         //testing functions...
         void reportForces();
+        void reportDirectors();
         void meanForce();
         void meanArea();
         float reportq();
