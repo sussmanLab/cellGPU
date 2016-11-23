@@ -44,7 +44,7 @@ __global__ void gpu_compute_cell_list_kernel(float2 *d_pt,
     //if (offset <= Nmax+1)
     if (offset <= d_assist[0]+1)
         {
-        unsigned int write_pos = min(cli(offset, bin),cli.getNumElements());
+        unsigned int write_pos = min(cli(offset, bin),cli.getNumElements()-1);
         d_idx[write_pos] = idx;
 //        atomicAdd(&(d_cell_sizes[bin]),1);
         //d_cell_sizes[bin] += 1;

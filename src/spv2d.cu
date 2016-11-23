@@ -93,8 +93,6 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(float2 *d_forceSets,
 
     };
 
-
-
 __global__ void gpu_force_sets_kernel(float2      *d_points,
                                           int     *d_nn,
                                           float2  *d_AP,
@@ -122,7 +120,7 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     if(nn >=pNeighbors)
         return;
     //Great...access the four Delaunay neighbors and the relevant fifth point
-    float2 pi, pnm2,rij, rik,pn2,pno; 
+    float2 pi, pnm2,rij, rik,pn2,pno;
     int4 neighs;
     pi   = d_points[pidx];
 

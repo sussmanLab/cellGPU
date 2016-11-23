@@ -354,14 +354,15 @@ if(code2!=cudaSuccess)
     ArrayHandle<float2> h_pt(points,access_location::host,access_mode::read);
     for (int ii = 0; ii < Np; ++ii)
         {
-        if (h_pt.data[ii].x <= 0) cout <<h_pt.data[ii].x << endl;
+        if (h_pt.data[ii].x <= 0) cout <<h_pt.data[ii].x <<  " X " << endl;
         };
     for (int ii = 0; ii < Np; ++ii)
         {
-        if (h_pt.data[ii].y <= 0) cout <<h_pt.data[ii].y << endl;
+        if (h_pt.data[ii].y <= 0) cout <<h_pt.data[ii].y <<  " Y " << endl;
         };
     for (int cc = 0; cc < totalCells; ++cc)
-        cout << cc<<"   "  << h_cell_sizes.data[cc] << "  " << endl;
+        if (h_cell_sizes.data[cc] >0)
+            cout << cc<<"   "  << h_cell_sizes.data[cc] << "  " << endl;
     cout.flush();
     printf("cell list first comp GPUassert: %s \n", cudaGetErrorString(code2));
     };

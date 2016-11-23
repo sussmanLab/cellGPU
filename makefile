@@ -18,7 +18,7 @@ LIB_NETCDF = -lnetcdf_c++ -lnetcdf
 
 #common flags
 COMMONFLAGS += $(INCLUDES) -std=c++11 -g -DCGAL_DISABLE_ROUNDING_MATH_CHECK
-NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo -Wno-deprecated-gpu-targets -O3 -Xptxas -fmad=false#-O0#-dlcm=ca#-G
+NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -lineinfo -Wno-deprecated-gpu-targets -O3 -Xptxas --generate-line-info #-fmad=false#-O0#-dlcm=ca#-G
 CXXFLAGS += $(COMMONFLAGS)
 CXXFLAGS += -w -frounding-math -O3
 CFLAGS += $(COMMONFLAGS) -frounding-math
