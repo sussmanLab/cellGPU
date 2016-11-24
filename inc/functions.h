@@ -43,8 +43,6 @@ HOSTDEVICE bool Circumcircle(dbl x1, dbl y1, dbl x2, dbl y2, dbl x3, dbl y3,
             mx1 = 0.5*(x1+x2);
             mx2 = 0.5*(x2+x3);
             my1 = 0.5*(y1+y2);
-            //my2 = 0.5*(y2+y3);
-            //xc = (m1*mx1-m2*mx2+my2-my1)/(m1-m2);
             my2 = 0.5*(y3-y1);
             xc = (m1*mx1-m2*mx2+my2)/(m1-m2);
             yc = m1*(xc-mx1)+my1;
@@ -115,30 +113,7 @@ HOSTDEVICE int quadrant(dbl x, dbl y)
     };
 
 
-//partial derivative of h (circumcenter of r1,r2,r3) w/r/t change in position of r1
-HOSTDEVICE void dhdr(float x1, float y1, float x2, float y2,float x3, float y3, float &dhxdrx, float &dhxdry,float &dhydrx, float &dhydry)
-    {
-    dhxdrx = (y2 - y3)*(2*x1*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)) - (x1 - x2)*(x1 + x2)*(y2 - y3) + (x2 - x3)*(x2 + x3)*(y1 - y2) - (y1 - y2)*(y1 - y3)*(y2 - y3))/(2*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)));
 
-    dhxdry = (y2 - y3)*((x1 - x2)*((x1 - x2)*(x1 + x2)*(y2 - y3) - (x2 - x3)*(x2 + x3)*(y1 - y2) + (y1 - y2)*(y1 - y3)*(y2 - y3)) - ((x1 - x2)*(x1 + x2) - (y1 - y2)*(y1-y2))*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)))/(2*(y1 - y2)*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)));
-    dhydrx=((x1 - x2)*(-2*x1*(y2 - y3)*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)) + (y2 - y3)*((x1 - x2)*(x1 + x2)*(y2 - y3) - (x2 - x3)*(x2 + x3)*(y1 - y2) + (y1 - y2)*(y1 - y3)*(y2 - y3)) + ((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))) + ((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))*(-(x1 - x2)*(x1 + x2)*(y2 - y3) + (x1 + x2)*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)) + (x2 - x3)*(x2 + x3)*(y1 - y2) - (y1 - y2)*(y1 - y3)*(y2 - y3)))/(2*(y1 - y2)*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)));
-
-    dhydry=(-(x1 - x2)*(y2 - y3)*((x1 - x2)*((x1 - x2)*(x1 + x2)*(y2 - y3) - (x2 - x3)*(x2 + x3)*(y1 - y2) + (y1 - y2)*(y1 - y3)*(y2 - y3)) - ((x1 - x2)*(x1 + x2) - (y1 - y2)*(y1-y2))*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))) - (x1 - x2)*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))*(-(x1 - x2)*(x1 + x2)*(y2 - y3) + (x1 + x2)*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)) + (x2 - x3)*(x2 + x3)*(y1 - y2) - (y1 - y2)*(y1 - y3)*(y2 - y3)) + (y1 - y2)*(y1-y2)*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)))/(2*(y1 - y2)*(y1-y2)*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2))*((x1 - x2)*(y2 - y3) + (-x2 + x3)*(y1 - y2)));
-
-    return;
-    };
-
-//partial derivative of h (circumcenter of r1,r2,r3) w/r/t change in position of r1, specialized to evaluate the derivatives at x1=y1=0
-HOSTDEVICE void dhdr0(float x2, float y2,float x3, float y3, float &dhxdrx, float &dhxdry,float &dhydrx, float &dhydry)
-    {
-    float crossprod1 = x3*y2-x2*y3;
-    float denom = 2.0*crossprod1*crossprod1;
-    dhxdrx=(y2-y3)*(x3*x3*y2-y3*(x2*x2+y2*(y2-y3)))/denom;
-    dhxdry=(y2-y3)*(x2*x2*x3+x3*y2*y2-x2*(x3*x3+y3*y3))/denom;
-    dhydrx=(x2-x3)*(-x3*x3*y2+y3*(x2*x2+y2*(y2-y3)))/denom;
-    dhydry=-(x2-x3)*(x3*x2*x2+x3*y2*y2-x2*(x3*x3+y3*y3))/denom;
-    return;
-    };
 
 // undefine HOSTDEVICE so we don't interfere with other headers
 #undef HOSTDEVICE

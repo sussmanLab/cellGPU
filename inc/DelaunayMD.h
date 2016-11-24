@@ -59,10 +59,6 @@ class DelaunayMD
         void getPoints(GPUArray<float2> &ps){ps = points;};
         //constructors
         DelaunayMD(){triangulated=false;cellsize=2.0;};
-        //constructor via a vector of point objects
-//        DelaunayMD(std::vector<pt> &points, box &bx){setPoints(points);setBox(bx);};
-        //constructor via a vector of scalars, {x1,y1,x2,y2,...}
-//        DelaunayMD(std::vector<float> &points,box &bx){setPoints(points);setBox(bx);};
 
         //initialization functions
         void initialize(int n);

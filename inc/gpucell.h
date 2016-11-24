@@ -10,9 +10,6 @@ using namespace voroguppy;
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "indexer.h"
-//#include "gpucell.cuh"
-//namespace voroguppy
-//{
 
 class cellListGPU
     {
@@ -61,7 +58,7 @@ class cellListGPU
             cout <<hh.data[i].x << "  " << hh.data[i].y << endl;
             };
             };
-        
+
         Index2D cell_indexer; //indexes cells from (i,j) pairs
         Index2D cell_list_indexer; //indexes elements in the cell list
 
@@ -81,7 +78,5 @@ class cellListGPU
 
     };
 
-
-//};
 
 #endif

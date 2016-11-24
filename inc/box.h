@@ -110,10 +110,6 @@ void box::minDist(const pt &p1, const pt &p2, pt &pans)
     pt vA,vB;
     invTrans(p1,vA);
     invTrans(p2,vB);
-    //this function is called a lot...so, optimize.
-    //structures::pt disp;
-    //disp.x = xi11*p1.x+xi12*p1.y - xi11*p2.x+xi12*p2.y;
-    //disp.y = xi21*p1.x+xi22*p1.y - xi21*p2.x+xi22*p2.y;
     pt disp=vA-vB;
     while(fabs(disp.x)>0.5)
         {
@@ -125,32 +121,9 @@ void box::minDist(const pt &p1, const pt &p2, pt &pans)
         dbl sgn = (disp.y > 0) - (disp.y < 0);
         disp.y = disp.y - sgn;
         };
-    //pans.x = x11*disp.x + x12*disp.y;
-    //pans.y = x21*disp.x + x22*disp.y;
     Trans(disp,pans);
     };
 
-/*
-void box::minDist(const pt &p1, const pt &p2, pt &pans)
-    {
-    float dx,dy;
-    dx = xi11*p1.x+xi12*p1.y - xi11*p2.x+xi12*p2.y;
-    dy = xi21*p1.x+xi22*p1.y - xi21*p2.x+xi22*p2.y;
-    float sgn;
-    while(fabs(dx)>0.5)
-        {
-        sgn = (dx > 0) - (dx < 0);
-        dx -= sgn;
-        };
-    while(fabs(dy)>0.5)
-        {
-        sgn = (dy > 0) - (dy < 0);
-        dy -= sgn;
-        };
-    pans.x = x11*dx + x12*dy;
-    pans.y = x21*dx + x22*dy;
-    };
-*/
 
 void box::move(pt &p1, const pt &disp)
     {//assume real space entries. Moves p1 by disp, and puts it back in box

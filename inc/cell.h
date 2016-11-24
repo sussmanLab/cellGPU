@@ -74,10 +74,8 @@ void grid::construct()
     for (int nn = 0; nn < N; ++nn)
         {
         int idx = posToCellIdx(points[nn].x,points[nn].y);
-if (idx >= cells.size() || idx < 0)
-    cout << "bad idx for particle" << nn << " : " << idx << "  " << points[nn].x << "  " << points[nn].y << endl; cout.flush();
-//if (idx >= cells.size() || idx < 0) 
-//    printf("\n  %i for point (%f,%f)...cells have %i available slots",idx,points[nn].x,points[nn].y,cells.size());
+        if (idx >= cells.size() || idx < 0)
+            cout << "bad idx for particle" << nn << " : " << idx << "  " << points[nn].x << "  " << points[nn].y << endl; cout.flush();
         cells[idx].push_back(nn);
         };
     };

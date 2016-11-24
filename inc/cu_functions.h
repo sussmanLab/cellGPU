@@ -36,8 +36,6 @@ HOSTDEVICE void Circumcenter(float2 x1, float2 x2, float2 x3, float2 &xc)
             mx1 = 0.5*(x1.x+x2.x);
             mx2 = 0.5*(x2.x+x3.x);
             my1 = 0.5*(x1.y+x2.y);
-            //my2 = 0.5*(y2+y3);
-            //xc = (m1*mx1-m2*mx2+my2-my1)/(m1-m2);
             my2 = 0.5*(x3.y-x1.y);
             xc.x = (m1*mx1-m2*mx2+my2)/(m1-m2);
             xc.y = m1*(xc.x-mx1)+my1;
@@ -75,8 +73,6 @@ __device__ inline void Circumcircle(float x1, float y1, float x2, float y2, floa
             mx1 = 0.5*(x1+x2);
             mx2 = 0.5*(x2+x3);
             my1 = 0.5*(y1+y2);
-            //my2 = 0.5*(y2+y3);
-            //xc = (m1*mx1-m2*mx2+my2-my1)/(m1-m2);
             my2 = 0.5*(y3-y1);
             xc = (m1*mx1-m2*mx2+my2)/(m1-m2);
             yc = m1*(xc-mx1)+my1;

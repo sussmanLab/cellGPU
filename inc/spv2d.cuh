@@ -30,7 +30,6 @@ bool gpu_displace_and_rotate(
 bool gpu_compute_geometry(
                     float2 *d_points,
                     float2 *d_AP,
-//                    float2 *d_voro,
                     int    *d_nn,
                     int    *d_n,
                     int    N,

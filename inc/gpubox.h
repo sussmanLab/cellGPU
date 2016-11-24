@@ -127,28 +127,7 @@ void gpubox::minDist(const float2 &p1, const float2 &p2, float2 &pans)
     float2 vA,vB;
     invTrans(p1,vA);
     invTrans(p2,vB);
-    //this function is called a lot...so, optimize.
-    //disp.x = xi11*p1.x+xi12*p1.y - xi11*p2.x+xi12*p2.y;
-    //disp.y = xi21*p1.x+xi22*p1.y - xi21*p2.x+xi22*p2.y;
     float2 disp= make_float2(vA.x-vB.x,vA.y-vB.y);
-/*
-    while(disp.x<-0.5)
-        {
-        disp.x += 1.;
-        };
-    while(disp.x>0.5)
-        {
-        disp.x -= 1.;
-        };
-    while(disp.y<-0.5)
-        {
-        disp.y += 1.;
-        };
-    while(disp.y>0.5)
-        {
-        disp.y -= 1.;
-        };
-*/
 
     while(fabs(disp.x)>0.5)
         {
@@ -161,8 +140,6 @@ void gpubox::minDist(const float2 &p1, const float2 &p2, float2 &pans)
         disp.y = disp.y - sgn;
         };
 
-    //pans.x = x11*disp.x + x12*disp.y;
-    //pans.y = x21*disp.x + x22*disp.y;
     Trans(disp,pans);
     };
 

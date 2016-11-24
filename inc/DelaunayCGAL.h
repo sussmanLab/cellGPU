@@ -5,7 +5,6 @@
 
 using namespace std;
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-//#include <CGAL/Periodic_2_triangulation_traits_2.h>
 #include <CGAL/Periodic_2_triangulation_filtered_traits_2.h>
 #include <CGAL/Periodic_2_Delaunay_triangulation_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
@@ -18,8 +17,6 @@ using namespace std;
 
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-//typedef CGAL::Periodic_2_triangulation_traits_2<K> GT;
-//typedef CGAL::Periodic_2_Delaunay_triangulation_2<GT> PDT;
 typedef CGAL::Periodic_2_triangulation_filtered_traits_2<K> GT;
 
 typedef CGAL::Periodic_2_triangulation_vertex_base_2<GT>    Vb;
@@ -42,7 +39,7 @@ typedef PDT::Point             Point;
 typedef PDT::Iso_rectangle     Iso_rectangle;
 typedef PDT::Vertex_handle     Vertex_handle;
 typedef PDT::Locate_type       Locate_type;
-typedef PDT::Face_handle       Face_handle; 
+typedef PDT::Face_handle       Face_handle;
 typedef PDT::Vertex_circulator Vertex_circulator;
 
 class DelaunayCGAL

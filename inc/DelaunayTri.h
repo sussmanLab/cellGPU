@@ -20,7 +20,7 @@ class DelaunayTri
         bool sorted;                  //are the points sorted
         bool triangulated;            //has a triangulation been performed?
         box Box;
-    
+
     public:
         DelaunayTri();
         //constructor via a vector of scalars, {x1,y1,x2,y2,...}

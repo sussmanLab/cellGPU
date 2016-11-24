@@ -14,7 +14,7 @@ using namespace std;
 #include "vector_types.h"
 #include "vector_functions.h"
 
-#include "Matrix.h"   
+#include "Matrix.h"
 #include "cu_functions.h"
 
 #include "DelaunayMD.h"
@@ -42,7 +42,7 @@ class SPV2D : public DelaunayMD
 
         //delSet.data[n_idx(nn,i)] are four consecutive delaunay neighbors, orientationally ordered, of point i (for use in computing forces on GPU)
         GPUArray<int4> delSets;
-        //delOther.daata[n_idx(nn,i)] contains the index of the "other" delaunay neighbor. i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
+        //delOther.data[n_idx(nn,i)] contains the index of the "other" delaunay neighbor. i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
         GPUArray<int> delOther;
         //interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
         GPUArray<float2> forceSets;
@@ -53,7 +53,7 @@ class SPV2D : public DelaunayMD
         GPUArray<int> CellType;
         GPUArray<float> cellDirectors;
         GPUArray<float2> forces;
-    
+
         //"exclusiosn" zero out the force on a cell...the external force needed to do this is stored in external_forces
         GPUArray<float2> external_forces;
         GPUArray<int> exclusions;

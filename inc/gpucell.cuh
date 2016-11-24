@@ -16,8 +16,6 @@ using namespace voroguppy;
 
 //! Kernel driver for gpu_compute_cell_list_kernel()
 
-//extern "C"
-//{
 bool gpu_compute_cell_list(float2 *d_pt,
                                   unsigned int *d_cell_sizes,
                                   int *d_idx,
@@ -31,6 +29,5 @@ bool gpu_compute_cell_list(float2 *d_pt,
                                   Index2D &cli,
                                   int *d_assist
                                   );
-//}
 #endif
 
