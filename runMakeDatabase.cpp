@@ -177,6 +177,7 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
     t2=clock();
+    ncdat.WriteState(spv);
 
 
     float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/tSteps;
@@ -184,8 +185,8 @@ int main(int argc, char*argv[])
     cout << "current q = " << spv.reportq() << endl;
     spv.meanForce();
 
-    cout << endl << "force time  = " << spv.forcetiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
-    cout << "other time  = " << spv.triangletiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
+    cout << endl << "GPU time  = " << spv.gputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
+    cout << "CPU time  = " << spv.cputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
 
 
