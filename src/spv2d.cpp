@@ -356,7 +356,6 @@ void SPV2D::performTimestepGPU()
     gputiming += (t2-t1);
 //    printf("computing forces\n");
     t1=clock();
-//    cudaProfilerStart();
     if(!useTension)
         computeSPVForceSetsGPU();
     else
@@ -380,10 +379,8 @@ void SPV2D::performTimestepGPU()
 
 //    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
-//    cudaProfilerStop();
 
     t1=clock();
-//    allDelSets();
     if(Fails == 1)
         {
         //maintain the auxilliary lists for computing forces
@@ -401,17 +398,14 @@ void SPV2D::performTimestepGPU()
 
 void SPV2D::computeGeometryGPU()
     {
-    //VoronoiPoints.resize(n_idx.getNumElements());
     ArrayHandle<float2> d_p(points,access_location::device,access_mode::read);
     ArrayHandle<float2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
-    //ArrayHandle<float2> d_voro(VoronoiPoints,access_location::device,access_mode::overwrite);
     ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
     ArrayHandle<int> d_n(neighs,access_location::device,access_mode::read);
 
     gpu_compute_geometry(
                         d_p.data,
                         d_AP.data,
-     //                   d_voro.data,
                         d_nn.data,
                         d_n.data,
                         N, n_idx,Box);
@@ -517,7 +511,6 @@ void SPV2D::computeGeometryCPU()
     {
     for (int i = 0; i < N; ++i)
         {
-//        printf("cell %i:\n",i);
         //read in all the data we'll need
         ArrayHandle<float2> h_p(points,access_location::host,access_mode::read);
         ArrayHandle<float2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
@@ -574,7 +567,6 @@ void SPV2D::computeGeometryCPU()
 void SPV2D::computeSPVForceCPU(int i)
     {
     float Pthreshold = 1e-8;
- //   printf("cell %i: \n",i);
     //for testing these routines...
     vector <int> test;
     DelaunayCell celltest;
