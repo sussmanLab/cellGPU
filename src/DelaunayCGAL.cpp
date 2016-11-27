@@ -63,8 +63,8 @@ void DelaunayCGAL::PeriodicTriangulation(vector<float> &points, float size)
     T.convert_to_1_sheeted_covering();
 
 
-    Locate_type lt;
     int li;
+    Locate_type lt;
 
     for (int ii = 0; ii < points.size()/2; ++ii)
         {
