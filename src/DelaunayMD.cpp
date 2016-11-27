@@ -577,28 +577,28 @@ void DelaunayMD::testTriangulationCPU()
 
 void DelaunayMD::testAndRepairTriangulation(bool verb)
     {
-    clock_t t1,t2;
+    //clock_t t1,t2;
     timestep +=1;
 
 //verb = true;
     if (verb) printf("testing triangulation\n");
     if(GPUcompute)
         {
-        t1=clock();
+//        t1=clock();
         testTriangulation();
-        t2=clock();
-        gputiming+= t2-t1;
+//        t2=clock();
+//        gputiming+= t2-t1;
         }
     else
         {
-        t1=clock();
+//        t1=clock();
         testTriangulationCPU();
-        t2=clock();
-        cputiming+= t2-t1;
+//        t2=clock();
+//        cputiming+= t2-t1;
         };
     if(Fails == 1)
         {
-        t1=clock();
+//        t1=clock();
         NeedsFixing.clear();
         ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
         cudaError_t code = cudaGetLastError();
@@ -640,8 +640,8 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
             FullFails = 0; 
             repairTriangulation(NeedsFixing);
             };
-        t2=clock();
-        cputiming+= t2-t1;
+//        t2=clock();
+//        cputiming+= t2-t1;
         }
     else
         skippedFrames+=1;

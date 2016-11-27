@@ -347,15 +347,15 @@ void SPV2D::performTimestepCPU()
 
 void SPV2D::performTimestepGPU()
     {
-    clock_t t1,t2;
+//    clock_t t1,t2;
 //    printf("computing geometry for timestep %i\n",Timestep);
-    t1=clock();
+//    t1=clock();
     computeGeometryGPU();
-    t2=clock();
-    triangletiming += (t2-t1);
-    gputiming += (t2-t1);
+//    t2=clock();
+//    triangletiming += (t2-t1);
+//    gputiming += (t2-t1);
 //    printf("computing forces\n");
-    t1=clock();
+//    t1=clock();
     if(!useTension)
         computeSPVForceSetsGPU();
     else
@@ -366,21 +366,21 @@ void SPV2D::performTimestepGPU()
     else
         sumForceSetsWithExclusions();
 
-    t2=clock();
-    forcetiming += t2-t1;
-    gputiming += (t2-t1);
-    t1=clock();
+//    t2=clock();
+//    forcetiming += t2-t1;
+//    gputiming += (t2-t1);
+//    t1=clock();
 
 //    printf("displacing particles\n");
     DisplacePointsAndRotate();
-    t2=clock();
-    gputiming += (t2-t1);
+//    t2=clock();
+//    gputiming += (t2-t1);
 
 
 //    printf("recomputing triangulation\n");
     testAndRepairTriangulation();
 
-    t1=clock();
+//    t1=clock();
     if(Fails == 1)
         {
         //maintain the auxilliary lists for computing forces
@@ -392,8 +392,8 @@ void SPV2D::performTimestepGPU()
                 getDelSets(NeedsFixing[jj]);
             };
         };
-    t2=clock();
-    cputiming += (t2-t1);
+//    t2=clock();
+//    cputiming += (t2-t1);
     };
 
 void SPV2D::computeGeometryGPU()
