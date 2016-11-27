@@ -241,7 +241,7 @@ void DelaunayMD::fullTriangulation()
         ofstream output(fn);
         getCircumcenterIndices();
         writeTriangulation(output);
-            
+
         throw std::exception();
         };
 
@@ -556,7 +556,6 @@ void DelaunayMD::testTriangulationCPU()
 
 
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
-    
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
 
@@ -568,7 +567,7 @@ void DelaunayMD::testTriangulationCPU()
                 int idxpos = n_idx(ii,nn);
                 neighbors.push_back(ns.data[idxpos]);
                 };
-        
+
         bool good = delLoc.testPointTriangulation(nn,neighbors,false);
         if(!good) h_repair.data[nn]=1;
         };

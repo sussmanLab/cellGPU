@@ -128,14 +128,15 @@ int main(int argc, char*argv[])
     clock_t t1,t2;
 
 
-
+    int count = 0;
+    cudaGetDeviceCount(&count);
     bool gpu = chooseGPU(USE_GPU);
     if (!gpu) return 0;
     cudaSetDevice(USE_GPU);
 
-    char dataname[256];
-    sprintf(dataname,"/hdd2/data/spv/test.nc");
-    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
+//    char dataname[256];
+//    sprintf(dataname,"/hdd2/data/spv/test.nc");
+//    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
 
     SPV2D spv(numpts,1.0,p0);
@@ -152,9 +153,9 @@ int main(int argc, char*argv[])
         };
 
     printf("Finished with initialization\n");
-    cout << "current q = " << spv.reportq() << endl;
-    spv.meanForce();
-
+    //cout << "current q = " << spv.reportq() << endl;
+    //spv.meanForce();
+    spv.repPerFrame = 0.0;
 
     t1=clock();
     cudaProfilerStart();
@@ -176,16 +177,16 @@ int main(int argc, char*argv[])
     cout << "CPU time  = " << spv.cputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
 //    ncdat.WriteState(spv);
-    
+
     spv.computeGeometryGPU();
     spv.computeSPVForceSetsGPU();
     spv.sumForceSets();
-    printf("<q> = %f\n",spv.reportq());
-    spv.meanForce();
-    spv.reportForces();
-    spv.reportDirectors();
-    spv.DisplacePointsAndRotate();
-    spv.reportDirectors();
+//    printf("<q> = %f\n",spv.reportq());
+//    spv.meanForce();
+//    spv.reportForces();
+//    spv.reportDirectors();
+//    spv.DisplacePointsAndRotate();
+//    spv.reportDirectors();
 
     return 0;
 };
