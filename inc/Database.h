@@ -53,6 +53,7 @@ private:
 
 public:
     SPVDatabase(int np, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly,bool excluded = false);
+    ~SPVDatabase(){File.close();};
 
 private:
     void SetDimVar();

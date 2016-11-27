@@ -64,11 +64,12 @@ void DelaunayCGAL::PeriodicTriangulation(vector<float> &points, float size)
 
 
     int li;
-    Locate_type lt;
-
+//    Locate_type lt;
+    vector<Locate_type> lts(points.size()/2);
     for (int ii = 0; ii < points.size()/2; ++ii)
         {
-        Face_handle fh = T.locate(V[ii],lt,li);
+        //Face_handle fh = T.locate(V[ii],lt,li);
+        Face_handle fh = T.locate(V[ii],lts[ii],li);
         Vertex_handle vh = fh->vertex(li);
         vh->info()=ii;
 
@@ -89,14 +90,15 @@ void DelaunayCGAL::PeriodicTriangulation(vector<float> &points, float size)
     allneighs.clear();
     allneighs.resize(points.size()/2);
 
-    
+    vector<int> neighs;
+    neighs.reserve(8);
     for (int ii = 0; ii < points.size()/2;++ii)
         {
-        Face_handle fh = T.locate(V[ii],lt,li);
+        neighs.clear();
+        Face_handle fh = T.locate(V[ii],lts[ii],li);
+        //Face_handle fh = T.locate(V[ii],lt,li);
         Vertex_handle vh = fh->vertex(li);
         Vertex_circulator vc(vh,fh);
-        vector<int> neighs;
-        neighs.reserve(8);
         int base = vc->info();
         neighs.push_back(base);
 

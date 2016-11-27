@@ -175,7 +175,7 @@ int main(int argc, char*argv[])
     cout << endl << "GPU time  = " << spv.gputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
     cout << "CPU time  = " << spv.cputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
-    ncdat.WriteState(spv);
+//    ncdat.WriteState(spv);
     
     spv.computeGeometryGPU();
     spv.computeSPVForceSetsGPU();
