@@ -9,6 +9,7 @@
 #endif
 
 //a class for converting between a 2d index and a 1-d array
+//inspired by the indexer class of Hoomd-blue
 
 class Index2D
     {
