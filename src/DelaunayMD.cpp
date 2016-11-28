@@ -30,7 +30,6 @@ using namespace std;
 #include "gpucell.cuh"
 #include "gpucell.h"
 
-#include "DelaunayTri.h"
 #include "DelaunayMD.cuh"
 #include "DelaunayMD.h"
 

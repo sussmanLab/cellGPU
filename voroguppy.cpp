@@ -12,36 +12,16 @@
 #include <sys/time.h>
 
 
-//#include "cuda.h"
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 #include "vector_types.h"
 
-//#define DIM 2
+#define ENABLE_CUDA
 #define dbl float
-#define REAL float // for triangle
 #define EPSILON 1e-12
 
-#include "box.h"
-#include "Delaunay1.h"
-#include "DelaunayLoc.h"
-#include "DelaunayTri.h"
 
-//#include "DelaunayCGAL.h"
-
-//comment this definition out to compile on cuda-free systems
-#define ENABLE_CUDA
-
-#include "Matrix.h"
-#include "gpubox.h"
-#include "gpuarray.h"
-#include "gpucell.h"
-
-#include "DelaunayCheckGPU.h"
-#include "DelaunayMD.h"
 #include "spv2d.h"
-
-
 #include "Database.h"
 
 
