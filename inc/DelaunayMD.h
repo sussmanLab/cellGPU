@@ -80,7 +80,6 @@ class DelaunayMD
         //construct complete triangulation point-by-point
         void fullTriangulation();
         //resort to a method that globally constructs the triangulation
-        void globalTriangulation(bool verbose = false);
         void globalTriangulationCGAL(bool verbose = false);
 
         //construct circumcenters structure from neighbor list

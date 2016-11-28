@@ -53,8 +53,6 @@ class DelaunayLoc
         void triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &DCell,bool timing=false);
         //"neighbors" returns a vector of the index of Delaunay neighbors of vertex i, sorted in clockwise order
         void getNeighbors(int i, vector<int> &neighbors);
-        //"neighbors" returns a vector of the index of Delaunay neighbors of vertex i, sorted in clockwise order...calculated via Triangle
-        void getNeighborsTri(int i, vector<int> &neighbors);
         //"neighbors" returns a vector of the index of Delaunay neighbors of vertex i, sorted in clockwise order...calculated via CGAL
         void getNeighborsCGAL(int i, vector<int> &neighbors);
 

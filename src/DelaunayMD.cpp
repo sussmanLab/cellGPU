@@ -197,7 +197,6 @@ void DelaunayMD::fullTriangulation()
     for(int nn = 0; nn < N; ++nn)
         {
         vector<int> neighTemp;
-//        delLoc.getNeighborsTri(nn,neighTemp);
         delLoc.getNeighbors(nn,neighTemp);
         allneighs[nn]=neighTemp;
         neighnum.data[nn] = neighTemp.size();
@@ -320,83 +319,6 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         throw std::exception();
         };
     };
-
-void DelaunayMD::globalTriangulation(bool verbose)
-    {
-    GlobalFixes +=1;
-    if(verbose)
-        cout << "Resetting complete triangulation globally" << endl;
-
-    //get neighbors of each cell in CW order from the Triangle interface
-    vector<float> psnew(2*N);
-    ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        psnew[2*ii] =  h_points.data[ii].x;
-        psnew[2*ii+1]= h_points.data[ii].y;
-        };
-    vector< vector<int> > allneighs(N);
-    DelaunayTri delTri;
-    delTri.fullPeriodicTriangulation(psnew,CPUbox,allneighs);
-
-    neigh_num.resize(N);
-
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
-    ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
-
-    int totaln = 0;
-    int nmax = 0;
-    for(int nn = 0; nn < N; ++nn)
-        {
-        neighnum.data[nn] = allneighs[nn].size();
-        totaln += allneighs[nn].size();
-        if (allneighs[nn].size() > nmax) nmax= allneighs[nn].size();
-        h_repair.data[nn]=0;
-        };
-    neighMax = nmax+1;
-    if(verbose)
-        cout << "global new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
-    neighs.resize(neighMax*N);
-    n_idx = Index2D(neighMax,N);
-
-    //store data in gpuarray
-    n_idx = Index2D(neighMax,N);
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
-
-    for (int nn = 0; nn < N; ++nn)
-        {
-        int imax = neighnum.data[nn];
-        for (int ii = 0; ii < imax; ++ii)
-            {
-            int idxpos = n_idx(ii,nn);
-            ns.data[idxpos] = allneighs[nn][ii];
-//printf("particle %i (%i,%i)\n",nn,idxpos,allneighs[nn][ii]);
-            };
-        };
-
-    getCircumcenterIndices(true);
-//        char fn[256];
-//        sprintf(fn,"failed2.txt");
-//        ofstream output(fn);
-//        writeTriangulation(output);
-
-    if(totaln != 6*N)
-        {
-        printf("global CPU neighbor failed! NN = %i\n",totaln);
-//        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
-//        for (int ii = 0; ii < N; ++ii)
-//            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
-        char fn[256];
-        sprintf(fn,"failed.txt");
-        ofstream output(fn);
-        writeTriangulation(output);
-        throw std::exception();
-        };
-
-    };
-
-
-
 
 void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
     {
