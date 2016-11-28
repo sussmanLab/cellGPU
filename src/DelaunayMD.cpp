@@ -16,7 +16,6 @@ using namespace std;
 #include <vector>
 #include <sys/time.h>
 
-//#include "cuda.h"
 #include "cuda_runtime.h"
 #include "vector_types.h"
 #include "vector_functions.h"
@@ -121,16 +120,8 @@ void DelaunayMD::updateCellList()
     celllist.setBox(Box);
     celllist.setGridSize(cellsize);
 
-    cudaError_t code1 = cudaGetLastError();
-    if(code1!=cudaSuccess)
-        {
-        printf("cell list preliminary computation GPUassert: %s \n", cudaGetErrorString(code1));
-        throw std::exception();
-        };
-
 
     celllist.computeGPU(points);
-    //celllist.compute(points);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         {
