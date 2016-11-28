@@ -39,26 +39,15 @@ __global__ void gpu_compute_cell_list_kernel(float2 *d_pt,
     //if (bin > xsize*ysize) printf("(%f,%f) -- (%i,%i) in bin %i out of %i... %f \n",pos.x,pos.y,ibin,jbin,bin,xsize*ysize,boxsize);
 
     unsigned int offset = atomicAdd(&(d_cell_sizes[bin]), 1);
-    //unsigned int offset = d_cell_sizes[bin];
-//printf("bin %i  offset %i\n",bin,offset);
-    //if (offset <= Nmax+1)
     if (offset <= d_assist[0]+1)
         {
         unsigned int write_pos = min(cli(offset, bin),cli.getNumElements()-1);
         d_idx[write_pos] = idx;
-//        atomicAdd(&(d_cell_sizes[bin]),1);
-        //d_cell_sizes[bin] += 1;
         }
     else
         {
-        //atomicMax(&(*Nmax), offset+1);
-        //d_assist[0]=d_assist[0]+1;
         d_assist[0]=offset+1;
-        //atomicAdd(&(d_assist[0]),1);
         d_assist[1]=1;
-//        printf( "nmax violation ...nmax = %i   offset+1 = %i  \n",Nmax,offset+1);
-        //atomicInc(&(*Nmax),1);
-        //*Nmax = offset; //atomicMax(Nmax,offset+1);
         };
 
     return;
@@ -79,6 +68,7 @@ bool gpu_compute_cell_list(float2 *d_pt,
                                   int *d_assist
                                   )
     {
+    cudaError_t code;
     //optimize block size later
     unsigned int block_size = 128;
     if (Np < 128) block_size = 16;
@@ -86,7 +76,6 @@ bool gpu_compute_cell_list(float2 *d_pt,
 
 
     unsigned int nmax = (unsigned int) Nmax;
-    //cout << "current NMax = " << nmax <<  endl;
     gpu_compute_cell_list_kernel<<<nblocks, block_size>>>(d_pt,
                                                           d_cell_sizes,
                                                           d_idx,
@@ -100,6 +89,9 @@ bool gpu_compute_cell_list(float2 *d_pt,
                                                           cli,
                                                           d_assist
                                                           );
+    code = cudaGetLastError();
+    if(code!=cudaSuccess)
+        printf("compute_cell_list GPUassert: %s \n", cudaGetErrorString(code));
 
     return cudaSuccess;
     }

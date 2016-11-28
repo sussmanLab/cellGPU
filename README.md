@@ -8,11 +8,11 @@ The primary engine -- the DelaunayMD class -- is a hybrid CPU/GPU algorithm inte
 ##Basic idea
 
 The following describes the basic operation of the DelaunayMD class
-* (1) If necessary (ie. after initialization, or after a timestep where a lot of neighbors need to be updated) a CGAL (default) or Bowyer-Watson (non-standard) routine is called to completely retriangulate the point set.
-* (2) The points are moved around in the periodic box, possibly based on forces computed by the GPU.
-* (3) The GPU checks the circumcircle of every Delaunay triangle from the last timestep (i.e., we check the connectivity of the old triangulation to see if anything needs to be updated). A list of particles to fix is generated. If this list is of length zero, no memory copies take place.
-* (4) Every particle that is flagged for fixing gets its neighbor list repaired. A call to DelaunayLoc finds the candidate 1-ring of that particle (a set of points from which the true Delaunay neighbors are a strict subset), and CGAL (again, the default) is called to reduce the candidate 1-ring to the true set of neighbors.
-* (5) The new topology of the triangulation is updated on the GPU, and the cycle of (2)-(5) can repeat.
+* (1) CPU STEP: If necessary (ie. after initialization, or after a timestep where a lot of neighbors need to be updated) a CGAL (default) or Bowyer-Watson (non-standard) routine is called to completely retriangulate the point set.
+* (2) GPU STEP: The points are moved around in the periodic box, possibly based on forces computed by the GPU.
+* (3) GPU STEP: The GPU checks the circumcircle of every Delaunay triangle from the last timestep (i.e., we check the connectivity of the old triangulation to see if anything needs to be updated). A list of particles to fix is generated. If this list is of length zero, no memory copies take place.
+* (4) CPU STEP: If needed, every particle that is flagged for fixing gets its neighbor list repaired on the CPU. A call to DelaunayLoc finds the candidate 1-ring of that particle (a set of points from which the true Delaunay neighbors are a strict subset), and CGAL (again, the default) is called to reduce the candidate 1-ring to the true set of neighbors.
+* (5) CPU/GPU: The new topology of the triangulation and associated data structures are updated, and the cycle of (2)-(5) can repeat.
 
 ##Classes of note
 

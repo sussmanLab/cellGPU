@@ -38,7 +38,7 @@ __global__ void gpu_sum_forces_kernel(float2 *d_forceSets,
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= N)
         return;
-    
+
     int neigh = d_nn[idx];
     float2 temp;
     temp.x=0.0;temp.y=0.0;
@@ -48,8 +48,6 @@ __global__ void gpu_sum_forces_kernel(float2 *d_forceSets,
         temp.x+=val.x;
         temp.y+=val.y;
         };
-//    if(!::isfinite(temp.x)) temp.x = 0.;
-//    if(!::isfinite(temp.y)) temp.y = 0.;
 
     d_forces[idx]=temp;
 
@@ -68,7 +66,7 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(float2 *d_forceSets,
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= N)
         return;
-    
+
     int neigh = d_nn[idx];
     float2 temp;
     temp.x=0.0;temp.y=0.0;
@@ -78,8 +76,6 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(float2 *d_forceSets,
         temp.x+=val.x;
         temp.y+=val.y;
         };
-//    if(!::isfinite(temp.x)) temp.x = 0.;
-//    if(!::isfinite(temp.y)) temp.y = 0.;
     if (d_exes[idx] ==0)
         {
         d_forces[idx]=temp;
@@ -125,7 +121,6 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     pi   = d_points[pidx];
 
     neighs = d_delSets[n_idx(nn,pidx)];
-//if(neighs.x >= computations/neighMax   || neighs.y >= computations/neighMax || neighs.z >= computations/neighMax || neighs.w >= computations/neighMax)    printf("tidx:%i,   pidx:%i,   neigh %i /  %i; pNeigh %i,  %i %i %i %i \n",tidx,pidx,nn,neighMax,pNeighbors, neighs.x,neighs.y,neighs.z,neighs.w);
 
     Box.minDist(d_points[neighs.x],pi,pnm2);
     Box.minDist(d_points[neighs.y],pi,rij);
@@ -241,10 +236,6 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
 
     d_forceSets[n_idx(nn,pidx)] = dEdv*dhdr;
 
-//    if(pidx == 0) printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",dPidv.x,dPidv.y,dPkdv.x,dPkdv.y,dPjdv.x,dPjdv.y);
-    //if(pidx == 0) printf("%i %f %f\n",nn,temp.x,temp.y);
-//    if(pidx == 0) printf("%f\t%f\t%f\t%f\n",dhdr.x11,dhdr.x12,dhdr.x21,dhdr.x22);
-
     return;
     };
 
@@ -338,7 +329,8 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
     if (d_cellTypes[pidx] != d_cellTypes[neighs.z]) Tik = true;
     if (d_cellTypes[pidx] != d_cellTypes[neighs.y]) Tij = true;
     if (d_cellTypes[neighs.z] != d_cellTypes[neighs.y]) Tjk = true;
-//neighs.z is "baseNeigh" of cpu routing... neighs.y is "otherNeigh"....neighOther is "DT_other_idx"
+    //neighs.z is "baseNeigh" of cpu routing... neighs.y is "otherNeigh"....neighOther is "DT_other_idx"
+
     //self terms
     dAdv.x = 0.5*(vlast.y-vnext.y);
     dAdv.y = 0.5*(vnext.x-vlast.x);
@@ -596,7 +588,7 @@ bool gpu_compute_geometry(float2 *d_points,
 
     code = cudaGetLastError();
     if(code!=cudaSuccess)
-    printf("compute geometry GPUassert: %s \n", cudaGetErrorString(code));
+        printf("compute geometry GPUassert: %s \n", cudaGetErrorString(code));
 
     return cudaSuccess;
     };
@@ -631,7 +623,7 @@ bool gpu_displace_and_rotate(float2 *d_points,
                                                 );
     code = cudaGetLastError();
     if(code!=cudaSuccess)
-    printf("displaceAndRotate GPUassert: %s \n", cudaGetErrorString(code));
+        printf("displaceAndRotate GPUassert: %s \n", cudaGetErrorString(code));
 
     return cudaSuccess;
     };
@@ -675,7 +667,7 @@ bool gpu_force_sets(float2 *d_points,
                                                 );
     code = cudaGetLastError();
     if(code!=cudaSuccess)
-    printf("forceSets GPUassert: %s \n", cudaGetErrorString(code));
+        printf("forceSets GPUassert: %s \n", cudaGetErrorString(code));
 
     return cudaSuccess;
     };
@@ -726,7 +718,7 @@ bool gpu_force_sets_tensions(float2 *d_points,
                                                 );
     code = cudaGetLastError();
     if(code!=cudaSuccess)
-    printf("forceSets GPUassert: %s \n", cudaGetErrorString(code));
+        printf("forceSets_Tensions GPUassert: %s \n", cudaGetErrorString(code));
 
     return cudaSuccess;
     };
@@ -752,7 +744,7 @@ bool gpu_sum_force_sets(
             );
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
-    printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
+        printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
     return cudaSuccess;
     };
 
@@ -782,7 +774,7 @@ bool gpu_sum_force_sets_with_exclusions(
             );
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
-    printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
+        printf("force_sum_with_exclusions GPUassert: %s \n", cudaGetErrorString(code));
     return cudaSuccess;
     };
 

@@ -165,7 +165,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
         {
         valid = CircumCircle(vx,vy,P1[ii].x,P1[ii].y,P1[(ii+1)%Psize].x,P1[(ii+1)%Psize].y,Qnew.x,Qnew.y,radius);
         Q0.push_back(Qnew);
-        rads.push_back(radius*1.001);
+        rads.push_back(radius*1.0001);
         };
 
 
@@ -210,7 +210,6 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
                 rr=rads[qq];
                 rr = rr*rr;
                 Box.minDist(disp,Q0[qq],tocenter);
-                //if(tocenter.norm()<rads[qq])
                 if(tocenter.x*tocenter.x+tocenter.y*tocenter.y<rr)
                     {
                     //the point is in at least one circumcircle...
@@ -235,6 +234,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
 
 void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTring)
     {
+    //basically, see if an enclosing polygon with a smaller sum of circumcircle radii can be found
     //start with the vertex i
     vector<int> newRingIdx; newRingIdx.reserve(50);
     vector<pt> newRing;     newRing.reserve(50);
@@ -268,10 +268,9 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
         {
         valid = CircumCircle(vx,vy,P1[ii].x,P1[ii].y,P1[(ii+1)%Psize].x,P1[(ii+1)%Psize].y,Qnew.x,Qnew.y,radius);
         Q0.push_back(Qnew);
-        rads.push_back(radius*1.00);
+        rads.push_back(radius);
         };
 
-    float EPS = 0.005;
     for (int nn = 5; nn < DTring.size(); ++nn)
         {
         int q =Quadrant(DTring[nn].x,DTring[nn].y);
@@ -281,7 +280,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
         dbl r1,r2;
         valid = CircumCircle(vx,vy,DTring[nn].x,DTring[nn].y,P1[polyi1].x,P1[polyi1].y,Qnew.x,Qnew.y,r1);
         valid = CircumCircle(vx,vy,P1[polyi2].x,P1[polyi2].y,DTring[nn].x,DTring[nn].y,Qnew2.x,Qnew2.y,r2);
-        if(r1+r2 < rads[q]+rads[polyi2] + EPS)
+        if(r1+r2 < rads[q]+rads[polyi2])
             {
             P1[q]=DTring[nn];
             Q0[q]=Qnew;
@@ -302,8 +301,8 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
         for (int qq = 0; qq < Q0.size(); ++qq)
             {
             if (repeat) continue;
-            rr=rads[qq];
-            rr = rr*rr+EPS;
+            rr=rads[qq]*1.0001;
+            rr = rr*rr;
             Box.minDist(DTring[pp],Q0[qq],tocenter);
             if(tocenter.x*tocenter.x+tocenter.y*tocenter.y<rr)
                 {
