@@ -1,8 +1,8 @@
 #DelGPU
 
-DelGPU (DELayed froGPUnch) implements highly parallelizable algorithms to calculate the Delaunay triangulation of a point set in a two-dimensional domain with periodic boundary conditions. (The program can also be referred to as VoroGuppy: Voronoi decomposisions on Graphics Processors).
+DelGPU (''DELayed froGPUnch:Delaunay on GPUS) implements highly parallelizable algorithms to calculate the Delaunay triangulation of a point set in a two-dimensional domain with periodic boundary conditions. (The program can also be referred to as ''VoroGuppy: Voronoi decompositions on Graphics Processors,'' which is where the logo comes from.).
 
-The primary engine -- the DelaunayMD class -- is meant to be used in ''molecular dynamics'' simulations where the particles are either Delaunay vertices or are derivable from them (as in the self-propelled Voronoi models of cells). It specializes in situations where the entire triangulation does not need to be recomputed at every time step, but rather only a small portion of the triangulation is to be repaired at a given time.
+The primary engine -- the DelaunayMD class -- is a hybrid CPU/GPU algorithm intended to be used in ''molecular dynamics'' simulations where the particles are either Delaunay vertices or are derivable from them (as in the self-propelled Voronoi models of cells). It specializes in situations where the entire triangulation does not need to be recomputed at every time step, but rather only a small portion of the triangulation is to be repaired at a given time.
 
 
 ##Basic idea
