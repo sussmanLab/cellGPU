@@ -14,8 +14,6 @@ using namespace std;
 #include "structures.h"
 
 
-namespace voroguppy
-{
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
@@ -136,6 +134,5 @@ void box::move(pt &p1, const pt &disp)
 
 // undefine HOSTDEVICE so we don't interfere with other headers
 #undef HOSTDEVICE
-}
 
 #endif

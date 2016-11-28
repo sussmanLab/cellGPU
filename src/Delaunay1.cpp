@@ -16,12 +16,6 @@ using namespace std;
 #include <sys/time.h>
 
 #include "Delaunay1.h"
-//#include "functions.h"
-//#include "structures.h"
-
-
-namespace voroguppy
-{
 
 
 void DelaunayNP::setPoints(vector<float> points)
@@ -260,7 +254,7 @@ void DelaunayNP::testDel(int numpts, int tmax,bool verbose)
         ps2[i*2]=x;
         ps2[i*2+1]=y;
         };
-    
+
     clock_t tstart,tstop;
     tstart = clock();
 
@@ -270,12 +264,11 @@ void DelaunayNP::testDel(int numpts, int tmax,bool verbose)
 //        sorted=false;
         triangulate();
         };
-    
+
     tstop=clock();
     dbl timing = (tstop-tstart)/(dbl)CLOCKS_PER_SEC/(dbl)tmax;
     cout << "average time per complete triangulation = " << timing<< endl;
 
     };
 
-}
 

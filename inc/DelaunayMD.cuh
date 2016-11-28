@@ -6,11 +6,6 @@
 #include "indexer.h"
 #include "gpubox.h"
 
-
-
-using namespace voroguppy;
-
-
 bool gpu_test_circumcenters(
                             int *d_repair,
                             int3 *d_ccs,

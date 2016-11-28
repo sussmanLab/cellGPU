@@ -69,8 +69,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdexcept>
 #include <algorithm>
 #include <stdlib.h>
-//namespace voroguppy
-//{
 
 //! Specifies where to acquire the data
 struct access_location
@@ -781,5 +779,4 @@ template<class T> void GPUArray<T>::resize(unsigned int num_elements)
     }
 
 
-//};
 #endif

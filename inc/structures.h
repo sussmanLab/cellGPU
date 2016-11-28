@@ -10,9 +10,7 @@
 //a few function protocols needed below...definitions are in functions.h
 //since some structures need to be able to call this function...
 
-namespace voroguppy
-{
-bool Circumcircle(dbl x1, dbl y1, dbl x2, dbl y2, dbl x3, dbl y3,dbl &xc, dbl &yc, dbl &r);
+bool CircumCircle(dbl x1, dbl y1, dbl x2, dbl y2, dbl x3, dbl y3,dbl &xc, dbl &yc, dbl &r);
 inline dbl TriangleArea(dbl x1, dbl y1, dbl x2, dbl y2);
 
 #ifdef NVCC
@@ -145,7 +143,7 @@ struct DelaunayCell
                 bool placeholder; // Circumcircle is a function with a type
                 pt p1 = Dneighs[CWorder[ii].second];
                 pt p2 = Dneighs[CWorder[((ii+1)%n)].second];
-                placeholder = Circumcircle(ori.x,ori.y,p1.x,p1.y,p2.x,p2.y,xc,yc,rad);
+                placeholder = CircumCircle(ori.x,ori.y,p1.x,p1.y,p2.x,p2.y,xc,yc,rad);
                 Vpoints[ii]=pt(xc,yc);
                 };
 
@@ -170,7 +168,5 @@ struct DelaunayCell
 
     };
 #undef HOSTDEVICE
-
-}
 
 #endif

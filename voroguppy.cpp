@@ -26,7 +26,6 @@
 
 
 using namespace std;
-using namespace voroguppy;
 
 
 bool chooseGPU(int USE_GPU,bool verbose = false)

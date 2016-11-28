@@ -8,9 +8,8 @@
 
 
 
-using namespace voroguppy;
-
-/*! \file CellListGPU.cuh
+/*
+    \file CellListGPU.cuh
     \brief Declares GPU kernel code for cell list generation on the GPU
 */
 

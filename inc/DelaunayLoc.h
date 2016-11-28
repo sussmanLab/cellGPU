@@ -3,13 +3,9 @@
 #define DELAUNAYLOC_H
 
 using namespace std;
-//#include "functions.h"
-//#include "structures.h"
 #include "box.h"
 #include "cell.h"
 #include "Delaunay1.h"
-namespace voroguppy
-{
 
 class DelaunayLoc
     {
@@ -76,8 +72,5 @@ class DelaunayLoc
         void testDel(int numpts,int tmax,double err, bool verbose);
 
     };
-
-};
-
 
 #endif

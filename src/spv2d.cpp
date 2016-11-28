@@ -1,11 +1,9 @@
 using namespace std;
 
-//definitions needed for DelaunayLoc, voroguppy namespace, Triangle, Triangle, and all GPU functions, respectively
+//definitions needed for DelaunayLoc, and all GPU functions, respectively
 
 #define EPSILON 1e-12
 #define dbl float
-#define REAL double
-#define ANSI_DECLARATIONS
 #define ENABLE_CUDA
 
 #define PI 3.14159265358979323846

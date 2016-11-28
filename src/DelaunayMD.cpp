@@ -1,8 +1,6 @@
 using namespace std;
 #define EPSILON 1e-12
 #define dbl float
-#define REAL double
-#define ANSI_DECLARATIONS
 #define ENABLE_CUDA
 
 #include <cmath>

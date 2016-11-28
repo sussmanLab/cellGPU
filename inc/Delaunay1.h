@@ -6,8 +6,6 @@ using namespace std;
 #include "functions.h"
 #include "structures.h"
 
-namespace voroguppy
-{
 
 class DelaunayNP
     {
@@ -63,6 +61,4 @@ class DelaunayNP
         void testDel(int numpts,int tmax,bool verbose);
     };
 
-
-};
 #endif

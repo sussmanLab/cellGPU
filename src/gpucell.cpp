@@ -26,8 +26,6 @@ using namespace std;
 #include "indexer.h"
 #include "gpucell.cuh"
 #include "gpucell.h"
-using namespace voroguppy;
-
 
 //DEFINE functions here
 

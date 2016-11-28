@@ -8,8 +8,6 @@
 
 using namespace std;
 #include "structures.h"
-namespace voroguppy
-{
 
 class grid
     {
@@ -153,9 +151,4 @@ void grid::getParticles(int cidx, std::vector<int> &plist)
     plist = cells[cidx];
     };
 
-
-
-
-
-}
 #endif

@@ -18,8 +18,6 @@ using namespace std;
 #include "vector_functions.h"
 
 
-namespace voroguppy
-{
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
@@ -155,7 +153,6 @@ void gpubox::move(float2 &p1, const float2 &disp)
 
 // undefine HOSTDEVICE so we don't interfere with other headers
 #undef HOSTDEVICE
-}
 
 #endif
 

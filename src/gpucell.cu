@@ -73,7 +73,7 @@ bool gpu_compute_cell_list(float2 *d_pt,
                                   int xsize,
                                   int ysize,
                                   float boxsize,
-                                  voroguppy::gpubox &Box,
+                                  gpubox &Box,
                                   Index2D &ci,
                                   Index2D &cli,
                                   int *d_assist

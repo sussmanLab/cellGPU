@@ -71,7 +71,7 @@ obj/voroguppy.o:voroguppy.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
 
 delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ $+
 
 run: build
 	./delGPU.out

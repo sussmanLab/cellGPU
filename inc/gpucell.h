@@ -5,7 +5,6 @@
 
 
 using namespace std;
-using namespace voroguppy;
 
 #include "gpubox.h"
 #include "gpuarray.h"

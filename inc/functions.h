@@ -5,15 +5,13 @@
 
 using namespace std;
 
-namespace voroguppy
-{
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-HOSTDEVICE bool Circumcircle(dbl x1, dbl y1, dbl x2, dbl y2, dbl x3, dbl y3,
+HOSTDEVICE bool CircumCircle(dbl x1, dbl y1, dbl x2, dbl y2, dbl x3, dbl y3,
                   dbl &xc, dbl &yc, dbl &r)
     {
     //Given coordinates (x1,y1),(x2,y2),(x3,y3), feeds the circumcenter to (xc,yc) along with the
@@ -59,7 +57,7 @@ HOSTDEVICE bool Circumcircle(pt &xt, pt &x1, pt &x2, pt &x3,
     //overloaded version when the input/output are pt objects
 
     dbl xcen, ycen;
-    bool valid = Circumcircle(x1.x,x1.y,x2.x,x2.y,x3.x,x3.y,xcen,ycen,rad);
+    bool valid = CircumCircle(x1.x,x1.y,x2.x,x2.y,x3.x,x3.y,xcen,ycen,rad);
     if (!valid) return false;
     xc.x=xcen;
     xc.y=ycen;
@@ -93,7 +91,7 @@ HOSTDEVICE dbl TriangleArea(dbl x1, dbl y1, dbl x2, dbl y2)
     return 0.5*(x1*y2-x2*y1);
     };
 
-HOSTDEVICE int quadrant(dbl x, dbl y)
+HOSTDEVICE int Quadrant(dbl x, dbl y)
     {
     if(x>=0)
         {
@@ -118,7 +116,6 @@ HOSTDEVICE int quadrant(dbl x, dbl y)
 // undefine HOSTDEVICE so we don't interfere with other headers
 #undef HOSTDEVICE
 
-};
 #endif
 
 
