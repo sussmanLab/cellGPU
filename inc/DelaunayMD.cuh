@@ -1,5 +1,5 @@
 #ifndef __DELAUNAYMD_CUH__
-#define __DELAUNAUMD_CUH__
+#define __DELAUNAYMD_CUH__
 
 
 #include <cuda_runtime.h>
