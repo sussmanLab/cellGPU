@@ -28,33 +28,19 @@ CFLAGS += $(COMMONFLAGS) -frounding-math
 #target rules
 all:build
 
-build: delGPU.out ellipse.out plates.out database.out
+build: delGPU.out
 
-PROG_OBJS= obj/runellipse.o obj/voroguppy.o obj/runplates.o obj/runMakeDatabase.o
+PROG_OBJS= obj/voroguppy.o
 
-CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayTri.o obj/DelaunayCGAL.o obj/gpucell.o obj/DelaunayCheckGPU.o obj/DelaunayMD.o obj/spv2d.o
+CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/gpucell.o obj/DelaunayMD.o obj/spv2d.o
 
-EXT_OBJS = obj/triangle.o
-
-CUOBJS= obj/gpucell.cu.o obj/DelaunayCheckGPU.cu.o obj/DelaunayMD.cu.o obj/spv2d.cu.o
-
-#for now, just compile triangle separately and copy the .o file to /obj directory
-#TRILIBDEFS = -DTRILIBRARY
-#CSWITCHES = -O
-#obj/triangle.o: ext_src/triangle.c ext_src/triangle.h
-#	$(CC) $(CSWITCHES) $(INCLUDES) -o $@ -c $<
+CUOBJS= obj/gpucell.cu.o obj/DelaunayMD.cu.o obj/spv2d.cu.o
 
 
 obj/gpucell.cu.o:src/gpucell.cu
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA)  -o $@ -c $<
 
 obj/gpucell.o:src/gpucell.cpp obj/gpucell.cu.o
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
-
-obj/DelaunayCheckGPU.cu.o:src/DelaunayCheckGPU.cu
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA)  -o $@ -c $<
-
-obj/DelaunayCheckGPU.o:src/DelaunayCheckGPU.cpp obj/DelaunayCheckGPU.cu.o
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
 obj/DelaunayMD.cu.o:src/DelaunayMD.cu
@@ -68,9 +54,6 @@ obj/spv2d.cu.o:src/spv2d.cu
 
 obj/spv2d.o:src/spv2d.cpp obj/DelaunayMD.o obj/spv2d.cu.o
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
-
-obj/DelaunayTri.o:src/DelaunayTri.cpp obj/triangle.o
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
 obj/DelaunayCGAL.o:src/DelaunayCGAL.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIB_CGAL) -o $@ -c $<
@@ -86,24 +69,6 @@ obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o obj/DelaunayCGAL.o $(EXT_O
 ##
 obj/voroguppy.o:voroguppy.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
-
-obj/runellipse.o:runellipse.cpp
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
-
-obj/runplates.o:runplates.cpp
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
-
-obj/runMakeDatabase.o:runMakeDatabase.cpp
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
-
-database.out: obj/runMakeDatabase.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
-
-plates.out: obj/runplates.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
-
-ellipse.out: obj/runellipse.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
