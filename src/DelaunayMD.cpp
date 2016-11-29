@@ -468,6 +468,7 @@ void DelaunayMD::testTriangulation()
 
 void DelaunayMD::testTriangulationCPU()
     {
+    Fails=0;
     globalTriangulationCGAL();
     skippedFrames -= 1;
     /*
