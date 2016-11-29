@@ -108,10 +108,10 @@ int main(int argc, char*argv[])
 
 
     SPV2D spv(numpts,1.0,p0);
-    //bool gpu = chooseGPU(USE_GPU);
-    //if (!gpu) return 0;
     if (USE_GPU >= 0)
         {
+        bool gpu = chooseGPU(USE_GPU);
+        if (!gpu) return 0;
         cudaSetDevice(USE_GPU);
         }
     else

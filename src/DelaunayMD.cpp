@@ -469,6 +469,7 @@ void DelaunayMD::testTriangulation()
 void DelaunayMD::testTriangulationCPU()
     {
     globalTriangulationCGAL();
+    skippedFrames -= 1;
     /*
     resetDelLocPoints();
 
