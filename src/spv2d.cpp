@@ -324,7 +324,6 @@ void SPV2D::calculateDispCPU()
 
 void SPV2D::performTimestepCPU()
     {
-//    printf("On CPU branch \n");
     computeGeometryCPU();
     if(useTension)
         {
@@ -339,8 +338,8 @@ void SPV2D::performTimestepCPU()
 
     calculateDispCPU();
 
-    movePoints(displacements);
-    testAndRepairTriangulation(false);
+    movePointsCPU(displacements);
+    testAndRepairTriangulation();
     };
 
 void SPV2D::performTimestepGPU()
@@ -565,10 +564,6 @@ void SPV2D::computeGeometryCPU()
 void SPV2D::computeSPVForceCPU(int i)
     {
     float Pthreshold = 1e-8;
-    //for testing these routines...
-    vector <int> test;
-    DelaunayCell celltest;
-    delLoc.triangulatePoint(i, test,celltest);
 
     //read in all the data we'll need
     ArrayHandle<float2> h_p(points,access_location::host,access_mode::read);
@@ -585,7 +580,6 @@ void SPV2D::computeSPVForceCPU(int i)
     for (int nn = 0; nn < neigh; ++nn)
         {
         ns[nn]=h_n.data[n_idx(nn,i)];
-   //     printf("%i - ",ns[nn]);
         };
 
     //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position

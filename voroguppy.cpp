@@ -107,18 +107,22 @@ int main(int argc, char*argv[])
     clock_t t1,t2;
 
 
-    int count = 0;
-    cudaGetDeviceCount(&count);
-    bool gpu = chooseGPU(USE_GPU);
-    if (!gpu) return 0;
-    cudaSetDevice(USE_GPU);
-
+    SPV2D spv(numpts,1.0,p0);
+    //bool gpu = chooseGPU(USE_GPU);
+    //if (!gpu) return 0;
+    if (USE_GPU >= 0)
+        {
+        cudaSetDevice(USE_GPU);
+        }
+    else
+        {
+        spv.setCPU();
+        }
 //    char dataname[256];
 //    sprintf(dataname,"/hdd2/data/spv/test.nc");
 //    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
 
-    SPV2D spv(numpts,1.0,p0);
 
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
@@ -130,6 +134,7 @@ int main(int argc, char*argv[])
         {
         spv.performTimestep();
         };
+    spv.meanForce();
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
@@ -137,7 +142,7 @@ int main(int argc, char*argv[])
     spv.repPerFrame = 0.0;
 
     t1=clock();
-    cudaProfilerStart();
+    //cudaProfilerStart();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
@@ -147,7 +152,7 @@ int main(int argc, char*argv[])
             };
         spv.performTimestep();
         };
-    cudaProfilerStop();
+    //cudaProfilerStop();
     t2=clock();
     float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
@@ -156,16 +161,6 @@ int main(int argc, char*argv[])
 //    cout << "CPU time  = " << spv.cputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
 //    ncdat.WriteState(spv);
-
-    spv.computeGeometryGPU();
-    spv.computeSPVForceSetsGPU();
-    spv.sumForceSets();
-//    printf("<q> = %f\n",spv.reportq());
-//    spv.meanForce();
-//    spv.reportForces();
-//    spv.reportDirectors();
-//    spv.DisplacePointsAndRotate();
-//    spv.reportDirectors();
 
     return 0;
 };

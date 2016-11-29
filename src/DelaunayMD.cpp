@@ -44,12 +44,6 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
         h_points.data[ii].y=y;
     //    printf("%i; {%f,%f}\n",ii,x,y);
         };
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        {
-        printf("randomizePos GPUassert: %s \n", cudaGetErrorString(code));
-        throw std::exception();
-        };
     };
 
 void DelaunayMD::resetDelLocPoints()
@@ -106,12 +100,6 @@ void DelaunayMD::initialize(int n)
     //make a full triangulation
     FullFails = 1;
     globalTriangulationCGAL();
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        {
-        printf("delMD initialization GPUassert: %s \n", cudaGetErrorString(code));
-        throw std::exception();
-        };
     };
 
 void DelaunayMD::updateCellList()
@@ -120,13 +108,28 @@ void DelaunayMD::updateCellList()
     celllist.setBox(Box);
     celllist.setGridSize(cellsize);
 
-
-    celllist.computeGPU(points);
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
+    if(GPUcompute)
         {
-        printf("cell list computation GPUassert: %s \n", cudaGetErrorString(code));
-        throw std::exception();
+        celllist.computeGPU(points);
+        cudaError_t code = cudaGetLastError();
+        if(code!=cudaSuccess)
+            {
+            printf("cell list computation GPUassert: %s \n", cudaGetErrorString(code));
+            throw std::exception();
+            };
+        }
+    else
+        {
+        vector<float> psnew(2*N);
+        ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
+        for (int ii = 0; ii < N; ++ii)
+            {
+            psnew[2*ii] =  h_points.data[ii].x;
+            psnew[2*ii+1]= h_points.data[ii].y;
+            };
+        celllist.setParticles(psnew);
+        celllist.compute();
+
         };
 
     };
@@ -152,6 +155,19 @@ void DelaunayMD::reportPos(int i)
     {
     ArrayHandle<float2> hp(points,access_location::host,access_mode::read);
     printf("particle %i\t{%f,%f}\n",i,hp.data[i].x,hp.data[i].y);
+    };
+
+void DelaunayMD::movePointsCPU(GPUArray<float2> &displacements)
+    {
+    ArrayHandle<float2> h_p(points,access_location::host,access_mode::readwrite);
+    ArrayHandle<float2> h_d(displacements,access_location::host,access_mode::read);
+    for (int idx = 0; idx < N; ++idx)
+        {
+        h_p.data[idx].x += h_d.data[idx].x;
+        h_p.data[idx].y += h_d.data[idx].y;
+        Box.putInBoxReal(h_p.data[idx]);
+        };
+
     };
 
 void DelaunayMD::movePoints(GPUArray<float2> &displacements)
@@ -357,15 +373,6 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
 //        throw std::exception();
         };
 
-
-    //cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        {
-        printf("getCCIndices GPUassert: %s \n", cudaGetErrorString(code));
-        throw std::exception();
-        };
-
     };
 
 
@@ -461,6 +468,8 @@ void DelaunayMD::testTriangulation()
 
 void DelaunayMD::testTriangulationCPU()
     {
+    globalTriangulationCGAL();
+    /*
     resetDelLocPoints();
 
 
@@ -468,7 +477,7 @@ void DelaunayMD::testTriangulationCPU()
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
-
+    Fails = 0;
     for (int nn = 0; nn < N; ++nn)
         {
         vector<int> neighbors;
@@ -479,9 +488,9 @@ void DelaunayMD::testTriangulationCPU()
                 };
 
         bool good = delLoc.testPointTriangulation(nn,neighbors,false);
-        if(!good) h_repair.data[nn]=1;
+        if(!good) Fails=1;
         };
-
+    */
     };
 
 

@@ -66,6 +66,7 @@ class DelaunayMD
 
         //move particles
         void movePoints(GPUArray<float2> &displacements);
+        void movePointsCPU(GPUArray<float2> &displacements);
 
         //utility functions
         void resetDelLocPoints();
