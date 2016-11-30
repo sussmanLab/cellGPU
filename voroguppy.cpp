@@ -146,7 +146,7 @@ int main(int argc, char*argv[])
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
-        if(ii%100 ==0)
+        if(ii%10000 ==0)
             {
             printf("timestep %i\n",ii);
             };
