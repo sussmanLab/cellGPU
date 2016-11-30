@@ -328,13 +328,16 @@ void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
 
     //call another algorithm to triangulate the candidate set
     DelaunayCGAL delcgal;
-    vector<float> pnts(DTring.size()*2);
+    //vector<float> pnts(DTring.size()*2);
+
+    vector<pair<LPoint,int> > Pnts(DTring.size());
     for (int ii = 0; ii < DTring.size(); ++ii)
         {
-        pnts[2*ii] = DTring[ii].x;
-        pnts[2*ii+1] = DTring[ii].y;
+        Pnts[ii] = make_pair(LPoint(DTring[ii].x,DTring[ii].y),ii);
+      //  pnts[2*ii] = DTring[ii].x;
+        //pnts[2*ii+1] = DTring[ii].y;
         };
-    delcgal.LocalTriangulation(pnts, neighbors);
+    delcgal.LocalTriangulation(Pnts, neighbors);
 
     for (int nn = 0; nn < neighbors.size(); ++nn)
         neighbors[nn] = DTringIdx[neighbors[nn]];

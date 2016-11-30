@@ -5,9 +5,11 @@ using namespace std;
 
 #include "DelaunayCGAL.h"
 
-void DelaunayCGAL::LocalTriangulation(vector<float> &points, vector<int> & neighs)
+void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> & neighs)
     {
     neighs.clear();
+    int size = V.size();
+    /*
     int size = points.size()/2;
     //vector<LPoint> V(size);
     vector<pair<LPoint,int> > V(size);
@@ -22,7 +24,7 @@ void DelaunayCGAL::LocalTriangulation(vector<float> &points, vector<int> & neigh
     //        max = fabs(valy);
         V[ii] = make_pair(LPoint(valx,valy),ii);
         };
-
+    */
 
 
 

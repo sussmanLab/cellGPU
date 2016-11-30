@@ -51,7 +51,7 @@ class DelaunayCGAL
 
         //void PeriodicTriangulation(vector<Point> &points,float size);
         void PeriodicTriangulation(vector<pair<Point,int> > &points,float size);
-        void LocalTriangulation(vector<float> &points, vector<int> &neighs);
+        void LocalTriangulation(vector<pair<LPoint,int> > &points, vector<int> &neighs);
 
     };
 

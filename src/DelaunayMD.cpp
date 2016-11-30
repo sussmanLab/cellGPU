@@ -259,7 +259,6 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     vector<pair<Point,int> > Psnew(N);
     for (int ii = 0; ii < N; ++ii)
         {
-        //Psnew[ii]=Point(h_points.data[ii].x,h_points.data[ii].y);
         Psnew[ii]=make_pair(Point(h_points.data[ii].x,h_points.data[ii].y),ii);
         };
     float b1,b2,b3,b4;
