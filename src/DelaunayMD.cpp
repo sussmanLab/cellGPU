@@ -65,6 +65,7 @@ void DelaunayMD::initialize(int n)
     GPUcompute = true;
     //assorted
     neighMax = 0;
+    neighMaxChange = false;
     repPerFrame = 0.0;
     skippedFrames = 0;
     GlobalFixes = 0;
@@ -279,16 +280,17 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         if (dcgal.allneighs[nn].size() > nmax) nmax= dcgal.allneighs[nn].size();
         h_repair.data[nn]=0;
         };
-    neighMax = nmax+1;
+    if (nmax%2 == 0)
+        neighMax = nmax+2;
+    else
+        neighMax = nmax+1;
 
-    if(verbose)
-        cout << "global new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
     if(neighMax != oldNmax)
         neighs.resize(neighMax*N);
-    n_idx = Index2D(neighMax,N);
 
     //store data in gpuarray
     n_idx = Index2D(neighMax,N);
+    {
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
 
     for (int nn = 0; nn < N; ++nn)
@@ -300,7 +302,9 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
             ns.data[idxpos] = dcgal.allneighs[nn][ii];
             };
         };
-
+    if(verbose)
+        cout << "global new Nmax = " << nmax+1 << "; total neighbors = " << totaln << endl;cout.flush();
+    };
     getCircumcenterIndices(true);
 
     if(totaln != 6*N)
@@ -358,7 +362,6 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
         globalTriangulationCGAL();
         throw std::exception();
         };
-
     };
 
 
@@ -395,6 +398,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     //Also, think about occasionally shrinking the list if it is much too big?
     if(resetCCidx)
         {
+        neighMaxChange = true;
         cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
         globalTriangulationCGAL();
         return;

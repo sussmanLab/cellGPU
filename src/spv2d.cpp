@@ -388,8 +388,11 @@ void SPV2D::performTimestepGPU()
     if(Fails == 1)
         {
         //maintain the auxilliary lists for computing forces
-        if(FullFails)
+        if(FullFails || neighMaxChange)
+            {
             allDelSets();
+            neighMaxChange = false;
+            }
         else
             {
             for (int jj = 0;jj < NeedsFixing.size(); ++jj)

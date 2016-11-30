@@ -42,6 +42,7 @@ class DelaunayMD
 
         bool GPUcompute;
         int timestep;
+        bool neighMaxChange;
 
     public:
         gpubox Box;
