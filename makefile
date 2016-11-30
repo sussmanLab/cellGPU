@@ -46,7 +46,7 @@ obj/gpucell.o:src/gpucell.cpp obj/gpucell.cu.o
 obj/DelaunayMD.cu.o:src/DelaunayMD.cu
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
-obj/DelaunayMD.o:src/DelaunayMD.cpp obj/DelaunayMD.cu.o obj/DelaunayCGAL.o $(EXT_OBJS)
+obj/DelaunayMD.o:src/DelaunayMD.cpp obj/DelaunayMD.cu.o obj/DelaunayCGAL.o
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
 
 obj/spv2d.cu.o:src/spv2d.cu
@@ -56,12 +56,12 @@ obj/spv2d.o:src/spv2d.cpp obj/DelaunayMD.o obj/spv2d.cu.o
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
 obj/DelaunayCGAL.o:src/DelaunayCGAL.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIB_CGAL) -o $@ -c $<
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CGAL) $(LIB_CUDA) -o $@ -c $<
 
 obj/Delaunay1.o:src/Delaunay1.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
 
-obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o obj/DelaunayCGAL.o $(EXT_OBJS)
+obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o obj/DelaunayCGAL.o
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIB_CGAL) -o $@ -c $<
 
 ###
@@ -70,7 +70,7 @@ obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o obj/DelaunayCGAL.o $(EXT_O
 obj/voroguppy.o:voroguppy.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
 
-delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
+delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ $+
 
 run: build

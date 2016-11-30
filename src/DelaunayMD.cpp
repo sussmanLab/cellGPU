@@ -29,6 +29,7 @@ using namespace std;
 
 #include "DelaunayMD.cuh"
 #include "DelaunayMD.h"
+//DelaunayMD.h included DelaunayCGAL, so gives access to the typedef PDT::Point Point structure
 
 
 
@@ -42,7 +43,6 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
         float y =EPSILON+boxy/(float)(randmax+1)* (float)(rand()%randmax);
         h_points.data[ii].x=x;
         h_points.data[ii].y=y;
-    //    printf("%i; {%f,%f}\n",ii,x,y);
         };
     };
 
@@ -81,7 +81,6 @@ void DelaunayMD::initialize(int n)
     //set circumcenter array size
     circumcenters.resize(2*(N+10));
 
-    //set particle positions (randomly)
     points.resize(N);
     pts.resize(N);
     repair.resize(N);
@@ -99,6 +98,7 @@ void DelaunayMD::initialize(int n)
 
     //make a full triangulation
     FullFails = 1;
+    neigh_num.resize(N);
     globalTriangulationCGAL();
     };
 
@@ -222,7 +222,6 @@ void DelaunayMD::fullTriangulation()
             {
             int idxpos = n_idx(ii,nn);
             ns.data[idxpos] = allneighs[nn][ii];
-//printf("particle %i (%i,%i)\n",nn,idxpos,allneighs[nn][ii]);
             };
         };
 
@@ -236,9 +235,6 @@ void DelaunayMD::fullTriangulation()
     if(totaln != 6*N)
         {
         printf("CPU neighbor creation failed to match topology! NN = %i \n",totaln);
-//        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
-//        for (int ii = 0; ii < N; ++ii)
-//            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
         char fn[256];
         sprintf(fn,"failed.txt");
         ofstream output(fn);
@@ -258,22 +254,21 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     GlobalFixes +=1;
     FullFails = 1;
     DelaunayCGAL dcgal;
-    vector<float> psnew(2*N);
     ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
+    vector<Point> Psnew(N);
     for (int ii = 0; ii < N; ++ii)
         {
-        psnew[2*ii] =  h_points.data[ii].x;
-        psnew[2*ii+1]= h_points.data[ii].y;
+        Psnew[ii]=Point(h_points.data[ii].x,h_points.data[ii].y);
         };
     float b1,b2,b3,b4;
     Box.getBoxDims(b1,b2,b3,b4);
-    dcgal.PeriodicTriangulation(psnew,b1);
+    dcgal.PeriodicTriangulation(Psnew,b1);
 
 
-    neigh_num.resize(N);
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
 
+    int oldNmax = neighMax;
     int totaln = 0;
     int nmax = 0;
     for(int nn = 0; nn < N; ++nn)
@@ -287,7 +282,8 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
 
     if(verbose)
         cout << "global new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
-    neighs.resize(neighMax*N);
+    if(neighMax != oldNmax)
+        neighs.resize(neighMax*N);
     n_idx = Index2D(neighMax,N);
 
     //store data in gpuarray
@@ -305,17 +301,10 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         };
 
     getCircumcenterIndices(true);
-//        char fn[256];
-//        sprintf(fn,"failed2.txt");
-//        ofstream output(fn);
-//        writeTriangulation(output);
 
     if(totaln != 6*N)
         {
         printf("global CPU neighbor failed! NN = %i\n",totaln);
-//        ArrayHandle<float2> p(points,access_location::host,access_mode::read);
-//        for (int ii = 0; ii < N; ++ii)
-//            printf("(%f,%f)\n",p.data[ii].x,p.data[ii].y);
         char fn[256];
         sprintf(fn,"failed.txt");
         ofstream output(fn);
@@ -345,11 +334,8 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
             int ne2 = jj + 1;
             if (jj == nmax-1)  ne2=0;
             int n2 = ns.data[n_idx(ne2,nn)];
-//if(nn == 20 || n1 ==20 || n2 == 20) printf("%i %i %i\n",nn,n1,n2);
             if (nn < n1 && nn < n2)
                 {
-//                if (fail) {cidx +=1;continue;};
-//                if (cidx == 2*N) fail = true;
                 h_ccs.data[cidx].x = nn;
                 h_ccs.data[cidx].y = n1;
                 h_ccs.data[cidx].z = n2;
@@ -359,18 +345,15 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
 
         };
     NumCircumCenters = cidx;
-  //  if (totaln != 6*N || fail || cidx > 3*N) fullTriangulation();
-//    cout << "Number of ccs processed : " << cidx << " with total neighbors "<< totaln << endl;
     if((totaln != 6*N || cidx != 2*N) && !secondtime)
         {
- //       char fn[256];
-//        sprintf(fn,"failed.txt");
-//        ofstream output(fn);
-//        writeTriangulation(output);
-        if(verbose)
-            printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*N,totaln,6*N);
+        char fn[256];
+        sprintf(fn,"failed.txt");
+        ofstream output(fn);
+        writeTriangulation(output);
+        printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*N,totaln,6*N);
         globalTriangulationCGAL();
-//        throw std::exception();
+        throw std::exception();
         };
 
     };

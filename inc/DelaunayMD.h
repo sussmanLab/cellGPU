@@ -3,8 +3,6 @@
 #define DELAUNAYMD_H
 
 using namespace std;
-//#include "functions.h"
-//#include "structures.h"
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "gpucell.h"

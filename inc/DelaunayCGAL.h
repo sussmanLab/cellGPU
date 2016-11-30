@@ -15,7 +15,6 @@ using namespace std;
 #include <cassert>
 #include <fstream>
 
-
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Periodic_2_triangulation_filtered_traits_2<K> GT;
 
@@ -50,7 +49,7 @@ class DelaunayCGAL
     public:
         vector< vector<int> > allneighs;
 
-        void PeriodicTriangulation(vector<float> &points,float size);
+        void PeriodicTriangulation(vector<Point> &points,float size);
         void LocalTriangulation(vector<float> &points, vector<int> &neighs);
 
     };

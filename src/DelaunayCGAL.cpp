@@ -1,5 +1,8 @@
 using namespace std;
 
+#include "cuda_runtime.h"
+#include "vector_types.h"
+
 #include "DelaunayCGAL.h"
 
 void DelaunayCGAL::LocalTriangulation(vector<float> &points, vector<int> & neighs)
@@ -49,13 +52,9 @@ void DelaunayCGAL::LocalTriangulation(vector<float> &points, vector<int> & neigh
 
     };
 
-void DelaunayCGAL::PeriodicTriangulation(vector<float> &points, float size)
+void DelaunayCGAL::PeriodicTriangulation(vector<Point> &V, float size)
     {
-    vector<Point> V(points.size()/2);
-    for (int ii = 0; ii < points.size()/2;++ii)
-        {
-        V[ii] = Point(points[2*ii],points[2*ii+1]);
-        };
+    int vnum = V.size();
 
     Iso_rectangle domain(0.0,0.0,size,size);
     PDT T(V.begin(),V.end(),domain);
@@ -65,9 +64,9 @@ void DelaunayCGAL::PeriodicTriangulation(vector<float> &points, float size)
 
     int li;
     Locate_type lt;
-    vector<Face_handle> fhs(points.size()/2);
-    vector<int> lis(points.size()/2);
-    for (int ii = 0; ii < points.size()/2; ++ii)
+    vector<Face_handle> fhs(vnum);
+    vector<int> lis(vnum);
+    for (int ii = 0; ii < vnum; ++ii)
         {
         //Face_handle fh = T.locate(V[ii],lt,li);
         fhs[ii] = T.locate(V[ii],lt,lis[ii]);
@@ -77,24 +76,12 @@ void DelaunayCGAL::PeriodicTriangulation(vector<float> &points, float size)
 
 
         };
-/*
-    PDT::Vertex_iterator vit;
-    int idx = 0;
-    int total_degree = 0;
-    for (vit = T.vertices_begin(); vit != T.vertices_end(); ++vit)
-        {
-        cout << idx << " has degree  " << T.degree(vit) << "  " << vit->point() << "     " << points[2*idx] <<", " << points[2*idx+1] << endl;
-        idx +=1;
-        total_degree += T.degree(vit);
-        };
-    cout << total_degree << endl;
-*/
     allneighs.clear();
-    allneighs.resize(points.size()/2);
+    allneighs.resize(vnum);
 
     vector<int> neighs;
     neighs.reserve(8);
-    for (int ii = 0; ii < points.size()/2;++ii)
+    for (int ii = 0; ii < vnum;++ii)
         {
         neighs.clear();
         //Face_handle fh = T.locate(V[ii],lts[ii],li);
@@ -114,17 +101,5 @@ void DelaunayCGAL::PeriodicTriangulation(vector<float> &points, float size)
 
         allneighs[ii]=neighs;
         };
-
-
-/*
-        if(vc != 0)
-            do {
-                ++vc;
-                neighs.push_back(vc->info());
-                //cout << vc->point() << "   " << vc->info() << endl;
-            }while(vc->info()!=base);
-  */      
-
-//    cout <<fh->neighbor(0)->index()<< "  " << fh->neighbor(1)->index()<< "  " << fh->neighbor(2)->index() << endl;
 
     };
