@@ -347,6 +347,8 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
         };
     NumCircumCenters = cidx;
     if((totaln != 6*N || cidx != 2*N) && !secondtime)
+        globalTriangulationCGAL();
+    if((totaln != 6*N || cidx != 2*N) && secondtime)
         {
         char fn[256];
         sprintf(fn,"failed.txt");
