@@ -33,7 +33,7 @@ void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> 
 
     Delaunay::Face_handle face;
     int li=-1;
-    LPoint p(points[0],points[1]);
+    LPoint p=V[0].first;
 
     face= T.locate(p);
     if (face->vertex(0)->info()==0) li = 0;
