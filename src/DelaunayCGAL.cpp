@@ -31,7 +31,7 @@ void DelaunayCGAL::LocalTriangulation(vector<float> &points, vector<int> & neigh
 
     Delaunay::Face_handle face;
     int li=-1;
-    LPoint p(points[0],points[0]);
+    LPoint p(points[0],points[1]);
 
     face= T.locate(p);
     if (face->vertex(0)->info()==0) li = 0;
@@ -52,7 +52,8 @@ void DelaunayCGAL::LocalTriangulation(vector<float> &points, vector<int> & neigh
 
     };
 
-void DelaunayCGAL::PeriodicTriangulation(vector<Point> &V, float size)
+//void DelaunayCGAL::PeriodicTriangulation(vector<Point> &V, float size)
+void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, float size)
     {
     int vnum = V.size();
 
@@ -66,15 +67,35 @@ void DelaunayCGAL::PeriodicTriangulation(vector<Point> &V, float size)
     Locate_type lt;
     vector<Face_handle> fhs(vnum);
     vector<int> lis(vnum);
+    vector<bool> located(vnum,false);
+
     for (int ii = 0; ii < vnum; ++ii)
         {
-        //Face_handle fh = T.locate(V[ii],lt,li);
-        fhs[ii] = T.locate(V[ii],lt,lis[ii]);
-        //Vertex_handle vh = fhs[ii]->vertex(li);
-        Vertex_handle vh = fhs[ii]->vertex(lis[ii]);
-        vh->info()=ii;
+        if(located[ii]) continue;
+        fhs[ii] = T.locate(V[ii].first,lt,lis[ii]);
+        int i0,i1,i2;
+        i0 = fhs[ii]->vertex(0)->info();
+        i1 = fhs[ii]->vertex(1)->info();
+        i2 = fhs[ii]->vertex(2)->info();
 
-
+        if(i0 > ii && !located[i0])
+            {
+            fhs[i0]=fhs[ii];
+            lis[i0]=0;
+            located[i0] = true;
+            };
+        if(i1 > ii && !located[i1])
+            {
+            fhs[i1]=fhs[ii];
+            lis[i1]=1;
+            located[i1] = true;
+            };
+        if(i2 > ii && !located[i2])
+            {
+            fhs[i2]=fhs[ii];
+            lis[i2]=2;
+            located[i2] = true;
+            };
         };
     allneighs.clear();
     allneighs.resize(vnum);

@@ -255,10 +255,12 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     FullFails = 1;
     DelaunayCGAL dcgal;
     ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
-    vector<Point> Psnew(N);
+    //vector<Point> Psnew(N);
+    vector<pair<Point,int> > Psnew(N);
     for (int ii = 0; ii < N; ++ii)
         {
-        Psnew[ii]=Point(h_points.data[ii].x,h_points.data[ii].y);
+        //Psnew[ii]=Point(h_points.data[ii].x,h_points.data[ii].y);
+        Psnew[ii]=make_pair(Point(h_points.data[ii].x,h_points.data[ii].y),ii);
         };
     float b1,b2,b3,b4;
     Box.getBoxDims(b1,b2,b3,b4);
