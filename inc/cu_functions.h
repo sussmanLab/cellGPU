@@ -13,7 +13,7 @@ HOSTDEVICE void Circumcenter(float2 x1, float2 x2, float2 x3, float2 &xc)
     //circumcircle's radius, r.
     //returns false if all three points are on a vertical line
     if(abs(x2.y-x1.y) < EPSILON && abs(x2.y-x3.y) < EPSILON) return;
-    double m1,m2,mx1,my1,mx2,my2;
+    float m1,m2,mx1,my1,mx2,my2;
 
     if(abs(x2.y-x1.y) < EPSILON)
         {
@@ -50,7 +50,7 @@ __device__ inline void Circumcircle(float x1, float y1, float x2, float y2, floa
     //circumcircle's radius, r.
     //returns false if all three points are on a vertical line
     if(abs(y2-y1) < EPSILON && abs(y2-y3) < EPSILON) return;
-    dbl m1,m2,mx1,my1,mx2,my2,dx,dy;
+    float m1,m2,mx1,my1,mx2,my2,dx,dy;
 
     if(abs(y2-y1) < EPSILON)
         {
@@ -93,7 +93,7 @@ __device__ inline float norm(float2 p)
     return sqrt(p.x*p.x+p.y*p.y);
     };
 
-__device__ inline int quadrant(dbl x, dbl y)
+__device__ inline int quadrant(float x, float y)
     {
     if(x>=0)
         {
