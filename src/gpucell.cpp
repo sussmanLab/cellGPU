@@ -377,7 +377,7 @@ if(code2!=cudaSuccess)
                 if(cs > Nmax)
                     {
                     Nmax =cs ;
-                    if (Nmax%2 == 0 ) Nmax +=0;
+                    if (Nmax%2 == 0 ) Nmax +=2;
                     if (Nmax%2 == 1 ) Nmax +=1;
                     recompute = true;
                     //cout << cs <<"in cell " << cc << endl;
