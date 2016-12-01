@@ -209,6 +209,10 @@ void DelaunayMD::fullTriangulation()
         if (neighTemp.size() > nmax) nmax= neighTemp.size();
         h_repair.data[nn]=0;
         };
+    if (nmax%2 ==0)
+        neighMax = nmax;
+    else
+        neighMax = nmax + 1;
     neighMax = nmax+1; cout << "new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
     neighs.resize(neighMax*N);
 
@@ -266,7 +270,7 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     Box.getBoxDims(b1,b2,b3,b4);
     dcgal.PeriodicTriangulation(Psnew,b1);
 
-
+    neigh_num.resize(N);
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
 
@@ -281,15 +285,15 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         h_repair.data[nn]=0;
         };
     if (nmax%2 == 0)
-        neighMax = nmax+2;
+        neighMax = nmax;
     else
         neighMax = nmax+1;
 
+    n_idx = Index2D(neighMax,N);
     if(neighMax != oldNmax)
         neighs.resize(neighMax*N);
 
     //store data in gpuarray
-    n_idx = Index2D(neighMax,N);
     {
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
 
@@ -389,7 +393,10 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         allneighs[ii]=neighTemp;
         if(neighTemp.size() > neighMax)
             {
-            neighMax = neighTemp.size()+1;
+            if(neighTemp.size()%2==0)
+                neighMax = neighTemp.size();
+            else
+                neighMax = neighTemp.size()+1;
             resetCCidx = true;
             };
         };

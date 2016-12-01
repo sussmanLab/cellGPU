@@ -123,7 +123,6 @@ int main(int argc, char*argv[])
 //    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
 
-
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);

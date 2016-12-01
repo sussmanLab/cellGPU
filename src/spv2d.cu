@@ -452,6 +452,7 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
 
     float2 circumcenter, origin, nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
     origin.x=0.0;origin.y=0.0;
+
     int neigh = d_nn[idx];
     float Varea = 0.0;
     float Vperi= 0.0;
@@ -459,6 +460,7 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
     pi = d_points[idx];
     nlastp = d_points[ d_n[n_idx(neigh-1,idx)] ];
     nnextp = d_points[ d_n[n_idx(0,idx)] ];
+
     Box.minDist(nlastp,pi,rij);
     Box.minDist(nnextp,pi,rik);
     Circumcenter(origin,rij,rik,circumcenter);
