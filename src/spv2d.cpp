@@ -28,6 +28,7 @@ SPV2D::SPV2D(int n,float A0, float P0)
 
 void SPV2D::Initialize(int n)
     {
+    N=n;
     gamma = 0.;
     useTension = false;
     particleExclusions=false;
