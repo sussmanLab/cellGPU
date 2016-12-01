@@ -107,21 +107,19 @@ int main(int argc, char*argv[])
     clock_t t1,t2;
 
 
-    SPV2D spv(numpts,1.0,p0);
     if (USE_GPU >= 0)
         {
         bool gpu = chooseGPU(USE_GPU);
         if (!gpu) return 0;
         cudaSetDevice(USE_GPU);
         }
-    else
-        {
-        spv.setCPU();
-        }
 //    char dataname[256];
 //    sprintf(dataname,"/hdd2/data/spv/test.nc");
 //    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
+    SPV2D spv(numpts,1.0,p0);
+    if (USE_GPU < 0)
+        spv.setCPU();
 
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
