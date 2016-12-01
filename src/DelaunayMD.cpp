@@ -285,13 +285,16 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         h_repair.data[nn]=0;
         };
     if (nmax%2 == 0)
-        neighMax = nmax;
+        neighMax = nmax+2;
     else
         neighMax = nmax+1;
 
     n_idx = Index2D(neighMax,N);
     if(neighMax != oldNmax)
+        {
         neighs.resize(neighMax*N);
+        neighMaxChange = true;
+        };
 
     //store data in gpuarray
     {
