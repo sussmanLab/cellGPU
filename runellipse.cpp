@@ -97,7 +97,7 @@ int main(int argc, char*argv[])
     Dscalar gamma = 0.0;
 
     int program_switch = 0;
-    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
+    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:d:z:p:t:e:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
