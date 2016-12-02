@@ -14,6 +14,7 @@
 
 #define Dscalar double
 #define Dscalar2 double2
+#define ncDscalar ncDouble
 
 HOSTDEVICE Dscalar2 make_Dscalar2(Dscalar x, Dscalar y)
     {

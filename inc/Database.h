@@ -105,14 +105,14 @@ void SPVDatabase::SetDimVar()
     unitDim = File.add_dim("unit",1);
 
     //Set the variables
-    timeVar          = File.add_var("time",     ncFloat,recDim, unitDim);
-    means0Var          = File.add_var("means0",     ncFloat,recDim, unitDim);
-    posVar          = File.add_var("pos",       ncFloat,recDim, dofDim);
+    timeVar          = File.add_var("time",     ncDscalar,recDim, unitDim);
+    means0Var          = File.add_var("means0",     ncDscalar,recDim, unitDim);
+    posVar          = File.add_var("pos",       ncDscalar,recDim, dofDim);
     typeVar          = File.add_var("type",         ncInt,recDim, NvDim );
-    directorVar          = File.add_var("director",         ncFloat,recDim, NvDim );
-    BoxMatrixVar    = File.add_var("BoxMatrix", ncFloat,recDim, boxDim);
+    directorVar          = File.add_var("director",         ncDscalar,recDim, NvDim );
+    BoxMatrixVar    = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
     if(exclusions)
-        exVar          = File.add_var("externalForce",       ncFloat,recDim, dofDim);
+        exVar          = File.add_var("externalForce",       ncDscalar,recDim, dofDim);
 }
 
 void SPVDatabase::GetDimVar()
