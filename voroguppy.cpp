@@ -125,6 +125,20 @@ int main(int argc, char*argv[])
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
 
+    /*
+    //compare with output of mattias' code
+    char fn[256];
+    sprintf(fn,"/hdd2/repos/test.txt");
+    ifstream input(fn);
+    spv.readTriangulation(input);
+    spv.globalTriangulationCGAL();
+    spv.allDelSets();
+    spv.computeGeometryGPU();
+    spv.computeSPVForceSetsGPU();
+    spv.sumForceSets();
+    spv.reportForces();
+    */
+
 
     printf("starting initialization\n");
     for(int ii = 0; ii < initSteps; ++ii)
