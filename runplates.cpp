@@ -130,7 +130,7 @@ int main(int argc, char*argv[])
 
 
     char dataname[256];
-    sprintf(dataname,"../../data/spv/Plates/Plates_N%i_p%.2f_v%.2f_g%.2f.nc",numpts,p0,v0,gamma);
+    sprintf(dataname,"../../data/spv/Plates/Plates_N%i_p%.3f_v%.3f_Dr%.3f_g%.3f.nc",numpts,p0,v0,Dr,gamma);
     SPVDatabase ncdat(numpts,dataname,NcFile::Replace,true);
     SPV2D spv(numpts,1.0,p0);
 
