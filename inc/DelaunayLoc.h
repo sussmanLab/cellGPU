@@ -3,6 +3,7 @@
 #define DELAUNAYLOC_H
 
 using namespace std;
+#include "std_include.h"
 #include "box.h"
 #include "cell.h"
 #include "Delaunay1.h"
@@ -14,27 +15,27 @@ class DelaunayLoc
         int nV;                       //number of vertices
         bool triangulated;            //has a triangulation been performed?
 
-        dbl cellsize;
+        Dscalar cellsize;
         grid clist;
         box Box;
 
 
     public:
-        float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
+        Dscalar polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
 
 
         DelaunayLoc(){triangulated=false;cellsize=2.0;};
         //constructor via a vector of point objects
         DelaunayLoc(std::vector<pt> &points, box &bx){setPoints(points);setBox(bx);};
         //constructor via a vector of scalars, {x1,y1,x2,y2,...}
-        DelaunayLoc(std::vector<float> &points,box &bx){setPoints(points);setBox(bx);};
+        DelaunayLoc(std::vector<Dscalar> &points,box &bx){setPoints(points);setBox(bx);};
 
         void setPoints(std::vector<pt> &points);
-        void setPoints(std::vector<dbl> &points);
+        void setPoints(std::vector<Dscalar> &points);
         void setBox(box &bx);
-        void setCellSize(dbl cs){cellsize=cs;};
+        void setCellSize(Dscalar cs){cellsize=cs;};
 
-        void initialize(dbl csize);
+        void initialize(Dscalar csize);
 
         //find indices of enclosing polygon of vertex i (helper function for the next function)
         void getPolygon(int i, vector<int> &P0,vector<pt> &P1);

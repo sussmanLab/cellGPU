@@ -3,6 +3,7 @@
 #define DELAUNAY1_H
 
 using namespace std;
+#include "std_include.h"
 #include "functions.h"
 #include "structures.h"
 
@@ -22,11 +23,11 @@ class DelaunayNP
         //constructor via a vector of point objects
         DelaunayNP(std::vector<pt> points){setPoints(points);};
         //constructor via a vector of scalars, {x1,y1,x2,y2,...}
-        DelaunayNP(std::vector<float> points){setPoints(points);};
+        DelaunayNP(std::vector<Dscalar> points){setPoints(points);};
 
         void setSorted(bool s){sorted=s;};
         void setPoints(std::vector<pt> points);
-        void setPoints(std::vector<float> points);
+        void setPoints(std::vector<Dscalar> points);
 
         void printPoint(int i){cout <<pts[i].x << " " <<pts[i].y << endl;};
         void getSortedPoint(int i,pt &point)

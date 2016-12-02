@@ -6,6 +6,7 @@
 
 using namespace std;
 
+#include "std_include.h"
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "indexer.h"
@@ -14,21 +15,21 @@ class cellListGPU
     {
     public:
         cellListGPU(){};
-        cellListGPU(vector<float> &points);
-        cellListGPU(dbl a, vector<float> &points, gpubox &bx);
+        cellListGPU(vector<Dscalar> &points);
+        cellListGPU(Dscalar a, vector<Dscalar> &points, gpubox &bx);
         //~cellListGPU();
 
-        void setParticles(const vector<float> &points);
+        void setParticles(const vector<Dscalar> &points);
         void setBox(gpubox &bx);
         void setNp(int nn){Np=nn;};
 
         //only call this if particles and box already set...doubles as a general initialization of data structures
-        void setGridSize(dbl a);
-        float getGridSize() {return boxsize;};
+        void setGridSize(Dscalar a);
+        Dscalar getGridSize() {return boxsize;};
         int getNmax() {return Nmax;};
         int getXsize() {return xsize;};
         int getYsize() {return ysize;};
-        float getBoxsize() {return boxsize;};
+        Dscalar getBoxsize() {return boxsize;};
 
         //initialization and helper
         void resetCellSizes();
@@ -46,14 +47,14 @@ class cellListGPU
 
         void computeGPU(); // compute the cell list given current particle positions
 
-        void computeGPU(GPUArray<float2> &points); // compute the cell list of the gpuarry passed to it
-        void compute(GPUArray<float2> &points); // compute the cell list of the gpuarry passed to it
+        void computeGPU(GPUArray<Dscalar2> &points); // compute the cell list of the gpuarry passed to it
+        void compute(GPUArray<Dscalar2> &points); // compute the cell list of the gpuarry passed to it
 
 
         void repP(int i)
             {
             if(true){
-            ArrayHandle<float2> hh(particles,access_location::host,access_mode::read);
+            ArrayHandle<Dscalar2> hh(particles,access_location::host,access_mode::read);
             cout <<hh.data[i].x << "  " << hh.data[i].y << endl;
             };
             };
@@ -61,14 +62,14 @@ class cellListGPU
         Index2D cell_indexer; //indexes cells from (i,j) pairs
         Index2D cell_list_indexer; //indexes elements in the cell list
 
-        GPUArray<float2> particles;
+        GPUArray<Dscalar2> particles;
         GPUArray<unsigned int> cell_sizes; //number of elements in each cell
         GPUArray<int> idxs; //cell list with index
 
     private:
         GPUArray<int> assist; //first index is Nmax, second is whether to recompute
         int Np; //number of particles to put in cells
-        dbl boxsize; //linear size of each grid cell
+        Dscalar boxsize; //linear size of each grid cell
         int xsize;
         int ysize;
         int totalCells;

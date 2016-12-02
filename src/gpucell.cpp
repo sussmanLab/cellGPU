@@ -1,6 +1,5 @@
 using namespace std;
-#define dbl float
-#define EPSILON 1e-12
+#define EPSILON 1e-16
 #define ENABLE_CUDA
 
 #include <cmath>
@@ -29,25 +28,25 @@ using namespace std;
 
 //DEFINE functions here
 
-cellListGPU::cellListGPU(dbl a, vector<float> &points,gpubox &bx)
+cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
     {
     setParticles(points);
     setBox(bx);
     setGridSize(a);
     }
-cellListGPU::cellListGPU(vector<float> &points)
+cellListGPU::cellListGPU(vector<Dscalar> &points)
     {
     setParticles(points);
     }
 
-void cellListGPU::setParticles(const vector<float> &points)
+void cellListGPU::setParticles(const vector<Dscalar> &points)
     {
     int newsize = points.size()/2;
     particles.resize(newsize);
     Np=newsize;
     if(true)
         {
-        ArrayHandle<float2> h_handle(particles,access_location::host,access_mode::overwrite);
+        ArrayHandle<Dscalar2> h_handle(particles,access_location::host,access_mode::overwrite);
         for (int ii = 0; ii < points.size()/2; ++ii)
             {
             h_handle.data[ii].x = points[2*ii];
@@ -58,14 +57,14 @@ void cellListGPU::setParticles(const vector<float> &points)
 
 void cellListGPU::setBox(gpubox &bx)
     {
-    dbl b11,b12,b21,b22;
+    Dscalar b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
     Box.setGeneral(b11,b12,b21,b22);
     };
 
-void cellListGPU::setGridSize(dbl a)
+void cellListGPU::setGridSize(Dscalar a)
     {
-    dbl b11,b12,b21,b22;
+    Dscalar b11,b12,b21,b22;
     Box.getBoxDims(b11,b12,b21,b22);
     xsize = (int)floor(b11/a);
     ysize = (int)floor(b22/a);
@@ -113,7 +112,7 @@ void cellListGPU::compute()
     //will loop through particles and put them in cells...
     //if there are more than Nmax particles in any cell, will need to recompute.
     bool recompute = true;
-    ArrayHandle<float2> h_pt(particles,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_pt(particles,access_location::host,access_mode::read);
     int ibin, jbin;
     int nmax = Nmax;
     int computations = 0;
@@ -157,12 +156,12 @@ void cellListGPU::compute()
     };
 
 
-void cellListGPU::compute(GPUArray<float2> &points)
+void cellListGPU::compute(GPUArray<Dscalar2> &points)
     {
     //will loop through particles and put them in cells...
     //if there are more than Nmax particles in any cell, will need to recompute.
     bool recompute = true;
-    ArrayHandle<float2> h_pt(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_pt(points,access_location::host,access_mode::read);
     int ibin, jbin;
     int nmax = Nmax;
     int computations = 0;
@@ -220,7 +219,7 @@ void cellListGPU::computeGPU()
         if (true)
             {
             //get particle data
-            ArrayHandle<float2> d_pt(particles,access_location::device,access_mode::read);
+            ArrayHandle<Dscalar2> d_pt(particles,access_location::device,access_mode::read);
 
             //get cell list arrays...readwrite so things are properly zeroed out
             ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);
@@ -287,7 +286,7 @@ void cellListGPU::computeGPU()
 
     };
 
-void cellListGPU::computeGPU(GPUArray<float2> &points)
+void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
     {
     bool recompute = true;
     resetCellSizes();
@@ -300,7 +299,7 @@ void cellListGPU::computeGPU(GPUArray<float2> &points)
         if (true)
             {
             //get particle data
-            ArrayHandle<float2> d_pt(points,access_location::device,access_mode::read);
+            ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::read);
 
             //get cell list arrays...readwrite so things are properly zeroed out
             ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);
@@ -345,11 +344,11 @@ void cellListGPU::computeGPU(GPUArray<float2> &points)
             ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
     //        ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::read);
 
-            
+
 cudaError_t code2 = cudaGetLastError();
 if(code2!=cudaSuccess)
     {
-    ArrayHandle<float2> h_pt(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_pt(points,access_location::host,access_mode::read);
     for (int ii = 0; ii < Np; ++ii)
         {
         if (h_pt.data[ii].x <= 0) cout <<h_pt.data[ii].x <<  " X " << endl;

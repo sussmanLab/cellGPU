@@ -4,6 +4,7 @@
 
 
 using namespace std;
+#include "std_include.h"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Periodic_2_triangulation_filtered_traits_2.h>
 #include <CGAL/Periodic_2_Delaunay_triangulation_2.h>
@@ -49,8 +50,8 @@ class DelaunayCGAL
     public:
         vector< vector<int> > allneighs;
 
-        //void PeriodicTriangulation(vector<Point> &points,float size);
-        void PeriodicTriangulation(vector<pair<Point,int> > &points,float size);
+        //void PeriodicTriangulation(vector<Point> &points,Dscalar size);
+        void PeriodicTriangulation(vector<pair<Point,int> > &points,Dscalar size);
         void LocalTriangulation(vector<pair<LPoint,int> > &points, vector<int> &neighs);
 
     };

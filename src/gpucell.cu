@@ -12,14 +12,14 @@
 #include <stdio.h>
 
 
-__global__ void gpu_compute_cell_list_kernel(float2 *d_pt,
+__global__ void gpu_compute_cell_list_kernel(Dscalar2 *d_pt,
                                               unsigned int *d_cell_sizes,
                                               int *d_idx,
                                               int Np,
                                               unsigned int Nmax,
                                               int xsize,
                                               int ysize,
-                                              float boxsize,
+                                              Dscalar boxsize,
                                               gpubox Box,
                                               Index2D ci,
                                               Index2D cli,
@@ -31,7 +31,7 @@ __global__ void gpu_compute_cell_list_kernel(float2 *d_pt,
     if (idx >= Np)
         return;
 
-    float2 pos = d_pt[idx];
+    Dscalar2 pos = d_pt[idx];
 
     int ibin = max(0,min(xsize-1,(int)floor(pos.x/boxsize)));
     int jbin = max(0,min(xsize-1,(int)floor(pos.y/boxsize)));
@@ -54,14 +54,14 @@ __global__ void gpu_compute_cell_list_kernel(float2 *d_pt,
     };
 
 
-bool gpu_compute_cell_list(float2 *d_pt,
+bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                   unsigned int *d_cell_sizes,
                                   int *d_idx,
                                   int Np,
                                   int &Nmax,
                                   int xsize,
                                   int ysize,
-                                  float boxsize,
+                                  Dscalar boxsize,
                                   gpubox &Box,
                                   Index2D &ci,
                                   Index2D &cli,

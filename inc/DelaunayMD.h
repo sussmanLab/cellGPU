@@ -3,6 +3,7 @@
 #define DELAUNAYMD_H
 
 using namespace std;
+#include "std_include.h"
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "gpucell.h"
@@ -19,12 +20,12 @@ class DelaunayMD
         int N;                       //number of vertices
         bool triangulated;            //has a triangulation been performed?
 
-        float cellsize;
+        Dscalar cellsize;
         cellListGPU celllist;
 
 
         //neighbor lists
-        GPUArray<int> neigh_num; 
+        GPUArray<int> neigh_num;
         GPUArray<int> neighs;
         Index2D n_idx;
         //circumcenter lists
@@ -48,31 +49,31 @@ class DelaunayMD
         gpubox Box;
         box CPUbox;
         DelaunayLoc delLoc;
-        GPUArray<float2> points;      //vector of particle positions
-        float polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
-        float gputiming,cputiming;
-        float repPerFrame;
+        GPUArray<Dscalar2> points;      //vector of particle positions
+        Dscalar polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
+        Dscalar gputiming,cputiming;
+        Dscalar repPerFrame;
         int skippedFrames;
         int GlobalFixes;
 
-        void getPoints(GPUArray<float2> &ps){ps = points;};
+        void getPoints(GPUArray<Dscalar2> &ps){ps = points;};
         //constructors
         DelaunayMD(){triangulated=false;cellsize=2.0;};
 
         //initialization functions
         void initialize(int n);
-        void randomizePositions(float boxx, float boxy);
+        void randomizePositions(Dscalar boxx, Dscalar boxy);
 
         //move particles
-        void movePoints(GPUArray<float2> &displacements);
-        void movePointsCPU(GPUArray<float2> &displacements);
+        void movePoints(GPUArray<Dscalar2> &displacements);
+        void movePointsCPU(GPUArray<Dscalar2> &displacements);
 
         //utility functions
         void resetDelLocPoints();
         void updateCellList();
         void reportCellList();
         void reportPos(int i);
-        void touchPoints(){ArrayHandle<float2> h(points,access_location::host,access_mode::readwrite);};
+        void touchPoints(){ArrayHandle<Dscalar2> h(points,access_location::host,access_mode::readwrite);};
 
         //only use the CPU:
         void setCPU(){GPUcompute = false;};
@@ -99,13 +100,13 @@ class DelaunayMD
 
 
         //soft-sphere repulsion....for testing
-        void repel(GPUArray<float2> &disp,float eps);
+        void repel(GPUArray<Dscalar2> &disp,Dscalar eps);
 
         //old functions
         void setPoints(std::vector<pt> &points);
-        void setPoints(std::vector<float> &points);
+        void setPoints(std::vector<Dscalar> &points);
         void setBox(gpubox &bx);
-        void setCellSize(float cs){cellsize=cs;};
+        void setCellSize(Dscalar cs){cellsize=cs;};
 
 
         //find indices of enclosing polygon of vertex i (helper function for the next function)

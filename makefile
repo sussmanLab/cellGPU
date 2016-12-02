@@ -59,10 +59,10 @@ obj/DelaunayCGAL.o:src/DelaunayCGAL.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CGAL) $(LIB_CUDA) -o $@ -c $<
 
 obj/Delaunay1.o:src/Delaunay1.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ -c $<
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) -o $@ -c $<
 
 obj/DelaunayLoc.o:src/DelaunayLoc.cpp obj/Delaunay1.o obj/DelaunayCGAL.o
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIB_CGAL) -o $@ -c $<
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ -c $<
 
 ###
 #Programs

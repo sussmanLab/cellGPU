@@ -10,8 +10,10 @@
 //a few function protocols needed below...definitions are in functions.h
 //since some structures need to be able to call this function...
 
-bool CircumCircle(dbl x1, dbl y1, dbl x2, dbl y2, dbl x3, dbl y3,dbl &xc, dbl &yc, dbl &r);
-inline dbl TriangleArea(dbl x1, dbl y1, dbl x2, dbl y2);
+#include "std_include.h"
+
+bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dscalar x3, Dscalar y3,Dscalar &xc, Dscalar &yc, Dscalar &r);
+inline Dscalar TriangleArea(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2);
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
@@ -23,11 +25,11 @@ inline dbl TriangleArea(dbl x1, dbl y1, dbl x2, dbl y2);
 struct pt
     {//contains a {x,y} pair; can constuct as pt(x,y) or assign after
     public:
-        dbl x;
-        dbl y;
+        Dscalar x;
+        Dscalar y;
         HOSTDEVICE pt(){};
         HOSTDEVICE ~pt(){};
-        HOSTDEVICE pt(dbl xn, dbl yn){x=xn;y=yn;};
+        HOSTDEVICE pt(Dscalar xn, Dscalar yn){x=xn;y=yn;};
 
         HOSTDEVICE bool operator < (const pt& other) const
             {
@@ -36,18 +38,18 @@ struct pt
 
         HOSTDEVICE pt operator+(const pt& other)
             {
-            dbl result_x = x+other.x;
-            dbl result_y = y+other.y;
+            Dscalar result_x = x+other.x;
+            Dscalar result_y = y+other.y;
             return pt(result_x,result_y);
             };
         HOSTDEVICE pt operator-(const pt& other)
             {
-            dbl result_x = x-other.x;
-            dbl result_y = y-other.y;
+            Dscalar result_x = x-other.x;
+            Dscalar result_y = y-other.y;
             return pt(result_x,result_y);
             };
-        HOSTDEVICE dbl norm(){return sqrt(x*x+y*y);};
-        HOSTDEVICE dbl norm2(){return x*x+y*y;};
+        HOSTDEVICE Dscalar norm(){return sqrt(x*x+y*y);};
+        HOSTDEVICE Dscalar norm2(){return x*x+y*y;};
     };
 
 struct edge
@@ -106,10 +108,10 @@ struct DelaunayCell
     public:
         int n; //number of delaunay neighbors
         std::vector< pt > Dneighs;
-        std::vector<std::pair <dbl,int> > CWorder;
+        std::vector<std::pair <Dscalar,int> > CWorder;
         std::vector< pt> Vpoints;
-        dbl Varea;
-        dbl Vperimeter;
+        Dscalar Varea;
+        Dscalar Vperimeter;
         bool Voro; //have the voronoi points of the cell already been calculated?
 
         DelaunayCell(){Voro=false;};
@@ -139,7 +141,7 @@ struct DelaunayCell
             pt ori(0.0,0.0);
             for (int ii=0; ii < n; ++ii)
                 {
-                dbl xc,yc,rad;
+                Dscalar xc,yc,rad;
                 bool placeholder; // Circumcircle is a function with a type
                 pt p1 = Dneighs[CWorder[ii].second];
                 pt p2 = Dneighs[CWorder[((ii+1)%n)].second];
@@ -160,8 +162,8 @@ struct DelaunayCell
                 pt p1 = Vpoints[ii];
                 pt p2 = Vpoints[((ii+1)%n)];
                 Varea += TriangleArea(p1.x,p1.y,p2.x,p2.y);
-                dbl dx = p1.x-p2.x;
-                dbl dy = p1.y-p2.y;
+                Dscalar dx = p1.x-p2.x;
+                Dscalar dy = p1.y-p2.y;
                 Vperimeter += sqrt(dx*dx+dy*dy);
                 };
             };

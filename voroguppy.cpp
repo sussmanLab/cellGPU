@@ -1,3 +1,4 @@
+#include "std_include.h"
 #include <cmath>
 #include <algorithm>
 #include <ctype.h>
@@ -17,8 +18,7 @@
 #include "vector_types.h"
 
 #define ENABLE_CUDA
-#define dbl float
-#define EPSILON 1e-12
+#define EPSILON 1e-16
 
 
 #include "spv2d.h"
@@ -72,11 +72,11 @@ int main(int argc, char*argv[])
     int tSteps = 5;
     int initSteps = 0;
 
-    float dt = 0.1;
-    float p0 = 4.0;
-    float a0 = 1.0;
-    float v0 = 0.1;
-    float gamma = 0.0;
+    Dscalar dt = 0.1;
+    Dscalar p0 = 4.0;
+    Dscalar a0 = 1.0;
+    Dscalar v0 = 0.1;
+    Dscalar gamma = 0.0;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
@@ -151,14 +151,14 @@ int main(int argc, char*argv[])
         };
     //cudaProfilerStop();
     t2=clock();
-    float steptime = (t2-t1)/(dbl)CLOCKS_PER_SEC/tSteps;
+    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
 
-    cout << endl << "force time  = " << spv.forcetiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
-    cout << "triangle time  = " << spv.triangletiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
+    cout << endl << "force time  = " << spv.forcetiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
+    cout << "triangle time  = " << spv.triangletiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
-//    cout << endl << "GPU time  = " << spv.gputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
-//    cout << "CPU time  = " << spv.cputiming/(float)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
+//    cout << endl << "GPU time  = " << spv.gputiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
+//    cout << "CPU time  = " << spv.cputiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
 //    ncdat.WriteState(spv);
 

@@ -4,6 +4,7 @@
 
 using namespace std;
 
+#include "std_include.h"
 #include <stdio.h>
 #include <cmath>
 #include <random>
@@ -22,21 +23,21 @@ using namespace std;
 class SPV2D : public DelaunayMD
     {
     protected:
-        float Dr;
-        float v0;
+        Dscalar Dr;
+        Dscalar v0;
 
-        float gamma; //value of inter-cell surface tension
+        Dscalar gamma; //value of inter-cell surface tension
         bool useTension;
         bool particleExclusions;
 
-//        GPUArray<float2> VoronoiPoints;
-        GPUArray<float2> AreaPeriPreferences;//(A0,P0) for each cell
-        GPUArray<float2> AreaPeri;//(current A,P) for each cell
-        GPUArray<float2> Moduli;//(KA,KP)
-        GPUArray<float2> Motility;//(v0,Dr) for each cell
+//        GPUArray<Dscalar2> VoronoiPoints;
+        GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
+        GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
+        GPUArray<Dscalar2> Moduli;//(KA,KP)
+        GPUArray<Dscalar2> Motility;//(v0,Dr) for each cell
 
-        GPUArray<float> cellDirectors_initial;// for testing
-        GPUArray<float2> displacements;
+        GPUArray<Dscalar> cellDirectors_initial;// for testing
+        GPUArray<Dscalar2> displacements;
 
 //        curandState *devStates;
 
@@ -45,17 +46,17 @@ class SPV2D : public DelaunayMD
         //delOther.data[n_idx(nn,i)] contains the index of the "other" delaunay neighbor. i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
         GPUArray<int> delOther;
         //interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
-        GPUArray<float2> forceSets;
+        GPUArray<Dscalar2> forceSets;
 
     public:
         int Timestep;
-        float deltaT;
+        Dscalar deltaT;
         GPUArray<int> CellType;
-        GPUArray<float> cellDirectors;
-        GPUArray<float2> forces;
+        GPUArray<Dscalar> cellDirectors;
+        GPUArray<Dscalar2> forces;
 
         //"exclusiosn" zero out the force on a cell...the external force needed to do this is stored in external_forces
-        GPUArray<float2> external_forces;
+        GPUArray<Dscalar2> external_forces;
         GPUArray<int> exclusions;
 
         ~SPV2D()
@@ -65,30 +66,30 @@ class SPV2D : public DelaunayMD
         //initialize with random positions in a square box
         SPV2D(int n);
         //additionally set all cells to have uniform target A_0 and P_0 parameters
-        SPV2D(int n, float A0, float P0);
+        SPV2D(int n, Dscalar A0, Dscalar P0);
 
         //initialize DelaunayMD, and set random orientations for cell directors
         void Initialize(int n);
 
         //set and get
-        void setDeltaT(float dt){deltaT = dt;};
+        void setDeltaT(Dscalar dt){deltaT = dt;};
         ///the following set uniform motilities...for individual choices use setCellMotility
-        void setv0Dr(float v0new,float drnew);
+        void setv0Dr(Dscalar v0new,Dscalar drnew);
 
-        void setTension(float g){gamma = g;};
+        void setTension(Dscalar g){gamma = g;};
         void setUseTension(bool u){useTension = u;};
 
 
-        void setCellPreferencesUniform(float A0, float P0);
-        void setModuliUniform(float KA, float KP);
+        void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
+        void setModuliUniform(Dscalar KA, Dscalar KP);
 
         void setCellTypeUniform(int i);
         void setCellType(vector<int> &types);
 
-        void setCellMotility(vector<float> &v0s,vector<float> &drs);
+        void setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs);
 
         //sets particles within an ellipse to type 0, outside to type 1. frac is fraction of area for the ellipse to take up, aspectRatio is (r_x/r_y)
-        void setCellTypeEllipse(float frac, float aspectRatio);
+        void setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio);
 
         void setCurandStates(int i);
 
@@ -131,10 +132,10 @@ class SPV2D : public DelaunayMD
         void reportDirectors();
         void meanForce();
         void meanArea();
-        float reportq();
+        Dscalar reportq();
         void deltaAngle();
 
-        float triangletiming, forcetiming;
+        Dscalar triangletiming, forcetiming;
     };
 
 

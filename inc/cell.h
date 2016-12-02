@@ -7,13 +7,14 @@
 
 
 using namespace std;
+#include "std_include.h"
 #include "structures.h"
 
 class grid
     {
     private:
         std::vector<pt> points;
-        dbl cellsize;
+        Dscalar cellsize;
         int N;
         int cellnumx, cellnumy,totalCells;
         box Box;
@@ -22,11 +23,11 @@ class grid
         std::vector< std::vector<int> > cells;
 
         inline grid(){};
-        inline grid(std::vector<pt> &pts, box &bx, dbl cs)
+        inline grid(std::vector<pt> &pts, box &bx, Dscalar cs)
             {points=pts;cellsize=cs;setBox(bx);initialize();};
 
         inline void setPoints(std::vector<pt> &pts){points = pts;};
-        inline void setCellSize(dbl cs){cellsize = cs;};
+        inline void setCellSize(Dscalar cs){cellsize = cs;};
         inline void setBox(box &bx);
 
         inline void initialize();
@@ -34,8 +35,8 @@ class grid
 
         inline int getN(){return N;};
         inline int getNx(){return cellnumx;};
-        inline dbl getCellSize(){return cellsize;};
-        inline int posToCellIdx(dbl x, dbl y);
+        inline Dscalar getCellSize(){return cellsize;};
+        inline int posToCellIdx(Dscalar x, Dscalar y);
         //all cells within width of the cell index
         inline void cellNeighbors(int cidx, int width, std::vector<int> &cellneighs);
         inline void cellNeighborsShort(int cidx, int width, std::vector<int> &cellneighs);
@@ -47,7 +48,7 @@ class grid
 
 void grid::setBox(box &bx)
     {
-    dbl b11,b12,b21,b22;
+    Dscalar b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
     Box.setGeneral(b11,b12,b21,b22);
     };
@@ -55,7 +56,7 @@ void grid::setBox(box &bx)
 void grid::initialize()
     {
     N = points.size();
-    dbl bx,bxx,by,byy;
+    Dscalar bx,bxx,by,byy;
     Box.getBoxDims(bx,bxx,byy,by);
     cellnumx = (int)floor(bx/cellsize);
     cellnumy= (int) floor(by/cellsize);
@@ -78,7 +79,7 @@ void grid::construct()
         };
     };
 
-int grid::posToCellIdx(dbl x, dbl y)
+int grid::posToCellIdx(Dscalar x, Dscalar y)
     {
     int cell_idx = 0;
     int binx = max(0,min(cellnumx-1,(int)floor(x/cellsize)));

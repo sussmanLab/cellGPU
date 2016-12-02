@@ -1,6 +1,7 @@
 #ifndef Matrix_H
 #define Matrix_H
 
+#include "std_include.h"
 #include "vector_types.h"
 
 #ifdef NVCC
@@ -15,12 +16,12 @@ struct Matrix2x2
     private:
 
     public:
-        float x11, x12, x21, x22;
+        Dscalar x11, x12, x21, x22;
         HOSTDEVICE Matrix2x2() : x11(1.0), x12(0.0), x21(0.0),x22(1.0) {};
-        HOSTDEVICE Matrix2x2(float y11, float y12, float y21,float y22) : x11(y11), x12(y12), x21(y21),x22(y22) {};
+        HOSTDEVICE Matrix2x2(Dscalar y11, Dscalar y12, Dscalar y21,Dscalar y22) : x11(y11), x12(y12), x21(y21),x22(y22) {};
 
 
-        HOSTDEVICE void set(float y11, float y12, float y21, float y22)
+        HOSTDEVICE void set(Dscalar y11, Dscalar y12, Dscalar y21, Dscalar y22)
                             {
                             x11=y11; x12=y12;x21=y21;x22=y22;
                             };
@@ -47,17 +48,17 @@ struct Matrix2x2
                             };
 
         //scalar multiplication
-        HOSTDEVICE void operator*=(float a)
+        HOSTDEVICE void operator*=(Dscalar a)
                             {
                             set(a*x11,a*x12,a*x21,a*x22);
                             };
-        HOSTDEVICE friend Matrix2x2 operator*(const Matrix2x2 &m,const float a)
+        HOSTDEVICE friend Matrix2x2 operator*(const Matrix2x2 &m,const Dscalar a)
                             {
                             Matrix2x2 temp(m);
                             temp*=a;
                             return temp;
                             };
-        HOSTDEVICE friend Matrix2x2 operator*(const float a, const Matrix2x2 &m)
+        HOSTDEVICE friend Matrix2x2 operator*(const Dscalar a, const Matrix2x2 &m)
                             {
                             Matrix2x2 temp(m);
                             temp*=a;
@@ -97,17 +98,17 @@ struct Matrix2x2
                             };
 
         //matrix-vector multiplication
-        HOSTDEVICE friend float2 operator*(const float2 &v, const Matrix2x2 &m)
+        HOSTDEVICE friend Dscalar2 operator*(const Dscalar2 &v, const Matrix2x2 &m)
                             {
-                            float2 temp;
+                            Dscalar2 temp;
                             temp.x = v.x*m.x11 + v.y*m.x21;
                             temp.y = v.x*m.x12 + v.y*m.x22;
                             return temp;
                             };
 
-        HOSTDEVICE friend float2 operator*(const Matrix2x2 &m, const float2 &v)
+        HOSTDEVICE friend Dscalar2 operator*(const Matrix2x2 &m, const Dscalar2 &v)
                             {
-                            float2 temp;
+                            Dscalar2 temp;
                             temp.x = m.x11*v.x+m.x12*v.y;
                             temp.y = m.x21*v.x+m.x22*v.y;
                             return temp;
@@ -120,7 +121,7 @@ struct Matrix2x2
             };
     };
 
-HOSTDEVICE Matrix2x2 dyad(float2 &v1, float2 &v2)
+HOSTDEVICE Matrix2x2 dyad(Dscalar2 &v1, Dscalar2 &v2)
     {
     return Matrix2x2(v1.x*v2.x,v1.x*v2.y,v1.y*v2.x,v1.y*v2.y);
     };

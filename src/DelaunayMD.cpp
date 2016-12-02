@@ -1,6 +1,5 @@
 using namespace std;
-#define EPSILON 1e-12
-#define dbl float
+#define EPSILON 1e-16
 #define ENABLE_CUDA
 
 #include <cmath>
@@ -33,14 +32,14 @@ using namespace std;
 
 
 
-void DelaunayMD::randomizePositions(float boxx, float boxy)
+void DelaunayMD::randomizePositions(Dscalar boxx, Dscalar boxy)
     {
     int randmax = 100000000;
-    ArrayHandle<float2> h_points(points,access_location::host, access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::overwrite);
     for (int ii = 0; ii < N; ++ii)
         {
-        float x =EPSILON+boxx/(float)(randmax+1)* (float)(rand()%randmax);
-        float y =EPSILON+boxy/(float)(randmax+1)* (float)(rand()%randmax);
+        Dscalar x =EPSILON+boxx/(Dscalar)(randmax+1)* (Dscalar)(rand()%randmax);
+        Dscalar y =EPSILON+boxy/(Dscalar)(randmax+1)* (Dscalar)(rand()%randmax);
         h_points.data[ii].x=x;
         h_points.data[ii].y=y;
         };
@@ -48,7 +47,7 @@ void DelaunayMD::randomizePositions(float boxx, float boxy)
 
 void DelaunayMD::resetDelLocPoints()
     {
-    ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
+    ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
     for (int ii = 0; ii < N; ++ii)
         {
         pts[ii].x=h_points.data[ii].x;
@@ -75,7 +74,7 @@ void DelaunayMD::initialize(int n)
 
     //set particle number and box
     N = n;
-    float boxsize = sqrt((float)N);
+    Dscalar boxsize = sqrt((Dscalar)N);
     Box.setSquare(boxsize,boxsize);
     CPUbox.setSquare(boxsize,boxsize);
 
@@ -121,8 +120,8 @@ void DelaunayMD::updateCellList()
         }
     else
         {
-        vector<float> psnew(2*N);
-        ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
+        vector<Dscalar> psnew(2*N);
+        ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
         for (int ii = 0; ii < N; ++ii)
             {
             psnew[2*ii] =  h_points.data[ii].x;
@@ -154,14 +153,14 @@ void DelaunayMD::reportCellList()
 
 void DelaunayMD::reportPos(int i)
     {
-    ArrayHandle<float2> hp(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> hp(points,access_location::host,access_mode::read);
     printf("particle %i\t{%f,%f}\n",i,hp.data[i].x,hp.data[i].y);
     };
 
-void DelaunayMD::movePointsCPU(GPUArray<float2> &displacements)
+void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
     {
-    ArrayHandle<float2> h_p(points,access_location::host,access_mode::readwrite);
-    ArrayHandle<float2> h_d(displacements,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_d(displacements,access_location::host,access_mode::read);
     for (int idx = 0; idx < N; ++idx)
         {
         h_p.data[idx].x += h_d.data[idx].x;
@@ -171,10 +170,10 @@ void DelaunayMD::movePointsCPU(GPUArray<float2> &displacements)
 
     };
 
-void DelaunayMD::movePoints(GPUArray<float2> &displacements)
+void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
     {
-    ArrayHandle<float2> d_p(points,access_location::device,access_mode::readwrite);
-    ArrayHandle<float2> d_d(displacements,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::readwrite);
     gpu_move_particles(d_p.data,d_d.data,N,Box);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
@@ -259,14 +258,14 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     GlobalFixes +=1;
     FullFails = 1;
     DelaunayCGAL dcgal;
-    ArrayHandle<float2> h_points(points,access_location::host, access_mode::read);
+    ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
     //vector<Point> Psnew(N);
     vector<pair<Point,int> > Psnew(N);
     for (int ii = 0; ii < N; ++ii)
         {
         Psnew[ii]=make_pair(Point(h_points.data[ii].x,h_points.data[ii].y),ii);
         };
-    float b1,b2,b3,b4;
+    Dscalar b1,b2,b3,b4;
     Box.getBoxDims(b1,b2,b3,b4);
     dcgal.PeriodicTriangulation(Psnew,b1);
 
@@ -375,7 +374,7 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
 void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     {
     int fixes = fixlist.size();
-    repPerFrame += ((float) fixes/(float)N);
+    repPerFrame += ((Dscalar) fixes/(Dscalar)N);
     resetDelLocPoints();
 
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
@@ -440,7 +439,7 @@ void DelaunayMD::testTriangulation()
     updateCellList();
 
     //access data handles
-    ArrayHandle<float2> d_pt(points,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::readwrite);
 
     ArrayHandle<unsigned int> d_cell_sizes(celllist.cell_sizes,access_location::device,access_mode::read);
     ArrayHandle<int> d_c_idx(celllist.idxs,access_location::device,access_mode::read);
@@ -580,10 +579,10 @@ void DelaunayMD::readTriangulation(ifstream &infile)
     cout << "Reading in " << nn << "points" << endl;
     int idx = 0;
     int ii = 0;
-    ArrayHandle<float2> p(points,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::overwrite);
     while(getline(infile,line))
         {
-        float val = stof(line);
+        Dscalar val = stof(line);
         if (idx == 0)
             {
             p.data[ii].x=val;
@@ -597,7 +596,7 @@ void DelaunayMD::readTriangulation(ifstream &infile)
             ii += 1;
             };
         };
-//    ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+//    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
 //    outfile << N <<endl;
 //    for (int ii = 0; ii < N ; ++ii)
 //        outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
@@ -606,7 +605,7 @@ void DelaunayMD::readTriangulation(ifstream &infile)
 
 void DelaunayMD::writeTriangulation(ofstream &outfile)
     {
-    ArrayHandle<float2> p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
 //    ArrayHandle<int> cc(circumcenters,access_location::host,access_mode::read);
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
@@ -629,26 +628,26 @@ void DelaunayMD::writeTriangulation(ofstream &outfile)
     */
     };
 
-void DelaunayMD::repel(GPUArray<float2> &disp,float eps)
+void DelaunayMD::repel(GPUArray<Dscalar2> &disp,Dscalar eps)
     {
-    ArrayHandle<float2> p(points,access_location::host,access_mode::read);
-    ArrayHandle<float2> dd(disp,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> dd(disp,access_location::host,access_mode::overwrite);
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
-    float2 ftot;ftot.x=0.0;ftot.y=0.0;
+    Dscalar2 ftot;ftot.x=0.0;ftot.y=0.0;
     for (int ii = 0; ii < N; ++ii)
         {
-        float2 dtot;dtot.x=0.0;dtot.y=0.0;
-        float2 posi = p.data[ii];
+        Dscalar2 dtot;dtot.x=0.0;dtot.y=0.0;
+        Dscalar2 posi = p.data[ii];
         int imax = neighnum.data[ii];
         for (int nn = 0; nn < imax; ++nn)
             {
             int idxpos = n_idx(nn,ii);
-            float2 posj = p.data[ns.data[idxpos]];
-            float2 d;
+            Dscalar2 posj = p.data[ns.data[idxpos]];
+            Dscalar2 d;
             Box.minDist(posi,posj,d);
 
-            float norm = sqrt(d.x*d.x+d.y*d.y);
+            Dscalar norm = sqrt(d.x*d.x+d.y*d.y);
             if (norm < 1)
                 {
                 dtot.x-=2*eps*d.x*(1.0-1.0/norm);
@@ -656,8 +655,8 @@ void DelaunayMD::repel(GPUArray<float2> &disp,float eps)
                 };
             };
         int randmax = 1000000;
-        float xrand = eps*0.1*(-0.5+1.0/(dbl)randmax* (dbl)(rand()%randmax));
-        float yrand = eps*0.1*(-0.5+1.0/(dbl)randmax* (dbl)(rand()%randmax));
+        Dscalar xrand = eps*0.1*(-0.5+1.0/(Dscalar)randmax* (Dscalar)(rand()%randmax));
+        Dscalar yrand = eps*0.1*(-0.5+1.0/(Dscalar)randmax* (Dscalar)(rand()%randmax));
         dd.data[ii]=dtot;
         ftot.x+=dtot.x+xrand;
         ftot.y+=dtot.y+yrand;

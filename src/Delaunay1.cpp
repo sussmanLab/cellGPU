@@ -1,5 +1,4 @@
 using namespace std;
-#define dbl float
 #define EPSILON 1e-16
 
 #include <cmath>
@@ -18,7 +17,7 @@ using namespace std;
 #include "Delaunay1.h"
 
 
-void DelaunayNP::setPoints(vector<float> points)
+void DelaunayNP::setPoints(vector<Dscalar> points)
     {
     nV=points.size()/2;
     sorted=false;
@@ -75,10 +74,10 @@ void DelaunayNP::triangulate()
 void DelaunayNP::naiveBowyerWatson()
     {
     bool incircle;
-    float xmin,xmax,ymin,ymax,dx,dy,dmax,xcen,ycen;
+    Dscalar xmin,xmax,ymin,ymax,dx,dy,dmax,xcen,ycen;
     int ntri;
     pt xtest,c;
-    float rad;
+    Dscalar rad;
     if (!sorted) sortPoints();
     edge nullEdge(-1,-1);
     int emax   = 3*(nV+1); //really 3n-3-k for n points with k points in the convex hull
@@ -94,7 +93,7 @@ void DelaunayNP::naiveBowyerWatson()
     ymin = sortmap[0].first.y;
     xmax=sortmap[nV-1].first.x;
     ymax=ymin;
-    float xx, yy;
+    Dscalar xx, yy;
     for(int ii=0;ii < nV;++ii)
         {
         xx=sortmap[ii].first.x;
@@ -133,7 +132,7 @@ void DelaunayNP::naiveBowyerWatson()
     ntri = 1;
 
     //begin loop to insert each vertex into the triangulation
-    float xp, yp;
+    Dscalar xp, yp;
     for(int ii = 0; ii < nV; ++ii)
         {
         xp = sortmap[ii].first.x;
@@ -243,14 +242,14 @@ void DelaunayNP::testDel(int numpts, int tmax,bool verbose)
     {
     cout << "Timing the base, non-periodic routine..." << endl;
     nV = numpts;
-    float boxa = sqrt(numpts)+1.0;
-    vector<float> ps2(2*numpts);
-    float maxx = 0.0;
+    Dscalar boxa = sqrt(numpts)+1.0;
+    vector<Dscalar> ps2(2*numpts);
+    Dscalar maxx = 0.0;
     int randmax = 1000000;
     for (int i=0;i<numpts;++i)
         {
-        float x =EPSILON+boxa/(float)randmax* (float)(rand()%randmax);
-        float y =EPSILON+boxa/(float)randmax* (float)(rand()%randmax);
+        Dscalar x =EPSILON+boxa/(Dscalar)randmax* (Dscalar)(rand()%randmax);
+        Dscalar y =EPSILON+boxa/(Dscalar)randmax* (Dscalar)(rand()%randmax);
         ps2[i*2]=x;
         ps2[i*2+1]=y;
         };
@@ -266,7 +265,7 @@ void DelaunayNP::testDel(int numpts, int tmax,bool verbose)
         };
 
     tstop=clock();
-    dbl timing = (tstop-tstart)/(dbl)CLOCKS_PER_SEC/(dbl)tmax;
+    Dscalar timing = (tstop-tstart)/(Dscalar)CLOCKS_PER_SEC/(Dscalar)tmax;
     cout << "average time per complete triangulation = " << timing<< endl;
 
     };

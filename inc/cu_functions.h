@@ -6,14 +6,15 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
+#include "std_include.h"
 
-HOSTDEVICE void Circumcenter(float2 x1, float2 x2, float2 x3, float2 &xc)
+HOSTDEVICE void Circumcenter(Dscalar2 x1, Dscalar2 x2, Dscalar2 x3, Dscalar2 &xc)
     {
     //Given coordinates (x1,y1),(x2,y2),(x3,y3), feeds the circumcenter to (xc,yc) along with the
     //circumcircle's radius, r.
     //returns false if all three points are on a vertical line
     if(abs(x2.y-x1.y) < EPSILON && abs(x2.y-x3.y) < EPSILON) return;
-    float m1,m2,mx1,my1,mx2,my2;
+    Dscalar m1,m2,mx1,my1,mx2,my2;
 
     if(abs(x2.y-x1.y) < EPSILON)
         {
@@ -43,14 +44,14 @@ HOSTDEVICE void Circumcenter(float2 x1, float2 x2, float2 x3, float2 &xc)
     return;
     };
 
-__device__ inline void Circumcircle(float x1, float y1, float x2, float y2, float x3, float y3,
-                  float &xc, float &yc, float &r)
+__device__ inline void Circumcircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dscalar x3, Dscalar y3,
+                  Dscalar &xc, Dscalar &yc, Dscalar &r)
     {
     //Given coordinates (x1,y1),(x2,y2),(x3,y3), feeds the circumcenter to (xc,yc) along with the
     //circumcircle's radius, r.
     //returns false if all three points are on a vertical line
     if(abs(y2-y1) < EPSILON && abs(y2-y3) < EPSILON) return;
-    float m1,m2,mx1,my1,mx2,my2,dx,dy;
+    Dscalar m1,m2,mx1,my1,mx2,my2,dx,dy;
 
     if(abs(y2-y1) < EPSILON)
         {
@@ -83,17 +84,17 @@ __device__ inline void Circumcircle(float x1, float y1, float x2, float y2, floa
     return;
     };
 
-HOSTDEVICE float dot(float2 p1,float2 p2)
+HOSTDEVICE Dscalar dot(Dscalar2 p1,Dscalar2 p2)
     {
     return p1.x*p2.x+p1.y*p2.y;
     };
 
-__device__ inline float norm(float2 p)
+__device__ inline Dscalar norm(Dscalar2 p)
     {
     return sqrt(p.x*p.x+p.y*p.y);
     };
 
-__device__ inline int quadrant(float x, float y)
+__device__ inline int quadrant(Dscalar x, Dscalar y)
     {
     if(x>=0)
         {
@@ -110,7 +111,7 @@ __device__ inline int quadrant(float x, float y)
     };
 
 //calculate the area of a triangle with a vertex at the origin
-HOSTDEVICE float TriangleArea(float2 p1, float2 p2)
+HOSTDEVICE Dscalar TriangleArea(Dscalar2 p1, Dscalar2 p2)
     {
     return abs(0.5*(p1.x*p2.y-p1.y*p2.x));
     };

@@ -3,8 +3,8 @@
 
 #define NVCC
 #define ENABLE_CUDA
-#define EPSILON 1e-12
-#define THRESHOLD 1e-8
+#define EPSILON 1e-16
+#define THRESHOLD 1e-10
 
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
@@ -27,8 +27,8 @@ __global__ void init_curand_kernel(unsigned long seed, curandState *state)
     };
 */
 
-__global__ void gpu_sum_forces_kernel(float2 *d_forceSets,
-                                      float2 *d_forces,
+__global__ void gpu_sum_forces_kernel(Dscalar2 *d_forceSets,
+                                      Dscalar2 *d_forces,
                                       int    *d_nn,
                                       int     N,
                                       Index2D n_idx
@@ -40,11 +40,11 @@ __global__ void gpu_sum_forces_kernel(float2 *d_forceSets,
         return;
 
     int neigh = d_nn[idx];
-    float2 temp;
+    Dscalar2 temp;
     temp.x=0.0;temp.y=0.0;
     for (int nn = 0; nn < neigh; ++nn)
         {
-        float2 val = d_forceSets[n_idx(nn,idx)];
+        Dscalar2 val = d_forceSets[n_idx(nn,idx)];
         temp.x+=val.x;
         temp.y+=val.y;
         };
@@ -53,9 +53,9 @@ __global__ void gpu_sum_forces_kernel(float2 *d_forceSets,
 
     };
 
-__global__ void gpu_sum_forces_with_exclusions_kernel(float2 *d_forceSets,
-                                      float2 *d_forces,
-                                      float2 *d_external_forces,
+__global__ void gpu_sum_forces_with_exclusions_kernel(Dscalar2 *d_forceSets,
+                                      Dscalar2 *d_forces,
+                                      Dscalar2 *d_external_forces,
                                       int    *d_exes,
                                       int    *d_nn,
                                       int     N,
@@ -68,36 +68,36 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(float2 *d_forceSets,
         return;
 
     int neigh = d_nn[idx];
-    float2 temp;
+    Dscalar2 temp;
     temp.x=0.0;temp.y=0.0;
     for (int nn = 0; nn < neigh; ++nn)
         {
-        float2 val = d_forceSets[n_idx(nn,idx)];
+        Dscalar2 val = d_forceSets[n_idx(nn,idx)];
         temp.x+=val.x;
         temp.y+=val.y;
         };
     if (d_exes[idx] ==0)
         {
         d_forces[idx]=temp;
-        d_external_forces[idx] = make_float2(0.0,0.0);
+        d_external_forces[idx] = make_Dscalar2(0.0,0.0);
         }
     else
         {
-        d_forces[idx]=make_float2(0.0,0.0);
-        d_external_forces[idx] = make_float2(-temp.x,-temp.y);
+        d_forces[idx]=make_Dscalar2(0.0,0.0);
+        d_external_forces[idx] = make_Dscalar2(-temp.x,-temp.y);
         };
 
     };
 
-__global__ void gpu_force_sets_kernel(float2      *d_points,
+__global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
                                           int     *d_nn,
-                                          float2  *d_AP,
-                                          float2  *d_APpref,
+                                          Dscalar2  *d_AP,
+                                          Dscalar2  *d_APpref,
                                           int4    *d_delSets,
                                           int     *d_delOther,
-                                          float2  *d_forceSets,
-                                          float   KA,
-                                          float   KP,
+                                          Dscalar2  *d_forceSets,
+                                          Dscalar   KA,
+                                          Dscalar   KP,
                                           int     computations,
                                           int     neighMax,
                                           Index2D n_idx,
@@ -116,7 +116,7 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     if(nn >=pNeighbors)
         return;
     //Great...access the four Delaunay neighbors and the relevant fifth point
-    float2 pi, pnm2,rij, rik,pn2,pno;
+    Dscalar2 pi, pnm2,rij, rik,pn2,pno;
     int4 neighs;
     pi   = d_points[pidx];
 
@@ -132,14 +132,14 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     //pnm1 is rij, pn1 is rik
     Matrix2x2 dhdr;
     Matrix2x2 Id;
-    float2 rjk;
+    Dscalar2 rjk;
     rjk.x =rik.x-rij.x;
     rjk.y =rik.y-rij.y;
-    float2 dbDdri,dgDdri,dDdriOD,z;
-    float betaD = -dot(rik,rik)*dot(rij,rjk);
-    float gammaD = dot(rij,rij)*dot(rik,rjk);
-    float cp = rij.x*rjk.y - rij.y*rjk.x;
-    float D = 2*cp*cp;
+    Dscalar2 dbDdri,dgDdri,dDdriOD,z;
+    Dscalar betaD = -dot(rik,rik)*dot(rij,rjk);
+    Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
+    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
+    Dscalar D = 2*cp*cp;
     z.x = betaD*rij.x+gammaD*rik.x;
     z.y = betaD*rij.y+gammaD*rik.y;
 
@@ -157,19 +157,19 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
 
 
     //finally, compute all of the forces
-    float2 origin; origin.x = 0.0;origin.y=0.0;
-    float2 vlast,vcur,vnext,vother;
+    Dscalar2 origin; origin.x = 0.0;origin.y=0.0;
+    Dscalar2 vlast,vcur,vnext,vother;
     Circumcenter(origin,pnm2,rij,vlast);
     Circumcenter(origin,rij,rik,vcur);
     Circumcenter(origin,rik,pn2,vnext);
     Circumcenter(rij,rik,pno,vother);
 
 
-    float2 dAdv,dPdv;
-    float2 dEdv;
-    float  Adiff, Pdiff;
-    float2 dlast, dnext;
-    float  dlnorm,dnnorm;
+    Dscalar2 dAdv,dPdv;
+    Dscalar2 dEdv;
+    Dscalar  Adiff, Pdiff;
+    Dscalar2 dlast, dnext;
+    Dscalar  dlnorm,dnnorm;
 
     //self terms
     dAdv.x = 0.5*(vlast.y-vnext.y);
@@ -239,17 +239,17 @@ __global__ void gpu_force_sets_kernel(float2      *d_points,
     return;
     };
 
-__global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
+__global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
                                           int     *d_nn,
-                                          float2  *d_AP,
-                                          float2  *d_APpref,
+                                          Dscalar2  *d_AP,
+                                          Dscalar2  *d_APpref,
                                           int4    *d_delSets,
                                           int     *d_delOther,
-                                          float2  *d_forceSets,
+                                          Dscalar2  *d_forceSets,
                                           int     *d_cellTypes,
-                                          float   KA,
-                                          float   KP,
-                                          float   gamma,
+                                          Dscalar   KA,
+                                          Dscalar   KP,
+                                          Dscalar   gamma,
                                           int     computations,
                                           int     neighMax,
                                           Index2D n_idx,
@@ -269,11 +269,11 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
     if(nn >=pNeighbors)
         return;
     //Great...access the four Delaunay neighbors and the relevant fifth point
-    float2 pi   = d_points[pidx];
+    Dscalar2 pi   = d_points[pidx];
 
     int4 neighs = d_delSets[n_idx(nn,pidx)];
     int neighOther = d_delOther[n_idx(nn,pidx)];
-    float2 pnm2,rij, rik,pn2,pno;
+    Dscalar2 pnm2,rij, rik,pn2,pno;
 
     Box.minDist(d_points[neighs.x],pi,pnm2);
     Box.minDist(d_points[neighs.y],pi,rij);
@@ -285,14 +285,14 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
     //pnm1 is rij, pn1 is rik
     Matrix2x2 dhdr;
     Matrix2x2 Id;
-    float2 rjk;
+    Dscalar2 rjk;
     rjk.x =rik.x-rij.x;
     rjk.y =rik.y-rij.y;
-    float2 dbDdri,dgDdri,dDdriOD,z;
-    float betaD = -dot(rik,rik)*dot(rij,rjk);
-    float gammaD = dot(rij,rij)*dot(rik,rjk);
-    float cp = rij.x*rjk.y - rij.y*rjk.x;
-    float D = 2*cp*cp;
+    Dscalar2 dbDdri,dgDdri,dDdriOD,z;
+    Dscalar betaD = -dot(rik,rik)*dot(rij,rjk);
+    Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
+    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
+    Dscalar D = 2*cp*cp;
     z.x = betaD*rij.x+gammaD*rik.x;
     z.y = betaD*rij.y+gammaD*rik.y;
 
@@ -310,19 +310,19 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
 
 
     //finally, compute all of the forces
-    float2 origin; origin.x = 0.0;origin.y=0.0;
-    float2 vlast,vcur,vnext,vother;
+    Dscalar2 origin; origin.x = 0.0;origin.y=0.0;
+    Dscalar2 vlast,vcur,vnext,vother;
     Circumcenter(origin,pnm2,rij,vlast);
     Circumcenter(origin,rij,rik,vcur);
     Circumcenter(origin,rik,pn2,vnext);
     Circumcenter(rij,rik,pno,vother);
 
 
-    float2 dAdv,dPdv,dTdv;
-    float2 dEdv;
-    float  Adiff, Pdiff;
-    float2 dlast, dnext;
-    float  dlnorm,dnnorm;
+    Dscalar2 dAdv,dPdv,dTdv;
+    Dscalar2 dEdv;
+    Dscalar  Adiff, Pdiff;
+    Dscalar2 dlast, dnext;
+    Dscalar  dlnorm,dnnorm;
     bool Tik = false;
     bool Tij = false;
     bool Tjk = false;
@@ -436,8 +436,8 @@ __global__ void gpu_force_sets_tensions_kernel(float2      *d_points,
 
 
 
-__global__ void gpu_compute_geometry_kernel(float2 *d_points,
-                                          float2 *d_AP,
+__global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
+                                          Dscalar2 *d_AP,
                                           int *d_nn,
                                           int *d_n,
                                           int N,
@@ -450,12 +450,12 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
     if (idx >= N)
         return;
 
-    float2 circumcenter, origin, nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
+    Dscalar2 circumcenter, origin, nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
     origin.x=0.0;origin.y=0.0;
 
     int neigh = d_nn[idx];
-    float Varea = 0.0;
-    float Vperi= 0.0;
+    Dscalar Varea = 0.0;
+    Dscalar Vperi= 0.0;
 
     pi = d_points[idx];
     nlastp = d_points[ d_n[n_idx(neigh-1,idx)] ];
@@ -477,14 +477,14 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
         vnext = circumcenter;
 
         Varea += TriangleArea(vlast,vnext);
-        float dx = vlast.x - vnext.x;
-        float dy = vlast.y - vnext.y;
+        Dscalar dx = vlast.x - vnext.x;
+        Dscalar dy = vlast.y - vnext.y;
         Vperi += sqrt(dx*dx+dy*dy);
         vlast=vnext;
         };
     Varea += TriangleArea(vlast,vfirst);
-    float dx = vlast.x - vfirst.x;
-    float dy = vlast.y - vfirst.y;
+    Dscalar dx = vlast.x - vfirst.x;
+    Dscalar dy = vlast.y - vfirst.y;
     Vperi += sqrt(dx*dx+dy*dy);
 
     d_AP[idx].x=Varea;
@@ -495,12 +495,12 @@ __global__ void gpu_compute_geometry_kernel(float2 *d_points,
 
 
 
-__global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
-                                          float2 *d_force,
-                                          float *d_directors,
-                                          float2 *d_motility,
+__global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
+                                          Dscalar2 *d_force,
+                                          Dscalar *d_directors,
+                                          Dscalar2 *d_motility,
                                           int N,
-                                          float dt,
+                                          Dscalar dt,
                                           int seed,
 //                                          curandState *states,
                                           gpubox Box
@@ -518,18 +518,18 @@ __global__ void gpu_displace_and_rotate_kernel(float2 *d_points,
                 0,   //offset. advance by sequence by 1 plus this value
                 &randState);
 
-    float dirx = cosf(d_directors[idx]);
-    float diry = sinf(d_directors[idx]);
-    //float angleDiff = curand_normal(&states[idx])*sqrt(2.0*dt*Dr);
-    float v0 = d_motility[idx].x;
-    float Dr = d_motility[idx].y;
-    float angleDiff = curand_normal(&randState)*sqrt(2.0*dt*Dr);
+    Dscalar dirx = cosf(d_directors[idx]);
+    Dscalar diry = sinf(d_directors[idx]);
+    //Dscalar angleDiff = curand_normal(&states[idx])*sqrt(2.0*dt*Dr);
+    Dscalar v0 = d_motility[idx].x;
+    Dscalar Dr = d_motility[idx].y;
+    Dscalar angleDiff = curand_normal(&randState)*sqrt(2.0*dt*Dr);
 //    printf("%f\n",angleDiff);
     d_directors[idx] += angleDiff;
 
- //   float dx = dt*(v0*dirx + d_force[idx].x);
+ //   Dscalar dx = dt*(v0*dirx + d_force[idx].x);
 //if (idx == 0) printf("x-displacement = %e\n",dx);
-//    float f = dt*(v0*dirx + d_force[idx].x);
+//    Dscalar f = dt*(v0*dirx + d_force[idx].x);
     d_points[idx].x += dt*(v0*dirx + d_force[idx].x);
 //    d_displacements[idx].x = f;
 //printf("%e\t", dt*(v0*dirx + d_force[idx].x));
@@ -564,8 +564,8 @@ bool gpu_init_curand(curandState *states,
 */
 
 
-bool gpu_compute_geometry(float2 *d_points,
-                        float2   *d_AP,
+bool gpu_compute_geometry(Dscalar2 *d_points,
+                        Dscalar2   *d_AP,
                         int      *d_nn,
                         int      *d_n,
                         int      N,
@@ -596,12 +596,12 @@ bool gpu_compute_geometry(float2 *d_points,
     };
 
 
-bool gpu_displace_and_rotate(float2 *d_points,
-                        float2 *d_force,
-                        float  *d_directors,
-                        float2 *d_motility,
+bool gpu_displace_and_rotate(Dscalar2 *d_points,
+                        Dscalar2 *d_force,
+                        Dscalar  *d_directors,
+                        Dscalar2 *d_motility,
                         int N,
-                        float dt,
+                        Dscalar dt,
                         int timestep,
   //                      curandState *states,
                         gpubox &Box
@@ -630,15 +630,15 @@ bool gpu_displace_and_rotate(float2 *d_points,
     return cudaSuccess;
     };
 
-bool gpu_force_sets(float2 *d_points,
+bool gpu_force_sets(Dscalar2 *d_points,
                     int    *d_nn,
-                    float2 *d_AP,
-                    float2 *d_APpref,
+                    Dscalar2 *d_AP,
+                    Dscalar2 *d_APpref,
                     int4   *d_delSets,
                     int    *d_delOther,
-                    float2 *d_forceSets,
-                    float  KA,
-                    float  KP,
+                    Dscalar2 *d_forceSets,
+                    Dscalar  KA,
+                    Dscalar  KP,
                     int    N,
                     int    neighMax,
                     Index2D &n_idx,
@@ -677,17 +677,17 @@ bool gpu_force_sets(float2 *d_points,
 
 
 
-bool gpu_force_sets_tensions(float2 *d_points,
+bool gpu_force_sets_tensions(Dscalar2 *d_points,
                     int    *d_nn,
-                    float2 *d_AP,
-                    float2 *d_APpref,
+                    Dscalar2 *d_AP,
+                    Dscalar2 *d_APpref,
                     int4   *d_delSets,
                     int    *d_delOther,
-                    float2 *d_forceSets,
+                    Dscalar2 *d_forceSets,
                     int    *d_cellTypes,
-                    float  KA,
-                    float  KP,
-                    float  gamma,
+                    Dscalar  KA,
+                    Dscalar  KP,
+                    Dscalar  gamma,
                     int    N,
                     int    neighMax,
                     Index2D &n_idx,
@@ -726,8 +726,8 @@ bool gpu_force_sets_tensions(float2 *d_points,
     };
 
 bool gpu_sum_force_sets(
-                        float2 *d_forceSets,
-                        float2 *d_forces,
+                        Dscalar2 *d_forceSets,
+                        Dscalar2 *d_forces,
                         int    *d_nn,
                         int     N,
                         Index2D &n_idx
@@ -752,9 +752,9 @@ bool gpu_sum_force_sets(
 
 
 bool gpu_sum_force_sets_with_exclusions(
-                        float2 *d_forceSets,
-                        float2 *d_forces,
-                        float2 *d_external_forces,
+                        Dscalar2 *d_forceSets,
+                        Dscalar2 *d_forces,
+                        Dscalar2 *d_external_forces,
                         int    *d_exes,
                         int    *d_nn,
                         int     N,

@@ -2,12 +2,10 @@
 #define DATABASE_H
 
 
+#include "std_include.h"
 #include <netcdfcpp.h>
 #include <string>
 #include "vector_types.h"
-//#include "DelaunayMD.h"
-
-
 
 
 using namespace std;
@@ -63,7 +61,7 @@ public:
     void SetCurrentRec(int r);
     int  GetCurrentRec();
 
-    void WriteState(STATE &c, float time = -1.0, int rec=-1);
+    void WriteState(STATE &c, Dscalar time = -1.0, int rec=-1);
     void ReadState(STATE &c, int rec);
     void ReadNextState(STATE &c);
 };
@@ -146,34 +144,34 @@ int SPVDatabase::GetCurrentRec()
     return Current;
 }
 
-void SPVDatabase::WriteState(STATE &s, float time, int rec)
+void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
 {
     if(rec<0)   rec = recDim->size();
     if (time < 0) time = s.Timestep*s.deltaT;
 
-    std::vector<float> boxdat(4,0.0);
-    float x11,x12,x21,x22;
+    std::vector<Dscalar> boxdat(4,0.0);
+    Dscalar x11,x12,x21,x22;
     s.Box.getBoxDims(x11,x12,x21,x22);
     boxdat[0]=x11;
     boxdat[1]=x12;
     boxdat[2]=x21;
     boxdat[3]=x22;
 
-    std::vector<float> posdat(2*Nv);
-    std::vector<float> directordat(Nv);
+    std::vector<Dscalar> posdat(2*Nv);
+    std::vector<Dscalar> directordat(Nv);
     std::vector<int> typedat(Nv);
     int idx = 0;
-    float means0=0.0;
+    Dscalar means0=0.0;
 
-    ArrayHandle<float2> h_p(s.points,access_location::host,access_mode::read);
-    ArrayHandle<float> h_cd(s.cellDirectors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_p(s.points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> h_cd(s.cellDirectors,access_location::host,access_mode::read);
     ArrayHandle<int> h_ct(s.CellType,access_location::host,access_mode::read);
     ArrayHandle<int> h_ex(s.exclusions,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Nv; ++ii)
         {
-        float px = h_p.data[ii].x;
-        float py = h_p.data[ii].y;
+        Dscalar px = h_p.data[ii].x;
+        Dscalar py = h_p.data[ii].y;
         posdat[(2*idx)] = px;
         posdat[(2*idx)+1] = py;
         directordat[ii] = h_cd.data[ii];
@@ -195,13 +193,13 @@ void SPVDatabase::WriteState(STATE &s, float time, int rec)
     BoxMatrixVar->put_rec(&boxdat[0],     rec);
     if(exclusions)
         {
-        ArrayHandle<float2> h_ef(s.external_forces,access_location::host,access_mode::read);
-        std::vector<float> exdat(2*Nv);
+        ArrayHandle<Dscalar2> h_ef(s.external_forces,access_location::host,access_mode::read);
+        std::vector<Dscalar> exdat(2*Nv);
         int id = 0;
         for (int ii = 0; ii < Nv; ++ii)
             {
-            float px = h_ef.data[ii].x;
-            float py = h_ef.data[ii].y;
+            Dscalar px = h_ef.data[ii].x;
+            Dscalar py = h_ef.data[ii].y;
             exdat[(2*id)] = px;
             exdat[(2*id)+1] = py;
             id +=1;
@@ -228,7 +226,7 @@ void SPVDatabase::ReadState(STATE &t, int rec)
     std::vector<double> posdata(2*Nv,0.0);
     posVar->get(&posdata[0],1, dofDim->size());
     int idx = 0;
-    ArrayHandle<float2> h_p(t.points,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_p(t.points,access_location::host,access_mode::overwrite);
     for (int idx = 0; idx < Nv; ++idx)
         {
         double px = posdata[(2*idx)];

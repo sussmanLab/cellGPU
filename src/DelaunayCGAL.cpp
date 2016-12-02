@@ -13,11 +13,11 @@ void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> 
     int size = points.size()/2;
     //vector<LPoint> V(size);
     vector<pair<LPoint,int> > V(size);
-    float max = 0.0;
+    Dscalar max = 0.0;
     for (int ii = 0; ii < size;++ii)
         {
-        float valx = points[2*ii];
-        float valy = points[2*ii+1];
+        Dscalar valx = points[2*ii];
+        Dscalar valy = points[2*ii+1];
     //    if (fabs(valx)> max)
     //        max = fabs(valx);
     //    if (fabs(valy)> max)
@@ -54,8 +54,8 @@ void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> 
 
     };
 
-//void DelaunayCGAL::PeriodicTriangulation(vector<Point> &V, float size)
-void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, float size)
+//void DelaunayCGAL::PeriodicTriangulation(vector<Point> &V, Dscalar size)
+void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, Dscalar size)
     {
     int vnum = V.size();
 
