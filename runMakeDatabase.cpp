@@ -24,9 +24,6 @@
 #include "box.h"
 #include "Delaunay1.h"
 #include "DelaunayLoc.h"
-#include "DelaunayTri.h"
-
-//#include "DelaunayCGAL.h"
 
 #define ENABLE_CUDA
 
@@ -35,7 +32,6 @@
 #include "gpuarray.h"
 #include "gpucell.h"
 
-#include "DelaunayCheckGPU.h"
 #include "DelaunayMD.h"
 #include "spv2d.h"
 
@@ -43,7 +39,6 @@
 #include "Database.h"
 
 using namespace std;
-using namespace voroguppy;
 
 
 bool chooseGPU(int USE_GPU,bool verbose = false)

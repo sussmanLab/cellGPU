@@ -132,6 +132,8 @@ void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
 void SPV2D::setv0Dr(Dscalar v0new,Dscalar drnew)
     {
     Motility.resize(N);
+    v0=v0new;
+    Dr=drnew;
     if (true)
         {
         ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
@@ -1175,5 +1177,9 @@ void SPV2D::deltaAngle()
     printf("timestep, dA^2 = (%i,%f)\n",Timestep,dA);
 
 
+    };
+void SPV2D::reportCellInfo()
+    {
+    printf("N=%i\tv0=%f\tDr=%f\tgamma=%f\n",N,v0,Dr,gamma);
     };
 

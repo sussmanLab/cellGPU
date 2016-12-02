@@ -28,7 +28,7 @@ CFLAGS += $(COMMONFLAGS) -frounding-math
 #target rules
 all:build
 
-build: delGPU.out
+build: delGPU.out ellipse.out plates.out database.out
 
 PROG_OBJS= obj/runellipse.o obj/voroguppy.o obj/runplates.o obj/runMakeDatabase.o
 
@@ -94,6 +94,9 @@ delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS)
 
 run: build
 	./delGPU.out
+	./plates.out
+	./ellipse.out
+	./database.out
 
 clean:
 	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) delGPU.out

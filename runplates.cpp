@@ -23,11 +23,8 @@
 #include "box.h"
 #include "Delaunay1.h"
 #include "DelaunayLoc.h"
-#include "DelaunayTri.h"
 
-//#include "DelaunayCGAL.h"
 
-//comment this definition out to compile on cuda-free systems
 #define ENABLE_CUDA
 
 #include "Matrix.h"
@@ -35,7 +32,6 @@
 #include "gpuarray.h"
 #include "gpucell.h"
 
-#include "DelaunayCheckGPU.h"
 #include "DelaunayMD.h"
 #include "spv2d.h"
 
@@ -43,7 +39,6 @@
 #include "Database.h"
 
 using namespace std;
-using namespace voroguppy;
 
 
 bool chooseGPU(int USE_GPU,bool verbose = false)
@@ -74,7 +69,7 @@ bool chooseGPU(int USE_GPU,bool verbose = false)
         {
         cudaDeviceProp prop;
         cudaGetDeviceProperties(&prop,USE_GPU);
-        cout << "using " << prop.name << "\t ClockRate = " << prop.memoryClockRate << " memBusWidth = " << prop.memoryBusWidth << endl << endl;
+        cout << "using " << prop.name << "\t ClockRate = " << prop.memoryClockRate << " memBusWidth = " << prop.memoryBusWidth << endl;
         };
     return true;
     };
@@ -93,6 +88,7 @@ int main(int argc, char*argv[])
     Dscalar dt = 0.1;
     Dscalar p0 = 4.0;
     Dscalar a0 = 1.0;
+    Dscalar Dr = 1.0;
     Dscalar v0 = 0.1;
     Dscalar gamma = 0.0;
 
@@ -107,6 +103,7 @@ int main(int argc, char*argv[])
             case 'i': initSteps = atoi(optarg); break;
             case 'z': program_switch = atoi(optarg); break;
             case 'e': dt = atof(optarg); break;
+            case 'd': Dr = atof(optarg); break;
             case 's': gamma = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
@@ -138,7 +135,7 @@ int main(int argc, char*argv[])
     SPV2D spv(numpts,1.0,p0);
 
     spv.setCellPreferencesUniform(1.0,p0);
-    spv.setv0Dr(v0,1.0);
+    spv.setv0Dr(v0,Dr);
     spv.setDeltaT(dt);
 
 
@@ -147,12 +144,11 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
 
-    printf("Finished with initialization\n");
-
     printf("Setting cells within the central circle to different type, adding plates...\n");
     spv.setCellTypeEllipse(0.25,1.0);
     spv.setUseTension(true);
     spv.setTension(gamma);
+    spv.reportCellInfo();
     Dscalar boxL = sqrt(numpts);
 
     Dscalar delta = (4.5*boxL/5.5 -3.*boxL/4.0)/(Dscalar)tSteps;
@@ -217,16 +213,9 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
     t2=clock();
-    
-    
+
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
-    cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl;
-    cout << "current q = " << spv.reportq() << endl;
-    spv.meanForce();
-
-    cout << endl << "force time  = " << spv.forcetiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
-    cout << "other time  = " << spv.triangletiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
-
+    cout << "timestep ~ " << steptime << " per frame; " << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << endl << endl;
 
 
     return 0;
