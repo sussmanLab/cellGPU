@@ -322,8 +322,8 @@ void SPV2D::calculateDispCPU()
 
 void SPV2D::performTimestepCPU()
     {
-    clock_t t1,t2;
-    t1=clock();
+    //clock_t t1,t2;
+    //t1=clock();
     computeGeometryCPU();
     if(useTension)
         {
@@ -339,11 +339,11 @@ void SPV2D::performTimestepCPU()
     calculateDispCPU();
 
     movePointsCPU(displacements);
-    t2=clock();
-    forcetiming += t2-t1;
-    t1=clock();
+    //t2=clock();
+    //forcetiming += t2-t1;
+    //t1=clock();
     testAndRepairTriangulation();
-    t2=clock();
+    //t2=clock();
     triangletiming += t2-t1;
     };
 
