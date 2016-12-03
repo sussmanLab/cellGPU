@@ -117,6 +117,7 @@ int main(int argc, char*argv[])
 //    sprintf(dataname,"/hdd2/data/spv/test.nc");
 //    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
+
 //    cudaProfilerStart();
 
     SPV2D spv(numpts,1.0,p0);
