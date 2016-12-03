@@ -344,7 +344,7 @@ void SPV2D::performTimestepCPU()
     //t1=clock();
     testAndRepairTriangulation();
     //t2=clock();
-    triangletiming += t2-t1;
+    //triangletiming += t2-t1;
     };
 
 void SPV2D::performTimestepGPU()
