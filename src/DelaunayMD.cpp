@@ -468,9 +468,9 @@ void DelaunayMD::testTriangulation()
 void DelaunayMD::testTriangulationCPU()
     {
     Fails=0;
-    globalTriangulationCGAL();
-    skippedFrames -= 1;
-    /*
+    //globalTriangulationCGAL();
+    //skippedFrames -= 1;
+    
     resetDelLocPoints();
 
 
@@ -481,6 +481,7 @@ void DelaunayMD::testTriangulationCPU()
     Fails = 0;
     for (int nn = 0; nn < N; ++nn)
         {
+        h_repair.data[nn] = 0;
         vector<int> neighbors;
         for (int ii = 0; ii < neighnum.data[nn];++ii)
                 {
@@ -489,9 +490,13 @@ void DelaunayMD::testTriangulationCPU()
                 };
 
         bool good = delLoc.testPointTriangulation(nn,neighbors,false);
-        if(!good) Fails=1;
+        if(!good)
+            {
+            h_repair.data[nn] = 1;
+            Fails=1;
+            };
         };
-    */
+
     };
 
 
