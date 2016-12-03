@@ -117,6 +117,8 @@ int main(int argc, char*argv[])
 //    sprintf(dataname,"/hdd2/data/spv/test.nc");
 //    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
+//    cudaProfilerStart();
+
     SPV2D spv(numpts,1.0,p0);
     if (USE_GPU < 0)
         spv.setCPU();
@@ -139,7 +141,6 @@ int main(int argc, char*argv[])
     spv.repPerFrame = 0.0;
 
     t1=clock();
-    //cudaProfilerStart();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 

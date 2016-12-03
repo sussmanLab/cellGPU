@@ -27,6 +27,11 @@ class DelaunayMD
         //neighbor lists
         GPUArray<int> neigh_num;
         GPUArray<int> neighs;
+
+        //an array that holds (particle, neighbor_number) info to avoid intra-warp divergence in force calculation?
+        GPUArray<int2> NeighIdxs;
+        int NeighIdxNum;
+
         Index2D n_idx;
         //circumcenter lists
         GPUArray<int3> circumcenters;
@@ -74,6 +79,7 @@ class DelaunayMD
         void reportCellList();
         void reportPos(int i);
         void touchPoints(){ArrayHandle<Dscalar2> h(points,access_location::host,access_mode::readwrite);};
+        void updateNeighIdxs();
 
         //only use the CPU:
         void setCPU(){GPUcompute = false;};

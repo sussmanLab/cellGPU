@@ -4,7 +4,7 @@
 #define NVCC
 #define ENABLE_CUDA
 #define EPSILON 1e-16
-#define THRESHOLD 1e-10
+#define THRESHOLD 1e-16
 
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
@@ -90,16 +90,15 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(Dscalar2 *d_forceSets,
     };
 
 __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
-                                          int     *d_nn,
                                           Dscalar2  *d_AP,
                                           Dscalar2  *d_APpref,
                                           int4    *d_delSets,
                                           int     *d_delOther,
                                           Dscalar2  *d_forceSets,
+                                          int2    *d_nidx,
                                           Dscalar   KA,
                                           Dscalar   KP,
                                           int     computations,
-                                          int     neighMax,
                                           Index2D n_idx,
                                           gpubox Box
                                         )
@@ -107,14 +106,11 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     unsigned int tidx = blockDim.x * blockIdx.x + threadIdx.x;
     if (tidx >= computations)
         return;
-    //which particle are we evaluating, and which neighbor
-    int pidx = tidx / neighMax;
-    int nn = tidx - pidx*neighMax;
-    //how many neighbors does it have?
-    int pNeighbors = d_nn[pidx];
 
-    if(nn >=pNeighbors)
-        return;
+    //which particle are we evaluating, and which neighbor
+    int pidx = d_nidx[tidx].x;
+    int nn = d_nidx[tidx].y;
+
     //Great...access the four Delaunay neighbors and the relevant fifth point
     Dscalar2 pi, pnm2,rij, rik,pn2,pno;
     int4 neighs;
@@ -240,18 +236,17 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     };
 
 __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
-                                          int     *d_nn,
                                           Dscalar2  *d_AP,
                                           Dscalar2  *d_APpref,
                                           int4    *d_delSets,
                                           int     *d_delOther,
                                           Dscalar2  *d_forceSets,
+                                          int2    *d_nidx,
                                           int     *d_cellTypes,
                                           Dscalar   KA,
                                           Dscalar   KP,
                                           Dscalar   gamma,
                                           int     computations,
-                                          int     neighMax,
                                           Index2D n_idx,
                                           gpubox Box
                                         )
@@ -261,13 +256,9 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
         return;
 
     //which particle are we evaluating, and which neighbor
-    int pidx = tidx / neighMax;
-    int nn = tidx - pidx*neighMax;
-    //how many neighbors does it have?
-    int pNeighbors = d_nn[pidx];
+    int pidx = d_nidx[tidx].x;
+    int nn = d_nidx[tidx].y;
 
-    if(nn >=pNeighbors)
-        return;
     //Great...access the four Delaunay neighbors and the relevant fifth point
     Dscalar2 pi   = d_points[pidx];
 
@@ -631,39 +622,36 @@ bool gpu_displace_and_rotate(Dscalar2 *d_points,
     };
 
 bool gpu_force_sets(Dscalar2 *d_points,
-                    int    *d_nn,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
                     int4   *d_delSets,
                     int    *d_delOther,
                     Dscalar2 *d_forceSets,
+                    int2   *d_nidx,
                     Dscalar  KA,
                     Dscalar  KP,
-                    int    N,
-                    int    neighMax,
+                    int    NeighIdxNum,
                     Index2D &n_idx,
                     gpubox &Box
                     )
     {
     cudaError_t code;
 
-    int computations = N*neighMax;
     unsigned int block_size = 128;
-    if (computations < 128) block_size = 32;
-    unsigned int nblocks  = computations/block_size + 1;
+    if (NeighIdxNum < 128) block_size = 32;
+    unsigned int nblocks  = NeighIdxNum/block_size + 1;
 
     gpu_force_sets_kernel<<<nblocks,block_size>>>(
                                                 d_points,
-                                                d_nn,
                                                 d_AP,
                                                 d_APpref,
                                                 d_delSets,
                                                 d_delOther,
                                                 d_forceSets,
+                                                d_nidx,
                                                 KA,
                                                 KP,
-                                                computations,
-                                                neighMax,
+                                                NeighIdxNum,
                                                 n_idx,
                                                 Box
                                                 );
@@ -678,43 +666,40 @@ bool gpu_force_sets(Dscalar2 *d_points,
 
 
 bool gpu_force_sets_tensions(Dscalar2 *d_points,
-                    int    *d_nn,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
                     int4   *d_delSets,
                     int    *d_delOther,
                     Dscalar2 *d_forceSets,
+                    int2   *d_nidx,
                     int    *d_cellTypes,
                     Dscalar  KA,
                     Dscalar  KP,
                     Dscalar  gamma,
-                    int    N,
-                    int    neighMax,
+                    int    NeighIdxNum,
                     Index2D &n_idx,
                     gpubox &Box
                     )
     {
     cudaError_t code;
 
-    int computations = N*neighMax;
     unsigned int block_size = 128;
-    if (computations < 128) block_size = 32;
-    unsigned int nblocks  = computations/block_size + 1;
+    if (NeighIdxNum < 128) block_size = 32;
+    unsigned int nblocks  = NeighIdxNum/block_size + 1;
 
     gpu_force_sets_tensions_kernel<<<nblocks,block_size>>>(
                                                 d_points,
-                                                d_nn,
                                                 d_AP,
                                                 d_APpref,
                                                 d_delSets,
                                                 d_delOther,
                                                 d_forceSets,
+                                                d_nidx,
                                                 d_cellTypes,
                                                 KA,
                                                 KP,
                                                 gamma,
-                                                computations,
-                                                neighMax,
+                                                NeighIdxNum,
                                                 n_idx,
                                                 Box
                                                 );

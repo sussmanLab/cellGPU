@@ -80,6 +80,7 @@ void DelaunayMD::initialize(int n)
 
     //set circumcenter array size
     circumcenters.resize(2*(N+10));
+    NeighIdxs.resize(6*(N+10));
 
     points.resize(N);
     pts.resize(N);
@@ -295,7 +296,7 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         neighMaxChange = true;
         };
 
-    //store data in gpuarray
+    //store data in gpuarrays
     {
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
 
@@ -308,9 +309,12 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
             ns.data[idxpos] = dcgal.allneighs[nn][ii];
             };
         };
+
     if(verbose)
         cout << "global new Nmax = " << nmax+1 << "; total neighbors = " << totaln << endl;cout.flush();
     };
+
+    updateNeighIdxs();
     getCircumcenterIndices(true);
 
     if(totaln != 6*N)
@@ -323,6 +327,27 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         throw std::exception();
         };
     };
+
+void DelaunayMD::updateNeighIdxs()
+    {
+    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
+    ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
+    ArrayHandle<int2> h_nidx(NeighIdxs,access_location::host,access_mode::overwrite);
+    int idx = 0;
+    for (int ii = 0; ii < N; ++ii)
+        {
+        int nmax = neighnum.data[ii];
+        for (int nn = 0; nn < nmax; ++nn)
+            {
+            h_nidx.data[idx].x = ii;
+            h_nidx.data[idx].y = nn;
+            idx+=1;
+            };
+        };
+    NeighIdxNum = idx;
+    };
+
+
 
 void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
     {
@@ -379,18 +404,13 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
 
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
 
-    //First, retriangulate the target points, and check if the neighbor list needs to be reset 
-    //(if neighMax changes)
-    //
-    //overwrite the first fixes elements of allneighs to save on vector costs, or something?
-//cout << "getting neighbors of points to fix..." << endl;
+    //First, retriangulate the target points, and check if the neighbor list needs to be reset
     vector<vector<int> > allneighs(fixes);
     bool resetCCidx = false;
     for (int ii = 0; ii < fixes; ++ii)
         {
         int pidx = fixlist[ii];
         vector<int> neighTemp;
-//        delLoc.getNeighborsTri(pidx,neighTemp);
         delLoc.getNeighborsCGAL(pidx,neighTemp);
         allneighs[ii]=neighTemp;
         if(neighTemp.size() > neighMax)
@@ -402,9 +422,8 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
             resetCCidx = true;
             };
         };
-    
+
     //if needed, regenerate the "neighs" structure...hopefully don't do this too much
-    //Also, think about occasionally shrinking the list if it is much too big?
     if(resetCCidx)
         {
         neighMaxChange = true;
@@ -420,16 +439,15 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         int pidx = fixlist[nn];
         int imax = allneighs[nn].size();
         neighnum.data[pidx] = imax;
-//        cout << " particle " << pidx << " neighs = " << imax << endl;
         for (int ii = 0; ii < imax; ++ii)
             {
             int idxpos = n_idx(ii,pidx);
             ns.data[idxpos] = allneighs[nn][ii];
-//            cout << ns.data[idxpos] << "    ";
             };
-//        cout << endl;
         };
-//cout << "about to get cc indices" << endl; cout.flush();
+
+    //finally, update the NeighIdx list and Circumcenter list
+    updateNeighIdxs();
     getCircumcenterIndices();
     };
 
@@ -468,9 +486,9 @@ void DelaunayMD::testTriangulation()
 void DelaunayMD::testTriangulationCPU()
     {
     Fails=0;
-    globalTriangulationCGAL();
-    skippedFrames -= 1;
-    /*
+    //globalTriangulationCGAL();
+    //skippedFrames -= 1;
+    
     resetDelLocPoints();
 
 
@@ -481,6 +499,7 @@ void DelaunayMD::testTriangulationCPU()
     Fails = 0;
     for (int nn = 0; nn < N; ++nn)
         {
+        h_repair.data[nn] = 0;
         vector<int> neighbors;
         for (int ii = 0; ii < neighnum.data[nn];++ii)
                 {
@@ -489,9 +508,13 @@ void DelaunayMD::testTriangulationCPU()
                 };
 
         bool good = delLoc.testPointTriangulation(nn,neighbors,false);
-        if(!good) Fails=1;
+        if(!good)
+            {
+            h_repair.data[nn] = 1;
+            Fails=1;
+            };
         };
-    */
+
     };
 
 

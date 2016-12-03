@@ -322,8 +322,8 @@ void SPV2D::calculateDispCPU()
 
 void SPV2D::performTimestepCPU()
     {
-    clock_t t1,t2;
-    t1=clock();
+    //clock_t t1,t2;
+    //t1=clock();
     computeGeometryCPU();
     if(useTension)
         {
@@ -339,12 +339,12 @@ void SPV2D::performTimestepCPU()
     calculateDispCPU();
 
     movePointsCPU(displacements);
-    t2=clock();
-    forcetiming += t2-t1;
-    t1=clock();
+    //t2=clock();
+    //forcetiming += t2-t1;
+    //t1=clock();
     testAndRepairTriangulation();
-    t2=clock();
-    triangletiming += t2-t1;
+    //t2=clock();
+    //triangletiming += t2-t1;
     };
 
 void SPV2D::performTimestepGPU()
@@ -456,39 +456,39 @@ void SPV2D::sumForceSetsWithExclusions()
 void SPV2D::computeSPVForceSetsGPU()
     {
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
-    ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
     ArrayHandle<int4> d_delSets(delSets,access_location::device,access_mode::read);
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
+    ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
 
 
     Dscalar KA = 1.0;
     Dscalar KP = 1.0;
     gpu_force_sets(
                     d_p.data,
-                    d_nn.data,
                     d_AP.data,
                     d_APpref.data,
                     d_delSets.data,
                     d_delOther.data,
                     d_forceSets.data,
+                    d_nidx.data,
                     KA,
                     KP,
-                    N,neighMax,n_idx,Box);
+                    NeighIdxNum,n_idx,Box);
     };
 
 
 void SPV2D::computeSPVForceSetsWithTensionsGPU()
     {
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
-    ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
     ArrayHandle<int4> d_delSets(delSets,access_location::device,access_mode::read);
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
+    ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
     ArrayHandle<int> d_ct(CellType,access_location::device,access_mode::read);
 
 
@@ -496,17 +496,17 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
     Dscalar KP = 1.0;
     gpu_force_sets_tensions(
                     d_p.data,
-                    d_nn.data,
                     d_AP.data,
                     d_APpref.data,
                     d_delSets.data,
                     d_delOther.data,
                     d_forceSets.data,
+                    d_nidx.data,
                     d_ct.data,
                     KA,
                     KP,
                     gamma,
-                    N,neighMax,n_idx,Box);
+                    NeighIdxNum,n_idx,Box);
 
 
     };
