@@ -27,6 +27,10 @@ class DelaunayMD
         //neighbor lists
         GPUArray<int> neigh_num;
         GPUArray<int> neighs;
+
+        //an array that holds (particle, neighbor_number) info to avoid intra-warp divergence in force calculation?
+        GPUArray<int2> NeighIdxs;
+
         Index2D n_idx;
         //circumcenter lists
         GPUArray<int3> circumcenters;
