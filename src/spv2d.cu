@@ -125,34 +125,11 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     Box.minDist(d_points[d_delOther[n_idx(nn,pidx)]],pi,pno);
 
     //first, compute the derivative of the main voro point w/r/t pidx's position
-    //pnm1 is rij, pn1 is rik
     Matrix2x2 dhdr;
-    Matrix2x2 Id;
-    Dscalar2 rjk;
-    rjk.x =rik.x-rij.x;
-    rjk.y =rik.y-rij.y;
-    Dscalar2 dbDdri,dgDdri,dDdriOD,z;
-    Dscalar betaD = -dot(rik,rik)*dot(rij,rjk);
-    Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
-    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
-    Dscalar D = 2*cp*cp;
-    z.x = betaD*rij.x+gammaD*rik.x;
-    z.y = betaD*rij.y+gammaD*rik.y;
-
-    dbDdri.x = 2*dot(rij,rjk)*rik.x+dot(rik,rik)*rjk.x;
-    dbDdri.y = 2*dot(rij,rjk)*rik.y+dot(rik,rik)*rjk.y;
-
-    dgDdri.x = -2*dot(rik,rjk)*rij.x-dot(rij,rij)*rjk.x;
-    dgDdri.y = -2*dot(rik,rjk)*rij.y-dot(rij,rij)*rjk.y;
-
-    dDdriOD.x = (-2.0*rjk.y)/cp;
-    dDdriOD.y = (2.0*rjk.x)/cp;
-
-    dhdr = Id+1.0/D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
-
-
+    getdhdr(dhdr,rij,rik);
 
     //finally, compute all of the forces
+    //pnm1 is rij, pn1 is rik
     Dscalar2 origin; origin.x = 0.0;origin.y=0.0;
     Dscalar2 vlast,vcur,vnext,vother;
     Circumcenter(origin,pnm2,rij,vlast);
@@ -273,34 +250,11 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
     Box.minDist(d_points[neighOther],pi,pno);
 
     //first, compute the derivative of the main voro point w/r/t pidx's position
-    //pnm1 is rij, pn1 is rik
     Matrix2x2 dhdr;
-    Matrix2x2 Id;
-    Dscalar2 rjk;
-    rjk.x =rik.x-rij.x;
-    rjk.y =rik.y-rij.y;
-    Dscalar2 dbDdri,dgDdri,dDdriOD,z;
-    Dscalar betaD = -dot(rik,rik)*dot(rij,rjk);
-    Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
-    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
-    Dscalar D = 2*cp*cp;
-    z.x = betaD*rij.x+gammaD*rik.x;
-    z.y = betaD*rij.y+gammaD*rik.y;
-
-    dbDdri.x = 2*dot(rij,rjk)*rik.x+dot(rik,rik)*rjk.x;
-    dbDdri.y = 2*dot(rij,rjk)*rik.y+dot(rik,rik)*rjk.y;
-
-    dgDdri.x = -2*dot(rik,rjk)*rij.x-dot(rij,rij)*rjk.x;
-    dgDdri.y = -2*dot(rik,rjk)*rij.y-dot(rij,rij)*rjk.y;
-
-    dDdriOD.x = (-2.0*rjk.y)/cp;
-    dDdriOD.y = (2.0*rjk.x)/cp;
-
-    dhdr = Id+1.0/D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
-
-
+    getdhdr(dhdr,rij,rik);
 
     //finally, compute all of the forces
+    //pnm1 is rij, pn1 is rik
     Dscalar2 origin; origin.x = 0.0;origin.y=0.0;
     Dscalar2 vlast,vcur,vnext,vother;
     Circumcenter(origin,pnm2,rij,vlast);

@@ -7,6 +7,7 @@
 #endif
 
 #include "std_include.h"
+#include "Matrix.h"
 
 HOSTDEVICE void Circumcenter(Dscalar2 x1, Dscalar2 x2, Dscalar2 x3, Dscalar2 &xc)
     {
@@ -115,5 +116,53 @@ HOSTDEVICE Dscalar TriangleArea(Dscalar2 p1, Dscalar2 p2)
     {
     return abs(0.5*(p1.x*p2.y-p1.y*p2.x));
     };
+
+//calculate matrix of derivatives
+HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,Dscalar2 &rij,Dscalar2 &rik)
+    {
+    Matrix2x2 Id;
+    dhdr=Id;
+
+    Dscalar2 rjk;
+    rjk.x =rik.x-rij.x;
+    rjk.y =rik.y-rij.y;
+
+    Dscalar rikDotrik=dot(rik,rik);
+    Dscalar rikDotrjk=dot(rik,rjk);
+    Dscalar rijDotrjk=dot(rij,rjk);
+    Dscalar rij2=dot(rij,rij);
+
+
+    Dscalar2 dDdriOD,z;
+    Dscalar betaD = -rikDotrik*rijDotrjk;
+    Dscalar gammaD = rij2*rikDotrjk;
+    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
+    //"D" is really 2*cp*cp
+    Dscalar D = 0.5/(cp*cp);
+    
+    z.x = betaD*rij.x+gammaD*rik.x;
+    z.y = betaD*rij.y+gammaD*rik.y;
+
+    dDdriOD.x = (-2.0*rjk.y)/cp;
+    dDdriOD.y = (2.0*rjk.x)/cp;
+    
+    dhdr -= D*((betaD+gammaD)*Id+dyad(z,dDdriOD));
+
+    //reuse dDdriOd, but here as dbDdri
+    dDdriOD.x = 2*rijDotrjk*rik.x+rikDotrik*rjk.x;
+    dDdriOD.y = 2*rijDotrjk*rik.y+rikDotrik*rjk.y;
+
+    dhdr += D*dyad(rij,dDdriOD);
+
+    //reuse dDdriOd, but here as dgDdri
+    dDdriOD.x = -2*rikDotrjk*rij.x-rij2*rjk.x;
+    dDdriOD.y = -2*rikDotrjk*rij.y-rij2*rjk.y;
+
+    dhdr += D*dyad(rik,dDdriOD);
+    //dhdr = Id+D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
+
+    return;
+    };
+
 
 #endif
