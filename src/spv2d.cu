@@ -130,11 +130,10 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
 
     //finally, compute all of the forces
     //pnm1 is rij, pn1 is rik
-    Dscalar2 origin; origin.x = 0.0;origin.y=0.0;
     Dscalar2 vlast,vcur,vnext,vother;
-    Circumcenter(origin,pnm2,rij,vlast);
-    Circumcenter(origin,rij,rik,vcur);
-    Circumcenter(origin,rik,pn2,vnext);
+    Circumcenter(pnm2,rij,vlast);
+    Circumcenter(rij,rik,vcur);
+    Circumcenter(rik,pn2,vnext);
     Circumcenter(rij,rik,pno,vother);
 
 
@@ -255,11 +254,11 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
 
     //finally, compute all of the forces
     //pnm1 is rij, pn1 is rik
-    Dscalar2 origin; origin.x = 0.0;origin.y=0.0;
     Dscalar2 vlast,vcur,vnext,vother;
-    Circumcenter(origin,pnm2,rij,vlast);
-    Circumcenter(origin,rij,rik,vcur);
-    Circumcenter(origin,rik,pn2,vnext);
+    //the first three can call the circumcenter function with one point being the origin
+    Circumcenter(pnm2,rij,vlast);
+    Circumcenter(rij,rik,vcur);
+    Circumcenter(rik,pn2,vnext);
     Circumcenter(rij,rik,pno,vother);
 
 
