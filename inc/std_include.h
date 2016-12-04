@@ -15,6 +15,11 @@
 #define Dscalar double
 #define Dscalar2 double2
 
+HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)
+    {
+    return a.x<b.x;
+    }
+
 HOSTDEVICE Dscalar2 make_Dscalar2(Dscalar x, Dscalar y)
     {
     Dscalar2 ans;

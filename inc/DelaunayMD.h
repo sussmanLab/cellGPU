@@ -8,6 +8,7 @@ using namespace std;
 #include "gpuarray.h"
 #include "gpucell.h"
 #include "indexer.h"
+#include "HilbertSort.h"
 
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
@@ -75,6 +76,7 @@ class DelaunayMD
 
         //utility functions
         void resetDelLocPoints();
+        void spatiallySortPoints();
         void updateCellList();
         void reportCellList();
         void reportPos(int i);

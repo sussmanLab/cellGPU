@@ -45,6 +45,28 @@ void DelaunayMD::randomizePositions(Dscalar boxx, Dscalar boxy)
         };
     };
 
+void DelaunayMD::spatiallySortPoints()
+    {
+    HilbertSorter hs(Box);
+
+    vector<pair<int,Dscalar2> > sorter(N);
+
+    ArrayHandle<Dscalar2> h_p(points,access_location::host, access_mode::readwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        sorter[ii].first = hs.getIdx(h_p.data[ii]);
+        sorter[ii].second = h_p.data[ii];
+        };
+
+    sort(sorter.begin(),sorter.end());
+
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_p.data[ii] = sorter[ii].second;
+        };
+
+    };
+
 void DelaunayMD::resetDelLocPoints()
     {
     ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
@@ -86,6 +108,7 @@ void DelaunayMD::initialize(int n)
     pts.resize(N);
     repair.resize(N);
     randomizePositions(boxsize,boxsize);
+    spatiallySortPoints();
 
     //cell list initialization
     celllist.setNp(N);
