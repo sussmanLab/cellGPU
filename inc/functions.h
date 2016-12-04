@@ -3,6 +3,7 @@
 
 #include "std_include.h"
 #include "structures.h"
+#include "cu_functions.h"
 
 using namespace std;
 
@@ -11,6 +12,31 @@ using namespace std;
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
+
+//the circumcenter of (x1,y1),(x2,y2), and the origin...
+HOSTDEVICE void CircumCenter(Dscalar x1,Dscalar y1,Dscalar x2,Dscalar y2, Dscalar &xc, Dscalar &yc)
+    {
+    Dscalar x1norm2,x2norm2,denominator;
+    x1norm2 = x1*x1 + y1*y1;
+    x2norm2 = x2*x2 + y2*y2;
+    denominator = 1/(2.0*Det2x2(x1,y1,x2,y2));
+
+    xc = denominator * Det2x2(x1norm2,y1,x2norm2,y2);
+    yc = denominator * Det2x2(x1,x1norm2,x2,x2norm2);
+    return;
+    };
+
+HOSTDEVICE bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2,
+                  Dscalar &xc, Dscalar &yc, Dscalar &r)
+    {
+    CircumCenter(x1,y1,x2,y2,xc,yc);
+    Dscalar dx = x1-xc;
+    Dscalar dy = y1-yc;
+    r = sqrt(dx*dx+dy*dy);
+    return true;
+    };
+
+
 
 HOSTDEVICE bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dscalar x3, Dscalar y3,
                   Dscalar &xc, Dscalar &yc, Dscalar &r)
