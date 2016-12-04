@@ -140,8 +140,8 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     Dscalar2 dAdv,dPdv;
     Dscalar2 dEdv;
     Dscalar  Adiff, Pdiff;
-    Dscalar2 dlast, dnext;
-    Dscalar  dlnorm,dnnorm;
+    Dscalar2 dlast, dnext,dcl,dnc;
+    Dscalar  dlnorm,dnnorm,dclnorm,dncnorm;
 
     //self terms
     dAdv.x = 0.5*(vlast.y-vnext.y);
@@ -156,6 +156,13 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
         dnnorm = THRESHOLD;
     if(dlnorm < THRESHOLD)
         dlnorm = THRESHOLD;
+    
+    //save a few of these differences for later...
+    dcl.x = -dlast.x;dcl.y = -dlast.y;
+    dnc.x=-dnext.x;dnc.y=-dnext.y;
+    dclnorm=dlnorm;
+    dncnorm=dnnorm;
+    
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[pidx].x - d_APpref[pidx].x);
@@ -167,18 +174,13 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     //other terms...k first...
     dAdv.x = 0.5*(vnext.y-vother.y);
     dAdv.y = 0.5*(vother.x-vnext.x);
-    dlast.x = vnext.x-vcur.x;
-    dlast.y=vnext.y-vcur.y;
-    dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
     dnext.x = vcur.x-vother.x;
     dnext.y = vcur.y-vother.y;
     dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
     if(dnnorm < THRESHOLD)
         dnnorm = THRESHOLD;
-    if(dlnorm < THRESHOLD)
-        dlnorm = THRESHOLD;
-    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dPdv.x = dnc.x/dncnorm - dnext.x/dnnorm;
+    dPdv.y = dnc.y/dncnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[neighs.z].x - d_APpref[neighs.z].x);
     Pdiff = KA*(d_AP[neighs.z].y - d_APpref[neighs.z].y);
 
@@ -188,18 +190,12 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     //...and then j
     dAdv.x = 0.5*(vother.y-vlast.y);
     dAdv.y = 0.5*(vlast.x-vother.x);
-    dlast.x = vother.x-vcur.x;
-    dlast.y=vother.y-vcur.y;
-    dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
-    dnext.x = vcur.x-vlast.x;
-    dnext.y = vcur.y-vlast.y;
-    dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-    if(dnnorm < THRESHOLD)
-        dnnorm = THRESHOLD;
-    if(dlnorm < THRESHOLD)
-        dlnorm = THRESHOLD;
-    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    //dlast is now -(dnext) from the K calculation
+    dlast.x = -dnext.x;
+    dlast.y = -dnext.y;
+    dlnorm = dnnorm;
+    dPdv.x = dlast.x/dlnorm - dcl.x/dclnorm;
+    dPdv.y = dlast.y/dlnorm - dcl.y/dclnorm;
     Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
     Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
 
@@ -265,8 +261,8 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
     Dscalar2 dAdv,dPdv,dTdv;
     Dscalar2 dEdv;
     Dscalar  Adiff, Pdiff;
-    Dscalar2 dlast, dnext;
-    Dscalar  dlnorm,dnnorm;
+    Dscalar2 dlast, dnext,dcl,dnc;
+    Dscalar  dlnorm,dnnorm,dclnorm,dncnorm;
     bool Tik = false;
     bool Tij = false;
     bool Tjk = false;
@@ -288,6 +284,13 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
         dnnorm = THRESHOLD;
     if(dlnorm < THRESHOLD)
         dlnorm = THRESHOLD;
+
+    //save a few of these differences for later...
+    dcl.x = -dlast.x;dcl.y = -dlast.y;
+    dnc.x=-dnext.x;dnc.y=-dnext.y;
+    dclnorm=dlnorm;
+    dncnorm=dnnorm;
+
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
     dTdv.x = 0.0; dTdv.y = 0.0;
@@ -311,25 +314,20 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
     //other terms...k first...
     dAdv.x = 0.5*(vnext.y-vother.y);
     dAdv.y = 0.5*(vother.x-vnext.x);
-    dlast.x = vnext.x-vcur.x;
-    dlast.y=vnext.y-vcur.y;
-    dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
     dnext.x = vcur.x-vother.x;
     dnext.y = vcur.y-vother.y;
     dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
     if(dnnorm < THRESHOLD)
         dnnorm = THRESHOLD;
-    if(dlnorm < THRESHOLD)
-        dlnorm = THRESHOLD;
-    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dPdv.x = dnc.x/dncnorm - dnext.x/dnnorm;
+    dPdv.y = dnc.y/dncnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[neighs.z].x - d_APpref[neighs.z].x);
     Pdiff = KA*(d_AP[neighs.z].y - d_APpref[neighs.z].y);
     dTdv.x = 0.0; dTdv.y = 0.0;
     if(Tik)
         {
-        dTdv.x += dlast.x/dlnorm;
-        dTdv.y += dlast.y/dlnorm;
+        dTdv.x += dnc.x/dncnorm;
+        dTdv.y += dnc.y/dncnorm;
         };
     if(Tjk)
         {
@@ -343,25 +341,18 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
     //...and then j
     dAdv.x = 0.5*(vother.y-vlast.y);
     dAdv.y = 0.5*(vlast.x-vother.x);
-    dlast.x = vother.x-vcur.x;
-    dlast.y=vother.y-vcur.y;
-    dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
-    dnext.x = vcur.x-vlast.x;
-    dnext.y = vcur.y-vlast.y;
-    dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-    if(dnnorm < THRESHOLD)
-        dnnorm = THRESHOLD;
-    if(dlnorm < THRESHOLD)
-        dlnorm = THRESHOLD;
-    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dlast.x = -dnext.x;
+    dlast.y = -dnext.y;
+    dlnorm = dnnorm;
+    dPdv.x = dlast.x/dlnorm - dcl.x/dclnorm;
+    dPdv.y = dlast.y/dlnorm - dcl.y/dclnorm;
     Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
     Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
     dTdv.x = 0.0; dTdv.y = 0.0;
     if(Tij)
         {
-        dTdv.x -= dnext.x/dnnorm;
-        dTdv.y -= dnext.y/dnnorm;
+        dTdv.x -= dcl.x/dclnorm;
+        dTdv.y -= dcl.y/dclnorm;
         };
     if(Tjk)
         {
