@@ -385,8 +385,7 @@ __global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
     if (idx >= N)
         return;
 
-    Dscalar2 circumcenter, origin, nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
-    origin.x=0.0;origin.y=0.0;
+    Dscalar2 circumcenter, nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
 
     int neigh = d_nn[idx];
     Dscalar Varea = 0.0;
@@ -398,7 +397,7 @@ __global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
 
     Box.minDist(nlastp,pi,rij);
     Box.minDist(nnextp,pi,rik);
-    Circumcenter(origin,rij,rik,circumcenter);
+    Circumcenter(rij,rik,circumcenter);
     vfirst = circumcenter;
     vlast = circumcenter;
 
@@ -408,7 +407,7 @@ __global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
         int nid = d_n[n_idx(nn,idx)];
         nnextp = d_points[ nid ];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(origin,rij,rik,circumcenter);
+        Circumcenter(rij,rik,circumcenter);
         vnext = circumcenter;
 
         Varea += TriangleArea(vlast,vnext);

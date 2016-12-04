@@ -534,7 +534,6 @@ void SPV2D::computeGeometryCPU()
         //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
         vector<Dscalar2> voro(neigh);
         Dscalar2 circumcent;
-        Dscalar2 origin; origin.x = 0.; origin.y=0.;
         Dscalar2 nnextp,nlastp;
         Dscalar2 pi = h_p.data[i];
         Dscalar2 rij, rik;
@@ -545,7 +544,7 @@ void SPV2D::computeGeometryCPU()
             {
             nnextp = h_p.data[ns[nn]];
             Box.minDist(nnextp,pi,rik);
-            Circumcenter(origin,rij,rik,circumcent);
+            Circumcenter(rij,rik,circumcent);
             voro[nn] = circumcent;
             rij=rik;
             };
@@ -595,7 +594,6 @@ void SPV2D::computeSPVForceCPU(int i)
     vector<Matrix2x2> dhdri(neigh);
     Matrix2x2 Id;
     Dscalar2 circumcent;
-    Dscalar2 origin; origin.x = 0.; origin.y=0.;
     Dscalar2 rij,rik;
     Dscalar2 nnextp,nlastp;
     Dscalar2 rjk;
@@ -607,7 +605,7 @@ void SPV2D::computeSPVForceCPU(int i)
         {
         nnextp = h_p.data[ns[nn]];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(origin,rij,rik,circumcent);
+        Circumcenter(rij,rik,circumcent);
         voro[nn] = circumcent;
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
@@ -833,7 +831,6 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
     vector<Matrix2x2> dhdri(neigh);
     Matrix2x2 Id;
     Dscalar2 circumcent;
-    Dscalar2 origin; origin.x = 0.; origin.y=0.;
     Dscalar2 rij,rik;
     Dscalar2 nnextp,nlastp;
     Dscalar2 rjk;
@@ -845,7 +842,7 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
         {
         nnextp = h_p.data[ns[nn]];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(origin,rij,rik,circumcent);
+        Circumcenter(rij,rik,circumcent);
         voro[nn] = circumcent;
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
