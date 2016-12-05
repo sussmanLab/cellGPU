@@ -40,34 +40,32 @@ bool gpu_compute_geometry(
 
 bool gpu_force_sets(
                     Dscalar2 *d_points,
-                    int    *d_nn,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
                     int4   *d_delSets,
                     int    *d_detOther,
                     Dscalar2 *d_forceSets,
+                    int2    *d_nidx,
                     Dscalar  KA,
                     Dscalar  KP,
-                    int    N,
-                    int    neighMax,
+                    int    NeighIdxNum,
                     Index2D &n_idx,
                     gpubox &Box
                     );
 
 bool gpu_force_sets_tensions(
                     Dscalar2 *d_points,
-                    int    *d_nn,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
                     int4   *d_delSets,
                     int    *d_detOther,
                     Dscalar2 *d_forceSets,
+                    int2   *d_nidx,
                     int    *d_cellTypes,
                     Dscalar  KA,
                     Dscalar  KP,
                     Dscalar  gamma,
-                    int    N,
-                    int    neighMax,
+                    int    NeighIdxNum,
                     Index2D &n_idx,
                     gpubox &Box
                     );

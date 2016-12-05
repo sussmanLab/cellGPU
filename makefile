@@ -90,7 +90,7 @@ ellipse.out: obj/runellipse.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) -o $@ $+
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 run: build
 	./delGPU.out

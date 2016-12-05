@@ -7,82 +7,62 @@
 #endif
 
 #include "std_include.h"
+#include "Matrix.h"
 
+//calculates the determinant of a 2x2 matrix
+HOSTDEVICE Dscalar Det2x2(Dscalar x11, Dscalar x12, Dscalar x21, Dscalar x22)
+    {
+    return x11*x22-x12*x21;
+    };
+
+//calculates the circumcenter of the circle passing through x1, x2 and the origin
+HOSTDEVICE void Circumcenter(Dscalar2 x1, Dscalar2 x2, Dscalar2 &xc)
+    {
+    Dscalar x1norm2,x2norm2,denominator;
+    x1norm2 = x1.x*x1.x + x1.y*x1.y;
+    x2norm2 = x2.x*x2.x + x2.y*x2.y;
+    denominator = 1/(2.0*Det2x2(x1.x,x1.y,x2.x,x2.y));
+
+    xc.x = denominator * Det2x2(x1norm2,x1.y,x2norm2,x2.y);
+    xc.y = denominator * Det2x2(x1.x,x1norm2,x2.x,x2norm2);
+    };
+
+//calculates the circumcenter through x1,x2,x3
 HOSTDEVICE void Circumcenter(Dscalar2 x1, Dscalar2 x2, Dscalar2 x3, Dscalar2 &xc)
     {
-    //Given coordinates (x1,y1),(x2,y2),(x3,y3), feeds the circumcenter to (xc,yc) along with the
-    //circumcircle's radius, r.
-    //returns false if all three points are on a vertical line
-    if(abs(x2.y-x1.y) < EPSILON && abs(x2.y-x3.y) < EPSILON) return;
-    Dscalar m1,m2,mx1,my1,mx2,my2;
+    Dscalar amcx,amcy,bmcx,bmcy,amcnorm2,bmcnorm2,denominator;
 
-    if(abs(x2.y-x1.y) < EPSILON)
-        {
-        m2  = -(x3.x-x2.x)/(x3.y-x2.y);
-        mx2 = 0.5*(x2.x+x3.x);
-        my2 = 0.5*(x2.y+x3.y);
-        xc.x  = 0.5*(x2.x+x1.x);
-        xc.y  = m2*(xc.x-mx2)+my2;
-        }else if(abs(x2.y-x3.y) < EPSILON)
-            {
-            m1  = -(x2.x-x1.x)/(x2.y-x1.y);
-            mx1 = 0.5*(x1.x+x2.x);
-            my1 = 0.5*(x1.y+x2.y);
-            xc.x  = 0.5*(x3.x+x2.x);
-            xc.y  = m1*(xc.x-mx1)+my1;
-            }else
-            {
-            m1  = -(x2.x-x1.x)/(x2.y-x1.y);
-            m2  = -(x3.x-x2.x)/(x3.y-x2.y);
-            mx1 = 0.5*(x1.x+x2.x);
-            mx2 = 0.5*(x2.x+x3.x);
-            my1 = 0.5*(x1.y+x2.y);
-            my2 = 0.5*(x3.y-x1.y);
-            xc.x = (m1*mx1-m2*mx2+my2)/(m1-m2);
-            xc.y = m1*(xc.x-mx1)+my1;
-            }
-    return;
+    amcx=x1.x-x3.x;
+    amcy=x1.y-x3.y;
+    amcnorm2 = amcx*amcx+amcy*amcy;
+    bmcx=x2.x-x3.x;
+    bmcy=x2.y-x3.y;
+    bmcnorm2 = bmcx*bmcx+bmcy*bmcy;
+
+    denominator = 1/(2.0*Det2x2(amcx,amcy,bmcx,bmcy));
+    
+    xc.x = x3.x + denominator * Det2x2(amcnorm2,amcy,bmcnorm2,bmcy);
+    xc.y = x3.y + denominator * Det2x2(amcx,amcnorm2,bmcx,bmcnorm2);
+
     };
 
-__device__ inline void Circumcircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dscalar x3, Dscalar y3,
-                  Dscalar &xc, Dscalar &yc, Dscalar &r)
+//get the circumcenter and radius, given one of the points on the circumcircle is the origin...
+HOSTDEVICE void Circumcircle(Dscalar2 x1, Dscalar2 x2, Dscalar2 &xc, Dscalar &radius)
     {
-    //Given coordinates (x1,y1),(x2,y2),(x3,y3), feeds the circumcenter to (xc,yc) along with the
-    //circumcircle's radius, r.
-    //returns false if all three points are on a vertical line
-    if(abs(y2-y1) < EPSILON && abs(y2-y3) < EPSILON) return;
-    Dscalar m1,m2,mx1,my1,mx2,my2,dx,dy;
-
-    if(abs(y2-y1) < EPSILON)
-        {
-        m2  = -(x3-x2)/(y3-y2);
-        mx2 = 0.5*(x2+x3);
-        my2 = 0.5*(y2+y3);
-        xc  = 0.5*(x2+x1);
-        yc  = m2*(xc-mx2)+my2;
-        }else if(abs(y2-y3) < EPSILON)
-            {
-            m1  = -(x2-x1)/(y2-y1);
-            mx1 = 0.5*(x1+x2);
-            my1 = 0.5*(y1+y2);
-            xc  = 0.5*(x3+x2);
-            yc  = m1*(xc-mx1)+my1;
-            }else
-            {
-            m1  = -(x2-x1)/(y2-y1);
-            m2  = -(x3-x2)/(y3-y2);
-            mx1 = 0.5*(x1+x2);
-            mx2 = 0.5*(x2+x3);
-            my1 = 0.5*(y1+y2);
-            my2 = 0.5*(y3-y1);
-            xc = (m1*mx1-m2*mx2+my2)/(m1-m2);
-            yc = m1*(xc-mx1)+my1;
-            }
-    dx = x2-xc;
-    dy = y2-yc;
-    r = sqrt(dx*dx+dy*dy);
-    return;
+    Circumcenter(x1,x2,xc);
+    Dscalar dx = (x1.x-xc.x);
+    Dscalar dy = (x1.y-xc.y);
+    radius = sqrt(dx*dx+dy*dy);
     };
+
+HOSTDEVICE void Circumcircle(Dscalar2 x1, Dscalar2 x2, Dscalar2 x3, Dscalar2 &xc, Dscalar &radius)
+    {
+    Circumcenter(x1,x2,x3,xc);
+    Dscalar dx = (x1.x-xc.x);
+    Dscalar dy = (x1.y-xc.y);
+    radius = sqrt(dx*dx+dy*dy);
+    };
+
 
 HOSTDEVICE Dscalar dot(Dscalar2 p1,Dscalar2 p2)
     {
@@ -94,26 +74,60 @@ __device__ inline Dscalar norm(Dscalar2 p)
     return sqrt(p.x*p.x+p.y*p.y);
     };
 
-__device__ inline int quadrant(Dscalar x, Dscalar y)
-    {
-    if(x>=0)
-        {
-        if (y >=0)
-            {return 0;
-                }else{
-                return  3;
-                };
-        }else{
-        if (y>=0)
-            return 1;
-        };
-    return 2;
-    };
+
 
 //calculate the area of a triangle with a vertex at the origin
 HOSTDEVICE Dscalar TriangleArea(Dscalar2 p1, Dscalar2 p2)
     {
     return abs(0.5*(p1.x*p2.y-p1.y*p2.x));
     };
+
+//calculate matrix of derivatives
+HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,Dscalar2 &rij,Dscalar2 &rik)
+    {
+    Matrix2x2 Id;
+    dhdr=Id;
+
+    Dscalar2 rjk;
+    rjk.x =rik.x-rij.x;
+    rjk.y =rik.y-rij.y;
+
+    Dscalar rikDotrik=dot(rik,rik);
+    Dscalar rikDotrjk=dot(rik,rjk);
+    Dscalar rijDotrjk=dot(rij,rjk);
+    Dscalar rij2=dot(rij,rij);
+
+
+    Dscalar2 dDdriOD,z;
+    Dscalar betaD = -rikDotrik*rijDotrjk;
+    Dscalar gammaD = rij2*rikDotrjk;
+    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
+    //"D" is really 2*cp*cp
+    Dscalar D = 0.5/(cp*cp);
+    
+    z.x = betaD*rij.x+gammaD*rik.x;
+    z.y = betaD*rij.y+gammaD*rik.y;
+
+    dDdriOD.x = (-2.0*rjk.y)/cp;
+    dDdriOD.y = (2.0*rjk.x)/cp;
+    
+    dhdr -= D*((betaD+gammaD)*Id+dyad(z,dDdriOD));
+
+    //reuse dDdriOd, but here as dbDdri
+    dDdriOD.x = 2*rijDotrjk*rik.x+rikDotrik*rjk.x;
+    dDdriOD.y = 2*rijDotrjk*rik.y+rikDotrik*rjk.y;
+
+    dhdr += D*dyad(rij,dDdriOD);
+
+    //reuse dDdriOd, but here as dgDdri
+    dDdriOD.x = -2*rikDotrjk*rij.x-rij2*rjk.x;
+    dDdriOD.y = -2*rikDotrjk*rij.y-rij2*rjk.y;
+
+    dhdr += D*dyad(rik,dDdriOD);
+    //dhdr = Id+D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
+
+    return;
+    };
+
 
 #endif

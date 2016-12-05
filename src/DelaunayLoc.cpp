@@ -128,12 +128,12 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
     //first, find a polygon enclosing vertex i
     vector<int> P0;//index of vertices forming surrounding sqaure
     vector<pt> P1;//relative position of vertices forming surrounding square
-    clock_t tstart, tstop;
-    tstart = clock();
+    //clock_t tstart, tstop;
+    //tstart = clock();
 
     getPolygon(i,P0,P1);
-    tstop = clock();
-    polytiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
+    //tstop = clock();
+    //polytiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
 
     pt v(pts[i].x,pts[i].y);
     DTring.clear();
@@ -162,7 +162,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
     Dscalar vx = 0.0;Dscalar vy = 0.0;
     for (int ii = 0; ii < Psize; ++ii)
         {
-        valid = CircumCircle(vx,vy,P1[ii].x,P1[ii].y,P1[(ii+1)%Psize].x,P1[(ii+1)%Psize].y,Qnew.x,Qnew.y,radius);
+        valid = CircumCircle(P1[ii].x,P1[ii].y,P1[(ii+1)%Psize].x,P1[(ii+1)%Psize].y,Qnew.x,Qnew.y,radius);
         Q0.push_back(Qnew);
         rads.push_back(radius*1.0001);
         };
@@ -223,10 +223,10 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
 
     if (DTring.size() > reduceSize)
         {
-        tstart=clock();
+        //tstart=clock();
         reduceOneRing(i,DTringIdx,DTring);
-        tstop=clock();
-        reducedtiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
+        //tstop=clock();
+        //reducedtiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
         };
     candidates = DTring.size();
     };
@@ -265,7 +265,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
     rads.reserve(4);
     for (int ii = 0; ii < Psize; ++ii)
         {
-        valid = CircumCircle(vx,vy,P1[ii].x,P1[ii].y,P1[(ii+1)%Psize].x,P1[(ii+1)%Psize].y,Qnew.x,Qnew.y,radius);
+        valid = CircumCircle(P1[ii].x,P1[ii].y,P1[(ii+1)%Psize].x,P1[(ii+1)%Psize].y,Qnew.x,Qnew.y,radius);
         Q0.push_back(Qnew);
         rads.push_back(radius);
         };
@@ -277,8 +277,8 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
         int polyi2 = q-1;
         if(polyi2 < 0) polyi2 = Psize -1;
         Dscalar r1,r2;
-        valid = CircumCircle(vx,vy,DTring[nn].x,DTring[nn].y,P1[polyi1].x,P1[polyi1].y,Qnew.x,Qnew.y,r1);
-        valid = CircumCircle(vx,vy,P1[polyi2].x,P1[polyi2].y,DTring[nn].x,DTring[nn].y,Qnew2.x,Qnew2.y,r2);
+        valid = CircumCircle(DTring[nn].x,DTring[nn].y,P1[polyi1].x,P1[polyi1].y,Qnew.x,Qnew.y,r1);
+        valid = CircumCircle(P1[polyi2].x,P1[polyi2].y,DTring[nn].x,DTring[nn].y,Qnew2.x,Qnew2.y,r2);
         if(r1+r2 < rads[q]+rads[polyi2])
             {
             P1[q]=DTring[nn];
@@ -391,23 +391,23 @@ void DelaunayLoc::getNeighbors(int i, vector<int> &neighbors)
 
 void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &DCell,bool timing)
     {
-    clock_t tstart,tstop;
+    //clock_t tstart,tstop;
 
     //first, get candidate 1-ring
     vector<int> DTringIdx;
     vector<pt> DTring;
-    tstart = clock();
+    //tstart = clock();
     getOneRingCandidate(i,DTringIdx,DTring);
-    tstop = clock();
-    if (timing) ringcandtiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
+    //tstop = clock();
+    //if (timing) ringcandtiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
 
 
     //call another algorithm to triangulate the candidate set
-    tstart=clock();
+    //tstart=clock();
     DelaunayNP del(DTring);
     del.triangulate();
-    tstop = clock();
-    if (timing) tritiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
+    //tstop = clock();
+    //if (timing) tritiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
 
 
     //pick out the triangulation of the desired vertex
@@ -424,10 +424,10 @@ void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &
         };
 
     //calculate the cell geometric properties, and put the points in CW order
-    tstart=clock();
+    //tstart=clock();
     DCell.Calculate();
-    tstop = clock();
-    if (timing) geotiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
+    //tstop = clock();
+    //if (timing) geotiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
 
     //convert neighbors to global indices,
     //and store the neighbor indexes in clockwise order
@@ -446,8 +446,8 @@ void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &
 
 bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool timing)
     {
-    clock_t tstart,tstop;
-    tstart = clock();
+    //clock_t tstart,tstop;
+    //tstart = clock();
 
     pt v = pts[i];
     //for each circumcirlce, see if its empty
@@ -467,7 +467,7 @@ bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool tim
         Box.minDist(pts[neigh2],v,pt2);
 
         pt Q;
-        bool valid =CircumCircle(vx,vy,pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
+        bool valid =CircumCircle(pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
         Dscalar rad2 = radius*radius;
 
         //what cell indices to check
@@ -499,15 +499,15 @@ bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool tim
         }; // end loop over neighbors for circumcircle
 
 
-    tstop = clock();
-    if (timing) tritesttiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
+    //tstop = clock();
+    //if (timing) tritesttiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
     return (!repeat);
     };
 
 void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool timing)
     {
-    clock_t tstart,tstop;
-    tstart = clock();
+    //clock_t tstart,tstop;
+    //tstart = clock();
 
     Dscalar vx = 0.0; Dscalar vy = 0.0;
     int circumcircles = ccs.size()/3;
@@ -528,7 +528,7 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
 
         pt tocenter,disp;
         pt Q;
-        bool valid =CircumCircle(vx,vy,pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
+        bool valid =CircumCircle(pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
         Dscalar rad2 = radius*radius;
 
         //what cell indices to check
@@ -573,8 +573,8 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
         }; // end loop over circumcircles
 
 
-    tstop = clock();
-    if (timing) tritesttiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
+    //tstop = clock();
+    //if (timing) tritesttiming +=(tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
 
     };
 

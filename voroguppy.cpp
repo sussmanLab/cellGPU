@@ -22,7 +22,7 @@
 
 
 #include "spv2d.h"
-//#include "Database.h"
+#include "Database.h"
 
 
 using namespace std;
@@ -113,9 +113,11 @@ int main(int argc, char*argv[])
         if (!gpu) return 0;
         cudaSetDevice(USE_GPU);
         }
-//    char dataname[256];
-//    sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
+    char dataname[256];
+    sprintf(dataname,"/hdd2/data/spv/test.nc");
+    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
+
+
 
     SPV2D spv(numpts,1.0,p0);
     if (USE_GPU < 0)
@@ -141,10 +143,20 @@ int main(int argc, char*argv[])
 
 
     printf("starting initialization\n");
+    spv.setSortPeriod(initSteps/10);
+    ncdat.WriteState(spv);
     for(int ii = 0; ii < initSteps; ++ii)
         {
         spv.performTimestep();
         };
+    ncdat.WriteState(spv);
+        spv.performTimestep();
+        spv.spatialSorting();
+    ncdat.WriteState(spv);
+        spv.performTimestep();
+        spv.spatialSorting();
+    ncdat.WriteState(spv);
+        spv.performTimestep();
     spv.meanForce();
 
     printf("Finished with initialization\n");
@@ -152,8 +164,8 @@ int main(int argc, char*argv[])
     //spv.meanForce();
     spv.repPerFrame = 0.0;
 
+//    cudaProfilerStart();
     t1=clock();
-    //cudaProfilerStart();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
@@ -163,7 +175,7 @@ int main(int argc, char*argv[])
             };
         spv.performTimestep();
         };
-    //cudaProfilerStop();
+//    cudaProfilerStop();
     t2=clock();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;

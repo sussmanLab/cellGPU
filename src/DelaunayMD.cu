@@ -42,7 +42,6 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     int3 i1 = d_circumcircles[idx];
     //the vertex we will take to be the origin, and its cell position
     Dscalar2 v = d_pt[i1.x];
-    Dscalar vz = 0.0;
     int ib=floorf(v.x/boxsize);
     int jb=floorf(v.y/boxsize);
 
@@ -56,13 +55,12 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
     //get the circumcircle
     Dscalar2 Q;
     Dscalar rad;
-    Circumcircle(vz,vz,pt1.x,pt1.y,pt2.x,pt2.y,
-                    Q.x,Q.y,rad);
+    Circumcircle(pt1,pt2,Q,rad);
 
     //look through cells for other particles
     bool badParticle = false;
     Dscalar2 ptnew,toCenter;
-    int wcheck = ceilf(rad/boxsize)+1;
+    int wcheck = ceilf(rad/boxsize);
 
     if(wcheck > xsize/2) wcheck = xsize/2;
     rad *=1.0001;
