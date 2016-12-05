@@ -133,7 +133,8 @@ int main(int argc, char*argv[])
 
 
     printf("starting initialization\n");
-    spv.setSortPeriod(initSteps-2);
+    spv.setSortPeriod(initSteps/10);
+    ncdat.WriteState(spv);
     for(int ii = 0; ii < initSteps; ++ii)
         {
         spv.performTimestep();
@@ -141,10 +142,11 @@ int main(int argc, char*argv[])
     ncdat.WriteState(spv);
         spv.performTimestep();
         spv.spatialSorting();
+    ncdat.WriteState(spv);
         spv.performTimestep();
         spv.spatialSorting();
-        spv.performTimestep();
     ncdat.WriteState(spv);
+        spv.performTimestep();
     spv.meanForce();
 
     printf("Finished with initialization\n");

@@ -45,44 +45,78 @@ void DelaunayMD::randomizePositions(Dscalar boxx, Dscalar boxy)
         };
     };
 
+void DelaunayMD::reIndexArray(GPUArray<Dscalar2> &array)
+    {
+    GPUArray<Dscalar2> TEMP = array;
+    ArrayHandle<Dscalar2> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        ar.data[ii] = temp.data[itt[ii]];
+        };
+    };
+
+void DelaunayMD::reIndexArray(GPUArray<Dscalar> &array)
+    {
+    GPUArray<Dscalar> TEMP = array;
+    ArrayHandle<Dscalar> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        ar.data[ii] = temp.data[itt[ii]];
+        };
+    };
+
+void DelaunayMD::reIndexArray(GPUArray<int> &array)
+    {
+    GPUArray<int> TEMP = array;
+    ArrayHandle<int> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<int> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        ar.data[ii] = temp.data[itt[ii]];
+        };
+    };
+
 void DelaunayMD::spatiallySortPoints()
     {
     //calling this should resort all particle data! need to make sure maps are working,
     //also need to add cellType, areaPeriPreferences,motility, etc. etc. to the SPV caller, and database, etc. etc.!
+    //
+    //itt and tti are the changes that happen in the current sort
+    //idxToTag and tagToIdx relate the current indexes to the original ones
     HilbertSorter hs(Box);
 
-    vector<pair<int,Dscalar2> > sorter(N);
     vector<pair<int,int> > idxSorter(N);
 
+    //sort points by Hilbert Curve location
     ArrayHandle<Dscalar2> h_p(points,access_location::host, access_mode::readwrite);
     for (int ii = 0; ii < N; ++ii)
         {
-        int idx = tagToIdx[ii];
-
-        sorter[ii].first = hs.getIdx(h_p.data[idx]);
-        sorter[ii].second = h_p.data[idx];
-
-        idxSorter[ii].first=sorter[ii].first;
-        idxSorter[ii].second = idx;
-
-        tti[ii]=tagToIdx[ii];
-        itt[ii]=idxToTag[ii];
+        idxSorter[ii].first=hs.getIdx(h_p.data[ii]);
+        idxSorter[ii].second = ii;
         };
-
-    sort(sorter.begin(),sorter.end());
     sort(idxSorter.begin(),idxSorter.end());
-
-
+    
+    //update tti and itt
     for (int ii = 0; ii < N; ++ii)
         {
-        h_p.data[ii] = sorter[ii].second;
         int newidx = idxSorter[ii].second;
-        int newtag = itt[newidx];
-        int nidx2  = tti[newidx];
-
-        tagToIdx[ii] = newtag;
-        idxToTag[nidx2] = ii;
+        itt[ii] = newidx;
+        tti[newidx] = ii;
         };
+
+    //update points, idxToTag, and tagToIdx
+    vector<int> tempi = idxToTag;
+    //GPUArray<Dscalar2> TP = points;
+    //ArrayHandle<Dscalar2> tempp(TP,access_location::host,access_mode::read);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        //h_p.data[ii] = tempp.data[itt[ii]];
+        idxToTag[ii] = tempi[itt[ii]];
+        tagToIdx[tempi[itt[ii]]] = ii;
+        };
+    reIndexArray(points);
 
     };
 

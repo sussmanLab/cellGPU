@@ -83,6 +83,12 @@ class DelaunayMD
         //utility functions
         void resetDelLocPoints();
         void spatiallySortPoints();
+
+        //why use templates when you can type more?
+        void reIndexArray(GPUArray<int> &array);
+        void reIndexArray(GPUArray<Dscalar> &array);
+        void reIndexArray(GPUArray<Dscalar2> &array);
+
         void updateCellList();
         void reportCellList();
         void reportPos(int i);

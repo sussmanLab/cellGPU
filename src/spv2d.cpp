@@ -68,79 +68,30 @@ void SPV2D::Initialize(int n)
 void SPV2D::spatialSorting()
     {
     spatiallySortPoints();
+
+    //reTriangulate with the new ordering
     globalTriangulationCGAL();
+    //get new DelSets and DelOthers
     allDelSets();
 
-    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_mod(Moduli,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_pref(AreaPeriPreferences,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_ex(exclusions,access_location::host,access_mode::readwrite);
-
-
+    //re-index all cell information arrays
     //motility
-    GPUArray<Dscalar2> sd2(N);
-    {
-    ArrayHandle<Dscalar2> hsd2(sd2,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        hsd2.data[ii].x = h_mot.data[idxToTag[ii]].x;
-        hsd2.data[ii].y = h_mot.data[idxToTag[ii]].y;
-        };
-    };
-    Motility = sd2;
+    reIndexArray(Motility);
 
     //moduli
-    {
-    ArrayHandle<Dscalar2> hsd2(sd2,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        if (idxToTag[ii] >=N) printf("Asda");
-        hsd2.data[ii].x = h_mod.data[idxToTag[ii]].x;
-        hsd2.data[ii].y = h_mod.data[idxToTag[ii]].y;
-        };
-    };
-    Moduli = sd2;
+    reIndexArray(Moduli);
 
     //preference
-    {
-    ArrayHandle<Dscalar2> hsd2(sd2,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        hsd2.data[ii].x = h_pref.data[idxToTag[ii]].x;
-        hsd2.data[ii].y = h_pref.data[idxToTag[ii]].y;
-        };
-    };
-    AreaPeriPreferences = sd2;
-
+    reIndexArray(AreaPeriPreferences);
 
     //director
-    GPUArray<Dscalar> sd(N);
-    {
-    ArrayHandle<Dscalar> hss(sd,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        hss.data[ii] = h_cd.data[idxToTag[ii]];
-    };
-    cellDirectors = sd;
+    reIndexArray(cellDirectors);
 
     //exclusions
-    GPUArray<int> swap(N);
-    {
-    ArrayHandle<int> ss(swap,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        ss.data[ii] = h_ex.data[idxToTag[ii]];
-    };
-    exclusions = swap;
+    reIndexArray(exclusions);
 
     //cellType
-    {
-    ArrayHandle<int> ss(swap,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        ss.data[ii] = h_ct.data[tti[tagToIdx[ii]]];
-    };
-    CellType = swap;
-
+    reIndexArray(CellType);
 
     };
 
