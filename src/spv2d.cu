@@ -125,47 +125,23 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     Box.minDist(d_points[d_delOther[n_idx(nn,pidx)]],pi,pno);
 
     //first, compute the derivative of the main voro point w/r/t pidx's position
-    //pnm1 is rij, pn1 is rik
     Matrix2x2 dhdr;
-    Matrix2x2 Id;
-    Dscalar2 rjk;
-    rjk.x =rik.x-rij.x;
-    rjk.y =rik.y-rij.y;
-    Dscalar2 dbDdri,dgDdri,dDdriOD,z;
-    Dscalar betaD = -dot(rik,rik)*dot(rij,rjk);
-    Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
-    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
-    Dscalar D = 2*cp*cp;
-    z.x = betaD*rij.x+gammaD*rik.x;
-    z.y = betaD*rij.y+gammaD*rik.y;
-
-    dbDdri.x = 2*dot(rij,rjk)*rik.x+dot(rik,rik)*rjk.x;
-    dbDdri.y = 2*dot(rij,rjk)*rik.y+dot(rik,rik)*rjk.y;
-
-    dgDdri.x = -2*dot(rik,rjk)*rij.x-dot(rij,rij)*rjk.x;
-    dgDdri.y = -2*dot(rik,rjk)*rij.y-dot(rij,rij)*rjk.y;
-
-    dDdriOD.x = (-2.0*rjk.y)/cp;
-    dDdriOD.y = (2.0*rjk.x)/cp;
-
-    dhdr = Id+1.0/D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
-
-
+    getdhdr(dhdr,rij,rik);
 
     //finally, compute all of the forces
-    Dscalar2 origin; origin.x = 0.0;origin.y=0.0;
+    //pnm1 is rij, pn1 is rik
     Dscalar2 vlast,vcur,vnext,vother;
-    Circumcenter(origin,pnm2,rij,vlast);
-    Circumcenter(origin,rij,rik,vcur);
-    Circumcenter(origin,rik,pn2,vnext);
+    Circumcenter(pnm2,rij,vlast);
+    Circumcenter(rij,rik,vcur);
+    Circumcenter(rik,pn2,vnext);
     Circumcenter(rij,rik,pno,vother);
 
 
     Dscalar2 dAdv,dPdv;
     Dscalar2 dEdv;
     Dscalar  Adiff, Pdiff;
-    Dscalar2 dlast, dnext;
-    Dscalar  dlnorm,dnnorm;
+    Dscalar2 dlast, dnext,dcl,dnc;
+    Dscalar  dlnorm,dnnorm,dclnorm,dncnorm;
 
     //self terms
     dAdv.x = 0.5*(vlast.y-vnext.y);
@@ -180,6 +156,13 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
         dnnorm = THRESHOLD;
     if(dlnorm < THRESHOLD)
         dlnorm = THRESHOLD;
+    
+    //save a few of these differences for later...
+    dcl.x = -dlast.x;dcl.y = -dlast.y;
+    dnc.x=-dnext.x;dnc.y=-dnext.y;
+    dclnorm=dlnorm;
+    dncnorm=dnnorm;
+    
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[pidx].x - d_APpref[pidx].x);
@@ -191,18 +174,13 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     //other terms...k first...
     dAdv.x = 0.5*(vnext.y-vother.y);
     dAdv.y = 0.5*(vother.x-vnext.x);
-    dlast.x = vnext.x-vcur.x;
-    dlast.y=vnext.y-vcur.y;
-    dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
     dnext.x = vcur.x-vother.x;
     dnext.y = vcur.y-vother.y;
     dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
     if(dnnorm < THRESHOLD)
         dnnorm = THRESHOLD;
-    if(dlnorm < THRESHOLD)
-        dlnorm = THRESHOLD;
-    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dPdv.x = dnc.x/dncnorm - dnext.x/dnnorm;
+    dPdv.y = dnc.y/dncnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[neighs.z].x - d_APpref[neighs.z].x);
     Pdiff = KA*(d_AP[neighs.z].y - d_APpref[neighs.z].y);
 
@@ -212,18 +190,12 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     //...and then j
     dAdv.x = 0.5*(vother.y-vlast.y);
     dAdv.y = 0.5*(vlast.x-vother.x);
-    dlast.x = vother.x-vcur.x;
-    dlast.y=vother.y-vcur.y;
-    dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
-    dnext.x = vcur.x-vlast.x;
-    dnext.y = vcur.y-vlast.y;
-    dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-    if(dnnorm < THRESHOLD)
-        dnnorm = THRESHOLD;
-    if(dlnorm < THRESHOLD)
-        dlnorm = THRESHOLD;
-    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    //dlast is now -(dnext) from the K calculation
+    dlast.x = -dnext.x;
+    dlast.y = -dnext.y;
+    dlnorm = dnnorm;
+    dPdv.x = dlast.x/dlnorm - dcl.x/dclnorm;
+    dPdv.y = dlast.y/dlnorm - dcl.y/dclnorm;
     Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
     Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
 
@@ -273,47 +245,24 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
     Box.minDist(d_points[neighOther],pi,pno);
 
     //first, compute the derivative of the main voro point w/r/t pidx's position
-    //pnm1 is rij, pn1 is rik
     Matrix2x2 dhdr;
-    Matrix2x2 Id;
-    Dscalar2 rjk;
-    rjk.x =rik.x-rij.x;
-    rjk.y =rik.y-rij.y;
-    Dscalar2 dbDdri,dgDdri,dDdriOD,z;
-    Dscalar betaD = -dot(rik,rik)*dot(rij,rjk);
-    Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
-    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
-    Dscalar D = 2*cp*cp;
-    z.x = betaD*rij.x+gammaD*rik.x;
-    z.y = betaD*rij.y+gammaD*rik.y;
-
-    dbDdri.x = 2*dot(rij,rjk)*rik.x+dot(rik,rik)*rjk.x;
-    dbDdri.y = 2*dot(rij,rjk)*rik.y+dot(rik,rik)*rjk.y;
-
-    dgDdri.x = -2*dot(rik,rjk)*rij.x-dot(rij,rij)*rjk.x;
-    dgDdri.y = -2*dot(rik,rjk)*rij.y-dot(rij,rij)*rjk.y;
-
-    dDdriOD.x = (-2.0*rjk.y)/cp;
-    dDdriOD.y = (2.0*rjk.x)/cp;
-
-    dhdr = Id+1.0/D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
-
-
+    getdhdr(dhdr,rij,rik);
 
     //finally, compute all of the forces
-    Dscalar2 origin; origin.x = 0.0;origin.y=0.0;
+    //pnm1 is rij, pn1 is rik
     Dscalar2 vlast,vcur,vnext,vother;
-    Circumcenter(origin,pnm2,rij,vlast);
-    Circumcenter(origin,rij,rik,vcur);
-    Circumcenter(origin,rik,pn2,vnext);
+    //the first three can call the circumcenter function with one point being the origin
+    Circumcenter(pnm2,rij,vlast);
+    Circumcenter(rij,rik,vcur);
+    Circumcenter(rik,pn2,vnext);
     Circumcenter(rij,rik,pno,vother);
 
 
     Dscalar2 dAdv,dPdv,dTdv;
     Dscalar2 dEdv;
     Dscalar  Adiff, Pdiff;
-    Dscalar2 dlast, dnext;
-    Dscalar  dlnorm,dnnorm;
+    Dscalar2 dlast, dnext,dcl,dnc;
+    Dscalar  dlnorm,dnnorm,dclnorm,dncnorm;
     bool Tik = false;
     bool Tij = false;
     bool Tjk = false;
@@ -335,6 +284,13 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
         dnnorm = THRESHOLD;
     if(dlnorm < THRESHOLD)
         dlnorm = THRESHOLD;
+
+    //save a few of these differences for later...
+    dcl.x = -dlast.x;dcl.y = -dlast.y;
+    dnc.x=-dnext.x;dnc.y=-dnext.y;
+    dclnorm=dlnorm;
+    dncnorm=dnnorm;
+
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
     dTdv.x = 0.0; dTdv.y = 0.0;
@@ -358,25 +314,20 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
     //other terms...k first...
     dAdv.x = 0.5*(vnext.y-vother.y);
     dAdv.y = 0.5*(vother.x-vnext.x);
-    dlast.x = vnext.x-vcur.x;
-    dlast.y=vnext.y-vcur.y;
-    dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
     dnext.x = vcur.x-vother.x;
     dnext.y = vcur.y-vother.y;
     dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
     if(dnnorm < THRESHOLD)
         dnnorm = THRESHOLD;
-    if(dlnorm < THRESHOLD)
-        dlnorm = THRESHOLD;
-    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dPdv.x = dnc.x/dncnorm - dnext.x/dnnorm;
+    dPdv.y = dnc.y/dncnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[neighs.z].x - d_APpref[neighs.z].x);
     Pdiff = KA*(d_AP[neighs.z].y - d_APpref[neighs.z].y);
     dTdv.x = 0.0; dTdv.y = 0.0;
     if(Tik)
         {
-        dTdv.x += dlast.x/dlnorm;
-        dTdv.y += dlast.y/dlnorm;
+        dTdv.x += dnc.x/dncnorm;
+        dTdv.y += dnc.y/dncnorm;
         };
     if(Tjk)
         {
@@ -390,25 +341,18 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
     //...and then j
     dAdv.x = 0.5*(vother.y-vlast.y);
     dAdv.y = 0.5*(vlast.x-vother.x);
-    dlast.x = vother.x-vcur.x;
-    dlast.y=vother.y-vcur.y;
-    dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
-    dnext.x = vcur.x-vlast.x;
-    dnext.y = vcur.y-vlast.y;
-    dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-    if(dnnorm < THRESHOLD)
-        dnnorm = THRESHOLD;
-    if(dlnorm < THRESHOLD)
-        dlnorm = THRESHOLD;
-    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+    dlast.x = -dnext.x;
+    dlast.y = -dnext.y;
+    dlnorm = dnnorm;
+    dPdv.x = dlast.x/dlnorm - dcl.x/dclnorm;
+    dPdv.y = dlast.y/dlnorm - dcl.y/dclnorm;
     Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
     Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
     dTdv.x = 0.0; dTdv.y = 0.0;
     if(Tij)
         {
-        dTdv.x -= dnext.x/dnnorm;
-        dTdv.y -= dnext.y/dnnorm;
+        dTdv.x -= dcl.x/dclnorm;
+        dTdv.y -= dcl.y/dclnorm;
         };
     if(Tjk)
         {
@@ -441,8 +385,7 @@ __global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
     if (idx >= N)
         return;
 
-    Dscalar2 circumcenter, origin, nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
-    origin.x=0.0;origin.y=0.0;
+    Dscalar2 circumcenter, nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
 
     int neigh = d_nn[idx];
     Dscalar Varea = 0.0;
@@ -454,7 +397,7 @@ __global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
 
     Box.minDist(nlastp,pi,rij);
     Box.minDist(nnextp,pi,rik);
-    Circumcenter(origin,rij,rik,circumcenter);
+    Circumcenter(rij,rik,circumcenter);
     vfirst = circumcenter;
     vlast = circumcenter;
 
@@ -464,7 +407,7 @@ __global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
         int nid = d_n[n_idx(nn,idx)];
         nnextp = d_points[ nid ];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(origin,rij,rik,circumcenter);
+        Circumcenter(rij,rik,circumcenter);
         vnext = circumcenter;
 
         Varea += TriangleArea(vlast,vnext);

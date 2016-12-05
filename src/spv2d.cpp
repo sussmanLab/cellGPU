@@ -33,6 +33,8 @@ void SPV2D::Initialize(int n)
     triangletiming = 0.0; forcetiming = 0.0;
     setDeltaT(0.01);
     initialize(n);
+    setModuliUniform(1.0,1.0);
+    sortPeriod = 1000;
 
 
     setv0Dr(0.05,1.0);
@@ -63,6 +65,37 @@ void SPV2D::Initialize(int n)
     allDelSets();
     };
 
+void SPV2D::spatialSorting()
+    {
+    spatiallySortPoints();
+
+    //reTriangulate with the new ordering
+    globalTriangulationCGAL();
+    //get new DelSets and DelOthers
+    allDelSets();
+
+    //re-index all cell information arrays
+    //motility
+    reIndexArray(Motility);
+
+    //moduli
+    reIndexArray(Moduli);
+
+    //preference
+    reIndexArray(AreaPeriPreferences);
+
+    //director
+    reIndexArray(cellDirectors);
+
+    //exclusions
+    reIndexArray(exclusions);
+
+    //cellType
+    reIndexArray(CellType);
+
+    };
+
+
 void SPV2D::allDelSets()
     {
     delSets.resize(neighMax*N);
@@ -71,6 +104,18 @@ void SPV2D::allDelSets()
     for (int ii = 0; ii < N; ++ii)
         getDelSets(ii);
     };
+
+void SPV2D::setModuliUniform(Dscalar KA, Dscalar KP)
+    {
+    Moduli.resize(N);
+    ArrayHandle<Dscalar2> h_m(Moduli,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_m.data[ii].x = KA;
+        h_m.data[ii].y = KP;
+        };
+    };
+
 
 void SPV2D::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
     {
@@ -242,6 +287,8 @@ void SPV2D::performTimestep()
         performTimestepGPU();
     else
         performTimestepCPU();
+
+    if (Timestep % sortPeriod == 0 && Timestep != 0) spatialSorting();
     };
 
 void SPV2D::DisplacePointsAndRotate()
@@ -534,7 +581,6 @@ void SPV2D::computeGeometryCPU()
         //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
         vector<Dscalar2> voro(neigh);
         Dscalar2 circumcent;
-        Dscalar2 origin; origin.x = 0.; origin.y=0.;
         Dscalar2 nnextp,nlastp;
         Dscalar2 pi = h_p.data[i];
         Dscalar2 rij, rik;
@@ -545,7 +591,7 @@ void SPV2D::computeGeometryCPU()
             {
             nnextp = h_p.data[ns[nn]];
             Box.minDist(nnextp,pi,rik);
-            Circumcenter(origin,rij,rik,circumcent);
+            Circumcenter(rij,rik,circumcent);
             voro[nn] = circumcent;
             rij=rik;
             };
@@ -595,7 +641,6 @@ void SPV2D::computeSPVForceCPU(int i)
     vector<Matrix2x2> dhdri(neigh);
     Matrix2x2 Id;
     Dscalar2 circumcent;
-    Dscalar2 origin; origin.x = 0.; origin.y=0.;
     Dscalar2 rij,rik;
     Dscalar2 nnextp,nlastp;
     Dscalar2 rjk;
@@ -607,7 +652,7 @@ void SPV2D::computeSPVForceCPU(int i)
         {
         nnextp = h_p.data[ns[nn]];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(origin,rij,rik,circumcent);
+        Circumcenter(rij,rik,circumcent);
         voro[nn] = circumcent;
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
@@ -833,7 +878,6 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
     vector<Matrix2x2> dhdri(neigh);
     Matrix2x2 Id;
     Dscalar2 circumcent;
-    Dscalar2 origin; origin.x = 0.; origin.y=0.;
     Dscalar2 rij,rik;
     Dscalar2 nnextp,nlastp;
     Dscalar2 rjk;
@@ -845,7 +889,7 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
         {
         nnextp = h_p.data[ns[nn]];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(origin,rij,rik,circumcent);
+        Circumcenter(rij,rik,circumcent);
         voro[nn] = circumcent;
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;

@@ -117,7 +117,7 @@ struct Matrix2x2
         //utility
         HOSTDEVICE void show()
             {
-            printf("{%f,%f,%f,%f}\n",x11,x12,x21,x22);
+            //printf("{%f,%f,%f,%f}\n",x11,x12,x21,x22);
             };
     };
 

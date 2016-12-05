@@ -87,14 +87,30 @@ void gpubox::setGeneral(Dscalar a, Dscalar b,Dscalar c, Dscalar d)
 
 void gpubox::Trans(const Dscalar2 &p1, Dscalar2 &pans)
     {
-    pans.x = x11*p1.x + x12*p1.y;
-    pans.y = x21*p1.x + x22*p1.y;
+    if(isSquare)
+        {
+        pans.x = x11*p1.x;
+        pans.y = x22*p1.y;
+        }
+    else
+        {
+        pans.x = x11*p1.x + x12*p1.y;
+        pans.y = x21*p1.x + x22*p1.y;
+        };
     };
 
 void gpubox::invTrans(const Dscalar2 p1, Dscalar2 &pans)
     {
-    pans.x = xi11*p1.x + xi12*p1.y;
-    pans.y = xi21*p1.x + xi22*p1.y;
+    if(isSquare)
+        {
+        pans.x = xi11*p1.x;
+        pans.y = xi22*p1.y;
+        }
+    else
+        {
+        pans.x = xi11*p1.x + xi12*p1.y;
+        pans.y = xi21*p1.x + xi22*p1.y;
+        };
     };
 
 void gpubox::putInBoxReal(Dscalar2 &p1)
@@ -127,16 +143,10 @@ void gpubox::minDist(const Dscalar2 &p1, const Dscalar2 &p2, Dscalar2 &pans)
     invTrans(p2,vB);
     Dscalar2 disp= make_Dscalar2(vA.x-vB.x,vA.y-vB.y);
 
-    while(fabs(disp.x)>0.5)
-        {
-        Dscalar sgn = (disp.x > 0) - (disp.x < 0);
-        disp.x = disp.x - sgn;
-        };
-    while(fabs(disp.y)>0.5)
-        {
-        Dscalar sgn = (disp.y > 0) - (disp.y < 0);
-        disp.y = disp.y - sgn;
-        };
+    while(disp.x < -0.5) disp.x +=1.0;
+    while(disp.y < -0.5) disp.y +=1.0;
+    while(disp.x > 0.5) disp.x -=1.0;
+    while(disp.y > 0.5) disp.y -=1.0;
 
     Trans(disp,pans);
     };
