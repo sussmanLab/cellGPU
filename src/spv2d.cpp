@@ -34,7 +34,7 @@ void SPV2D::Initialize(int n)
     setDeltaT(0.01);
     initialize(n);
     setModuliUniform(1.0,1.0);
-    sortPeriod = 10000;
+    sortPeriod = 1000;
 
 
     setv0Dr(0.05,1.0);

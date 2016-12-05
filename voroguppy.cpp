@@ -134,6 +134,7 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
     spv.meanForce();
+    spv.setSortPeriod((int)(1000/dt));
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
