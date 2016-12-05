@@ -50,6 +50,7 @@ class SPV2D : public DelaunayMD
 
     public:
         int Timestep;
+        int sortPeriod;
         Dscalar deltaT;
         GPUArray<int> CellType;
         GPUArray<Dscalar> cellDirectors;
@@ -100,6 +101,7 @@ class SPV2D : public DelaunayMD
         void getDelSets(int i);
         void allDelSets();
         void centerCells();
+        void spatialSorting();
 
         //cell-dynamics related functions
         void performTimestep();

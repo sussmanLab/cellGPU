@@ -33,6 +33,8 @@ void SPV2D::Initialize(int n)
     triangletiming = 0.0; forcetiming = 0.0;
     setDeltaT(0.01);
     initialize(n);
+    setModuliUniform(1.0,1.0);
+    sortPeriod = 10000;
 
 
     setv0Dr(0.05,1.0);
@@ -63,6 +65,86 @@ void SPV2D::Initialize(int n)
     allDelSets();
     };
 
+void SPV2D::spatialSorting()
+    {
+    spatiallySortPoints();
+    globalTriangulationCGAL();
+    allDelSets();
+
+    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_mod(Moduli,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_pref(AreaPeriPreferences,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_ex(exclusions,access_location::host,access_mode::readwrite);
+
+
+    //motility
+    GPUArray<Dscalar2> sd2(N);
+    {
+    ArrayHandle<Dscalar2> hsd2(sd2,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        hsd2.data[ii].x = h_mot.data[idxToTag[ii]].x;
+        hsd2.data[ii].y = h_mot.data[idxToTag[ii]].y;
+        };
+    };
+    Motility = sd2;
+
+    //moduli
+    {
+    ArrayHandle<Dscalar2> hsd2(sd2,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        if (idxToTag[ii] >=N) printf("Asda");
+        hsd2.data[ii].x = h_mod.data[idxToTag[ii]].x;
+        hsd2.data[ii].y = h_mod.data[idxToTag[ii]].y;
+        };
+    };
+    Moduli = sd2;
+
+    //preference
+    {
+    ArrayHandle<Dscalar2> hsd2(sd2,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        hsd2.data[ii].x = h_pref.data[idxToTag[ii]].x;
+        hsd2.data[ii].y = h_pref.data[idxToTag[ii]].y;
+        };
+    };
+    AreaPeriPreferences = sd2;
+
+
+    //director
+    GPUArray<Dscalar> sd(N);
+    {
+    ArrayHandle<Dscalar> hss(sd,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        hss.data[ii] = h_cd.data[idxToTag[ii]];
+    };
+    cellDirectors = sd;
+
+    //exclusions
+    GPUArray<int> swap(N);
+    {
+    ArrayHandle<int> ss(swap,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        ss.data[ii] = h_ex.data[idxToTag[ii]];
+    };
+    exclusions = swap;
+
+    //cellType
+    {
+    ArrayHandle<int> ss(swap,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        ss.data[ii] = h_ct.data[idxToTag[ii]];
+    };
+    CellType = swap;
+
+
+    };
+
+
 void SPV2D::allDelSets()
     {
     delSets.resize(neighMax*N);
@@ -71,6 +153,18 @@ void SPV2D::allDelSets()
     for (int ii = 0; ii < N; ++ii)
         getDelSets(ii);
     };
+
+void SPV2D::setModuliUniform(Dscalar KA, Dscalar KP)
+    {
+    Moduli.resize(N);
+    ArrayHandle<Dscalar2> h_m(Moduli,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_m.data[ii].x = KA;
+        h_m.data[ii].y = KP;
+        };
+    };
+
 
 void SPV2D::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
     {
@@ -242,6 +336,8 @@ void SPV2D::performTimestep()
         performTimestepGPU();
     else
         performTimestepCPU();
+
+    if (Timestep % sortPeriod == 0 && Timestep != 0) spatialSorting();
     };
 
 void SPV2D::DisplacePointsAndRotate()

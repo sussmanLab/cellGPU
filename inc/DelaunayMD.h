@@ -114,33 +114,6 @@ class DelaunayMD
         //soft-sphere repulsion....for testing
         void repel(GPUArray<Dscalar2> &disp,Dscalar eps);
 
-        //old functions
-        void setPoints(std::vector<pt> &points);
-        void setPoints(std::vector<Dscalar> &points);
-        void setBox(gpubox &bx);
-        void setCellSize(Dscalar cs){cellsize=cs;};
-
-
-        //find indices of enclosing polygon of vertex i (helper function for the next function)
-        void getPolygon(int i, vector<int> &P0,vector<pt> &P1);
-        //finds a candidate set of possible points in the 1-ring of vertex i
-        void getOneRingCandidate(int i, vector<int> &DTringIdx,vector<pt> &DTring);
-        //checks if the one ring can be reduced by changing the initial polygon
-        void reduceOneRing(int i, vector<int> &DTringIdx,vector<pt> &DTring);
-        int cellschecked,candidates; //statistics for the above function
-
-        //default call... update this whenever a better algorithm is implemented
-        //"neighbors" returns a vector of the index of Delaunay neighbors of vertex i, sorted in clockwise order
-        void triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &DCell,bool timing=false);
-
-
-        //a public variable (for now) that stores the triangulation as sets of (i,j,k) vertices
-        triangulation DT;
-
-        //output part of triangulation to screen
-        void printTriangulation(int maxprint);
-        //write triangulation to text file
-
 
     };
 

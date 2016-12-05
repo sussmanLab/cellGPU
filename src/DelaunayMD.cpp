@@ -57,11 +57,12 @@ void DelaunayMD::spatiallySortPoints()
     ArrayHandle<Dscalar2> h_p(points,access_location::host, access_mode::readwrite);
     for (int ii = 0; ii < N; ++ii)
         {
-        sorter[ii].first = hs.getIdx(h_p.data[ii]);
-        sorter[ii].second = h_p.data[ii];
+        int idx = tagToIdx[ii];
+        sorter[ii].first = hs.getIdx(h_p.data[idx]);
+        sorter[ii].second = h_p.data[idx];
 
         idxSorter[ii].first=sorter[ii].first;
-        idxSorter[ii].second = ii;
+        idxSorter[ii].second = idx;
         };
 
     sort(sorter.begin(),sorter.end());
@@ -107,8 +108,6 @@ void DelaunayMD::initialize(int n)
 
     //set particle number and box
     N = n;
-    idxToTag.resize(N);
-    tagToIdx.resize(N);
     Dscalar boxsize = sqrt((Dscalar)N);
     Box.setSquare(boxsize,boxsize);
     CPUbox.setSquare(boxsize,boxsize);
@@ -121,6 +120,15 @@ void DelaunayMD::initialize(int n)
     pts.resize(N);
     repair.resize(N);
     randomizePositions(boxsize,boxsize);
+
+    //initialize spatial sorting
+    idxToTag.resize(N);
+    tagToIdx.resize(N);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        idxToTag[ii]=ii;
+        tagToIdx[ii]=ii;
+        };
     spatiallySortPoints();
 
     //cell list initialization

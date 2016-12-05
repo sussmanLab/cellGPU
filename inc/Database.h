@@ -170,15 +170,16 @@ void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
 
     for (int ii = 0; ii < Nv; ++ii)
         {
-        Dscalar px = h_p.data[ii].x;
-        Dscalar py = h_p.data[ii].y;
+        int pidx = s.idxToTag[ii];
+        Dscalar px = h_p.data[pidx].x;
+        Dscalar py = h_p.data[pidx].y;
         posdat[(2*idx)] = px;
         posdat[(2*idx)+1] = py;
-        directordat[ii] = h_cd.data[ii];
+        directordat[ii] = h_cd.data[pidx];
         if(h_ex.data[ii] == 0)
-            typedat[ii] = h_ct.data[ii];
+            typedat[ii] = h_ct.data[pidx];
         else
-            typedat[ii] = h_ct.data[ii]-5;
+            typedat[ii] = h_ct.data[pidx]-5;
         idx +=1;
         };
 //    means0 = means0/Nv;
@@ -198,8 +199,9 @@ void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
         int id = 0;
         for (int ii = 0; ii < Nv; ++ii)
             {
-            Dscalar px = h_ef.data[ii].x;
-            Dscalar py = h_ef.data[ii].y;
+            int pidx = s.idxToTag[ii];
+            Dscalar px = h_ef.data[pidx].x;
+            Dscalar py = h_ef.data[pidx].y;
             exdat[(2*id)] = px;
             exdat[(2*id)+1] = py;
             id +=1;

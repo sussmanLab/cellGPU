@@ -140,7 +140,7 @@ int main(int argc, char*argv[])
     //spv.meanForce();
     spv.repPerFrame = 0.0;
 
-    cudaProfilerStart();
+//    cudaProfilerStart();
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
@@ -151,7 +151,7 @@ int main(int argc, char*argv[])
             };
         spv.performTimestep();
         };
-    cudaProfilerStop();
+//    cudaProfilerStop();
     t2=clock();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
