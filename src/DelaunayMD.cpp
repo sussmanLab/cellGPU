@@ -58,25 +58,30 @@ void DelaunayMD::spatiallySortPoints()
     for (int ii = 0; ii < N; ++ii)
         {
         int idx = tagToIdx[ii];
-        int tag = idxToTag[ii];
 
-        sorter[ii].first = hs.getIdx(h_p.data[tag]);
-        sorter[ii].second = h_p.data[tag];
+        sorter[ii].first = hs.getIdx(h_p.data[idx]);
+        sorter[ii].second = h_p.data[idx];
 
         idxSorter[ii].first=sorter[ii].first;
         idxSorter[ii].second = idx;
+
+        tti[ii]=tagToIdx[ii];
+        itt[ii]=idxToTag[ii];
         };
 
     sort(sorter.begin(),sorter.end());
     sort(idxSorter.begin(),idxSorter.end());
 
+
     for (int ii = 0; ii < N; ++ii)
         {
-        int newidx = idxSorter[ii].second;
-
         h_p.data[ii] = sorter[ii].second;
-        idxToTag[ii] = newidx;
-        tagToIdx[newidx] = ii;
+        int newidx = idxSorter[ii].second;
+        int newtag = itt[newidx];
+        int nidx2  = tti[newidx];
+
+        tagToIdx[ii] = newtag;
+        idxToTag[nidx2] = ii;
         };
 
     };
@@ -123,15 +128,18 @@ void DelaunayMD::initialize(int n)
     repair.resize(N);
     randomizePositions(boxsize,boxsize);
 
-    //initialize spatial sorting
+    //initialize spatial sorting, but do not sort by default
+    itt.resize(N);
+    tti.resize(N);
     idxToTag.resize(N);
     tagToIdx.resize(N);
     for (int ii = 0; ii < N; ++ii)
         {
+        itt[ii]=ii;
+        tti[ii]=ii;
         idxToTag[ii]=ii;
         tagToIdx[ii]=ii;
         };
-    spatiallySortPoints();
 
     //cell list initialization
     celllist.setNp(N);
@@ -534,7 +542,7 @@ void DelaunayMD::testTriangulationCPU()
     Fails=0;
     globalTriangulationCGAL();
     skippedFrames -= 1;
-    /*
+/*
     resetDelLocPoints();
 
 

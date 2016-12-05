@@ -170,7 +170,7 @@ void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
 
     for (int ii = 0; ii < Nv; ++ii)
         {
-        int pidx = s.tagToIdx[ii];
+        int pidx = s.idxToTag[ii];
         Dscalar px = h_p.data[pidx].x;
         Dscalar py = h_p.data[pidx].y;
         posdat[(2*idx)] = px;

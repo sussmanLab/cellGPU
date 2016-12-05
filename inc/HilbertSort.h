@@ -45,7 +45,7 @@ struct HilbertSorter
                 mm +=1;
                 };
             //printf("creating sorter of order %i\n",mm+2);
-            setOrder(mm+2);
+            setOrder((int)min(30,mm+4));
             }
 
         HOSTDEVICE void setOrder(int m){M=m;};

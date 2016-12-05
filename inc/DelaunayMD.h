@@ -62,7 +62,9 @@ class DelaunayMD
         int skippedFrames;
         int GlobalFixes;
 
-        //maps between particle index and spatially sorted tag
+        //maps between particle index and spatially sorted tag...together with itt and tti (the versions of idxToTag and tagToIdx stored from the last spatial sorting) enables one to keep track of initial particle indices based on current index/tag combinations
+        vector<int> itt;
+        vector<int> tti;
         vector<int> idxToTag;
         vector<int> tagToIdx;
 

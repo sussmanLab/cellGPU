@@ -137,7 +137,7 @@ void SPV2D::spatialSorting()
     {
     ArrayHandle<int> ss(swap,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < N; ++ii)
-        ss.data[ii] = h_ct.data[idxToTag[ii]];
+        ss.data[ii] = h_ct.data[tti[tagToIdx[ii]]];
     };
     CellType = swap;
 

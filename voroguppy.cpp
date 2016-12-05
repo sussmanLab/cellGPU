@@ -22,7 +22,7 @@
 
 
 #include "spv2d.h"
-//#include "Database.h"
+#include "Database.h"
 
 
 using namespace std;
@@ -113,9 +113,9 @@ int main(int argc, char*argv[])
         if (!gpu) return 0;
         cudaSetDevice(USE_GPU);
         }
-//    char dataname[256];
-//    sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
+    char dataname[256];
+    sprintf(dataname,"/hdd2/data/spv/test.nc");
+    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
 
 
@@ -127,14 +127,25 @@ int main(int argc, char*argv[])
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
 
+    vector<int> types(numpts,0);
+    for (int ii = 0; ii < numpts; ++ii) types[ii]=ii;
+    spv.setCellType(types);
+
 
     printf("starting initialization\n");
+    spv.setSortPeriod(initSteps-2);
     for(int ii = 0; ii < initSteps; ++ii)
         {
         spv.performTimestep();
         };
+    ncdat.WriteState(spv);
+        spv.performTimestep();
+        spv.spatialSorting();
+        spv.performTimestep();
+        spv.spatialSorting();
+        spv.performTimestep();
+    ncdat.WriteState(spv);
     spv.meanForce();
-    spv.setSortPeriod((int)(1000/dt));
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
