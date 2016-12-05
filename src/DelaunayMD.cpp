@@ -47,22 +47,33 @@ void DelaunayMD::randomizePositions(Dscalar boxx, Dscalar boxy)
 
 void DelaunayMD::spatiallySortPoints()
     {
+    //calling this should resort all particle data! need to make sure maps are working,
+    //also need to add cellType, areaPeriPreferences,motility, etc. etc. to the SPV caller, and database, etc. etc.!
     HilbertSorter hs(Box);
 
     vector<pair<int,Dscalar2> > sorter(N);
+    vector<pair<int,int> > idxSorter(N);
 
     ArrayHandle<Dscalar2> h_p(points,access_location::host, access_mode::readwrite);
     for (int ii = 0; ii < N; ++ii)
         {
         sorter[ii].first = hs.getIdx(h_p.data[ii]);
         sorter[ii].second = h_p.data[ii];
+
+        idxSorter[ii].first=sorter[ii].first;
+        idxSorter[ii].second = ii;
         };
 
     sort(sorter.begin(),sorter.end());
+    sort(idxSorter.begin(),idxSorter.end());
 
     for (int ii = 0; ii < N; ++ii)
         {
+        int newidx = idxSorter[ii].second;
+
         h_p.data[ii] = sorter[ii].second;
+        idxToTag[ii] = newidx;
+        tagToIdx[newidx] = ii;
         };
 
     };
@@ -96,6 +107,8 @@ void DelaunayMD::initialize(int n)
 
     //set particle number and box
     N = n;
+    idxToTag.resize(N);
+    tagToIdx.resize(N);
     Dscalar boxsize = sqrt((Dscalar)N);
     Box.setSquare(boxsize,boxsize);
     CPUbox.setSquare(boxsize,boxsize);

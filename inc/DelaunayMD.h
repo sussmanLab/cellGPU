@@ -62,6 +62,10 @@ class DelaunayMD
         int skippedFrames;
         int GlobalFixes;
 
+        //maps between particle index and spatially sorted tag
+        vector<int> idxToTag;
+        vector<int> tagToIdx;
+
         void getPoints(GPUArray<Dscalar2> &ps){ps = points;};
         //constructors
         DelaunayMD(){triangulated=false;cellsize=2.0;};

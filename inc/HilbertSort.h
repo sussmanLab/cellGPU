@@ -44,7 +44,7 @@ struct HilbertSorter
                 temp *=2;
                 mm +=1;
                 };
-            printf("creating sorter of order %i\n",mm+2);
+            //printf("creating sorter of order %i\n",mm+2);
             setOrder(mm+2);
             }
 
@@ -53,7 +53,7 @@ struct HilbertSorter
 
 
 
-        int int_power(int i, int j)
+        HOSTDEVICE int int_power(int i, int j)
             {
             int value;
             if (j < 0)
@@ -77,24 +77,24 @@ struct HilbertSorter
             return value;
             };
 
-void HilbertRotate(int n, int &x, int &y, int rx, int ry)
-    {
-    int t;
-    if (ry == 0)
-        {
-        //reflect
-        if(ry == 1)
-            {
-            x = n-1-x;
-            y=n-1-y;
-            };
-        //flip
-        t = x;
-        x = y;
-        y = t;
-        };
-    return;
-    };
+            HOSTDEVICE void HilbertRotate(int n, int &x, int &y, int rx, int ry)
+                {
+                int t;
+                if (ry == 0)
+                    {
+                    //reflect
+                    if(ry == 1)
+                        {
+                        x = n-1-x;
+                        y=n-1-y;
+                        };
+                    //flip
+                    t = x;
+                    x = y;
+                    y = t;
+                    };
+                return;
+                };
 
 
 
