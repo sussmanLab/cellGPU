@@ -58,8 +58,10 @@ void DelaunayMD::spatiallySortPoints()
     for (int ii = 0; ii < N; ++ii)
         {
         int idx = tagToIdx[ii];
-        sorter[ii].first = hs.getIdx(h_p.data[idx]);
-        sorter[ii].second = h_p.data[idx];
+        int tag = idxToTag[ii];
+
+        sorter[ii].first = hs.getIdx(h_p.data[tag]);
+        sorter[ii].second = h_p.data[tag];
 
         idxSorter[ii].first=sorter[ii].first;
         idxSorter[ii].second = idx;
