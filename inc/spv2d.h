@@ -81,7 +81,7 @@ class SPV2D : public DelaunayMD
         void setUseTension(bool u){useTension = u;};
 
 
-        void setSortPeriod(int sp){sortPeriod = sp;};
+        void setSortPeriod(int sp){sortPeriod = (int) min(1,sp);};
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
         void setModuliUniform(Dscalar KA, Dscalar KP);
 

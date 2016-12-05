@@ -1173,7 +1173,7 @@ void SPV2D::reportForces()
 //
 //        if (isnan(h_f.data[i].x) || isnan(h_f.data[i].y))
 //        if(i == N-1)
-          printf("cell %i: \t position (%f,%f)\t force (%f, %f)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
+          printf("cell %i: \t position (%f,%f)\t force (%e, %e)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
         };
     printf("min/max force : (%f,%f)\n",min,max);
 
