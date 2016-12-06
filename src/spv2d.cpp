@@ -446,7 +446,7 @@ void SPV2D::performTimestepGPU()
 
     //spatial sorting triggers a global re-triangulation, so no need to test and repair
     //
-    if(!spatialSortThisStep)
+//    if(!spatialSortThisStep)
         {
         testAndRepairTriangulation();
 
