@@ -80,23 +80,12 @@ obj/runMakeDatabase.o:runMakeDatabase.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
 
 
-database.out: obj/runMakeDatabase.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
-
-plates.out: obj/runplates.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
-
-ellipse.out: obj/runellipse.o $(CLASS_OBJS) $(CUOBJS) $(EXT_OBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 run: build
 	./delGPU.out
-	./plates.out
-	./ellipse.out
-	./database.out
 
 clean:
 	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) delGPU.out
