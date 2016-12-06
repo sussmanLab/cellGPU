@@ -34,7 +34,7 @@ void SPV2D::Initialize(int n)
     setDeltaT(0.01);
     initialize(n);
     setModuliUniform(1.0,1.0);
-    sortPeriod = 1000;
+    sortPeriod = -1;
 
 
     setv0Dr(0.05,1.0);
@@ -177,6 +177,8 @@ void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
 void SPV2D::setv0Dr(Dscalar v0new,Dscalar drnew)
     {
     Motility.resize(N);
+    v0=v0new;
+    Dr=drnew;
     if (true)
         {
         ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
@@ -287,8 +289,11 @@ void SPV2D::performTimestep()
         performTimestepGPU();
     else
         performTimestepCPU();
-
-    if (Timestep % sortPeriod == 0 && Timestep != 0) spatialSorting();
+    if (sortPeriod > 0)
+        {
+        if (Timestep % sortPeriod == 0)
+            spatialSorting();
+        };
     };
 
 void SPV2D::DisplacePointsAndRotate()
@@ -1171,7 +1176,7 @@ void SPV2D::reportForces()
 //
 //        if (isnan(h_f.data[i].x) || isnan(h_f.data[i].y))
 //        if(i == N-1)
-//          printf("cell %i: \t position (%f,%f)\t force (%f, %f)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
+          printf("cell %i: \t position (%f,%f)\t force (%e, %e)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
         };
     printf("min/max force : (%f,%f)\n",min,max);
 
@@ -1219,5 +1224,9 @@ void SPV2D::deltaAngle()
     printf("timestep, dA^2 = (%i,%f)\n",Timestep,dA);
 
 
+    };
+void SPV2D::reportCellInfo()
+    {
+    printf("N=%i\tv0=%f\tDr=%f\tgamma=%f\n",N,v0,Dr,gamma);
     };
 

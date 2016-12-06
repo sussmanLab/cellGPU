@@ -127,10 +127,19 @@ int main(int argc, char*argv[])
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
 
-    vector<int> types(numpts,0);
-    for (int ii = 0; ii < numpts; ++ii) types[ii]=ii;
-    spv.setCellType(types);
-
+    /*
+    //compare with output of mattias' code
+    char fn[256];
+    sprintf(fn,"/hdd2/repos/test.txt");
+    ifstream input(fn);
+    spv.readTriangulation(input);
+    spv.globalTriangulationCGAL();
+    spv.allDelSets();
+    spv.computeGeometryGPU();
+    spv.computeSPVForceSetsGPU();
+    spv.sumForceSets();
+    spv.reportForces();
+    */
 
     printf("starting initialization\n");
     spv.setSortPeriod(initSteps/10);
@@ -139,22 +148,13 @@ int main(int argc, char*argv[])
         {
         spv.performTimestep();
         };
-    ncdat.WriteState(spv);
-        spv.performTimestep();
-        spv.spatialSorting();
-    ncdat.WriteState(spv);
-        spv.performTimestep();
-        spv.spatialSorting();
-    ncdat.WriteState(spv);
-        spv.performTimestep();
-    spv.meanForce();
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
     //spv.meanForce();
     spv.repPerFrame = 0.0;
 
-//    cudaProfilerStart();
+    cudaProfilerStart();
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
@@ -165,8 +165,8 @@ int main(int argc, char*argv[])
             };
         spv.performTimestep();
         };
-//    cudaProfilerStop();
     t2=clock();
+    cudaProfilerStop();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
 

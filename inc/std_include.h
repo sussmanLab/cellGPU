@@ -14,6 +14,7 @@
 
 #define Dscalar double
 #define Dscalar2 double2
+#define ncDscalar ncDouble
 
 HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)
     {
