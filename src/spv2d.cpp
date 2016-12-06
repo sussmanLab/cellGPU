@@ -174,6 +174,29 @@ void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
         };
     };
 
+void SPV2D::setCellTypeStrip(Dscalar frac)
+    {
+    Dscalar x11,x12,x21,x22;
+    Box.getBoxDims(x11,x12,x21,x22);
+    Dscalar ymin = x22*(0.5-frac*0.5);
+    Dscalar ymax = x22*(0.5+frac*0.5);
+
+
+    CellType.resize(N);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+
+    for (int ii = 0; ii < N; ++ii)
+        {
+        Dscalar py = h_p.data[ii].y;
+        if (py > ymin && py < ymax)
+            h_ct.data[ii] = 0;
+        else
+            h_ct.data[ii] = 1;
+        };
+    };
+
+
 void SPV2D::setv0Dr(Dscalar v0new,Dscalar drnew)
     {
     Motility.resize(N);
