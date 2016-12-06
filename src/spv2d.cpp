@@ -178,8 +178,8 @@ void SPV2D::setCellTypeStrip(Dscalar frac)
     {
     Dscalar x11,x12,x21,x22;
     Box.getBoxDims(x11,x12,x21,x22);
-    Dscalar ymin = x22*(0.5-frac*0.5);
-    Dscalar ymax = x22*(0.5+frac*0.5);
+    Dscalar xmin = x11*(0.5-frac*0.5);
+    Dscalar xmax = x11*(0.5+frac*0.5);
 
 
     CellType.resize(N);
@@ -188,8 +188,8 @@ void SPV2D::setCellTypeStrip(Dscalar frac)
 
     for (int ii = 0; ii < N; ++ii)
         {
-        Dscalar py = h_p.data[ii].y;
-        if (py > ymin && py < ymax)
+        Dscalar px = h_p.data[ii].x;
+        if (px > xmin && px < xmax)
             h_ct.data[ii] = 0;
         else
             h_ct.data[ii] = 1;
