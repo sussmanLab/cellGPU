@@ -137,6 +137,7 @@ int main(int argc, char*argv[])
 
     spv.setv0Dr(v0,Dr);
     spv.setDeltaT(dt);
+    spv.setSortPeriod(5000);
 
     //initialize
     for(int ii = 0; ii < initSteps; ++ii)

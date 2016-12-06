@@ -154,7 +154,7 @@ int main(int argc, char*argv[])
     spv.setUseTension(true);
     spv.setTension(gamma);
     spv.reportCellInfo();
-
+    spv.setSortPeriod(10000);
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {

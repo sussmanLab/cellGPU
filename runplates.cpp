@@ -201,6 +201,7 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
 
+//    spv.setSortPeriod(5000);
     printf("Relaxing system with plates fixed\n");
     for(int ii = 0; ii < 10*tSteps; ++ii)
         {

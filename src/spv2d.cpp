@@ -34,7 +34,7 @@ void SPV2D::Initialize(int n)
     setDeltaT(0.01);
     initialize(n);
     setModuliUniform(1.0,1.0);
-    sortPeriod = 5000;
+    sortPeriod = -1;
 
 
     setv0Dr(0.05,1.0);
@@ -289,8 +289,11 @@ void SPV2D::performTimestep()
         performTimestepGPU();
     else
         performTimestepCPU();
-
-    if (Timestep % sortPeriod == 0 && Timestep != 0) spatialSorting();
+    if (sortPeriod > 0)
+        {
+        if (Timestep % sortPeriod == 0)
+            spatialSorting();
+        };
     };
 
 void SPV2D::DisplacePointsAndRotate()
