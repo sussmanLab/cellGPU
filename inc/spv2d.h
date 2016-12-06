@@ -51,6 +51,7 @@ class SPV2D : public DelaunayMD
     public:
         int Timestep;
         int sortPeriod;
+        bool spatialSortThisStep;
         Dscalar deltaT;
         GPUArray<int> CellType;
         GPUArray<Dscalar> cellDirectors;

@@ -98,6 +98,7 @@ void SPV2D::spatialSorting()
 
 void SPV2D::allDelSets()
     {
+    updateNeighIdxs();
     delSets.resize(neighMax*N);
     delOther.resize(neighMax*N);
     forceSets.resize(neighMax*N);
@@ -312,10 +313,15 @@ void SPV2D::performTimestep()
         performTimestepGPU();
     else
         performTimestepCPU();
+
+    spatialSortThisStep = false;
     if (sortPeriod > 0)
         {
         if (Timestep % sortPeriod == 0)
+            {
+            spatialSortThisStep = true;
             spatialSorting();
+            };
         };
     };
 
@@ -424,15 +430,7 @@ void SPV2D::performTimestepCPU()
 
 void SPV2D::performTimestepGPU()
     {
-//    clock_t t1,t2;
-//    printf("computing geometry for timestep %i\n",Timestep);
-//    t1=clock();
     computeGeometryGPU();
-//    t2=clock();
-//    triangletiming += (t2-t1);
-//    gputiming += (t2-t1);
-//    printf("computing forces\n");
-//    t1=clock();
     if(!useTension)
         computeSPVForceSetsGPU();
     else
@@ -443,37 +441,30 @@ void SPV2D::performTimestepGPU()
     else
         sumForceSetsWithExclusions();
 
-//    t2=clock();
-//    forcetiming += t2-t1;
-//    gputiming += (t2-t1);
-//    t1=clock();
 
-//    printf("displacing particles\n");
     DisplacePointsAndRotate();
-//    t2=clock();
-//    gputiming += (t2-t1);
 
-
-//    printf("recomputing triangulation\n");
-    testAndRepairTriangulation();
-
-//    t1=clock();
-    if(Fails == 1)
+    //spatial sorting triggers a global re-triangulation, so no need to test and repair
+    //
+    if(!spatialSortThisStep)
         {
-        //maintain the auxilliary lists for computing forces
-        if(FullFails || neighMaxChange)
+        testAndRepairTriangulation();
+
+        if(Fails == 1)
             {
-            allDelSets();
-            neighMaxChange = false;
-            }
-        else
-            {
-            for (int jj = 0;jj < NeedsFixing.size(); ++jj)
-                getDelSets(NeedsFixing[jj]);
+            //maintain the auxilliary lists for computing forces
+            if(FullFails || neighMaxChange)
+                {
+                allDelSets();
+                neighMaxChange = false;
+                }
+            else
+                {
+                for (int jj = 0;jj < NeedsFixing.size(); ++jj)
+                    getDelSets(NeedsFixing[jj]);
+                };
             };
         };
-//    t2=clock();
-//    cputiming += (t2-t1);
     };
 
 void SPV2D::computeGeometryGPU()
