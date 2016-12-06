@@ -98,6 +98,7 @@ void SPV2D::spatialSorting()
 
 void SPV2D::allDelSets()
     {
+    updateNeighIdxs();
     delSets.resize(neighMax*N);
     delOther.resize(neighMax*N);
     forceSets.resize(neighMax*N);
@@ -173,6 +174,29 @@ void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
             h_ct.data[ii] = 1;
         };
     };
+
+void SPV2D::setCellTypeStrip(Dscalar frac)
+    {
+    Dscalar x11,x12,x21,x22;
+    Box.getBoxDims(x11,x12,x21,x22);
+    Dscalar xmin = x11*(0.5-frac*0.5);
+    Dscalar xmax = x11*(0.5+frac*0.5);
+
+
+    CellType.resize(N);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+
+    for (int ii = 0; ii < N; ++ii)
+        {
+        Dscalar px = h_p.data[ii].x;
+        if (px > xmin && px < xmax)
+            h_ct.data[ii] = 0;
+        else
+            h_ct.data[ii] = 1;
+        };
+    };
+
 
 void SPV2D::setv0Dr(Dscalar v0new,Dscalar drnew)
     {
@@ -289,10 +313,15 @@ void SPV2D::performTimestep()
         performTimestepGPU();
     else
         performTimestepCPU();
+
+    spatialSortThisStep = false;
     if (sortPeriod > 0)
         {
         if (Timestep % sortPeriod == 0)
+            {
+            spatialSortThisStep = true;
             spatialSorting();
+            };
         };
     };
 
@@ -401,15 +430,7 @@ void SPV2D::performTimestepCPU()
 
 void SPV2D::performTimestepGPU()
     {
-//    clock_t t1,t2;
-//    printf("computing geometry for timestep %i\n",Timestep);
-//    t1=clock();
     computeGeometryGPU();
-//    t2=clock();
-//    triangletiming += (t2-t1);
-//    gputiming += (t2-t1);
-//    printf("computing forces\n");
-//    t1=clock();
     if(!useTension)
         computeSPVForceSetsGPU();
     else
@@ -420,37 +441,30 @@ void SPV2D::performTimestepGPU()
     else
         sumForceSetsWithExclusions();
 
-//    t2=clock();
-//    forcetiming += t2-t1;
-//    gputiming += (t2-t1);
-//    t1=clock();
 
-//    printf("displacing particles\n");
     DisplacePointsAndRotate();
-//    t2=clock();
-//    gputiming += (t2-t1);
 
-
-//    printf("recomputing triangulation\n");
-    testAndRepairTriangulation();
-
-//    t1=clock();
-    if(Fails == 1)
+    //spatial sorting triggers a global re-triangulation, so no need to test and repair
+    //
+    if(!spatialSortThisStep)
         {
-        //maintain the auxilliary lists for computing forces
-        if(FullFails || neighMaxChange)
+        testAndRepairTriangulation();
+
+        if(Fails == 1)
             {
-            allDelSets();
-            neighMaxChange = false;
-            }
-        else
-            {
-            for (int jj = 0;jj < NeedsFixing.size(); ++jj)
-                getDelSets(NeedsFixing[jj]);
+            //maintain the auxilliary lists for computing forces
+            if(FullFails || neighMaxChange)
+                {
+                allDelSets();
+                neighMaxChange = false;
+                }
+            else
+                {
+                for (int jj = 0;jj < NeedsFixing.size(); ++jj)
+                    getDelSets(NeedsFixing[jj]);
+                };
             };
         };
-//    t2=clock();
-//    cputiming += (t2-t1);
     };
 
 void SPV2D::computeGeometryGPU()

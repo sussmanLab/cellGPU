@@ -298,7 +298,7 @@ void DelaunayMD::fullTriangulation()
         h_repair.data[nn]=0;
         };
     if (nmax%2 ==0)
-        neighMax = nmax;
+        neighMax = nmax + 2;
     else
         neighMax = nmax + 1;
     neighMax = nmax+1; cout << "new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
@@ -383,6 +383,7 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         neighs.resize(neighMax*N);
         neighMaxChange = true;
         };
+    updateNeighIdxs();
 
     //store data in gpuarrays
     {
@@ -399,10 +400,9 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         };
 
     if(verbose)
-        cout << "global new Nmax = " << nmax+1 << "; total neighbors = " << totaln << endl;cout.flush();
+        cout << "global new Nmax = " << neighMax << "; total neighbors = " << totaln << endl;cout.flush();
     };
 
-    updateNeighIdxs();
     getCircumcenterIndices(true);
 
     if(totaln != 6*N)
@@ -419,7 +419,6 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
 void DelaunayMD::updateNeighIdxs()
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
     ArrayHandle<int2> h_nidx(NeighIdxs,access_location::host,access_mode::overwrite);
     int idx = 0;
     for (int ii = 0; ii < N; ++ii)
@@ -504,7 +503,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         if(neighTemp.size() > neighMax)
             {
             if(neighTemp.size()%2==0)
-                neighMax = neighTemp.size();
+                neighMax = neighTemp.size()+2;
             else
                 neighMax = neighTemp.size()+1;
             resetCCidx = true;
@@ -516,6 +515,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         {
         neighMaxChange = true;
         cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
+        neighs.resize(neighMax*N);
         globalTriangulationCGAL();
         return;
         };

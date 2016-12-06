@@ -51,6 +51,7 @@ class SPV2D : public DelaunayMD
     public:
         int Timestep;
         int sortPeriod;
+        bool spatialSortThisStep;
         Dscalar deltaT;
         GPUArray<int> CellType;
         GPUArray<Dscalar> cellDirectors;
@@ -92,6 +93,8 @@ class SPV2D : public DelaunayMD
 
         //sets particles within an ellipse to type 0, outside to type 1. frac is fraction of area for the ellipse to take up, aspectRatio is (r_x/r_y)
         void setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio);
+        //sets particles within a strip (surface normal to x) to type 0, other particles to type 1. Fraction is the area of strip occupied by the system
+        void setCellTypeStrip(Dscalar frac);
 
         void setCurandStates(int i);
 
