@@ -40,6 +40,7 @@ class SPV2D : public DelaunayMD
         GPUArray<Dscalar2> displacements;
 
 //        curandState *devStates;
+        GPUArray<curandState> devStates;
 
         //delSet.data[n_idx(nn,i)] are four consecutive delaunay neighbors, orientationally ordered, of point i (for use in computing forces on GPU)
         GPUArray<int4> delSets;
@@ -63,7 +64,6 @@ class SPV2D : public DelaunayMD
 
         ~SPV2D()
             {
-  //          cudaFree(devStates);
             };
         //initialize with random positions in a square box
         SPV2D(int n);

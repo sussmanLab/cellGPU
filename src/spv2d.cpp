@@ -61,7 +61,8 @@ void SPV2D::Initialize(int n)
         h_cd.data[ii] = theta;
         h_cdi.data[ii] = theta;
         };
-    //setCurandStates(n);
+    devStates.resize(N);
+    setCurandStates(Timestep);
     allDelSets();
     };
 
@@ -245,13 +246,14 @@ void SPV2D::setExclusions(vector<int> &exes)
             };
         };
     };
-/*
+
 void SPV2D::setCurandStates(int i)
     {
-    gpu_init_curand(devStates,i,N);
+    ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
+
+    gpu_init_curand(d_cs.data,N,i);
 
     };
-*/
 
 /////////////////
 //Utility
@@ -332,6 +334,7 @@ void SPV2D::DisplacePointsAndRotate()
     ArrayHandle<Dscalar2> d_f(forces,access_location::device,access_mode::read);
     ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_motility(Motility,access_location::device,access_mode::read);
+    ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::read);
 
     gpu_displace_and_rotate(d_p.data,
                             d_f.data,
@@ -340,7 +343,7 @@ void SPV2D::DisplacePointsAndRotate()
                             N,
                             deltaT,
                             Timestep,
-//                            devStates,
+                            d_cs.data,
                             Box);
 
     };
