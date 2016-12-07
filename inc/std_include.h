@@ -16,6 +16,8 @@
 #define Dscalar2 double2
 #define ncDscalar ncDouble
 
+#define cur_norm curand_normal_double
+
 HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)
     {
     return a.x<b.x;
