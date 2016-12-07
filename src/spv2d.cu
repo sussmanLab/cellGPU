@@ -446,10 +446,10 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
         return;
 
     curandState_t randState;
-                    //seed passed is timestep*N
-    curand_init(seed+idx,//seed first
-                0,   // sequence -- only important for multiple cores
-                0,   //offset. advance by sequence by 1 plus this value
+                    //seed passed is timestep
+    curand_init(1337,//seed first
+                idx,   // sequence
+                seed,   //offset for starting the sequence.... advance by sequence by 1 plus this value
                 &randState);
 
     Dscalar dirx = cosf(d_directors[idx]);
@@ -553,7 +553,7 @@ bool gpu_displace_and_rotate(Dscalar2 *d_points,
                                                 d_motility,
                                                 N,
                                                 dt,
-                                                timestep*N,
+                                                timestep,
     //                                            states,
                                                 Box
                                                 );
