@@ -161,7 +161,7 @@ int main(int argc, char*argv[])
         if(ii%100 ==0)
             {
             printf("timestep %i\n",ii);
-    ncdat.WriteState(spv);
+//    ncdat.WriteState(spv);
             };
         spv.performTimestep();
         };

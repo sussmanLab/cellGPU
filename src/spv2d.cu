@@ -18,14 +18,17 @@
 #include <stdio.h>
 #include "Matrix.h"
 
-/*
-__global__ void init_curand_kernel(unsigned long seed, curandState *state)
+
+__global__ void init_curand_kernel(curandState *state, int N,int Timestep)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
-    curand_init(seed,idx,0,&state[idx]);
+    if (idx >=N)
+        return;
+    
+    curand_init(1337,idx,Timestep,&state[idx]);
     return;
     };
-*/
+
 
 __global__ void gpu_sum_forces_kernel(Dscalar2 *d_forceSets,
                                       Dscalar2 *d_forces,
@@ -436,7 +439,7 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
                                           int N,
                                           Dscalar dt,
                                           int seed,
-//                                          curandState *states,
+                                          curandState *states,
                                           gpubox Box
                                          )
     {
@@ -446,30 +449,19 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
         return;
 
     curandState_t randState;
-                    //seed passed is timestep
-    curand_init(1337,//seed first
-                idx,   // sequence
-                seed,   //offset for starting the sequence.... advance by sequence by 1 plus this value
-                &randState);
-
+    
+    randState=states[idx];
     Dscalar dirx = cosf(d_directors[idx]);
     Dscalar diry = sinf(d_directors[idx]);
-    //Dscalar angleDiff = curand_normal(&states[idx])*sqrt(2.0*dt*Dr);
     Dscalar v0 = d_motility[idx].x;
     Dscalar Dr = d_motility[idx].y;
     Dscalar angleDiff = cur_norm(&randState)*sqrt(2.0*dt*Dr);
-//    printf("%f\n",angleDiff);
     d_directors[idx] += angleDiff;
 
- //   Dscalar dx = dt*(v0*dirx + d_force[idx].x);
-//if (idx == 0) printf("x-displacement = %e\n",dx);
-//    Dscalar f = dt*(v0*dirx + d_force[idx].x);
+    states[idx] = randState;
+
     d_points[idx].x += dt*(v0*dirx + d_force[idx].x);
-//    d_displacements[idx].x = f;
-//printf("%e\t", dt*(v0*dirx + d_force[idx].x));
-//    f = dt*(v0*diry + d_force[idx].y);
     d_points[idx].y += dt*(v0*diry + d_force[idx].y);
-//    d_displacements[idx].y = f;
     Box.putInBoxReal(d_points[idx]);
     return;
     };
@@ -481,21 +473,19 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
 
 
 
-/*
+
 bool gpu_init_curand(curandState *states,
-                    unsigned long seed,
-                    int N)
+                    int N,
+                    int Timestep)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
 
 
-    cudaMalloc((void **)&states,nblocks*block_size*sizeof(curandState) );
-    init_curand_kernel<<<nblocks,block_size>>>(seed,states);
+    init_curand_kernel<<<nblocks,block_size>>>(states,N,Timestep);
     return cudaSuccess;
     };
-*/
 
 
 bool gpu_compute_geometry(Dscalar2 *d_points,
@@ -537,7 +527,7 @@ bool gpu_displace_and_rotate(Dscalar2 *d_points,
                         int N,
                         Dscalar dt,
                         int timestep,
-  //                      curandState *states,
+                        curandState *states,
                         gpubox &Box
                         )
     {
@@ -554,7 +544,7 @@ bool gpu_displace_and_rotate(Dscalar2 *d_points,
                                                 N,
                                                 dt,
                                                 timestep,
-    //                                            states,
+                                                states,
                                                 Box
                                                 );
     code = cudaGetLastError();

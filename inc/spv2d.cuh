@@ -8,12 +8,10 @@
 #include "gpubox.h"
 
 
-/*
 bool gpu_init_curand(curandState *states,
-                    unsigned long seed,
-                    int N
+                    int N,
+                    int Timestep
                     );
-*/
 
 
 bool gpu_displace_and_rotate(
@@ -24,7 +22,7 @@ bool gpu_displace_and_rotate(
                     int N,
                     Dscalar dt,
                     int seed,
-//                    curandState *states,
+                    curandState *states,
                     gpubox &Box
                     );
 
