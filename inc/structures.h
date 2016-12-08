@@ -138,7 +138,8 @@ struct DelaunayCell
             getCW();
 
             //calculate the voronoi points as the circumcenter of the origin,p_i,p_{i+1}
-            pt ori(0.0,0.0);
+            pt ori;
+            ori.x=0.0;ori.y=0.0;
             for (int ii=0; ii < n; ++ii)
                 {
                 Dscalar xc,yc,rad;

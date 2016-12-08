@@ -26,7 +26,8 @@ void DelaunayLoc::setPoints(vector<Dscalar> &points)
     cellsize = 2.0;
     for (unsigned int ii = 0; ii<nV; ++ii)
         {
-        pt point(points[ii*2],points[ii*2+1]);
+        pt point;
+        point.x=points[ii*2]; point.y=points[ii*2+1];
         pts[ii]=point;
         pair<pt, int> pp;
         pp.first = point;
@@ -77,7 +78,9 @@ void DelaunayLoc::initialize(Dscalar csize)
 void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<pt> &P1)
     {
     vector<int> Pt(4,-1);
-    pt np(-1,-1); vector<pt> Pt2(4,np);
+    pt np;
+    np.x=-1;np.y=-1;
+    vector<pt> Pt2(4,np);
     P0.resize(4);
     P1.resize(4);
 
@@ -104,7 +107,7 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<pt> &P1)
                 idx = clist.cells[cellneighs[cc]][pp];
                 if (idx == i ) continue;
                 Box.minDist(pts[idx],v,disp);
-                nrm = disp.norm();
+                nrm = sqrt(disp.x*disp.x+disp.y*disp.y);
                 int q = Quadrant(disp.x,disp.y);
                 if(!found[q]||nrm < dists[q])
                     {
@@ -131,13 +134,15 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
 
     getPolygon(i,P0,P1);
 
-    pt v(pts[i].x,pts[i].y);
+    pt v;
+    v.x=pts[i].x;v.y=pts[i].y;
     DTring.clear();
     DTringIdx.clear();
 
     int reduceSize = 30;
     DTring.reserve(2*reduceSize); DTringIdx.reserve(2*reduceSize);
-    pt vc(0.0,0.0);
+    pt vc;
+    vc.x=0.0; vc.y=0.0;
     DTring.push_back(vc);
     DTringIdx.push_back(i);
     for (int jj = 0; jj < P0.size();++jj)
@@ -147,7 +152,8 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
         };
 
     vector<pt> Q0;//vector of circumcenters formed by vertex i and the P_i
-    pt Qnew(0.0,0.0);
+    pt Qnew;
+    Qnew.x=0.0;Qnew.y=0.0;
     bool valid;
     int Psize = P1.size();
     vector<Dscalar> rads;
@@ -229,13 +235,14 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
     //start with the vertex i
     vector<int> newRingIdx; newRingIdx.reserve(50);
     vector<pt> newRing;     newRing.reserve(50);
-    pt v(0.0,0.0);
+    pt v;
+    v.x=0.0;v.y=0.0;
     newRing.push_back(v);
     newRingIdx.push_back(i);
 
     vector<pt> Q0;//vector of circumcenters formed by vertex i and the P_i
-    pt Qnew(0.0,0.0);
-    pt Qnew2(0.0,0.0);
+    pt Qnew,Qnew2;
+    Qnew.x=0.0;Qnew.y=0.0;Qnew2.x=0.0;Qnew2.y=0.0;
     bool valid;
     vector<int> P0(4);
     vector<pt> P1(4);

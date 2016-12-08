@@ -30,7 +30,8 @@ void DelaunayNP::setPoints(vector<Dscalar> points)
     pts.resize(nV);
     for (unsigned int ii = 0; ii<nV; ++ii)
         {
-        pt point(points[ii*2],points[ii*2+1]);
+        pt point;
+        point.x=points[ii*2];point.y=points[ii*2+1];
         pts[ii]=point;
         pair<pt, int> pp;
         pp.first = point;
@@ -138,7 +139,8 @@ void DelaunayNP::naiveBowyerWatson()
         {
         xp = sortmap[ii].first.x;
         yp = sortmap[ii].first.y;
-        pt Xp(xp,yp);
+        pt Xp;
+        Xp.x=xp;Xp.y=yp;
         DT.nEdges=0;
 
         //loop over constructed triangles, find the ones where (xp,yp) is in the circumcenter

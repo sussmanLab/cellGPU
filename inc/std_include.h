@@ -33,6 +33,16 @@ HOSTDEVICE Dscalar2 make_Dscalar2(Dscalar x, Dscalar y)
     return ans;
     }
 
+HOSTDEVICE Dscalar2 operator+(const Dscalar2 &a, const Dscalar2 &b)
+    {
+    return make_Dscalar2(a.x+b.x,a.y+b.y);
+    }
+
+HOSTDEVICE Dscalar2 operator-(const Dscalar2 &a, const Dscalar2 &b)
+    {
+    return make_Dscalar2(a.x-b.x,a.y-b.y);
+    }
+
 HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
     {
     Dscalar4 ans;
