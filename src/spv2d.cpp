@@ -1,7 +1,4 @@
-using namespace std;
-
 //definitions needed for DelaunayLoc, and all GPU functions, respectively
-
 #define EPSILON 1e-16
 #define ENABLE_CUDA
 
@@ -43,7 +40,6 @@ void SPV2D::Initialize(int n)
     AreaPeri.resize(n);
 
     cellDirectors.resize(n);
-    cellDirectors_initial.resize(n);
     displacements.resize(n);
 
     vector<int> baseEx(n,0);
@@ -52,17 +48,17 @@ void SPV2D::Initialize(int n)
 
 
     ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
-    ArrayHandle<Dscalar> h_cdi(cellDirectors_initial,access_location::host, access_mode::overwrite);
 
     int randmax = 100000000;
     for (int ii = 0; ii < N; ++ii)
         {
         Dscalar theta = 2.0*PI/(Dscalar)(randmax)* (Dscalar)(rand()%randmax);
         h_cd.data[ii] = theta;
-        h_cdi.data[ii] = theta;
         };
     devStates.resize(N);
     setCurandStates(Timestep);
+    VoroCur.resize(neighMax*N);
+    VoroLastNext.resize(neighMax*N);
     allDelSets();
     };
 
@@ -294,13 +290,6 @@ void SPV2D::getDelSets(int i)
         nm1=n1;
         n1=n2;
         };
-/*
-    for (int nn = 0; nn < iNeighs; ++nn)
-        {
-        printf("%i  %i   %i   %i   ;  %i \n",ds.data[n_idx(nn,i)].x,ds.data[n_idx(nn,i)].y, ds.data[n_idx(nn,i)].z,ds.data[n_idx(nn,i)].w,dother.data[n_idx(nn,i)]);
-
-        };
-*/
     };
 
 
@@ -311,10 +300,6 @@ void SPV2D::getDelSets(int i)
 void SPV2D::performTimestep()
     {
     Timestep += 1;
-    if(GPUcompute)
-        performTimestepGPU();
-    else
-        performTimestepCPU();
 
     spatialSortThisStep = false;
     if (sortPeriod > 0)
@@ -322,9 +307,16 @@ void SPV2D::performTimestep()
         if (Timestep % sortPeriod == 0)
             {
             spatialSortThisStep = true;
-            spatialSorting();
             };
         };
+
+    if(GPUcompute)
+        performTimestepGPU();
+    else
+        performTimestepCPU();
+
+    if (spatialSortThisStep)
+        spatialSorting();
     };
 
 void SPV2D::DisplacePointsAndRotate()
@@ -380,12 +372,15 @@ void SPV2D::calculateDispCPU()
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
     ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_motility(Motility,access_location::host,access_mode::read);
 
     random_device rd;
     mt19937 gen(rd());
-    normal_distribution<> normal(0.0,sqrt(2.0*deltaT*Dr));
+    normal_distribution<> normal(0.0,1.0);
     for (int ii = 0; ii < N; ++ii)
         {
+        Dscalar v0i = h_motility.data[ii].x;
+        Dscalar Dri = h_motility.data[ii].y;
         Dscalar dx,dy;
         Dscalar directorx = cos(h_cd.data[ii]);
         Dscalar directory = sin(h_cd.data[ii]);
@@ -396,18 +391,13 @@ void SPV2D::calculateDispCPU()
         h_disp.data[ii].y = dy;
 
         //rotate each director a bit
-        h_cd.data[ii] +=normal(gen);
+        h_cd.data[ii] +=normal(gen)*sqrt(2.0*deltaT*Dri);
         };
-
     //vector of displacements is forces*timestep + v0's*timestep
-
-
     };
 
 void SPV2D::performTimestepCPU()
     {
-    //clock_t t1,t2;
-    //t1=clock();
     computeGeometryCPU();
     if(useTension)
         {
@@ -423,12 +413,10 @@ void SPV2D::performTimestepCPU()
     calculateDispCPU();
 
     movePointsCPU(displacements);
-    //t2=clock();
-    //forcetiming += t2-t1;
-    //t1=clock();
-    testAndRepairTriangulation();
-    //t2=clock();
-    //triangletiming += t2-t1;
+    if(!spatialSortThisStep)
+        {
+        testAndRepairTriangulation();
+        };
     };
 
 void SPV2D::performTimestepGPU()
@@ -449,7 +437,7 @@ void SPV2D::performTimestepGPU()
 
     //spatial sorting triggers a global re-triangulation, so no need to test and repair
     //
-//    if(!spatialSortThisStep)
+    if(!spatialSortThisStep)
         {
         testAndRepairTriangulation();
 
@@ -459,6 +447,8 @@ void SPV2D::performTimestepGPU()
             if(FullFails || neighMaxChange)
                 {
                 allDelSets();
+                VoroCur.resize(neighMax*N);
+                VoroLastNext.resize(neighMax*N);
                 neighMaxChange = false;
                 }
             else
@@ -583,15 +573,16 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
 
 void SPV2D::computeGeometryCPU()
     {
+    //read in all the data we'll need
+    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
+
+    ArrayHandle<Dscalar2> h_v(VoroCur,access_location::host,access_mode::overwrite);
+
     for (int i = 0; i < N; ++i)
         {
-        //read in all the data we'll need
-        ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
-        ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
-
-        ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
-        ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
-
         //get Delaunay neighbors of the cell
         int neigh = h_nn.data[i];
         vector<int> ns(neigh);
@@ -616,6 +607,8 @@ void SPV2D::computeGeometryCPU()
             Circumcenter(rij,rik,circumcent);
             voro[nn] = circumcent;
             rij=rik;
+            int id = n_idx(nn,i);
+            h_v.data[id] = voro[nn];
             };
 
         Dscalar2 vlast,vnext;
@@ -646,6 +639,7 @@ void SPV2D::computeSPVForceCPU(int i)
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(VoroCur,access_location::host,access_mode::read);
 
     ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
@@ -672,10 +666,10 @@ void SPV2D::computeSPVForceCPU(int i)
     Box.minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
+        int id = n_idx(nn,i);
         nnextp = h_p.data[ns[nn]];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(rij,rik,circumcent);
-        voro[nn] = circumcent;
+        voro[nn] = h_v.data[id];
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
 
@@ -715,7 +709,6 @@ void SPV2D::computeSPVForceCPU(int i)
     Dscalar Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
     Dscalar Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
 
-//    printf("cell %i: %f, %f\n",i,h_AP.data[i].x,h_APpref.data[i].x);
 
     Dscalar2 vcur;
     vlast = voro[neigh-1];
@@ -745,13 +738,9 @@ void SPV2D::computeSPVForceCPU(int i)
         dPidv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-
-
-        //
         //
         //now let's compute the other terms...first we need to find the third voronoi
         //position that v_cur is connected to
-        //
         //
         int baseNeigh = ns[nn];
         int other_idx = nn - 1;
@@ -780,14 +769,6 @@ void SPV2D::computeSPVForceCPU(int i)
         Box.minDist(no1,pi,r3);
 
         Circumcenter(r1,r2,r3,vother);
-        if(vother.x*vother.x+vother.y*vother.y > 10)
-//        if(true)
-            {
-//        printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
-//            printf("Big voro_other:\n");
-//            printf("(%f,%f), (%f,%f), (%f,%f)\n",r1.x,r1.y,r2.x,r2.y,r3.x,r3.y);
-
-            };
 
         Dscalar Akdiff = KA*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
         Dscalar Pkdiff = KP*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
@@ -849,13 +830,6 @@ void SPV2D::computeSPVForceCPU(int i)
         forceSum.x += temp3.x;
         forceSum.y += temp3.y;
 
-//        printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
-
-//        printf("%f\t %f\t %f\t %f\t %f\t %f\t\n",Adiff,Akdiff,Ajdiff,Pdiff,Pkdiff,Pjdiff);
-//        if (i ==0)
-//            printf("(%f,%f)\t(%f,%f)\t(%f,%f)\n",dPidv.x,dPidv.y,dPkdv.x,dPkdv.y,dPjdv.x,dPjdv.y);
-            //    printf("%f\t%f\t%f\t%f\n",dhdri[nn].x11,dhdri[nn].x12,dhdri[nn].x21,dhdri[nn].x22);
-//            printf("%i %f %f\n",nn,temp.x+temp2.x+temp3.x,temp.y+temp2.y+temp3.y);
         vlast=vcur;
         };
 
@@ -863,17 +837,11 @@ void SPV2D::computeSPVForceCPU(int i)
 
     h_f.data[i].x=forceSum.x;
     h_f.data[i].y=forceSum.y;
-//    printf("total force on cell: (%f,%f)\n",forceSum.x,forceSum.y);
     };
 
 void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
     {
     Dscalar Pthreshold = 1e-8;
- //   printf("cell %i: \n",i);
-    //for testing these routines...
-    vector <int> test;
-    DelaunayCell celltest;
-    delLoc.triangulatePoint(i, test,celltest);
 
     //read in all the data we'll need
     ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
@@ -881,6 +849,7 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
     ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(VoroCur,access_location::host,access_mode::read);
 
     ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
@@ -891,8 +860,6 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
     for (int nn = 0; nn < neigh; ++nn)
         {
         ns[nn]=h_n.data[n_idx(nn,i)];
-//        if (i == 602)
-//            printf("%i - ",ns[nn]);
         };
 
     //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
@@ -909,10 +876,10 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
     Box.minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
+        int id = n_idx(nn,i);
         nnextp = h_p.data[ns[nn]];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(rij,rik,circumcent);
-        voro[nn] = circumcent;
+        voro[nn] = h_v.data[id];
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
 
@@ -951,8 +918,6 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
 
     Dscalar Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
     Dscalar Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
-
-//    printf("cell %i: %f, %f\n",i,h_AP.data[i].x,h_APpref.data[i].x);
 
     Dscalar2 vcur;
     vlast = voro[neigh-1];
@@ -1002,10 +967,8 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
             };
 
         //
-        //
         //now let's compute the other terms...first we need to find the third voronoi
         //position that v_cur is connected to
-        //
         //
         int neigh2 = h_nn.data[baseNeigh];
         int DT_other_idx=-1;
@@ -1119,14 +1082,6 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
         forceSum.x += temp.x;
         forceSum.y += temp.y;
 
-        if(verbose)
-            {
-            printf("idx %i; baseNeigh %i; otherNeigh %i; DT_other_idx %i\n",i,baseNeigh,otherNeigh,DT_other_idx);
-            printf("%f  %f   %f   \n%f  %f    %f\n   %f    %f    %f\n",dAidv.x,dPidv.x,dTidv.x,dAkdv.x, dPkdv.x,dTkdv.x,dAjdv.x,dPjdv.x,dTjdv.x);
-            };
-//        printf("\nvother %i--%i--%i = (%f,%f)\n",baseNeigh,otherNeigh,DT_other_idx,vother.x,vother.y);
-
-//        printf("%f\t %f\t %f\t %f\t %f\t %f\t\n",Adiff,Akdiff,Ajdiff,Pdiff,Pkdiff,Pjdiff);
         vlast=vcur;
         };
 
@@ -1134,7 +1089,6 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
 
     h_f.data[i].x=forceSum.x;
     h_f.data[i].y=forceSum.y;
-//    printf("total force on cell: (%f,%f)\n",forceSum.x,forceSum.y);
     };
 
 
@@ -1144,11 +1098,9 @@ void SPV2D::meanArea()
     Dscalar fx = 0.0;
     for (int i = 0; i < N; ++i)
         {
-//        printf("cell %i Area %f\n",i,h_AP.data[i].x);
         fx += h_AP.data[i].x/N;
         };
     printf("Mean area = %f\n" ,fx);
-
     };
 
 void SPV2D::reportDirectors()
@@ -1190,10 +1142,8 @@ void SPV2D::reportForces()
             min = h_f.data[i].x;
         fx += h_f.data[i].x;
         fy += h_f.data[i].y;
-//
-//        if (isnan(h_f.data[i].x) || isnan(h_f.data[i].y))
-//        if(i == N-1)
-          printf("cell %i: \t position (%f,%f)\t force (%e, %e)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
+
+        printf("cell %i: \t position (%f,%f)\t force (%e, %e)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
         };
     printf("min/max force : (%f,%f)\n",min,max);
 
@@ -1228,20 +1178,6 @@ Dscalar SPV2D::reportq()
     return q/(Dscalar)N;
     };
 
-void SPV2D::deltaAngle()
-    {
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::read);
-    ArrayHandle<Dscalar> h_cdi(cellDirectors_initial,access_location::host, access_mode::read);
-    Dscalar dA = 0;
-    for (int ii = 0; ii < N; ++ii)
-        {
-        dA += (h_cd.data[ii]-h_cdi.data[ii])* (h_cd.data[ii]-h_cdi.data[ii]);
-        };
-    dA/=(Dscalar)N;
-    printf("timestep, dA^2 = (%i,%f)\n",Timestep,dA);
-
-
-    };
 void SPV2D::reportCellInfo()
     {
     printf("N=%i\tv0=%f\tDr=%f\tgamma=%f\n",N,v0,Dr,gamma);

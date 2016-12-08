@@ -7,15 +7,6 @@
 #include "indexer.h"
 #include "gpubox.h"
 
-
-
-/*
-    \file CellListGPU.cuh
-    \brief Declares GPU kernel code for cell list generation on the GPU
-*/
-
-//! Kernel driver for gpu_compute_cell_list_kernel()
-
 bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                   unsigned int *d_cell_sizes,
                                   int *d_idx,

@@ -1,4 +1,3 @@
-using namespace std;
 #define EPSILON 1e-16
 
 #include <cmath>
@@ -13,6 +12,8 @@ using namespace std;
 #include <sstream>
 #include <vector>
 #include <sys/time.h>
+
+using namespace std;
 
 #include "Delaunay1.h"
 
@@ -83,7 +84,7 @@ void DelaunayNP::naiveBowyerWatson()
     int emax   = 3*(nV+1); //really 3n-3-k for n points with k points in the convex hull
     int trimax = 2*(nV+1); //really 2n-2-k for '' ''   ''
     vector<bool> complete(trimax,false);
-    
+
     DT.edges.resize(emax);
     DT.triangles.resize(trimax);
     DT.nEdges=0;

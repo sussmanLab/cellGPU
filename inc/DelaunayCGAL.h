@@ -3,7 +3,6 @@
 //uses CGAL to compute periodic or non-periodic delaunay triangulations
 
 
-using namespace std;
 #include "std_include.h"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Periodic_2_triangulation_filtered_traits_2.h>
@@ -15,6 +14,7 @@ using namespace std;
 
 #include <cassert>
 #include <fstream>
+using namespace std;
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Periodic_2_triangulation_filtered_traits_2<K> GT;
