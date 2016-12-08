@@ -60,6 +60,8 @@ void SPV2D::Initialize(int n)
         };
     devStates.resize(N);
     setCurandStates(Timestep);
+    VoroCur.resize(neighMax*N);
+    VoroLastNext.resize(neighMax*N);
     allDelSets();
     };
 
@@ -462,6 +464,8 @@ void SPV2D::performTimestepGPU()
             if(FullFails || neighMaxChange)
                 {
                 allDelSets();
+                VoroCur.resize(neighMax*N);
+                VoroLastNext.resize(neighMax*N);
                 neighMaxChange = false;
                 }
             else
@@ -586,15 +590,17 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
 
 void SPV2D::computeGeometryCPU()
     {
+    //read in all the data we'll need
+    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
+
+    ArrayHandle<Dscalar2> h_v(VoroCur,access_location::host,access_mode::overwrite);
+    //ArrayHandle<Dscalar4> h_vln(VoroLastNext,access_location::host,access_mode::overwrite);
+
     for (int i = 0; i < N; ++i)
         {
-        //read in all the data we'll need
-        ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
-        ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
-
-        ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
-        ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
-
         //get Delaunay neighbors of the cell
         int neigh = h_nn.data[i];
         vector<int> ns(neigh);
@@ -619,9 +625,25 @@ void SPV2D::computeGeometryCPU()
             Circumcenter(rij,rik,circumcent);
             voro[nn] = circumcent;
             rij=rik;
+            int id = n_idx(nn,i);
+            h_v.data[id] = voro[nn];
             };
-
         Dscalar2 vlast,vnext;
+        /*
+        vlast = voro[neigh-1];
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            if(nn ==neigh-1)
+                vnext = voro[0];
+            else
+                vnext = voro[nn+1];
+            h_vln.data[id].x=vlast.x;
+            h_vln.data[id].y=vlast.y;
+            h_vln.data[id].z=vnext.x;
+            h_vln.data[id].w=vnext.y;
+            vlast = voro[nn];
+            };
+        */
         //compute Area and perimeter
         Dscalar Varea = 0.0;
         Dscalar Vperi = 0.0;
@@ -649,6 +671,7 @@ void SPV2D::computeSPVForceCPU(int i)
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(VoroCur,access_location::host,access_mode::read);
 
     ArrayHandle<int> h_nn(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(neighs,access_location::host,access_mode::read);
@@ -675,10 +698,12 @@ void SPV2D::computeSPVForceCPU(int i)
     Box.minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
+        int id = n_idx(nn,i);
         nnextp = h_p.data[ns[nn]];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(rij,rik,circumcent);
-        voro[nn] = circumcent;
+//        Circumcenter(rij,rik,circumcent);
+//        voro[nn] = circumcent;
+        voro[nn] = h_v.data[id];
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
 

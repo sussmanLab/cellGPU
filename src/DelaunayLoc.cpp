@@ -1,4 +1,3 @@
-using namespace std;
 #define EPSILON 1e-16
 
 #include <cmath>
@@ -13,6 +12,7 @@ using namespace std;
 #include <sstream>
 #include <vector>
 #include <sys/time.h>
+using namespace std;
 
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"

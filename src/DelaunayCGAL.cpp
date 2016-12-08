@@ -1,9 +1,9 @@
-using namespace std;
 
 #include "cuda_runtime.h"
 #include "vector_types.h"
 
 #include "DelaunayCGAL.h"
+using namespace std;
 
 void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> & neighs)
     {

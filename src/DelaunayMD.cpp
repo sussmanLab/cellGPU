@@ -1,4 +1,3 @@
-using namespace std;
 #define EPSILON 1e-16
 #define ENABLE_CUDA
 
@@ -14,6 +13,8 @@ using namespace std;
 #include <sstream>
 #include <vector>
 #include <sys/time.h>
+
+using namespace std;
 
 #include "cuda_runtime.h"
 #include "vector_types.h"
@@ -502,10 +503,6 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         allneighs[ii]=neighTemp;
         if(neighTemp.size() > neighMax)
             {
-            if(neighTemp.size()%2==0)
-                neighMax = neighTemp.size()+2;
-            else
-                neighMax = neighTemp.size()+1;
             resetCCidx = true;
             };
         };
@@ -515,7 +512,6 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         {
         neighMaxChange = true;
         cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
-        neighs.resize(neighMax*N);
         globalTriangulationCGAL();
         return;
         };

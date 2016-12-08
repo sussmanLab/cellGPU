@@ -1,4 +1,3 @@
-using namespace std;
 #define EPSILON 1e-16
 #define ENABLE_CUDA
 
@@ -14,6 +13,7 @@ using namespace std;
 #include <sstream>
 #include <vector>
 #include <sys/time.h>
+using namespace std;
 
 //#include "cuda.h"
 #include "cuda_runtime.h"

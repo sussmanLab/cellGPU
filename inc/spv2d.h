@@ -48,8 +48,8 @@ class SPV2D : public DelaunayMD
         GPUArray<int> delOther;
 
         //arrays indexed by (nn, pidx) of that particle and neighbor number's voronoi vertex (in order) and, and the last and next voro points
-        //GPUArray<Dscalar2> VoroCur;
-        //GPUArray<Dscalar4> VoroLastNext;
+        GPUArray<Dscalar2> VoroCur;
+        GPUArray<Dscalar4> VoroLastNext;
 
         //interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
         GPUArray<Dscalar2> forceSets;
