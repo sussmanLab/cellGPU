@@ -466,12 +466,16 @@ void SPV2D::computeGeometryGPU()
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
     ArrayHandle<int> d_nn(neigh_num,access_location::device,access_mode::read);
     ArrayHandle<int> d_n(neighs,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_vc(VoroCur,access_location::device,access_mode::overwrite);
+    ArrayHandle<Dscalar4> d_vln(VoroLastNext,access_location::device,access_mode::overwrite);
 
     gpu_compute_geometry(
                         d_p.data,
                         d_AP.data,
                         d_nn.data,
                         d_n.data,
+                        d_vc.data,
+                        d_vln.data,
                         N, n_idx,Box);
 
 
@@ -521,6 +525,8 @@ void SPV2D::computeSPVForceSetsGPU()
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
     ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_vc(VoroCur,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar4> d_vln(VoroLastNext,access_location::device,access_mode::read);
 
 
     Dscalar KA = 1.0;
@@ -531,6 +537,8 @@ void SPV2D::computeSPVForceSetsGPU()
                     d_APpref.data,
                     d_delSets.data,
                     d_delOther.data,
+                    d_vc.data,
+                    d_vln.data,
                     d_forceSets.data,
                     d_nidx.data,
                     KA,
@@ -549,6 +557,8 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
     ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
     ArrayHandle<int> d_ct(CellType,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_vc(VoroCur,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar4> d_vln(VoroLastNext,access_location::device,access_mode::read);
 
 
     Dscalar KA = 1.0;
@@ -559,6 +569,8 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
                     d_APpref.data,
                     d_delSets.data,
                     d_delOther.data,
+                    d_vc.data,
+                    d_vln.data,
                     d_forceSets.data,
                     d_nidx.data,
                     d_ct.data,

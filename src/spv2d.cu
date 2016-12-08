@@ -97,6 +97,8 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
                                           Dscalar2  *d_APpref,
                                           int4    *d_delSets,
                                           int     *d_delOther,
+                                          Dscalar2 *d_vc,
+                                          Dscalar4 *d_vln,
                                           Dscalar2  *d_forceSets,
                                           int2    *d_nidx,
                                           Dscalar   KA,
@@ -134,9 +136,10 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     //finally, compute all of the forces
     //pnm1 is rij, pn1 is rik
     Dscalar2 vlast,vcur,vnext,vother;
-    Circumcenter(pnm2,rij,vlast);
-    Circumcenter(rij,rik,vcur);
-    Circumcenter(rik,pn2,vnext);
+    vcur = d_vc[n_idx(nn,pidx)];
+    Dscalar4 vvv = d_vln[n_idx(nn,pidx)];
+    vlast.x = vvv.x; vlast.y = vvv.y;
+    vnext.x = vvv.z; vnext.y = vvv.z;
     Circumcenter(rij,rik,pno,vother);
 
 
@@ -215,6 +218,8 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
                                           Dscalar2  *d_APpref,
                                           int4    *d_delSets,
                                           int     *d_delOther,
+                                          Dscalar2 *d_vc,
+                                          Dscalar4 *d_vln,
                                           Dscalar2  *d_forceSets,
                                           int2    *d_nidx,
                                           int     *d_cellTypes,
@@ -254,10 +259,10 @@ __global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
     //finally, compute all of the forces
     //pnm1 is rij, pn1 is rik
     Dscalar2 vlast,vcur,vnext,vother;
-    //the first three can call the circumcenter function with one point being the origin
-    Circumcenter(pnm2,rij,vlast);
-    Circumcenter(rij,rik,vcur);
-    Circumcenter(rik,pn2,vnext);
+    vcur = d_vc[n_idx(nn,pidx)];
+    Dscalar4 vvv = d_vln[n_idx(nn,pidx)];
+    vlast.x = vvv.x; vlast.y = vvv.y;
+    vnext.x = vvv.z; vnext.y = vvv.z;
     Circumcenter(rij,rik,pno,vother);
 
 
@@ -378,6 +383,8 @@ __global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
                                           Dscalar2 *d_AP,
                                           int *d_nn,
                                           int *d_n,
+                                          Dscalar2 *d_vc,
+                                          Dscalar4 *d_vln,
                                           int N,
                                           Index2D n_idx,
                                           gpubox Box
@@ -404,6 +411,15 @@ __global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
     vfirst = circumcenter;
     vlast = circumcenter;
 
+    //set the VoroCur to this voronoi vertex
+    d_vc[n_idx(0,idx)] = vlast;
+    //this vertex is also the "next" vertex of (neighs-1,idx)
+    d_vln[n_idx(neigh-1,idx)].z =vlast.x;
+    d_vln[n_idx(neigh-1,idx)].w =vlast.y;
+    //...and the "last"  vertex of (1,idx)
+    d_vln[n_idx(1,idx)].x =vlast.x;
+    d_vln[n_idx(1,idx)].y =vlast.y;
+
     for (int nn = 1; nn < neigh; ++nn)
         {
         rij = rik;
@@ -413,6 +429,18 @@ __global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
         Circumcenter(rij,rik,circumcenter);
         vnext = circumcenter;
 
+        //fill in the VoroCur and VoroLastNext structures
+        int idl = n_idx(nn-1,idx);
+        int idn = n_idx(nn+1,idx);
+        if(nn == neigh-1)
+            idn = n_idx(0,idx);
+        d_vc[n_idx(nn,idx)]=vnext;
+        d_vln[idl].z=vnext.x;
+        d_vln[idl].w=vnext.y;
+        d_vln[idn].x=vnext.x;
+        d_vln[idn].y=vnext.y;
+
+        //...and back to computing the geometry
         Varea += TriangleArea(vlast,vnext);
         Dscalar dx = vlast.x - vnext.x;
         Dscalar dy = vlast.y - vnext.y;
@@ -491,6 +519,8 @@ bool gpu_compute_geometry(Dscalar2 *d_points,
                         Dscalar2   *d_AP,
                         int      *d_nn,
                         int      *d_n,
+                        Dscalar2 *d_vc,
+                        Dscalar4 *d_vln,
                         int      N,
                         Index2D  &n_idx,
                         gpubox &Box
@@ -506,6 +536,8 @@ bool gpu_compute_geometry(Dscalar2 *d_points,
                                                 d_AP,
                                                 d_nn,
                                                 d_n,
+                                                d_vc,
+                                                d_vln,
                                                 N,
                                                 n_idx,
                                                 Box
@@ -558,6 +590,8 @@ bool gpu_force_sets(Dscalar2 *d_points,
                     Dscalar2 *d_APpref,
                     int4   *d_delSets,
                     int    *d_delOther,
+                    Dscalar2 *d_vc,
+                    Dscalar4 *d_vln,
                     Dscalar2 *d_forceSets,
                     int2   *d_nidx,
                     Dscalar  KA,
@@ -579,6 +613,8 @@ bool gpu_force_sets(Dscalar2 *d_points,
                                                 d_APpref,
                                                 d_delSets,
                                                 d_delOther,
+                                                d_vc,
+                                                d_vln,
                                                 d_forceSets,
                                                 d_nidx,
                                                 KA,
@@ -602,6 +638,8 @@ bool gpu_force_sets_tensions(Dscalar2 *d_points,
                     Dscalar2 *d_APpref,
                     int4   *d_delSets,
                     int    *d_delOther,
+                    Dscalar2 *d_vc,
+                    Dscalar4 *d_vln,
                     Dscalar2 *d_forceSets,
                     int2   *d_nidx,
                     int    *d_cellTypes,
@@ -625,6 +663,8 @@ bool gpu_force_sets_tensions(Dscalar2 *d_points,
                                                 d_APpref,
                                                 d_delSets,
                                                 d_delOther,
+                                                d_vc,
+                                                d_vln,
                                                 d_forceSets,
                                                 d_nidx,
                                                 d_cellTypes,
