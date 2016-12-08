@@ -140,7 +140,6 @@ void DelaunayMD::initialize(int n)
     repPerFrame = 0.0;
     skippedFrames = 0;
     GlobalFixes = 0;
-    gputiming = 0.0; cputiming = 0.0;
     //set cellsize to about unity
     cellsize = 1.25;
 

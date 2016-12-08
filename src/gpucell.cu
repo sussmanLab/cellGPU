@@ -36,7 +36,6 @@ __global__ void gpu_compute_cell_list_kernel(Dscalar2 *d_pt,
     int ibin = max(0,min(xsize-1,(int)floor(pos.x/boxsize)));
     int jbin = max(0,min(xsize-1,(int)floor(pos.y/boxsize)));
     int bin = ci(ibin,jbin);
-    //if (bin > xsize*ysize) printf("(%f,%f) -- (%i,%i) in bin %i out of %i... %f \n",pos.x,pos.y,ibin,jbin,bin,xsize*ysize,boxsize);
 
     unsigned int offset = atomicAdd(&(d_cell_sizes[bin]), 1);
     if (offset <= d_assist[0]+1)

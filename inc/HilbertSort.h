@@ -1,6 +1,12 @@
 #ifndef HILBERTSORT
 #define HILBERTSORT
 
+///
+/*
+This structure can help sort scalar2's according to their position along a hilbert curve of order M... some code straight from wikipedia!
+*/
+///
+
 #include "std_include.h"
 #include <cmath>
 #include <vector>
@@ -15,15 +21,6 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-///
-/*
-This structure can help sort scalar2's according to their position along a hilbert curve of order M... some code straight from wikipedia!
-
-
-*/
-///
-
-
 
 struct HilbertSorter
     {
@@ -31,6 +28,7 @@ struct HilbertSorter
         gpubox box;
         int M;
     public:
+        //the only constructor requires a box
         HOSTDEVICE HilbertSorter(gpubox Box)
             {
             Dscalar x11,x12,x21,x22;
@@ -44,15 +42,13 @@ struct HilbertSorter
                 temp *=2;
                 mm +=1;
                 };
-            //printf("creating sorter of order %i\n",mm+2);
             setOrder((int)min(30,mm+4));
             }
-
+        //some functions to help out...
+        //set the order of the desired HC
         HOSTDEVICE void setOrder(int m){M=m;};
 
-
-
-
+        //hand-write a function to take integer powers of integers
         HOSTDEVICE int int_power(int i, int j)
             {
             int value;
@@ -77,6 +73,7 @@ struct HilbertSorter
             return value;
             };
 
+            //rotate
             HOSTDEVICE void HilbertRotate(int n, int &x, int &y, int rx, int ry)
                 {
                 int t;
@@ -98,7 +95,7 @@ struct HilbertSorter
 
 
 
-//converts a real(x,y) pair to a nearby integer pair, and then gets the 1D hilbert coordinate of that point. The number of cells is 2^M (M is the index of the hc))
+        //converts a real(x,y) pair to a nearby integer pair, and then gets the 1D hilbert coordinate of that point. The number of cells is 2^M (M is the index of the hc))
         HOSTDEVICE int getIdx(Dscalar2 point)
             {
 

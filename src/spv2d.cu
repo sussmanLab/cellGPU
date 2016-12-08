@@ -24,7 +24,7 @@ __global__ void init_curand_kernel(curandState *state, int N,int Timestep)
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     if (idx >=N)
         return;
-    
+
     curand_init(1337,idx,Timestep,&state[idx]);
     return;
     };
@@ -159,13 +159,13 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
         dnnorm = THRESHOLD;
     if(dlnorm < THRESHOLD)
         dlnorm = THRESHOLD;
-    
+
     //save a few of these differences for later...
     dcl.x = -dlast.x;dcl.y = -dlast.y;
     dnc.x=-dnext.x;dnc.y=-dnext.y;
     dclnorm=dlnorm;
     dncnorm=dnnorm;
-    
+
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[pidx].x - d_APpref[pidx].x);
@@ -449,7 +449,7 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
         return;
 
     curandState_t randState;
-    
+
     randState=states[idx];
     Dscalar dirx = cosf(d_directors[idx]);
     Dscalar diry = sinf(d_directors[idx]);
@@ -467,10 +467,9 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
     };
 
 
-//////////////
+////////////////
 //kernel callers
-//
-
+////////////////
 
 
 

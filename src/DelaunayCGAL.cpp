@@ -9,24 +9,6 @@ void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> 
     {
     neighs.clear();
     int size = V.size();
-    /*
-    int size = points.size()/2;
-    //vector<LPoint> V(size);
-    vector<pair<LPoint,int> > V(size);
-    Dscalar max = 0.0;
-    for (int ii = 0; ii < size;++ii)
-        {
-        Dscalar valx = points[2*ii];
-        Dscalar valy = points[2*ii+1];
-    //    if (fabs(valx)> max)
-    //        max = fabs(valx);
-    //    if (fabs(valy)> max)
-    //        max = fabs(valy);
-        V[ii] = make_pair(LPoint(valx,valy),ii);
-        };
-    */
-
-
 
     Delaunay T;
     T.insert(V.begin(),V.end());
@@ -54,7 +36,6 @@ void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> 
 
     };
 
-//void DelaunayCGAL::PeriodicTriangulation(vector<Point> &V, Dscalar size)
 void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, Dscalar size)
     {
     int vnum = V.size();
@@ -107,10 +88,7 @@ void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, Dscalar si
     for (int ii = 0; ii < vnum;++ii)
         {
         neighs.clear();
-        //Face_handle fh = T.locate(V[ii],lts[ii],li);
-        //Face_handle fh = T.locate(V[ii],lt,li);
         Vertex_handle vh = fhs[ii]->vertex(lis[ii]);
-        //Vertex_handle vh = fh->vertex(li);
         Vertex_circulator vc(vh,fhs[ii]);
         int base = vc->info();
         neighs.push_back(base);

@@ -78,7 +78,7 @@ class DelaunayMD
         /////
 
         //constructors
-        DelaunayMD(){triangulated=false;cellsize=2.0;};
+        DelaunayMD(){cellsize=2.0;};
 
         //initialization functions
         void initialize(int n);
@@ -105,7 +105,7 @@ class DelaunayMD
         void getPoints(GPUArray<Dscalar2> &ps){ps = points;};
         
         //only use the CPU... pass global = false to not call CGAL to test/fix the triangulation
-        void setCPU(bool global = true){GPUcompute = false;globalOnly=global};
+        void setCPU(bool global = true){GPUcompute = false;globalOnly=global;};
 
         //construct complete triangulation point-by-point
         void fullTriangulation();

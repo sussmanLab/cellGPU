@@ -15,9 +15,6 @@
 #include "DelaunayMD.cuh"
 
 
-//
-//texture<int,1,cudaReadModeElementType> dcc_tex;
-//
 __global__ void gpu_test_circumcenters_kernel(int *d_repair,
                                               int3 *d_circumcircles,
                                               Dscalar2 *d_pt,
@@ -69,7 +66,6 @@ __global__ void gpu_test_circumcenters_kernel(int *d_repair,
         {
         for (int jj = -wcheck; jj <= wcheck; ++jj)
             {
-//if(badParticle) continue;
             int cx = (ib+ii);
             if(cx < 0) cx += xsize;
             if(cx >= xsize) cx -= xsize;
@@ -212,10 +208,5 @@ bool gpu_move_particles(Dscalar2 *d_points,
 
     return cudaSuccess;
     };
-
-
-
-
-
 
 #endif
