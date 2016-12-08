@@ -1,7 +1,4 @@
-using namespace std;
-
 //definitions needed for DelaunayLoc, and all GPU functions, respectively
-
 #define EPSILON 1e-16
 #define ENABLE_CUDA
 
@@ -311,10 +308,6 @@ void SPV2D::getDelSets(int i)
 void SPV2D::performTimestep()
     {
     Timestep += 1;
-    if(GPUcompute)
-        performTimestepGPU();
-    else
-        performTimestepCPU();
 
     spatialSortThisStep = false;
     if (sortPeriod > 0)
@@ -322,9 +315,16 @@ void SPV2D::performTimestep()
         if (Timestep % sortPeriod == 0)
             {
             spatialSortThisStep = true;
-            spatialSorting();
             };
         };
+
+    if(GPUcompute)
+        performTimestepGPU();
+    else
+        performTimestepCPU();
+
+    if (spatialSortThisStep)
+        spatialSorting();
     };
 
 void SPV2D::DisplacePointsAndRotate()
@@ -426,7 +426,10 @@ void SPV2D::performTimestepCPU()
     //t2=clock();
     //forcetiming += t2-t1;
     //t1=clock();
-    testAndRepairTriangulation();
+    if(!spatialSortThisStep)
+        {
+        testAndRepairTriangulation();
+        };
     //t2=clock();
     //triangletiming += t2-t1;
     };
@@ -449,7 +452,7 @@ void SPV2D::performTimestepGPU()
 
     //spatial sorting triggers a global re-triangulation, so no need to test and repair
     //
-//    if(!spatialSortThisStep)
+    if(!spatialSortThisStep)
         {
         testAndRepairTriangulation();
 

@@ -14,6 +14,7 @@
 
 #define Dscalar double
 #define Dscalar2 double2
+#define Dscalar4 double4
 #define ncDscalar ncDouble
 
 #define cur_norm curand_normal_double
@@ -31,6 +32,15 @@ HOSTDEVICE Dscalar2 make_Dscalar2(Dscalar x, Dscalar y)
     return ans;
     }
 
+HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
+    {
+    Dscalar4 ans;
+    ans.x =x;
+    ans.y=y;
+    ans.z =z;
+    ans.w=w;
+    return ans;
+    }
 
 
 

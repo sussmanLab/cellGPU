@@ -22,7 +22,7 @@
 
 
 #include "spv2d.h"
-#include "Database.h"
+//#include "Database.h"
 
 
 using namespace std;
@@ -115,7 +115,7 @@ int main(int argc, char*argv[])
         }
     char dataname[256];
     sprintf(dataname,"/hdd2/data/spv/test.nc");
-    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
+//    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
 
 

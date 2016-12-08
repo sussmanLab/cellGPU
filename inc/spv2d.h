@@ -2,7 +2,6 @@
 #ifndef SPV_H
 #define SPV_H
 
-using namespace std;
 
 #include "std_include.h"
 #include <stdio.h>
@@ -14,6 +13,8 @@ using namespace std;
 #include "curand_kernel.h"
 #include "vector_types.h"
 #include "vector_functions.h"
+
+using namespace std;
 
 #include "Matrix.h"
 #include "cu_functions.h"
@@ -30,7 +31,6 @@ class SPV2D : public DelaunayMD
         bool useTension;
         bool particleExclusions;
 
-//        GPUArray<Dscalar2> VoronoiPoints;
         GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
         GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
         GPUArray<Dscalar2> Moduli;//(KA,KP)
@@ -46,6 +46,11 @@ class SPV2D : public DelaunayMD
         GPUArray<int4> delSets;
         //delOther.data[n_idx(nn,i)] contains the index of the "other" delaunay neighbor. i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
         GPUArray<int> delOther;
+
+        //arrays indexed by (nn, pidx) of that particle and neighbor number's voronoi vertex (in order) and, and the last and next voro points
+        //GPUArray<Dscalar2> VoroCur;
+        //GPUArray<Dscalar4> VoroLastNext;
+
         //interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
         GPUArray<Dscalar2> forceSets;
 
