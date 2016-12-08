@@ -53,10 +53,11 @@ class cellListGPU
 
         void repP(int i)
             {
-            if(true){
-            ArrayHandle<Dscalar2> hh(particles,access_location::host,access_mode::read);
-            cout <<hh.data[i].x << "  " << hh.data[i].y << endl;
-            };
+            if(true)
+                {
+                ArrayHandle<Dscalar2> hh(particles,access_location::host,access_mode::read);
+                cout <<hh.data[i].x << "  " << hh.data[i].y << endl;
+                };
             };
 
         Index2D cell_indexer; //indexes cells from (i,j) pairs
