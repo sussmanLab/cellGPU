@@ -50,7 +50,7 @@ class DelaunayMD
 
         //this class' time        
         int timestep;
-        std::vector<pt> pts;          //vector of points to triangulate...for delLoc purposes
+        std::vector<Dscalar2> pts;          //vector of points to triangulate...for delLoc purposes
 
 
     public:

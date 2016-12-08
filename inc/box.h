@@ -39,12 +39,12 @@ class box
         HOSTDEVICE void setSquare(Dscalar x, Dscalar y);
         HOSTDEVICE void setGeneral(Dscalar a, Dscalar b,Dscalar c, Dscalar d);
 
-        HOSTDEVICE void putInBox(pt &vp);
-        HOSTDEVICE void Trans(const pt &p1, pt &pans);
-        HOSTDEVICE void invTrans(const pt &p1, pt &pans);
-        HOSTDEVICE void minDist(const pt &p1, const pt &p2, pt &pans);
+        HOSTDEVICE void putInBox(Dscalar2 &vp);
+        HOSTDEVICE void Trans(const Dscalar2 &p1, Dscalar2 &pans);
+        HOSTDEVICE void invTrans(const Dscalar2 &p1, Dscalar2 &pans);
+        HOSTDEVICE void minDist(const Dscalar2 &p1, const Dscalar2 &p2, Dscalar2 &pans);
 
-        HOSTDEVICE void move(pt &p1, const pt &disp);
+        HOSTDEVICE void move(Dscalar2 &p1, const Dscalar2 &disp);
 
         HOSTDEVICE void operator=(box &other)
             {
@@ -78,19 +78,19 @@ void box::setGeneral(Dscalar a, Dscalar b,Dscalar c, Dscalar d)
     isSquare = false;
     };
 
-void box::Trans(const pt &p1, pt &pans)
+void box::Trans(const Dscalar2 &p1, Dscalar2 &pans)
     {
     pans.x = x11*p1.x + x12*p1.y;
     pans.y = x21*p1.x + x22*p1.y;
     };
 
-void box::invTrans(const pt &p1, pt &pans)
+void box::invTrans(const Dscalar2 &p1, Dscalar2 &pans)
     {
     pans.x = xi11*p1.x + xi12*p1.y;
     pans.y = xi21*p1.x + xi22*p1.y;
     };
 
-void box::putInBox(pt &vp)
+void box::putInBox(Dscalar2 &vp)
     {//acts on points in the virtual space
     while(fabs(vp.x)>=1.0)
         {
@@ -104,12 +104,12 @@ void box::putInBox(pt &vp)
         };
     };
 
-void box::minDist(const pt &p1, const pt &p2, pt &pans)
+void box::minDist(const Dscalar2 &p1, const Dscalar2 &p2, Dscalar2 &pans)
     {
-    pt vA,vB;
+    Dscalar2 vA,vB;
     invTrans(p1,vA);
     invTrans(p2,vB);
-    pt disp=vA-vB;
+    Dscalar2 disp=vA-vB;
     while(fabs(disp.x)>0.5)
         {
         Dscalar sgn = (disp.x > 0) - (disp.x < 0);
@@ -124,9 +124,9 @@ void box::minDist(const pt &p1, const pt &p2, pt &pans)
     };
 
 
-void box::move(pt &p1, const pt &disp)
+void box::move(Dscalar2 &p1, const Dscalar2 &disp)
     {//assume real space entries. Moves p1 by disp, and puts it back in box
-    pt vP,vD;
+    Dscalar2 vP,vD;
     p1 = p1+disp;
     invTrans(p1,vP);
     putInBox(vP);

@@ -11,7 +11,7 @@ using namespace std;
 class DelaunayLoc
     {
     private:
-        std::vector<pt> pts;          //vector of points to triangulate
+        std::vector<Dscalar2> pts;          //vector of points to triangulate
         int nV;                       //number of vertices
         bool triangulated;            //has a triangulation been performed?
 
@@ -26,11 +26,11 @@ class DelaunayLoc
 
         DelaunayLoc(){triangulated=false;cellsize=2.0;};
         //constructor via a vector of point objects
-        DelaunayLoc(std::vector<pt> &points, box &bx){setPoints(points);setBox(bx);};
+        DelaunayLoc(std::vector<Dscalar2> &points, box &bx){setPoints(points);setBox(bx);};
         //constructor via a vector of scalars, {x1,y1,x2,y2,...}
         DelaunayLoc(std::vector<Dscalar> &points,box &bx){setPoints(points);setBox(bx);};
 
-        void setPoints(std::vector<pt> &points);
+        void setPoints(std::vector<Dscalar2> &points);
         void setPoints(std::vector<Dscalar> &points);
         void setBox(box &bx);
         void setCellSize(Dscalar cs){cellsize=cs;};
@@ -38,11 +38,11 @@ class DelaunayLoc
         void initialize(Dscalar csize);
 
         //find indices of enclosing polygon of vertex i (helper function for the next function)
-        void getPolygon(int i, vector<int> &P0,vector<pt> &P1);
+        void getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1);
         //finds a candidate set of possible points in the 1-ring of vertex i
-        void getOneRingCandidate(int i, vector<int> &DTringIdx,vector<pt> &DTring);
+        void getOneRingCandidate(int i, vector<int> &DTringIdx,vector<Dscalar2> &DTring);
         //checks if the one ring can be reduced by changing the initial polygon
-        void reduceOneRing(int i, vector<int> &DTringIdx,vector<pt> &DTring);
+        void reduceOneRing(int i, vector<int> &DTringIdx,vector<Dscalar2> &DTring);
         int cellschecked,candidates; //statistics for the above function
 
         //default call... update this whenever a better algorithm is implemented

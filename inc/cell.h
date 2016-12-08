@@ -13,7 +13,7 @@ using namespace std;
 class grid
     {
     private:
-        std::vector<pt> points;
+        std::vector<Dscalar2> points;
         Dscalar cellsize;
         int N;
         int cellnumx, cellnumy,totalCells;
@@ -23,10 +23,10 @@ class grid
         std::vector< std::vector<int> > cells;
 
         inline grid(){};
-        inline grid(std::vector<pt> &pts, box &bx, Dscalar cs)
+        inline grid(std::vector<Dscalar2> &pts, box &bx, Dscalar cs)
             {points=pts;cellsize=cs;setBox(bx);initialize();};
 
-        inline void setPoints(std::vector<pt> &pts){points = pts;};
+        inline void setPoints(std::vector<Dscalar2> &pts){points = pts;};
         inline void setCellSize(Dscalar cs){cellsize = cs;};
         inline void setBox(box &bx);
 
