@@ -16,10 +16,10 @@
 
 
 __global__ void gpu_test_circumcenters_kernel(int *d_repair,
-                                              int3 *d_circumcircles,
-                                              Dscalar2 *d_pt,
-                                              unsigned int *d_cell_sizes,
-                                              int *d_cell_idx,
+                                              const int3* __restrict__ d_circumcircles,
+                                              const Dscalar2* __restrict__ d_pt,
+                                              const unsigned int* __restrict__ d_cell_sizes,
+                                              const int* __restrict__ d_cell_idx,
                                               int Nccs,
                                               int xsize,
                                               int ysize,

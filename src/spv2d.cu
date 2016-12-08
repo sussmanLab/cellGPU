@@ -92,21 +92,21 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(Dscalar2 *d_forceSets,
 
     };
 
-__global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
-                                          Dscalar2  *d_AP,
-                                          Dscalar2  *d_APpref,
-                                          int4    *d_delSets,
-                                          int     *d_delOther,
-                                          Dscalar2 *d_vc,
-                                          Dscalar4 *d_vln,
-                                          Dscalar2  *d_forceSets,
-                                          int2    *d_nidx,
-                                          Dscalar   KA,
-                                          Dscalar   KP,
-                                          int     computations,
-                                          Index2D n_idx,
-                                          gpubox Box
-                                        )
+__global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
+                                      const Dscalar2* __restrict__ d_AP,
+                                      const Dscalar2*  __restrict__ d_APpref,
+                                      const int4* __restrict__ d_delSets,
+                                      const int* __restrict__ d_delOther,
+                                      const Dscalar2* __restrict__ d_vc,
+                                      const Dscalar4* __restrict__ d_vln,
+                                      Dscalar2* __restrict__ d_forceSets,
+                                      const int2* __restrict__ d_nidx,
+                                      Dscalar   KA,
+                                      Dscalar   KP,
+                                      int     computations,
+                                      Index2D n_idx,
+                                      gpubox Box
+                                     )
     {
     unsigned int tidx = blockDim.x * blockIdx.x + threadIdx.x;
     if (tidx >= computations)
@@ -213,16 +213,16 @@ __global__ void gpu_force_sets_kernel(Dscalar2      *d_points,
     return;
     };
 
-__global__ void gpu_force_sets_tensions_kernel(Dscalar2      *d_points,
-                                          Dscalar2  *d_AP,
-                                          Dscalar2  *d_APpref,
-                                          int4    *d_delSets,
-                                          int     *d_delOther,
-                                          Dscalar2 *d_vc,
-                                          Dscalar4 *d_vln,
-                                          Dscalar2  *d_forceSets,
-                                          int2    *d_nidx,
-                                          int     *d_cellTypes,
+__global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_points,
+                                          const Dscalar2* __restrict__ d_AP,
+                                          const Dscalar2* __restrict__ d_APpref,
+                                          const int4* __restrict__ d_delSets,
+                                          const int* __restrict__ d_delOther,
+                                          const Dscalar2* __restrict__ d_vc,
+                                          const Dscalar4* __restrict__ d_vln,
+                                          Dscalar2* __restrict__ d_forceSets,
+                                          const int2* __restrict__ d_nidx,
+                                          const int* __restrict__ d_cellTypes,
                                           Dscalar   KA,
                                           Dscalar   KP,
                                           Dscalar   gamma,

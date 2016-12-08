@@ -535,7 +535,7 @@ void DelaunayMD::testTriangulation()
     updateCellList();
 
     //access data handles
-    ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::read);
 
     ArrayHandle<unsigned int> d_cell_sizes(celllist.cell_sizes,access_location::device,access_mode::read);
     ArrayHandle<int> d_c_idx(celllist.idxs,access_location::device,access_mode::read);
