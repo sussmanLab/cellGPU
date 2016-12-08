@@ -15,7 +15,7 @@
 #include "DelaunayMD.cuh"
 
 
-__global__ void gpu_test_circumcenters_kernel(int *d_repair,
+__global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                                               const int3* __restrict__ d_circumcircles,
                                               const Dscalar2* __restrict__ d_pt,
                                               const unsigned int* __restrict__ d_cell_sizes,

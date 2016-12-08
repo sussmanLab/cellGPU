@@ -30,9 +30,9 @@ __global__ void init_curand_kernel(curandState *state, int N,int Timestep)
     };
 
 
-__global__ void gpu_sum_forces_kernel(Dscalar2 *d_forceSets,
-                                      Dscalar2 *d_forces,
-                                      int    *d_nn,
+__global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
+                                      Dscalar2* __restrict__ d_forces,
+                                      const int* __restrict__      d_nn,
                                       int     N,
                                       Index2D n_idx
                                      )
@@ -56,11 +56,11 @@ __global__ void gpu_sum_forces_kernel(Dscalar2 *d_forceSets,
 
     };
 
-__global__ void gpu_sum_forces_with_exclusions_kernel(Dscalar2 *d_forceSets,
-                                      Dscalar2 *d_forces,
-                                      Dscalar2 *d_external_forces,
-                                      int    *d_exes,
-                                      int    *d_nn,
+__global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict__ d_forceSets,
+                                      Dscalar2* __restrict__ d_forces,
+                                      Dscalar2* __restrict__ d_external_forces,
+                                      const int* __restrict__ d_exes,
+                                      const int* __restrict__ d_nn,
                                       int     N,
                                       Index2D n_idx
                                      )
@@ -379,12 +379,12 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
 
 
 
-__global__ void gpu_compute_geometry_kernel(Dscalar2 *d_points,
-                                          Dscalar2 *d_AP,
-                                          int *d_nn,
-                                          int *d_n,
-                                          Dscalar2 *d_vc,
-                                          Dscalar4 *d_vln,
+__global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_points,
+                                          Dscalar2* __restrict__ d_AP,
+                                          const int* __restrict__ d_nn,
+                                          const int* __restrict__ d_n,
+                                          Dscalar2* __restrict__ d_vc,
+                                          Dscalar4* __restrict__ d_vln,
                                           int N,
                                           Index2D n_idx,
                                           gpubox Box
