@@ -12,13 +12,13 @@
 
 #define PI 3.14159265358979323846
 
-#define Dscalar float
-#define Dscalar2 float2
-#define Dscalar4 float4
+#define Dscalar double
+#define Dscalar2 double2
+#define Dscalar4 double4
 #define ncDscalar ncDouble
 
 //#define cur_norm curand_normal_double
-#define cur_norm curand_normal
+//#define cur_norm curand_normal
 
 HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)
     {
