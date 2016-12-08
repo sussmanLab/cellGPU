@@ -16,48 +16,53 @@ using namespace std;
 class DelaunayMD
     {
     protected:
-
-        std::vector<pt> pts;          //vector of points to triangulate
         int N;                       //number of vertices
-        bool triangulated;            //has a triangulation been performed?
+        cellListGPU celllist;        //the cell list structure
+        Dscalar cellsize;            //size of its grid
 
-        Dscalar cellsize;
-        cellListGPU celllist;
-
-
-        //neighbor lists
+        //neighbor lists and their indexer. And the maximum number of neighbors any particle has
         GPUArray<int> neigh_num;
         GPUArray<int> neighs;
+        Index2D n_idx;
+        int neighMax;
 
         //an array that holds (particle, neighbor_number) info to avoid intra-warp divergence in force calculation?
         GPUArray<int2> NeighIdxs;
         int NeighIdxNum;
 
-        Index2D n_idx;
         //circumcenter lists
         GPUArray<int3> circumcenters;
-
-        int neighMax;
         int NumCircumCenters;
 
+        //flags that can be accessed by child classes...has any change in the network topology occured? Has a complete retriangulation been performed (necessitating changes in array sizes)?
         int Fails;
         int FullFails;
+        //has the maximum neighbor number changed?
+        bool neighMaxChange;
 
         //repair is a vector of zeros (everything is fine) and ones (that index needs to be repaired)
         GPUArray<int> repair;
         vector<int> NeedsFixing;
 
+        //flags...should the GPU be used? If no, what CPU routine should be run (global vs. local retriangulations)?
         bool GPUcompute;
+        bool globalOnly;
+
+        //this class' time        
         int timestep;
-        bool neighMaxChange;
+        std::vector<pt> pts;          //vector of points to triangulate...for delLoc purposes
+
 
     public:
+        GPUArray<Dscalar2> points;      //vector of particle positions
+        //the GPU and CPU boxes owned by this object
         gpubox Box;
         box CPUbox;
+
+        //the local Delaunay tester/updater
         DelaunayLoc delLoc;
-        GPUArray<Dscalar2> points;      //vector of particle positions
-        Dscalar polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
-        Dscalar gputiming,cputiming;
+
+        //statistics of how many triangulation repairs are done per frame, etc.
         Dscalar repPerFrame;
         int skippedFrames;
         int GlobalFixes;
@@ -68,7 +73,10 @@ class DelaunayMD
         vector<int> idxToTag;
         vector<int> tagToIdx;
 
-        void getPoints(GPUArray<Dscalar2> &ps){ps = points;};
+        /////
+        //Member functions
+        /////
+
         //constructors
         DelaunayMD(){triangulated=false;cellsize=2.0;};
 
@@ -92,11 +100,12 @@ class DelaunayMD
         void updateCellList();
         void reportCellList();
         void reportPos(int i);
-        void touchPoints(){ArrayHandle<Dscalar2> h(points,access_location::host,access_mode::readwrite);};
         void updateNeighIdxs();
 
-        //only use the CPU:
-        void setCPU(){GPUcompute = false;};
+        void getPoints(GPUArray<Dscalar2> &ps){ps = points;};
+        
+        //only use the CPU... pass global = false to not call CGAL to test/fix the triangulation
+        void setCPU(bool global = true){GPUcompute = false;globalOnly=global};
 
         //construct complete triangulation point-by-point
         void fullTriangulation();

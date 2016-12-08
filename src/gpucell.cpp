@@ -73,13 +73,12 @@ void cellListGPU::setGridSize(Dscalar a)
 
     xsize = (int)ceil(b11/boxsize);
     ysize = (int)ceil(b22/boxsize);
-    //printf("Box: (%f,%f)... boxsize: %f... x,y = (%i,%i)",b11,b22,boxsize,xsize,ysize);
 
     totalCells = xsize*ysize;
     cell_sizes.resize(totalCells); //number of elements in each cell...initialize to zero
 
     cell_indexer = Index2D(xsize,ysize);
-    //cout << "Cell size is " << xsize*ysize << endl;
+
     //estimate Nmax
     Nmax = ceil(Np/totalCells)+1;
     resetCellSizes();
@@ -123,7 +122,6 @@ void cellListGPU::compute()
         ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::readwrite);
         ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::readwrite);
         recompute=false;
-//cout << "cell list computation #"<<computations << endl;
 
         for (int nn = 0; nn < Np; ++nn)
             {
@@ -132,15 +130,11 @@ void cellListGPU::compute()
             jbin = floor(h_pt.data[nn].y/boxsize);
 
             int bin = cell_indexer(ibin,jbin);
-//cout << bin << "out of bins " << totalCells << "for particle " << nn << endl; cout.flush();
             int offset = h_cell_sizes.data[bin];
-//cout << "offset = " << offset <<  "  cli is " << cell_list_indexer(offset,bin)<< endl; cout.flush();
             if (offset < Nmax)
                 {
                 int clpos = cell_list_indexer(offset,bin);
                 h_idx.data[cell_list_indexer(offset,bin)]=nn;
-//            cout << "particle " << nn << " ibin =" << ibin<< " jbin=" <<jbin << " bin "<<bin << "out of " << totalCells<< "  Nmax = " << Nmax << "  clpos = " << clpos << " OFFSET " << offset<< endl;
- //               cout.flush();
                 }
             else
                 {
@@ -172,7 +166,6 @@ void cellListGPU::compute(GPUArray<Dscalar2> &points)
         ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::readwrite);
         ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::readwrite);
         recompute=false;
-//cout << "cell list computation #"<<computations << endl;
 
         for (int nn = 0; nn < Np; ++nn)
             {
@@ -181,15 +174,11 @@ void cellListGPU::compute(GPUArray<Dscalar2> &points)
             jbin = floor(h_pt.data[nn].y/boxsize);
 
             int bin = cell_indexer(ibin,jbin);
-//cout << bin << "out of bins " << totalCells << "for particle " << nn << endl; cout.flush();
             int offset = h_cell_sizes.data[bin];
-//cout << "offset = " << offset <<  "  cli is " << cell_list_indexer(offset,bin)<< endl; cout.flush();
             if (offset < Nmax)
                 {
                 int clpos = cell_list_indexer(offset,bin);
                 h_idx.data[cell_list_indexer(offset,bin)]=nn;
-//            cout << "particle " << nn << " ibin =" << ibin<< " jbin=" <<jbin << " bin "<<bin << "out of " << totalCells<< "  Nmax = " << Nmax << "  clpos = " << clpos << " OFFSET " << offset<< endl;
- //               cout.flush();
                 }
             else
                 {
@@ -246,35 +235,20 @@ void cellListGPU::computeGPU()
         //bool loopcheck=false;
         if (true)
             {
-/*
-            ArrayHandle<int> h_as(assist,access_location::host,access_mode::read);
-            cout << Nmax << endl;
-            cout << h_as.data[0]<< "   " << h_as.data[1] << endl;
-            if (h_as.data[1]==1)
-                {
-                Nmax=h_as.data[0];
-                recompute=true;
-                };
-
-*/
 
             ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
             ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::read);
             for (int cc = 0; cc < totalCells; ++cc)
                 {
-                //if (loopcheck) continue;
                 int cs = h_cell_sizes.data[cc] ;
                 for (int bb = 0; bb < cs; ++bb)
                     {
                     int wp = cell_list_indexer(bb,cc);
-  //                  cout <<" cell " <<cc << "pp  "<<h_idx.data[wp] <<endl;
                     };
                 if(cs > Nmax)
                     {
                     Nmax =cs ;
                     recompute = true;
-                    //cout << cs <<"in cell " << cc << endl;
-                    //loopcheck = true;
                     };
 
                 };
@@ -282,7 +256,6 @@ void cellListGPU::computeGPU()
             };
         };
     cell_list_indexer = Index2D(Nmax,totalCells);
-//    cout << "Nmax = " << Nmax << endl;
 
     };
 
@@ -306,10 +279,6 @@ void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
             ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_assist(assist,access_location::device,access_mode::readwrite);
 
-            cudaError_t code = cudaGetLastError();
-            if(code!=cudaSuccess)
-                printf("cell list data handles GPUassert: %s \n", cudaGetErrorString(code));
-
             //call the gpu function
             gpu_compute_cell_list(d_pt.data,        //particle positions...broken
                           d_cell_sizes.data,//particles per cell
@@ -327,60 +296,18 @@ void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
             }
         //get cell list arrays
         recompute = false;
-        //bool loopcheck=false;
         if (true)
             {
-/*
-            ArrayHandle<int> h_as(assist,access_location::host,access_mode::read);
-            cout << Nmax << endl;
-            cout << h_as.data[0]<< "   " << h_as.data[1] << endl;
-            if (h_as.data[1]==1)
-                {
-                Nmax=h_as.data[0];
-                recompute=true;
-                };
-
-*/
             ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
-    //        ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::read);
-
-
-cudaError_t code2 = cudaGetLastError();
-if(code2!=cudaSuccess)
-    {
-    ArrayHandle<Dscalar2> h_pt(points,access_location::host,access_mode::read);
-    for (int ii = 0; ii < Np; ++ii)
-        {
-        if (h_pt.data[ii].x <= 0) cout <<h_pt.data[ii].x <<  " X " << endl;
-        };
-    for (int ii = 0; ii < Np; ++ii)
-        {
-        if (h_pt.data[ii].y <= 0) cout <<h_pt.data[ii].y <<  " Y " << endl;
-        };
-    for (int cc = 0; cc < totalCells; ++cc)
-        if (h_cell_sizes.data[cc] >0)
-            cout << cc<<"   "  << h_cell_sizes.data[cc] << "  " << endl;
-    cout.flush();
-    printf("cell list first comp GPUassert: %s \n", cudaGetErrorString(code2));
-    };
-
             for (int cc = 0; cc < totalCells; ++cc)
                 {
-                //if (loopcheck) continue;
                 int cs = h_cell_sizes.data[cc] ;
-      //          for (int bb = 0; bb < cs; ++bb)
-        //            {
-          //          int wp = cell_list_indexer(bb,cc);
-  //                  cout <<" cell " <<cc << "pp  "<<h_idx.data[wp] <<endl;
-            //        };
                 if(cs > Nmax)
                     {
                     Nmax =cs ;
                     if (Nmax%2 == 0 ) Nmax +=2;
                     if (Nmax%2 == 1 ) Nmax +=1;
                     recompute = true;
-                    //cout << cs <<"in cell " << cc << endl;
-                    //loopcheck = true;
                     };
 
                 };
@@ -388,7 +315,5 @@ if(code2!=cudaSuccess)
             };
         };
     cell_list_indexer = Index2D(Nmax,totalCells);
-//    cout << "Nmax = " << Nmax << endl;
-
     };
 

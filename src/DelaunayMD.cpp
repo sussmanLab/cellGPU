@@ -81,8 +81,7 @@ void DelaunayMD::reIndexArray(GPUArray<int> &array)
 
 void DelaunayMD::spatiallySortPoints()
     {
-    //calling this should resort all particle data! need to make sure maps are working,
-    //also need to add cellType, areaPeriPreferences,motility, etc. etc. to the SPV caller, and database, etc. etc.!
+    //calling this should resort all particle data!
     //
     //itt and tti are the changes that happen in the current sort
     //idxToTag and tagToIdx relate the current indexes to the original ones
@@ -98,7 +97,7 @@ void DelaunayMD::spatiallySortPoints()
         idxSorter[ii].second = ii;
         };
     sort(idxSorter.begin(),idxSorter.end());
-    
+
     //update tti and itt
     for (int ii = 0; ii < N; ++ii)
         {
@@ -109,11 +108,8 @@ void DelaunayMD::spatiallySortPoints()
 
     //update points, idxToTag, and tagToIdx
     vector<int> tempi = idxToTag;
-    //GPUArray<Dscalar2> TP = points;
-    //ArrayHandle<Dscalar2> tempp(TP,access_location::host,access_mode::read);
     for (int ii = 0; ii < N; ++ii)
         {
-        //h_p.data[ii] = tempp.data[itt[ii]];
         idxToTag[ii] = tempi[itt[ii]];
         tagToIdx[tempi[itt[ii]]] = ii;
         };
@@ -349,7 +345,6 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     FullFails = 1;
     DelaunayCGAL dcgal;
     ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
-    //vector<Point> Psnew(N);
     vector<pair<Point,int> > Psnew(N);
     for (int ii = 0; ii < N; ++ii)
         {
@@ -570,69 +565,67 @@ void DelaunayMD::testTriangulation()
 void DelaunayMD::testTriangulationCPU()
     {
     Fails=0;
-    globalTriangulationCGAL();
-    skippedFrames -= 1;
-/*
-    resetDelLocPoints();
-
-
-
-    ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
-    Fails = 0;
-    for (int nn = 0; nn < N; ++nn)
+    if (globalOnly)
         {
-        h_repair.data[nn] = 0;
-        vector<int> neighbors;
-        for (int ii = 0; ii < neighnum.data[nn];++ii)
-                {
-                int idxpos = n_idx(ii,nn);
-                neighbors.push_back(ns.data[idxpos]);
-                };
+        globalTriangulationCGAL();
+        skippedFrames -= 1;
+        }
+    else
+        {
+        resetDelLocPoints();
 
-        bool good = delLoc.testPointTriangulation(nn,neighbors,false);
-        if(!good)
+
+
+        ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
+        Fails = 0;
+        for (int nn = 0; nn < N; ++nn)
             {
-            h_repair.data[nn] = 1;
-            Fails=1;
+            h_repair.data[nn] = 0;
+            vector<int> neighbors;
+            for (int ii = 0; ii < neighnum.data[nn];++ii)
+                    {
+                    int idxpos = n_idx(ii,nn);
+                    neighbors.push_back(ns.data[idxpos]);
+                    };
+
+            bool good = delLoc.testPointTriangulation(nn,neighbors,false);
+            if(!good)
+                {
+                h_repair.data[nn] = 1;
+                Fails=1;
+                };
             };
         };
-*/
     };
 
 
 void DelaunayMD::testAndRepairTriangulation(bool verb)
     {
-    //clock_t t1,t2;
     timestep +=1;
 
-//verb = true;
     if (verb) printf("testing triangulation\n");
     if(GPUcompute)
         {
-//        t1=clock();
         testTriangulation();
-//        t2=clock();
-//        gputiming+= t2-t1;
         }
     else
         {
-//        t1=clock();
         testTriangulationCPU();
-//        t2=clock();
-//        cputiming+= t2-t1;
         };
     if(Fails == 1)
         {
-//        t1=clock();
         NeedsFixing.clear();
         ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
-        cudaError_t code = cudaGetLastError();
-        if(code!=cudaSuccess)
+        if(GPUcompute)
             {
-            printf("testAndRepair preliminary GPUassert: %s \n", cudaGetErrorString(code));
-            throw std::exception();
+            cudaError_t code = cudaGetLastError();
+            if(code!=cudaSuccess)
+                {
+                printf("testAndRepair preliminary GPUassert: %s \n", cudaGetErrorString(code));
+                throw std::exception();
+                };
             };
 
         //add the index and all of its' neighbors
@@ -648,7 +641,6 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
                     {
                     int idxpos = n_idx(ii,nn);
                     NeedsFixing.push_back(ns.data[idxpos]);
-//                    printf("testing %i\t ",ns.data[idxpos]);
                     };
                 };
             };
@@ -664,11 +656,9 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
             }
         else
             {
-            FullFails = 0; 
+            FullFails = 0;
             repairTriangulation(NeedsFixing);
             };
-//        t2=clock();
-//        cputiming+= t2-t1;
         }
     else
         skippedFrames+=1;
@@ -703,36 +693,14 @@ void DelaunayMD::readTriangulation(ifstream &infile)
             ii += 1;
             };
         };
-//    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
-//    outfile << N <<endl;
-//    for (int ii = 0; ii < N ; ++ii)
-//        outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
-
     };
 
 void DelaunayMD::writeTriangulation(ofstream &outfile)
     {
     ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
-//    ArrayHandle<int> cc(circumcenters,access_location::host,access_mode::read);
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
     outfile << N <<endl;
     for (int ii = 0; ii < N ; ++ii)
         outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
- /*
-    for (int ii = 0; ii < 2*N; ++ii)
-        outfile << cc.data[3*ii] <<"\t" <<cc.data[3*ii+1]<<"\t"<<cc.data[3*ii+2]<<endl;
-    for (int ii = 0; ii < N; ++ii)
-        {
-        int imax = neighnum.data[ii];
-        for (int nn = 0; nn < imax; ++nn)
-            {
-            int idxpos = n_idx(nn,ii);
-            outfile << ns.data[idxpos] << "\t";
-            };
-        outfile << endl;
-        };
-    */
     };
 
 void DelaunayMD::repel(GPUArray<Dscalar2> &disp,Dscalar eps)
@@ -768,5 +736,4 @@ void DelaunayMD::repel(GPUArray<Dscalar2> &disp,Dscalar eps)
         ftot.x+=dtot.x+xrand;
         ftot.y+=dtot.y+yrand;
         };
-//    printf("Total force = (%f,%f)\n",ftot.x,ftot.y);
     };

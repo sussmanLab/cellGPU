@@ -170,11 +170,6 @@ int main(int argc, char*argv[])
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
 
-    cout << endl << "force time  = " << spv.forcetiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
-    cout << "triangle time  = " << spv.triangletiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
-
-//    cout << endl << "GPU time  = " << spv.gputiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
-//    cout << "CPU time  = " << spv.cputiming/(Dscalar)CLOCKS_PER_SEC/(initSteps+tSteps) << endl;
 
 //    ncdat.WriteState(spv);
 

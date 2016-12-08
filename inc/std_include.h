@@ -17,7 +17,7 @@
 #define Dscalar4 double4
 #define ncDscalar ncDouble
 
-//#define cur_norm curand_normal_double
+#define cur_norm curand_normal_double
 //#define cur_norm curand_normal
 
 HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)
