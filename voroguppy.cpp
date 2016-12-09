@@ -141,14 +141,14 @@ int main(int argc, char*argv[])
     spv.reportForces();
     */
 
-    printf("starting initialization\n");
+    //printf("starting initialization\n");
     spv.setSortPeriod(initSteps/10);
     for(int ii = 0; ii < initSteps; ++ii)
         {
         spv.performTimestep();
         };
 
-    printf("Finished with initialization\n");
+    //printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
     //spv.meanForce();
     spv.repPerFrame = 0.0;
@@ -158,7 +158,7 @@ int main(int argc, char*argv[])
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
-        if(ii%100 ==0)
+        if(ii%10000 ==0)
             {
             printf("timestep %i\n",ii);
 //    ncdat.WriteState(spv);
