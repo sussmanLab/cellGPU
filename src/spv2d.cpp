@@ -110,7 +110,7 @@ void SPV2D::getDelSets(int i)
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
-    ArrayHandle<int4> ds(delSets,access_location::host,access_mode::readwrite);
+    ArrayHandle<int2> ds(delSets,access_location::host,access_mode::readwrite);
     ArrayHandle<int> dother(delOther,access_location::host,access_mode::readwrite);
 
     int iNeighs = neighnum.data[i];
@@ -132,10 +132,8 @@ void SPV2D::getDelSets(int i)
                 break;
                 };
             };
-        ds.data[n_idx(nn,i)].x= nm2;
-        ds.data[n_idx(nn,i)].y= nm1;
-        ds.data[n_idx(nn,i)].z= n1;
-        ds.data[n_idx(nn,i)].w= n2;
+        ds.data[n_idx(nn,i)].x= nm1;
+        ds.data[n_idx(nn,i)].y= n1;
 
         nm2=nm1;
         nm1=n1;
@@ -505,7 +503,7 @@ void SPV2D::computeSPVForceSetsGPU()
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
-    ArrayHandle<int4> d_delSets(delSets,access_location::device,access_mode::read);
+    ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
     ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
@@ -535,7 +533,7 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
-    ArrayHandle<int4> d_delSets(delSets,access_location::device,access_mode::read);
+    ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
     ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);

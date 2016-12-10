@@ -95,7 +95,7 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict
 __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
                                       const Dscalar2* __restrict__ d_AP,
                                       const Dscalar2*  __restrict__ d_APpref,
-                                      const int4* __restrict__ d_delSets,
+                                      const int2* __restrict__ d_delSets,
                                       const int* __restrict__ d_delOther,
                                       const Dscalar2* __restrict__ d_vc,
                                       const Dscalar4* __restrict__ d_vln,
@@ -118,13 +118,13 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
 
     //Great...access the Delaunay neighbors and the relevant other point
     Dscalar2 pi, rij, rik,pno;
-    int4 neighs;
+    int2 neighs;
     pi   = d_points[pidx];
 
     neighs = d_delSets[n_idx(nn,pidx)];
 
-    Box.minDist(d_points[neighs.y],pi,rij);
-    Box.minDist(d_points[neighs.z],pi,rik);
+    Box.minDist(d_points[neighs.x],pi,rij);
+    Box.minDist(d_points[neighs.y],pi,rik);
     Box.minDist(d_points[d_delOther[n_idx(nn,pidx)]],pi,pno);
 
     //first, compute the derivative of the main voro point w/r/t pidx's position
@@ -186,8 +186,8 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
         dnnorm = THRESHOLD;
     dPdv.x = dnc.x/dncnorm - dnext.x/dnnorm;
     dPdv.y = dnc.y/dncnorm - dnext.y/dnnorm;
-    Adiff = KA*(d_AP[neighs.z].x - d_APpref[neighs.z].x);
-    Pdiff = KA*(d_AP[neighs.z].y - d_APpref[neighs.z].y);
+    Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
+    Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
 
     dEdv.x  += 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x;
     dEdv.y  += 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y;
@@ -201,8 +201,8 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     dlnorm = dnnorm;
     dPdv.x = dlast.x/dlnorm - dcl.x/dclnorm;
     dPdv.y = dlast.y/dlnorm - dcl.y/dclnorm;
-    Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
-    Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
+    Adiff = KA*(d_AP[neighs.x].x - d_APpref[neighs.x].x);
+    Pdiff = KA*(d_AP[neighs.x].y - d_APpref[neighs.x].y);
 
     dEdv.x  += 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x;
     dEdv.y  += 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y;
@@ -215,7 +215,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
 __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_points,
                                           const Dscalar2* __restrict__ d_AP,
                                           const Dscalar2* __restrict__ d_APpref,
-                                          const int4* __restrict__ d_delSets,
+                                          const int2* __restrict__ d_delSets,
                                           const int* __restrict__ d_delOther,
                                           const Dscalar2* __restrict__ d_vc,
                                           const Dscalar4* __restrict__ d_vln,
@@ -241,12 +241,12 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     //Great...access the Delaunay neighbors and the relevant other point
     Dscalar2 pi   = d_points[pidx];
 
-    int4 neighs = d_delSets[n_idx(nn,pidx)];
+    int2 neighs = d_delSets[n_idx(nn,pidx)];
     int neighOther = d_delOther[n_idx(nn,pidx)];
     Dscalar2 rij, rik,pno;
 
-    Box.minDist(d_points[neighs.y],pi,rij);
-    Box.minDist(d_points[neighs.z],pi,rik);
+    Box.minDist(d_points[neighs.x],pi,rij);
+    Box.minDist(d_points[neighs.y],pi,rik);
     Box.minDist(d_points[neighOther],pi,pno);
 
     //first, compute the derivative of the main voro point w/r/t pidx's position
@@ -271,10 +271,10 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     bool Tik = false;
     bool Tij = false;
     bool Tjk = false;
-    if (d_cellTypes[pidx] != d_cellTypes[neighs.z]) Tik = true;
-    if (d_cellTypes[pidx] != d_cellTypes[neighs.y]) Tij = true;
-    if (d_cellTypes[neighs.z] != d_cellTypes[neighs.y]) Tjk = true;
-    //neighs.z is "baseNeigh" of cpu routing... neighs.y is "otherNeigh"....neighOther is "DT_other_idx"
+    if (d_cellTypes[pidx] != d_cellTypes[neighs.y]) Tik = true;
+    if (d_cellTypes[pidx] != d_cellTypes[neighs.x]) Tij = true;
+    if (d_cellTypes[neighs.y] != d_cellTypes[neighs.x]) Tjk = true;
+    //neighs.y is "baseNeigh" of cpu routing... neighs.x is "otherNeigh"....neighOther is "DT_other_idx"
 
     //self terms
     dAdv.x = 0.5*(vlast.y-vnext.y);
@@ -326,8 +326,8 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
         dnnorm = THRESHOLD;
     dPdv.x = dnc.x/dncnorm - dnext.x/dnnorm;
     dPdv.y = dnc.y/dncnorm - dnext.y/dnnorm;
-    Adiff = KA*(d_AP[neighs.z].x - d_APpref[neighs.z].x);
-    Pdiff = KA*(d_AP[neighs.z].y - d_APpref[neighs.z].y);
+    Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
+    Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
     dTdv.x = 0.0; dTdv.y = 0.0;
     if(Tik)
         {
@@ -351,8 +351,8 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     dlnorm = dnnorm;
     dPdv.x = dlast.x/dlnorm - dcl.x/dclnorm;
     dPdv.y = dlast.y/dlnorm - dcl.y/dclnorm;
-    Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
-    Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
+    Adiff = KA*(d_AP[neighs.x].x - d_APpref[neighs.x].x);
+    Pdiff = KA*(d_AP[neighs.x].y - d_APpref[neighs.x].y);
     dTdv.x = 0.0; dTdv.y = 0.0;
     if(Tij)
         {
@@ -585,7 +585,7 @@ bool gpu_displace_and_rotate(Dscalar2 *d_points,
 bool gpu_force_sets(Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
-                    int4   *d_delSets,
+                    int2   *d_delSets,
                     int    *d_delOther,
                     Dscalar2 *d_vc,
                     Dscalar4 *d_vln,
@@ -633,7 +633,7 @@ bool gpu_force_sets(Dscalar2 *d_points,
 bool gpu_force_sets_tensions(Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
-                    int4   *d_delSets,
+                    int2   *d_delSets,
                     int    *d_delOther,
                     Dscalar2 *d_vc,
                     Dscalar4 *d_vln,
