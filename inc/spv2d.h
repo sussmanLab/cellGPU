@@ -124,9 +124,12 @@ class SPV2D : public DelaunayMD
         void spatialSorting();
 
         //cell-dynamics related functions...these call functions in the next section
+        //in general, these functions are the common calls, and test flags to know whether to call specific versions of specialty functins
         void performTimestep();
         void performTimestepCPU();
         void performTimestepGPU();
+        void ComputeForceSetsGPU();
+        void SumForcesGPU();
 
 
         //CPU functions

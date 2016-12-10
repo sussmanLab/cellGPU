@@ -398,20 +398,28 @@ void SPV2D::performTimestepCPU()
         };
     };
 
-//perform a timestep on the GPU
-void SPV2D::performTimestepGPU()
+void SPV2D::ComputeForceSetsGPU()
     {
-    computeGeometryGPU();
     if(!useTension)
         computeSPVForceSetsGPU();
     else
         computeSPVForceSetsWithTensionsGPU();
+    };
 
+void SPV2D::SumForcesGPU()
+    {
     if(!particleExclusions)
         sumForceSets();
     else
         sumForceSetsWithExclusions();
+    };
 
+//perform a timestep on the GPU
+void SPV2D::performTimestepGPU()
+    {
+    computeGeometryGPU();
+    ComputeForceSetsGPU();
+    SumForcesGPU();
     DisplacePointsAndRotate();
 
     //spatial sorting triggers a global re-triangulation, so no need to test and repair
