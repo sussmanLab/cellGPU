@@ -471,6 +471,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     };
 
 //call the GPU to test each circumcenter to see if it is still empty (i.e., how much of the triangulation from the last time step is still valid?)
+//Note that because gpu_test_circumcenters *always* copies at least a single integer back and forth (to answer the question "did any circumcircle come back non-empty?" for the cpu)this function is always an implicit cuda synchronization event
 void DelaunayMD::testTriangulation()
     {
     //first, update the cell list
@@ -541,6 +542,7 @@ void DelaunayMD::testTriangulationCPU()
     };
 
 //calls the relevant testing and repairing functions. increments the timestep by one
+//the call to testTriangulation will synchronize the gpu via a memcpy of "Fails" variable
 void DelaunayMD::testAndRepairTriangulation(bool verb)
     {
     timestep +=1;
@@ -554,6 +556,7 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
         {
         testTriangulationCPU();
         };
+
     if(Fails == 1)
         {
         NeedsFixing.clear();
