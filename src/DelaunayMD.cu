@@ -52,7 +52,7 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     Dscalar rad;
     Circumcircle(pt1,pt2,Q,rad);
 
-    //look through cells for other particles
+    //look through cells for other particles...re-use pt1 and pt2 variables below
     bool badParticle = false;
     Dscalar2 ptnew,toCenter;
     int wcheck = Ceil(rad/boxsize);
@@ -76,11 +76,11 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                 {
                 int newidx = d_cell_idx[cli(pp,bin)];
 
-                Dscalar2 pnreal = d_pt[newidx];
-                Box.minDist(pnreal,v,ptnew);
-                Box.minDist(ptnew,Q,toCenter);
+                Box.minDist(d_pt[newidx],v,pt1);
+                Box.minDist(pt1,Q,pt2);
+
                 //if it's in the circumcircle, check that its not one of the three points
-                if(toCenter.x*toCenter.x+toCenter.y*toCenter.y < rad)
+                if(pt2.x*pt2.x+pt2.y*pt2.y < rad)
                     {
                     if (newidx != i1.x && newidx != i1.y && newidx !=i1.z)
                         {
