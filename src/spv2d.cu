@@ -116,17 +116,15 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     int pidx = d_nidx[tidx].x;
     int nn = d_nidx[tidx].y;
 
-    //Great...access the four Delaunay neighbors and the relevant fifth point
-    Dscalar2 pi, pnm2,rij, rik,pn2,pno;
+    //Great...access the Delaunay neighbors and the relevant other point
+    Dscalar2 pi, rij, rik,pno;
     int4 neighs;
     pi   = d_points[pidx];
 
     neighs = d_delSets[n_idx(nn,pidx)];
 
-    Box.minDist(d_points[neighs.x],pi,pnm2);
     Box.minDist(d_points[neighs.y],pi,rij);
     Box.minDist(d_points[neighs.z],pi,rik);
-    Box.minDist(d_points[neighs.w],pi,pn2);
     Box.minDist(d_points[d_delOther[n_idx(nn,pidx)]],pi,pno);
 
     //first, compute the derivative of the main voro point w/r/t pidx's position
@@ -140,6 +138,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     Dscalar4 vvv = d_vln[n_idx(nn,pidx)];
     vlast.x = vvv.x; vlast.y = vvv.y;
     vnext.x = vvv.z; vnext.y = vvv.z;
+
     Circumcenter(rij,rik,pno,vother);
 
 
@@ -239,17 +238,15 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     int pidx = d_nidx[tidx].x;
     int nn = d_nidx[tidx].y;
 
-    //Great...access the four Delaunay neighbors and the relevant fifth point
+    //Great...access the Delaunay neighbors and the relevant other point
     Dscalar2 pi   = d_points[pidx];
 
     int4 neighs = d_delSets[n_idx(nn,pidx)];
     int neighOther = d_delOther[n_idx(nn,pidx)];
-    Dscalar2 pnm2,rij, rik,pn2,pno;
+    Dscalar2 rij, rik,pno;
 
-    Box.minDist(d_points[neighs.x],pi,pnm2);
     Box.minDist(d_points[neighs.y],pi,rij);
     Box.minDist(d_points[neighs.z],pi,rik);
-    Box.minDist(d_points[neighs.w],pi,pn2);
     Box.minDist(d_points[neighOther],pi,pno);
 
     //first, compute the derivative of the main voro point w/r/t pidx's position

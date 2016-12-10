@@ -54,7 +54,6 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
 
     //look through cells for other particles...re-use pt1 and pt2 variables below
     bool badParticle = false;
-    Dscalar2 ptnew,toCenter;
     int wcheck = Ceil(rad/boxsize);
 
     if(wcheck > xsize/2) wcheck = xsize/2;
