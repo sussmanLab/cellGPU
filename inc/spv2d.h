@@ -14,8 +14,6 @@
 #include "vector_types.h"
 #include "vector_functions.h"
 
-using namespace std;
-
 #include "Matrix.h"
 #include "cu_functions.h"
 
@@ -122,7 +120,6 @@ class SPV2D : public DelaunayMD
         //internal utility
         void getDelSets(int i);
         void allDelSets();
-        void centerCells();
         void setCurandStates(int i);
         void spatialSorting();
 
@@ -151,7 +148,6 @@ class SPV2D : public DelaunayMD
         //testing and reporting functions...
         void reportCellInfo();
         void reportForces();
-        void reportDirectors();
         void meanForce();
         void meanArea();
         Dscalar reportq();

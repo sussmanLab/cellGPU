@@ -6,12 +6,16 @@
 #include "spv2d.cuh"
 #include "cuda_profiler_api.h"
 
+//simple constructor
 SPV2D::SPV2D(int n)
     {
     printf("Initializing %i cells with random positions in a square box\n",n);
     Initialize(n);
+    setCellPreferencesUniform(1.0,4.0);
+    setCellTypeUniform(0);
     };
 
+//most common constructor...sets uniform cell preferences and types
 SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0)
     {
     printf("Initializing %i cells with random positions in a square box\n",n);
@@ -20,6 +24,7 @@ SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0)
     setCellTypeUniform(0);
     };
 
+//take care of all class initialization functions
 void SPV2D::Initialize(int n)
     {
     N=n;
@@ -33,7 +38,6 @@ void SPV2D::Initialize(int n)
     setModuliUniform(1.0,1.0);
     sortPeriod = -1;
 
-
     setv0Dr(0.05,1.0);
     forces.resize(n);
     external_forces.resize(n);
@@ -46,9 +50,7 @@ void SPV2D::Initialize(int n)
     setExclusions(baseEx);
     particleExclusions=false;
 
-
     ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
-
     int randmax = 100000000;
     for (int ii = 0; ii < N; ++ii)
         {
@@ -62,6 +64,7 @@ void SPV2D::Initialize(int n)
     allDelSets();
     };
 
+//call DelaunayMD's underlying Hilbert sort scheme, and re-index spv2d's arrays
 void SPV2D::spatialSorting()
     {
     spatiallySortPoints();
@@ -89,10 +92,9 @@ void SPV2D::spatialSorting()
 
     //cellType
     reIndexArray(CellType);
-
     };
 
-
+//DelSets is a helper data structure keeping track of some ordering of the Delaunay vertices around a given vertex. This updates it
 void SPV2D::allDelSets()
     {
     updateNeighIdxs();
@@ -103,158 +105,7 @@ void SPV2D::allDelSets()
         getDelSets(ii);
     };
 
-void SPV2D::setModuliUniform(Dscalar KA, Dscalar KP)
-    {
-    Moduli.resize(N);
-    ArrayHandle<Dscalar2> h_m(Moduli,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        h_m.data[ii].x = KA;
-        h_m.data[ii].y = KP;
-        };
-    };
-
-
-void SPV2D::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
-    {
-    AreaPeriPreferences.resize(N);
-    ArrayHandle<Dscalar2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        h_p.data[ii].x = A0;
-        h_p.data[ii].y = P0;
-        };
-    };
-
-void SPV2D::setCellTypeUniform(int i)
-    {
-    CellType.resize(N);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        h_ct.data[ii] = i;
-        };
-    };
-
-void SPV2D::setCellType(vector<int> &types)
-    {
-    CellType.resize(N);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        h_ct.data[ii] = types[ii];
-        };
-    };
-
-void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
-    {
-    Dscalar x11,x12,x21,x22;
-    Box.getBoxDims(x11,x12,x21,x22);
-    Dscalar xc = x11*0.5;
-    Dscalar yc = x22*0.5;
-
-    Dscalar ry = sqrt(x11*x22*frac/(3.14159*aspectRatio));
-    Dscalar rx = aspectRatio*ry;
-
-    CellType.resize(N);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
-
-    for (int ii = 0; ii < N; ++ii)
-        {
-        Dscalar px = h_p.data[ii].x;
-        Dscalar py = h_p.data[ii].y;
-        Dscalar test = (px-xc)*(px-xc)/(rx*rx) + (py-yc)*(py-yc)/(ry*ry);
-        if (test <=1.0)
-            h_ct.data[ii] = 0;
-        else
-            h_ct.data[ii] = 1;
-        };
-    };
-
-void SPV2D::setCellTypeStrip(Dscalar frac)
-    {
-    Dscalar x11,x12,x21,x22;
-    Box.getBoxDims(x11,x12,x21,x22);
-    Dscalar xmin = x11*(0.5-frac*0.5);
-    Dscalar xmax = x11*(0.5+frac*0.5);
-
-
-    CellType.resize(N);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
-
-    for (int ii = 0; ii < N; ++ii)
-        {
-        Dscalar px = h_p.data[ii].x;
-        if (px > xmin && px < xmax)
-            h_ct.data[ii] = 0;
-        else
-            h_ct.data[ii] = 1;
-        };
-    };
-
-
-void SPV2D::setv0Dr(Dscalar v0new,Dscalar drnew)
-    {
-    Motility.resize(N);
-    v0=v0new;
-    Dr=drnew;
-    if (true)
-        {
-        ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
-        for (int ii = 0; ii < N; ++ii)
-            {
-            h_mot.data[ii].x = v0new;
-            h_mot.data[ii].y = drnew;
-            };
-        };
-    };
-void SPV2D::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs)
-    {
-    Motility.resize(N);
-    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        h_mot.data[ii].x = v0s[ii];
-        h_mot.data[ii].y = drs[ii];
-        };
-    };
-
-
-void SPV2D::setExclusions(vector<int> &exes)
-    {
-    particleExclusions=true;
-    external_forces.resize(N);
-    exclusions.resize(N);
-    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_ex(exclusions,access_location::host,access_mode::overwrite);
-
-    for (int ii = 0; ii < N; ++ii)
-        {
-        h_ex.data[ii] = 0;
-        if( exes[ii] != 0)
-            {
-            //set v0 to zero and Dr to zero
-            h_mot.data[ii].x = 0.0;
-            h_mot.data[ii].y = 0.0;
-            h_ex.data[ii] = 1;
-            };
-        };
-    };
-
-void SPV2D::setCurandStates(int i)
-    {
-    ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
-
-    gpu_init_curand(d_cs.data,N,i);
-
-    };
-
-/////////////////
-//Utility
-/////////////////
-
+//update the delSet and delOther structure just for a particular particle
 void SPV2D::getDelSets(int i)
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
@@ -292,11 +143,166 @@ void SPV2D::getDelSets(int i)
         };
     };
 
+//set all cell K_A, K_P preferences to uniform values
+void SPV2D::setModuliUniform(Dscalar KA, Dscalar KP)
+    {
+    Moduli.resize(N);
+    ArrayHandle<Dscalar2> h_m(Moduli,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_m.data[ii].x = KA;
+        h_m.data[ii].y = KP;
+        };
+    };
+
+//set all cell area and perimeter preferences to uniform values
+void SPV2D::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
+    {
+    AreaPeriPreferences.resize(N);
+    ArrayHandle<Dscalar2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_p.data[ii].x = A0;
+        h_p.data[ii].y = P0;
+        };
+    };
+//set all cell types to i
+void SPV2D::setCellTypeUniform(int i)
+    {
+    CellType.resize(N);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_ct.data[ii] = i;
+        };
+    };
+
+//pass a vector of integers and set the cell types to it
+void SPV2D::setCellType(vector<int> &types)
+    {
+    CellType.resize(N);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_ct.data[ii] = types[ii];
+        };
+    };
+
+//a specialty function...set all cells within an ellipse of given aspect ratio occupying a given fraction of the box area to one type, and everything else to a different type
+void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
+    {
+    Dscalar x11,x12,x21,x22;
+    Box.getBoxDims(x11,x12,x21,x22);
+    Dscalar xc = x11*0.5;
+    Dscalar yc = x22*0.5;
+
+    Dscalar ry = sqrt(x11*x22*frac/(3.14159*aspectRatio));
+    Dscalar rx = aspectRatio*ry;
+
+    CellType.resize(N);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+
+    for (int ii = 0; ii < N; ++ii)
+        {
+        Dscalar px = h_p.data[ii].x;
+        Dscalar py = h_p.data[ii].y;
+        Dscalar test = (px-xc)*(px-xc)/(rx*rx) + (py-yc)*(py-yc)/(ry*ry);
+        if (test <=1.0)
+            h_ct.data[ii] = 0;
+        else
+            h_ct.data[ii] = 1;
+        };
+    };
+
+//same thing, but for particles in a strip geometry
+void SPV2D::setCellTypeStrip(Dscalar frac)
+    {
+    Dscalar x11,x12,x21,x22;
+    Box.getBoxDims(x11,x12,x21,x22);
+    Dscalar xmin = x11*(0.5-frac*0.5);
+    Dscalar xmax = x11*(0.5+frac*0.5);
+
+    CellType.resize(N);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+
+    for (int ii = 0; ii < N; ++ii)
+        {
+        Dscalar px = h_p.data[ii].x;
+        if (px > xmin && px < xmax)
+            h_ct.data[ii] = 0;
+        else
+            h_ct.data[ii] = 1;
+        };
+    };
+
+//set all cell v0 and Dr values to the same thing
+void SPV2D::setv0Dr(Dscalar v0new,Dscalar drnew)
+    {
+    Motility.resize(N);
+    v0=v0new;
+    Dr=drnew;
+    if (true)
+        {
+        ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
+        for (int ii = 0; ii < N; ++ii)
+            {
+            h_mot.data[ii].x = v0new;
+            h_mot.data[ii].y = drnew;
+            };
+        };
+    };
+
+//set v0 and Dr per cell by passing vectors of desired motility parameters
+void SPV2D::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs)
+    {
+    Motility.resize(N);
+    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_mot.data[ii].x = v0s[ii];
+        h_mot.data[ii].y = drs[ii];
+        };
+    };
+
+//set a list of particles to be excluded (forces on them will be set to zero, and motility is set to zero)
+void SPV2D::setExclusions(vector<int> &exes)
+    {
+    particleExclusions=true;
+    external_forces.resize(N);
+    exclusions.resize(N);
+    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_ex(exclusions,access_location::host,access_mode::overwrite);
+
+    for (int ii = 0; ii < N; ++ii)
+        {
+        h_ex.data[ii] = 0;
+        if( exes[ii] != 0)
+            {
+            //set v0 to zero and Dr to zero
+            h_mot.data[ii].x = 0.0;
+            h_mot.data[ii].y = 0.0;
+            h_ex.data[ii] = 1;
+            };
+        };
+    };
+
+//initialize the cuda RNG
+void SPV2D::setCurandStates(int i)
+    {
+    ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
+
+    gpu_init_curand(d_cs.data,N,i);
+
+    };
 
 /////////////////
 //Dynamics
 /////////////////
 
+
+//generic function to call the basic parts of a time step
 void SPV2D::performTimestep()
     {
     Timestep += 1;
@@ -319,6 +325,7 @@ void SPV2D::performTimestep()
         spatialSorting();
     };
 
+//if forces have already been computed, displace particles according to net force and motility, and rotate the cell directors
 void SPV2D::DisplacePointsAndRotate()
     {
 
@@ -340,33 +347,7 @@ void SPV2D::DisplacePointsAndRotate()
 
     };
 
-void SPV2D::centerCells()
-    {
-    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
-    Dscalar x11,x12,x21,x22;
-    Box.getBoxDims(x11,x12,x21,x22);
-    Dscalar xcm, ycm;
-    xcm = 0.0; ycm = 0,0;
-    for (int ii = 0; ii < N; ++ii)
-        {
-        Dscalar2 pos = h_p.data[ii];
-        xcm+=pos.x;
-        ycm+=pos.y;
-        };
-    xcm /= (Dscalar)N;
-    ycm /= (Dscalar)N;
-    if(true)
-        {
-        ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
-        for (int ii = 0; ii < N; ++ii)
-            {
-            h_disp.data[ii].x = -(xcm-x11*0.5);
-            h_disp.data[ii].y = -(ycm-x22*0.5);
-            };
-        };
-    movePoints(displacements);
-    };
-
+//Do the same thing, but on the CPU
 void SPV2D::calculateDispCPU()
     {
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
@@ -396,6 +377,7 @@ void SPV2D::calculateDispCPU()
     //vector of displacements is forces*timestep + v0's*timestep
     };
 
+//perform a timestep on the CPU
 void SPV2D::performTimestepCPU()
     {
     computeGeometryCPU();
@@ -409,7 +391,6 @@ void SPV2D::performTimestepCPU()
         for (int ii = 0; ii < N; ++ii)
             computeSPVForceCPU(ii);
         };
-
     calculateDispCPU();
 
     movePointsCPU(displacements);
@@ -419,6 +400,7 @@ void SPV2D::performTimestepCPU()
         };
     };
 
+//perform a timestep on the GPU
 void SPV2D::performTimestepGPU()
     {
     computeGeometryGPU();
@@ -431,7 +413,6 @@ void SPV2D::performTimestepGPU()
         sumForceSets();
     else
         sumForceSetsWithExclusions();
-
 
     DisplacePointsAndRotate();
 
@@ -460,6 +441,7 @@ void SPV2D::performTimestepGPU()
         };
     };
 
+//call a GPU routine to compute cell area and perimeters
 void SPV2D::computeGeometryGPU()
     {
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
@@ -481,6 +463,7 @@ void SPV2D::computeGeometryGPU()
 
     };
 
+//if force sets have been computed on the GPU, add them up
 void SPV2D::sumForceSets()
     {
 
@@ -495,7 +478,7 @@ void SPV2D::sumForceSets()
                     N,n_idx);
     };
 
-
+//same thing, but with particle exclusions
 void SPV2D::sumForceSetsWithExclusions()
     {
 
@@ -515,7 +498,8 @@ void SPV2D::sumForceSetsWithExclusions()
     };
 
 
-
+//compute force sets on the GPU
+//these are the contributions to the net force on particle "i" from each of particle i's voronoi vertices
 void SPV2D::computeSPVForceSetsGPU()
     {
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
@@ -527,7 +511,6 @@ void SPV2D::computeSPVForceSetsGPU()
     ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_vc(VoroCur,access_location::device,access_mode::read);
     ArrayHandle<Dscalar4> d_vln(VoroLastNext,access_location::device,access_mode::read);
-
 
     Dscalar KA = 1.0;
     Dscalar KP = 1.0;
@@ -546,7 +529,7 @@ void SPV2D::computeSPVForceSetsGPU()
                     NeighIdxNum,n_idx,Box);
     };
 
-
+//same thing, but add a tension between cells of different type
 void SPV2D::computeSPVForceSetsWithTensionsGPU()
     {
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
@@ -559,7 +542,6 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
     ArrayHandle<int> d_ct(CellType,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_vc(VoroCur,access_location::device,access_mode::read);
     ArrayHandle<Dscalar4> d_vln(VoroLastNext,access_location::device,access_mode::read);
-
 
     Dscalar KA = 1.0;
     Dscalar KP = 1.0;
@@ -578,11 +560,9 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
                     KP,
                     gamma,
                     NeighIdxNum,n_idx,Box);
-
-
     };
 
-
+//compute cell area and perimeter on the CPU
 void SPV2D::computeGeometryCPU()
     {
     //read in all the data we'll need
@@ -642,6 +622,7 @@ void SPV2D::computeGeometryCPU()
         };
     };
 
+//compute force on particle i on the CPU
 void SPV2D::computeSPVForceCPU(int i)
     {
     Dscalar Pthreshold = 1e-8;
@@ -844,13 +825,11 @@ void SPV2D::computeSPVForceCPU(int i)
 
         vlast=vcur;
         };
-
-
-
     h_f.data[i].x=forceSum.x;
     h_f.data[i].y=forceSum.y;
     };
 
+//same thing, but with additional tension terms between cells of different types
 void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
     {
     Dscalar Pthreshold = 1e-8;
@@ -1096,14 +1075,11 @@ void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
 
         vlast=vcur;
         };
-
-
-
     h_f.data[i].x=forceSum.x;
     h_f.data[i].y=forceSum.y;
     };
 
-
+//a utility testing function...calculate the average area of the cells
 void SPV2D::meanArea()
     {
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
@@ -1115,25 +1091,7 @@ void SPV2D::meanArea()
     printf("Mean area = %f\n" ,fx);
     };
 
-void SPV2D::reportDirectors()
-    {
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::read);
-    Dscalar fx = 0.0;
-    Dscalar fy = 0.0;
-    Dscalar min = 10000;
-    Dscalar max = -10000;
-    for (int i = 0; i < N; ++i)
-        {
-        if (h_cd.data[i] >max)
-            max = h_cd.data[i];
-        if (h_cd.data[i] < min)
-            min = h_cd.data[i];
-        };
-    printf("min/max director : (%f,%f)\n",min,max);
-
-    };
-
-
+//a utility/testing function...output the currently computed forces to the screen
 void SPV2D::reportForces()
     {
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
@@ -1161,6 +1119,7 @@ void SPV2D::reportForces()
 
     };
 
+//a utility/testing function...report the sum (not the mean!) of all net forces on all particles. It had better be close to zero.
 void SPV2D::meanForce()
     {
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
@@ -1172,9 +1131,9 @@ void SPV2D::meanForce()
         fy += h_f.data[i].y;
         };
     printf("Mean force = (%e,%e)\n" ,fx,fy);
-
     };
 
+//a utility/testing function, report the current average value of the shape parameter P/sqrt(A)
 Dscalar SPV2D::reportq()
     {
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
@@ -1190,6 +1149,7 @@ Dscalar SPV2D::reportq()
     return q/(Dscalar)N;
     };
 
+//a utility function...output some information assuming the system is uniform
 void SPV2D::reportCellInfo()
     {
     printf("N=%i\tv0=%f\tDr=%f\tgamma=%f\n",N,v0,Dr,gamma);

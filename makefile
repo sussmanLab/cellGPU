@@ -17,10 +17,10 @@ LIB_CGAL = -L/home/user/CGAL/CGAL-4.9/lib -lCGAL -lCGAL_Core -lgmp -lmpfr
 LIB_NETCDF = -lnetcdf_c++ -lnetcdf -L/opt/local/lib
 
 #common flags
-COMMONFLAGS += $(INCLUDES) -std=c++11 -DCGAL_DISABLE_ROUNDING_MATH_CHECK
-NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -Wno-deprecated-gpu-targets -O3 #-Xptxas -fmad=false#-O0#-dlcm=ca#-G
+COMMONFLAGS += $(INCLUDES) -std=c++11 -DCGAL_DISABLE_ROUNDING_MATH_CHECK -O3
+NVCCFLAGS += -D_FORCE_INLINES $(COMMONFLAGS) -Wno-deprecated-gpu-targets #-Xptxas -fmad=false#-O0#-dlcm=ca#-G
 CXXFLAGS += $(COMMONFLAGS)
-CXXFLAGS += -w -frounding-math -O3
+CXXFLAGS += -w -frounding-math
 CFLAGS += $(COMMONFLAGS) -frounding-math
 
 CUOBJ_DIR=cuobj

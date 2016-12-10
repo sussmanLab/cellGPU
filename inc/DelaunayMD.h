@@ -2,10 +2,11 @@
 #ifndef DELAUNAYMD_H
 #define DELAUNAYMD_H
 
-using namespace std;
 #include "std_include.h"
+
 #include "gpubox.h"
 #include "gpuarray.h"
+#include "gpucell.cuh"
 #include "gpucell.h"
 #include "indexer.h"
 #include "HilbertSort.h"
@@ -97,8 +98,6 @@ class DelaunayMD
         void reIndexArray(GPUArray<Dscalar2> &array);
 
         void updateCellList();
-        void reportCellList();
-        void reportPos(int i);
         void updateNeighIdxs();
 
         void getPoints(GPUArray<Dscalar2> &ps){ps = points;};

@@ -7,6 +7,22 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
+#include <cmath>
+#include <algorithm>
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <sys/time.h>
+
+using namespace std;
+
+
 #include "vector_types.h"
 #include "vector_functions.h"
 
