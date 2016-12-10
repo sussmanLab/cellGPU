@@ -479,8 +479,8 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
     curandState_t randState;
 
     randState=states[idx];
-    Dscalar dirx = cosf(d_directors[idx]);
-    Dscalar diry = sinf(d_directors[idx]);
+    Dscalar dirx = Cos(d_directors[idx]);
+    Dscalar diry = Sin(d_directors[idx]);
     Dscalar v0 = d_motility[idx].x;
     Dscalar Dr = d_motility[idx].y;
     Dscalar angleDiff = cur_norm(&randState)*sqrt(2.0*dt*Dr);

@@ -28,19 +28,32 @@ using namespace std;
 
 #define PI 3.14159265358979323846
 
+
+//decide whether to compute everything in floating point or double precision
 #ifndef SCALARFLOAT
+//doubles
 #define Dscalar double
 #define Dscalar2 double2
 #define Dscalar4 double4
 #define ncDscalar ncDouble
 #define cur_norm curand_normal_double
+#define Cos cos
+#define Sin sin
+#define Floor floor
+#define Ceil ceil
+
 #else
+//floats
 
 #define Dscalar float
 #define Dscalar2 float2
 #define Dscalar4 float4
 #define ncDscalar ncFloat
 #define cur_norm curand_normal
+#define Cos cosf
+#define Sin sinf
+#define Floor floorf
+#define Ceil ceilf
 #endif
 
 HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)

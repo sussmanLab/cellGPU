@@ -39,15 +39,13 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     int3 i1 = d_circumcircles[idx];
     //the vertex we will take to be the origin, and its cell position
     Dscalar2 v = d_pt[i1.x];
-    int ib=floorf(v.x/boxsize);
-    int jb=floorf(v.y/boxsize);
+    int ib=Floor(v.x/boxsize);
+    int jb=Floor(v.y/boxsize);
 
-    Dscalar2 p1real = d_pt[i1.y];
-    Dscalar2 p2real = d_pt[i1.z];
 
     Dscalar2 pt1,pt2;
-    Box.minDist(p1real,v,pt1);
-    Box.minDist(p2real,v,pt2);
+    Box.minDist(d_pt[i1.y],v,pt1);
+    Box.minDist(d_pt[i1.z],v,pt2);
 
     //get the circumcircle
     Dscalar2 Q;
@@ -57,11 +55,10 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     //look through cells for other particles
     bool badParticle = false;
     Dscalar2 ptnew,toCenter;
-    int wcheck = ceilf(rad/boxsize);
+    int wcheck = Ceil(rad/boxsize);
 
     if(wcheck > xsize/2) wcheck = xsize/2;
-    rad *=1.0001;
-    rad = rad*rad;
+    rad = rad*rad*1.0000000001;
     for (int ii = -wcheck; ii <= wcheck; ++ii)
         {
         for (int jj = -wcheck; jj <= wcheck; ++jj)
@@ -91,9 +88,7 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                         d_repair[newidx] = 1;
                         };
                     };
-
-                };
-
+                };//end loop over particles in the given cell
             };
         };// end loop over cells
 
