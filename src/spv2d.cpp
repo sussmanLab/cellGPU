@@ -398,6 +398,7 @@ void SPV2D::performTimestepCPU()
         };
     };
 
+//compute force sets on the gpu
 void SPV2D::ComputeForceSetsGPU()
     {
     if(!useTension)
@@ -406,6 +407,7 @@ void SPV2D::ComputeForceSetsGPU()
         computeSPVForceSetsWithTensionsGPU();
     };
 
+//add up the already-computed force sets on the gpu
 void SPV2D::SumForcesGPU()
     {
     if(!particleExclusions)
