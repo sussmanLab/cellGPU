@@ -4,7 +4,7 @@
 
 using namespace std;
 #include "std_include.h"
-#include "box.h"
+#include "gpubox.h"
 #include "cell.h"
 #include "Delaunay1.h"
 
@@ -17,7 +17,7 @@ class DelaunayLoc
 
         Dscalar cellsize;
         grid clist;
-        box Box;
+        gpubox Box;
 
 
     public:
@@ -26,13 +26,13 @@ class DelaunayLoc
 
         DelaunayLoc(){triangulated=false;cellsize=2.0;};
         //constructor via a vector of point objects
-        DelaunayLoc(std::vector<Dscalar2> &points, box &bx){setPoints(points);setBox(bx);};
+        DelaunayLoc(std::vector<Dscalar2> &points, gpubox &bx){setPoints(points);setBox(bx);};
         //constructor via a vector of scalars, {x1,y1,x2,y2,...}
-        DelaunayLoc(std::vector<Dscalar> &points,box &bx){setPoints(points);setBox(bx);};
+        DelaunayLoc(std::vector<Dscalar> &points,gpubox &bx){setPoints(points);setBox(bx);};
 
         void setPoints(std::vector<Dscalar2> &points);
         void setPoints(std::vector<Dscalar> &points);
-        void setBox(box &bx);
+        void setBox(gpubox &bx);
         void setCellSize(Dscalar cs){cellsize=cs;};
 
         void initialize(Dscalar csize);

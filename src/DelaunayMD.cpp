@@ -20,8 +20,6 @@ using namespace std;
 #include "vector_types.h"
 #include "vector_functions.h"
 
-#include "box.h"
-
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "gpucell.cuh"
@@ -147,7 +145,6 @@ void DelaunayMD::initialize(int n)
     N = n;
     Dscalar boxsize = sqrt((Dscalar)N);
     Box.setSquare(boxsize,boxsize);
-    CPUbox.setSquare(boxsize,boxsize);
 
     //set circumcenter array size
     circumcenters.resize(2*(N+10));
@@ -177,7 +174,7 @@ void DelaunayMD::initialize(int n)
     celllist.setGridSize(cellsize);
 
     //DelaunayLoc initialization
-    box Bx(boxsize,boxsize);
+    gpubox Bx(boxsize,boxsize);
     delLoc.setBox(Bx);
     resetDelLocPoints();
 

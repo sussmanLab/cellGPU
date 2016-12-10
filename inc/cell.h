@@ -9,6 +9,7 @@
 using namespace std;
 #include "std_include.h"
 #include "structures.h"
+#include "gpubox.h"
 
 class grid
     {
@@ -17,18 +18,18 @@ class grid
         Dscalar cellsize;
         int N;
         int cellnumx, cellnumy,totalCells;
-        box Box;
+        gpubox Box;
     public:
         //The fundamental structure
         std::vector< std::vector<int> > cells;
 
         inline grid(){};
-        inline grid(std::vector<Dscalar2> &pts, box &bx, Dscalar cs)
+        inline grid(std::vector<Dscalar2> &pts, gpubox &bx, Dscalar cs)
             {points=pts;cellsize=cs;setBox(bx);initialize();};
 
         inline void setPoints(std::vector<Dscalar2> &pts){points = pts;};
         inline void setCellSize(Dscalar cs){cellsize = cs;};
-        inline void setBox(box &bx);
+        inline void setBox(gpubox &bx);
 
         inline void initialize();
         inline void construct();
@@ -46,7 +47,7 @@ class grid
         inline void getParticles(int cidx, std::vector<int> &plist);
     };
 
-void grid::setBox(box &bx)
+void grid::setBox(gpubox &bx)
     {
     Dscalar b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);

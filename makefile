@@ -29,6 +29,10 @@ SRC_DIR=src
 #target rules
 all:build
 
+float: CXXFLAGS += -DSCALARFLOAT
+float: NVCCFLAGS += -DSCALARFLOAT
+float: build
+
 debug: CXXFLAGS += -g
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info
 debug: build

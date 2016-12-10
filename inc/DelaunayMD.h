@@ -57,7 +57,6 @@ class DelaunayMD
         GPUArray<Dscalar2> points;      //vector of particle positions
         //the GPU and CPU boxes owned by this object
         gpubox Box;
-        box CPUbox;
 
         //the local Delaunay tester/updater
         DelaunayLoc delLoc;

@@ -54,7 +54,7 @@ void DelaunayLoc::setPoints(vector<Dscalar2> &points)
         };
     };
 
-void DelaunayLoc::setBox(box &bx)
+void DelaunayLoc::setBox(gpubox &bx)
     {
     Dscalar b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
@@ -583,7 +583,7 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
     cout << "Timing DelaunayLoc routine..." << endl;
     nV = numpts;
     Dscalar boxa = sqrt(numpts)+1.0;
-    box Bx(boxa,boxa);
+    gpubox Bx(boxa,boxa);
     setBox(Bx);
     vector<Dscalar> ps2(2*numpts);
     vector<Dscalar> ps3(2*numpts);
