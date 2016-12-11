@@ -127,19 +127,20 @@ int main(int argc, char*argv[])
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
 
-    /*
-    //compare with output of mattias' code
-    char fn[256];
-    sprintf(fn,"/hdd2/repos/test.txt");
-    ifstream input(fn);
-    spv.readTriangulation(input);
-    spv.globalTriangulationCGAL();
-    spv.allDelSets();
-    spv.computeGeometryGPU();
-    spv.computeSPVForceSetsGPU();
-    spv.sumForceSets();
-    spv.reportForces();
-    */
+    if(program_switch == -1)
+        {
+        //compare with output of mattias' code
+        char fn[256];
+        sprintf(fn,"/home/daniel/Dropbox/test.txt");
+        ifstream input(fn);
+        spv.readTriangulation(input);
+        spv.globalTriangulationCGAL();
+        spv.allDelSets();
+        spv.computeGeometryGPU();
+        spv.computeSPVForceSetsGPU();
+        spv.sumForceSets();
+        spv.reportForces();
+        };
 
     //printf("starting initialization\n");
     spv.setSortPeriod(initSteps/10);
