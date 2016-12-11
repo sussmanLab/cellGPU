@@ -140,8 +140,6 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     vnext.x = vvv.z; vnext.y = vvv.w;
 
     Circumcenter(rij,rik,pno,vother);
-if(pidx==0)
-printf("pidx %i nn %i: (%f,%f)\t(%f,%f)\t(%f,%f)\n",pidx,nn,vlast.x,vlast.y,vcur.x,vcur.y,vnext.x,vnext.y);
 
     Dscalar2 dAdv,dPdv;
     Dscalar2 dEdv;
@@ -410,13 +408,14 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
     vlast = circumcenter;
 
     //set the VoroCur to this voronoi vertex
-    d_vc[n_idx(0,idx)] = vlast;
+    //the convention is that nn=0 in this routine should be nn = 1 in the force sets calculation
+    d_vc[n_idx(1,idx)] = vlast;
     //this vertex is also the "next" vertex of (neighs-1,idx)
-    d_vln[n_idx(neigh-1,idx)].z =vlast.x;
-    d_vln[n_idx(neigh-1,idx)].w =vlast.y;
+    d_vln[n_idx(0,idx)].z =vlast.x;
+    d_vln[n_idx(0,idx)].w =vlast.y;
     //...and the "last"  vertex of (1,idx)
-    d_vln[n_idx(1,idx)].x =vlast.x;
-    d_vln[n_idx(1,idx)].y =vlast.y;
+    d_vln[n_idx(2,idx)].x =vlast.x;
+    d_vln[n_idx(2,idx)].y =vlast.y;
 
     for (int nn = 1; nn < neigh; ++nn)
         {
@@ -428,11 +427,18 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
         vnext = circumcenter;
 
         //fill in the VoroCur and VoroLastNext structures
-        int idl = n_idx(nn-1,idx);
-        int idn = n_idx(nn+1,idx);
+        int idl = n_idx(nn,idx);
+
+        int idc = n_idx(nn+1,idx);
         if(nn == neigh-1)
+            idc = n_idx(0,idx);
+
+        int idn = n_idx(nn+2,idx);
+        if(nn == neigh-2)
             idn = n_idx(0,idx);
-        d_vc[n_idx(nn,idx)]=vnext;
+        if(nn == neigh-1)
+            idn = n_idx(1,idx);
+        d_vc[idc]=vnext;
         d_vln[idl].z=vnext.x;
         d_vln[idl].w=vnext.y;
         d_vln[idn].x=vnext.x;
