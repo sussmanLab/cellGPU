@@ -98,9 +98,12 @@ void SPV2D::spatialSorting()
 void SPV2D::allDelSets()
     {
     updateNeighIdxs();
-    delSets.resize(neighMax*N);
-    delOther.resize(neighMax*N);
-    forceSets.resize(neighMax*N);
+    if(neighMaxChange)
+        {
+        delSets.resize(neighMax*N);
+        delOther.resize(neighMax*N);
+        forceSets.resize(neighMax*N);
+        };
     for (int ii = 0; ii < N; ++ii)
         getDelSets(ii);
     };
@@ -436,9 +439,12 @@ void SPV2D::performTimestepGPU()
             if(FullFails || neighMaxChange)
                 {
                 allDelSets();
-                VoroCur.resize(neighMax*N);
-                VoroLastNext.resize(neighMax*N);
-                neighMaxChange = false;
+                if(neighMaxChange)
+                    {
+                    VoroCur.resize(neighMax*N);
+                    VoroLastNext.resize(neighMax*N);
+                    neighMaxChange = false;
+                    };
                 }
             else
                 {

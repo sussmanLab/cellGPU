@@ -115,37 +115,46 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     //which particle are we evaluating, and which neighbor
     int pidx = d_nidx[tidx].x;
     int nn = d_nidx[tidx].y;
+    int nidx=n_idx(nn,pidx);
 
-    //Great...access the Delaunay neighbors and the relevant other point
-    Dscalar2 pi, rij, rik,pno;
-    int2 neighs;
-    pi   = d_points[pidx];
-
-    neighs = d_delSets[n_idx(nn,pidx)];
-
-    Box.minDist(d_points[neighs.x],pi,rij);
-    Box.minDist(d_points[neighs.y],pi,rik);
-    Box.minDist(d_points[d_delOther[n_idx(nn,pidx)]],pi,pno);
-
-    //first, compute the derivative of the main voro point w/r/t pidx's position
-    Matrix2x2 dhdr;
-    getdhdr(dhdr,rij,rik);
-
-    //finally, compute all of the forces
-    //pnm1 is rij, pn1 is rik
-    Dscalar2 vlast,vcur,vnext,vother;
-    vcur = d_vc[n_idx(nn,pidx)];
-    Dscalar4 vvv = d_vln[n_idx(nn,pidx)];
-    vlast.x = vvv.x; vlast.y = vvv.y;
-    vnext.x = vvv.z; vnext.y = vvv.w;
-
-    Circumcenter(rij,rik,pno,vother);
-
+    //local variables declared...
     Dscalar2 dAdv,dPdv;
     Dscalar2 dEdv;
     Dscalar  Adiff, Pdiff;
     Dscalar2 dlast, dnext,dcl,dnc;
     Dscalar  dlnorm,dnnorm,dclnorm,dncnorm;
+    Dscalar2 vlast,vcur,vnext,vother;
+
+    //logically, I want these variables:
+    //Dscalar2 pi, rij, rik,pno;
+    //they will simply re-use
+    //     dlast, dnext, dcl, dnc, respectively
+    //to reduce register usage
+
+
+    //Great...access the Delaunay neighbors and the relevant other point
+    int2 neighs;
+    dlast   = d_points[pidx];
+
+    neighs = d_delSets[nidx];
+
+    Box.minDist(d_points[neighs.x],dlast,dnext);
+    Box.minDist(d_points[neighs.y],dlast,dcl);
+    Box.minDist(d_points[d_delOther[nidx]],dlast,dnc);
+
+    //first, compute the derivative of the main voro point w/r/t pidx's position
+    Matrix2x2 dhdr;
+    getdhdr(dhdr,dnext,dcl);
+
+    //finally, compute all of the forces
+    //pnm1 is rij (dnext), pn1 is rik
+    vcur = d_vc[nidx];
+    Dscalar4 vvv = d_vln[nidx];
+    vlast.x = vvv.x; vlast.y = vvv.y;
+    vnext.x = vvv.z; vnext.y = vvv.w;
+
+    Circumcenter(dnext,dcl,dnc,vother);
+
 
     //self terms
     dAdv.x = 0.5*(vlast.y-vnext.y);
@@ -162,8 +171,10 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
         dlnorm = THRESHOLD;
 
     //save a few of these differences for later...
-    dcl.x = -dlast.x;dcl.y = -dlast.y;
-    dnc.x=-dnext.x;dnc.y=-dnext.y;
+    //dcl.x = -dlast.x;dcl.y = -dlast.y;
+    //dnc.x=-dnext.x;dnc.y=-dnext.y;
+    dcl.x = dlast.x; dcl.y = dlast.y;
+    dnc.x = dnext.x; dnc.y = dnext.y;
     dclnorm=dlnorm;
     dncnorm=dnnorm;
 
@@ -172,8 +183,9 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     Adiff = KA*(d_AP[pidx].x - d_APpref[pidx].x);
     Pdiff = KA*(d_AP[pidx].y - d_APpref[pidx].y);
 
-    dEdv.x  = 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x;
-    dEdv.y  = 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y;
+    //replace all "multiply-by-two's" with a single one at the end...saves 10 mult operations
+    dEdv.x  = Adiff*dAdv.x + Pdiff*dPdv.x;
+    dEdv.y  = Adiff*dAdv.y + Pdiff*dPdv.y;
 
     //other terms...k first...
     dAdv.x = 0.5*(vnext.y-vother.y);
@@ -183,30 +195,33 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
     if(dnnorm < THRESHOLD)
         dnnorm = THRESHOLD;
-    dPdv.x = dnc.x/dncnorm - dnext.x/dnnorm;
-    dPdv.y = dnc.y/dncnorm - dnext.y/dnnorm;
+    dPdv.x = -dnc.x/dncnorm - dnext.x/dnnorm;
+    dPdv.y = -dnc.y/dncnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
     Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
 
-    dEdv.x  += 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x;
-    dEdv.y  += 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y;
+    dEdv.x  += Adiff*dAdv.x + Pdiff*dPdv.x;
+    dEdv.y  += Adiff*dAdv.y + Pdiff*dPdv.y;
 
     //...and then j
     dAdv.x = 0.5*(vother.y-vlast.y);
     dAdv.y = 0.5*(vlast.x-vother.x);
     //dlast is now -(dnext) from the K calculation
-    dlast.x = -dnext.x;
-    dlast.y = -dnext.y;
-    dlnorm = dnnorm;
-    dPdv.x = dlast.x/dlnorm - dcl.x/dclnorm;
-    dPdv.y = dlast.y/dlnorm - dcl.y/dclnorm;
+    //dlast.x = -dnext.x;
+    //dlast.y = -dnext.y;
+    //dlnorm = dnnorm;
+    dPdv.x = -dnext.x/dnnorm + dcl.x/dclnorm;
+    dPdv.y = -dnext.y/dnnorm + dcl.y/dclnorm;
     Adiff = KA*(d_AP[neighs.x].x - d_APpref[neighs.x].x);
     Pdiff = KA*(d_AP[neighs.x].y - d_APpref[neighs.x].y);
 
-    dEdv.x  += 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x;
-    dEdv.y  += 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y;
+    dEdv.x  += Adiff*dAdv.x + Pdiff*dPdv.x;
+    dEdv.y  += Adiff*dAdv.y + Pdiff*dPdv.y;
 
-    d_forceSets[n_idx(nn,pidx)] = dEdv*dhdr;
+    dEdv.x *= 2.0;
+    dEdv.y *= 2.0;
+
+    d_forceSets[nidx] = dEdv*dhdr;
 
     return;
     };
@@ -236,12 +251,13 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     //which particle are we evaluating, and which neighbor
     int pidx = d_nidx[tidx].x;
     int nn = d_nidx[tidx].y;
+    int nidx=n_idx(nn,pidx);
 
     //Great...access the Delaunay neighbors and the relevant other point
     Dscalar2 pi   = d_points[pidx];
 
-    int2 neighs = d_delSets[n_idx(nn,pidx)];
-    int neighOther = d_delOther[n_idx(nn,pidx)];
+    int2 neighs = d_delSets[nidx];
+    int neighOther = d_delOther[nidx];
     Dscalar2 rij, rik,pno;
 
     Box.minDist(d_points[neighs.x],pi,rij);
@@ -255,8 +271,8 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     //finally, compute all of the forces
     //pnm1 is rij, pn1 is rik
     Dscalar2 vlast,vcur,vnext,vother;
-    vcur = d_vc[n_idx(nn,pidx)];
-    Dscalar4 vvv = d_vln[n_idx(nn,pidx)];
+    vcur = d_vc[nidx];
+    Dscalar4 vvv = d_vln[nidx];
     vlast.x = vvv.x; vlast.y = vvv.y;
     vnext.x = vvv.z; vnext.y = vvv.w;
     Circumcenter(rij,rik,pno,vother);
@@ -312,8 +328,9 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     Adiff = KA*(d_AP[pidx].x - d_APpref[pidx].x);
     Pdiff = KA*(d_AP[pidx].y - d_APpref[pidx].y);
 
-    dEdv.x  = 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x + gamma*dTdv.x;
-    dEdv.y  = 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y + gamma*dTdv.y;
+    //defer a global factor of two to the very end...saves six multiplications...
+    dEdv.x  =  Adiff*dAdv.x + Pdiff*dPdv.x + 0.5*gamma*dTdv.x;
+    dEdv.y  =  Adiff*dAdv.y + Pdiff*dPdv.y + 0.5*gamma*dTdv.y;
 
     //other terms...k first...
     dAdv.x = 0.5*(vnext.y-vother.y);
@@ -339,8 +356,8 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
         dTdv.y -= dnext.y/dnnorm;
         };
 
-    dEdv.x  += 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x + gamma*dTdv.x;
-    dEdv.y  += 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y + gamma*dTdv.y;
+    dEdv.x  += Adiff*dAdv.x + Pdiff*dPdv.x + 0.5*gamma*dTdv.x;
+    dEdv.y  += Adiff*dAdv.y + Pdiff*dPdv.y + 0.5*gamma*dTdv.y;
 
     //...and then j
     dAdv.x = 0.5*(vother.y-vlast.y);
@@ -364,10 +381,13 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
         dTdv.y += dlast.y/dlnorm;
         };
 
-    dEdv.x  += 2.0*Adiff*dAdv.x +2.0*Pdiff*dPdv.x + gamma*dTdv.x;
-    dEdv.y  += 2.0*Adiff*dAdv.y +2.0*Pdiff*dPdv.y + gamma*dTdv.y;
+    dEdv.x  +=  Adiff*dAdv.x + Pdiff*dPdv.x + 0.5*gamma*dTdv.x;
+    dEdv.y  +=  Adiff*dAdv.y + Pdiff*dPdv.y + 0.5*gamma*dTdv.y;
 
-    d_forceSets[n_idx(nn,pidx)] = dEdv*dhdr;
+    dEdv.x *= 2.0;
+    dEdv.y *= 2.0;
+
+    d_forceSets[nidx] = dEdv*dhdr;
 
     return;
     };
@@ -391,7 +411,7 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
     if (idx >= N)
         return;
 
-    Dscalar2 circumcenter, nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
+    Dscalar2  nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
 
     int neigh = d_nn[idx];
     Dscalar Varea = 0.0;
@@ -403,19 +423,12 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
 
     Box.minDist(nlastp,pi,rij);
     Box.minDist(nnextp,pi,rik);
-    Circumcenter(rij,rik,circumcenter);
-    vfirst = circumcenter;
-    vlast = circumcenter;
+    Circumcenter(rij,rik,vfirst);
+    vlast = vfirst;
 
     //set the VoroCur to this voronoi vertex
     //the convention is that nn=0 in this routine should be nn = 1 in the force sets calculation
     d_vc[n_idx(1,idx)] = vlast;
-    //this vertex is also the "next" vertex of (neighs-1,idx)
-    d_vln[n_idx(0,idx)].z =vlast.x;
-    d_vln[n_idx(0,idx)].w =vlast.y;
-    //...and the "last"  vertex of (1,idx)
-    d_vln[n_idx(2,idx)].x =vlast.x;
-    d_vln[n_idx(2,idx)].y =vlast.y;
 
     for (int nn = 1; nn < neigh; ++nn)
         {
@@ -423,26 +436,15 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
         int nid = d_n[n_idx(nn,idx)];
         nnextp = d_points[ nid ];
         Box.minDist(nnextp,pi,rik);
-        Circumcenter(rij,rik,circumcenter);
-        vnext = circumcenter;
+        Circumcenter(rij,rik,vnext);
 
-        //fill in the VoroCur and VoroLastNext structures
-        int idl = n_idx(nn,idx);
+        //fill in the VoroCur structure
 
         int idc = n_idx(nn+1,idx);
         if(nn == neigh-1)
             idc = n_idx(0,idx);
 
-        int idn = n_idx(nn+2,idx);
-        if(nn == neigh-2)
-            idn = n_idx(0,idx);
-        if(nn == neigh-1)
-            idn = n_idx(1,idx);
         d_vc[idc]=vnext;
-        d_vln[idl].z=vnext.x;
-        d_vln[idl].w=vnext.y;
-        d_vln[idn].x=vnext.x;
-        d_vln[idn].y=vnext.y;
 
         //...and back to computing the geometry
         Varea += TriangleArea(vlast,vnext);
@@ -455,6 +457,25 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
     Dscalar dx = vlast.x - vfirst.x;
     Dscalar dy = vlast.y - vfirst.y;
     Vperi += sqrt(dx*dx+dy*dy);
+
+    //it's more memory-access friendly to now fill in the VoroLastNext structure separately
+    vlast = d_vc[n_idx(neigh-1,idx)];
+    vfirst = d_vc[n_idx(0,idx)];
+    for (int nn = 0; nn < neigh; ++nn)
+        {
+        int idn = n_idx(nn+1,idx);
+        if(nn == neigh-1) idn = n_idx(0,idx);
+        vnext = d_vc[idn];
+
+        int idc = n_idx(nn,idx);
+        d_vln[idc].x = vlast.x;
+        d_vln[idc].y = vlast.y;
+        d_vln[idc].z = vnext.x;
+        d_vln[idc].w = vnext.y;
+
+        vlast = vfirst;
+        vfirst = vnext;
+        };
 
     d_AP[idx].x=Varea;
     d_AP[idx].y=Vperi;

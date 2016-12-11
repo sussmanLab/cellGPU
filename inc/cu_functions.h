@@ -10,25 +10,25 @@
 #include "Matrix.h"
 
 //calculates the determinant of a 2x2 matrix
-HOSTDEVICE Dscalar Det2x2(Dscalar x11, Dscalar x12, Dscalar x21, Dscalar x22)
+HOSTDEVICE Dscalar Det2x2(const Dscalar &x11,const Dscalar &x12, const Dscalar &x21, const Dscalar &x22)
     {
     return x11*x22-x12*x21;
     };
 
 //calculates the circumcenter of the circle passing through x1, x2 and the origin
-HOSTDEVICE void Circumcenter(Dscalar2 x1, Dscalar2 x2, Dscalar2 &xc)
+HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, Dscalar2 &xc)
     {
     Dscalar x1norm2,x2norm2,denominator;
     x1norm2 = x1.x*x1.x + x1.y*x1.y;
     x2norm2 = x2.x*x2.x + x2.y*x2.y;
-    denominator = 1/(2.0*Det2x2(x1.x,x1.y,x2.x,x2.y));
+    denominator = 0.5/(Det2x2(x1.x,x1.y,x2.x,x2.y));
 
     xc.x = denominator * Det2x2(x1norm2,x1.y,x2norm2,x2.y);
     xc.y = denominator * Det2x2(x1.x,x1norm2,x2.x,x2norm2);
     };
 
 //calculates the circumcenter through x1,x2,x3
-HOSTDEVICE void Circumcenter(Dscalar2 x1, Dscalar2 x2, Dscalar2 x3, Dscalar2 &xc)
+HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscalar2 &x3, Dscalar2 &xc)
     {
     Dscalar amcx,amcy,bmcx,bmcy,amcnorm2,bmcnorm2,denominator;
 
@@ -39,15 +39,15 @@ HOSTDEVICE void Circumcenter(Dscalar2 x1, Dscalar2 x2, Dscalar2 x3, Dscalar2 &xc
     bmcy=x2.y-x3.y;
     bmcnorm2 = bmcx*bmcx+bmcy*bmcy;
 
-    denominator = 1/(2.0*Det2x2(amcx,amcy,bmcx,bmcy));
-    
+    denominator = 0.5/(Det2x2(amcx,amcy,bmcx,bmcy));
+
     xc.x = x3.x + denominator * Det2x2(amcnorm2,amcy,bmcnorm2,bmcy);
     xc.y = x3.y + denominator * Det2x2(amcx,amcnorm2,bmcx,bmcnorm2);
 
     };
 
 //get the circumcenter and radius, given one of the points on the circumcircle is the origin...
-HOSTDEVICE void Circumcircle(Dscalar2 x1, Dscalar2 x2, Dscalar2 &xc, Dscalar &radius)
+HOSTDEVICE void Circumcircle(const Dscalar2 &x1, const Dscalar2 &x2, Dscalar2 &xc, Dscalar &radius)
     {
     Circumcenter(x1,x2,xc);
     Dscalar dx = (x1.x-xc.x);
@@ -55,7 +55,7 @@ HOSTDEVICE void Circumcircle(Dscalar2 x1, Dscalar2 x2, Dscalar2 &xc, Dscalar &ra
     radius = sqrt(dx*dx+dy*dy);
     };
 
-HOSTDEVICE void Circumcircle(Dscalar2 x1, Dscalar2 x2, Dscalar2 x3, Dscalar2 &xc, Dscalar &radius)
+HOSTDEVICE void Circumcircle(const Dscalar2 &x1, const Dscalar2 &x2, const Dscalar2 &x3, Dscalar2 &xc, Dscalar &radius)
     {
     Circumcenter(x1,x2,x3,xc);
     Dscalar dx = (x1.x-xc.x);
@@ -64,7 +64,7 @@ HOSTDEVICE void Circumcircle(Dscalar2 x1, Dscalar2 x2, Dscalar2 x3, Dscalar2 &xc
     };
 
 
-HOSTDEVICE Dscalar dot(Dscalar2 p1,Dscalar2 p2)
+HOSTDEVICE Dscalar dot(const Dscalar2 &p1, const Dscalar2 &p2)
     {
     return p1.x*p2.x+p1.y*p2.y;
     };
@@ -77,13 +77,13 @@ __device__ inline Dscalar norm(Dscalar2 p)
 
 
 //calculate the area of a triangle with a vertex at the origin
-HOSTDEVICE Dscalar TriangleArea(Dscalar2 p1, Dscalar2 p2)
+HOSTDEVICE Dscalar TriangleArea(const Dscalar2 &p1, const Dscalar2 &p2)
     {
     return abs(0.5*(p1.x*p2.y-p1.y*p2.x));
     };
 
 //calculate matrix of derivatives
-HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,Dscalar2 &rij,Dscalar2 &rik)
+HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     {
     Matrix2x2 Id;
     dhdr=Id;
@@ -99,31 +99,33 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,Dscalar2 &rij,Dscalar2 &rik)
 
 
     Dscalar2 dDdriOD,z;
-    Dscalar betaD = -rikDotrik*rijDotrjk;
-    Dscalar gammaD = rij2*rikDotrjk;
-    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
+    Dscalar cpi = 1.0/(rij.x*rjk.y - rij.y*rjk.x);
     //"D" is really 2*cp*cp
-    Dscalar D = 0.5/(cp*cp);
-    
+    Dscalar D = 0.5*cpi*cpi;
+    //betaD has an extra D for computational efficiency
+    //same with gammaD
+    Dscalar betaD = -D*rikDotrik*rijDotrjk;
+    Dscalar gammaD = D*rij2*rikDotrjk;
+
     z.x = betaD*rij.x+gammaD*rik.x;
     z.y = betaD*rij.y+gammaD*rik.y;
 
-    dDdriOD.x = (-2.0*rjk.y)/cp;
-    dDdriOD.y = (2.0*rjk.x)/cp;
-    
-    dhdr -= D*((betaD+gammaD)*Id+dyad(z,dDdriOD));
+    dDdriOD.x = (-2.0*rjk.y)*cpi;
+    dDdriOD.y = (2.0*rjk.x)*cpi;
+
+    dhdr -= ((betaD+gammaD)*Id+dyad(z,dDdriOD));
 
     //reuse dDdriOd, but here as dbDdri
-    dDdriOD.x = 2*rijDotrjk*rik.x+rikDotrik*rjk.x;
-    dDdriOD.y = 2*rijDotrjk*rik.y+rikDotrik*rjk.y;
+    dDdriOD.x = D*(2.0*rijDotrjk*rik.x+rikDotrik*rjk.x);
+    dDdriOD.y = D*(2.0*rijDotrjk*rik.y+rikDotrik*rjk.y);
 
-    dhdr += D*dyad(rij,dDdriOD);
+    dhdr += dyad(rij,dDdriOD);
 
     //reuse dDdriOd, but here as dgDdri
-    dDdriOD.x = -2*rikDotrjk*rij.x-rij2*rjk.x;
-    dDdriOD.y = -2*rikDotrjk*rij.y-rij2*rjk.y;
+    dDdriOD.x = D*(-2.0*rikDotrjk*rij.x-rij2*rjk.x);
+    dDdriOD.y = D*(-2.0*rikDotrjk*rij.y-rij2*rjk.y);
 
-    dhdr += D*dyad(rik,dDdriOD);
+    dhdr += dyad(rik,dDdriOD);
     //dhdr = Id+D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
 
     return;

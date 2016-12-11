@@ -57,15 +57,15 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     int wcheck = Ceil(rad/boxsize);
 
     if(wcheck > xsize/2) wcheck = xsize/2;
-    rad = rad*rad*1.0000000001;
-    for (int ii = -wcheck; ii <= wcheck; ++ii)
+    rad = rad*rad;
+    for (int ii = ib-wcheck; ii <= ib+wcheck; ++ii)
         {
-        for (int jj = -wcheck; jj <= wcheck; ++jj)
+        for (int jj = jb-wcheck; jj <= jb+wcheck; ++jj)
             {
-            int cx = (ib+ii);
+            int cx = ii;
             if(cx < 0) cx += xsize;
             if(cx >= xsize) cx -= xsize;
-            int cy = (jb+jj);
+            int cy = jj;
             if(cy < 0) cy += ysize;
             if(cy >= ysize) cy -= ysize;
 
