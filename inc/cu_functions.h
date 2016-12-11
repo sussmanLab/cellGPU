@@ -99,31 +99,33 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
 
 
     Dscalar2 dDdriOD,z;
-    Dscalar betaD = -rikDotrik*rijDotrjk;
-    Dscalar gammaD = rij2*rikDotrjk;
-    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
+    Dscalar cpi = 1.0/(rij.x*rjk.y - rij.y*rjk.x);
     //"D" is really 2*cp*cp
-    Dscalar D = 0.5/(cp*cp);
-    
+    Dscalar D = 0.5*cpi*cpi;
+    //betaD has an extra D for computational efficiency
+    //same with gammaD
+    Dscalar betaD = -D*rikDotrik*rijDotrjk;
+    Dscalar gammaD = D*rij2*rikDotrjk;
+
     z.x = betaD*rij.x+gammaD*rik.x;
     z.y = betaD*rij.y+gammaD*rik.y;
 
-    dDdriOD.x = (-2.0*rjk.y)/cp;
-    dDdriOD.y = (2.0*rjk.x)/cp;
-    
-    dhdr -= D*((betaD+gammaD)*Id+dyad(z,dDdriOD));
+    dDdriOD.x = (-2.0*rjk.y)*cpi;
+    dDdriOD.y = (2.0*rjk.x)*cpi;
+
+    dhdr -= ((betaD+gammaD)*Id+dyad(z,dDdriOD));
 
     //reuse dDdriOd, but here as dbDdri
-    dDdriOD.x = 2.0*rijDotrjk*rik.x+rikDotrik*rjk.x;
-    dDdriOD.y = 2.0*rijDotrjk*rik.y+rikDotrik*rjk.y;
+    dDdriOD.x = D*(2.0*rijDotrjk*rik.x+rikDotrik*rjk.x);
+    dDdriOD.y = D*(2.0*rijDotrjk*rik.y+rikDotrik*rjk.y);
 
-    dhdr += D*dyad(rij,dDdriOD);
+    dhdr += dyad(rij,dDdriOD);
 
     //reuse dDdriOd, but here as dgDdri
-    dDdriOD.x = -2.0*rikDotrjk*rij.x-rij2*rjk.x;
-    dDdriOD.y = -2.0*rikDotrjk*rij.y-rij2*rjk.y;
+    dDdriOD.x = D*(-2.0*rikDotrjk*rij.x-rij2*rjk.x);
+    dDdriOD.y = D*(-2.0*rikDotrjk*rij.y-rij2*rjk.y);
 
-    dhdr += D*dyad(rik,dDdriOD);
+    dhdr += dyad(rik,dDdriOD);
     //dhdr = Id+D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
 
     return;
