@@ -137,10 +137,11 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     vcur = d_vc[n_idx(nn,pidx)];
     Dscalar4 vvv = d_vln[n_idx(nn,pidx)];
     vlast.x = vvv.x; vlast.y = vvv.y;
-    vnext.x = vvv.z; vnext.y = vvv.z;
+    vnext.x = vvv.z; vnext.y = vvv.w;
 
     Circumcenter(rij,rik,pno,vother);
-
+if(pidx==0)
+printf("pidx %i nn %i: (%f,%f)\t(%f,%f)\t(%f,%f)\n",pidx,nn,vlast.x,vlast.y,vcur.x,vcur.y,vnext.x,vnext.y);
 
     Dscalar2 dAdv,dPdv;
     Dscalar2 dEdv;
@@ -259,7 +260,7 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     vcur = d_vc[n_idx(nn,pidx)];
     Dscalar4 vvv = d_vln[n_idx(nn,pidx)];
     vlast.x = vvv.x; vlast.y = vvv.y;
-    vnext.x = vvv.z; vnext.y = vvv.z;
+    vnext.x = vvv.z; vnext.y = vvv.w;
     Circumcenter(rij,rik,pno,vother);
 
 
