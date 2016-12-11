@@ -112,6 +112,11 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     if (tidx >= computations)
         return;
 
+    //which particle are we evaluating, and which neighbor
+    int pidx = d_nidx[tidx].x;
+    int nn = d_nidx[tidx].y;
+    int nidx=n_idx(nn,pidx);
+
     //local variables declared...
     Dscalar2 dAdv,dPdv;
     Dscalar2 dEdv;
@@ -126,11 +131,6 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     //     dlast, dnext, dcl, dnc, respectively
     //to reduce register usage
 
-    //which particle are we evaluating, and which neighbor
-    int pidx = d_nidx[tidx].x;
-    int nn = d_nidx[tidx].y;
-
-    int nidx=n_idx(nn,pidx);
 
     //Great...access the Delaunay neighbors and the relevant other point
     int2 neighs;
@@ -429,12 +429,6 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
     //set the VoroCur to this voronoi vertex
     //the convention is that nn=0 in this routine should be nn = 1 in the force sets calculation
     d_vc[n_idx(1,idx)] = vlast;
-    //this vertex is also the "next" vertex of (neighs-1,idx)
-    d_vln[n_idx(0,idx)].z =vlast.x;
-    d_vln[n_idx(0,idx)].w =vlast.y;
-    //...and the "last"  vertex of (1,idx)
-    d_vln[n_idx(2,idx)].x =vlast.x;
-    d_vln[n_idx(2,idx)].y =vlast.y;
 
     for (int nn = 1; nn < neigh; ++nn)
         {
@@ -444,23 +438,13 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
         Box.minDist(nnextp,pi,rik);
         Circumcenter(rij,rik,vnext);
 
-        //fill in the VoroCur and VoroLastNext structures
-        int idl = n_idx(nn,idx);
+        //fill in the VoroCur structure
 
         int idc = n_idx(nn+1,idx);
         if(nn == neigh-1)
             idc = n_idx(0,idx);
 
-        int idn = n_idx(nn+2,idx);
-        if(nn == neigh-2)
-            idn = n_idx(0,idx);
-        if(nn == neigh-1)
-            idn = n_idx(1,idx);
         d_vc[idc]=vnext;
-        d_vln[idl].z=vnext.x;
-        d_vln[idl].w=vnext.y;
-        d_vln[idn].x=vnext.x;
-        d_vln[idn].y=vnext.y;
 
         //...and back to computing the geometry
         Varea += TriangleArea(vlast,vnext);
@@ -473,6 +457,25 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
     Dscalar dx = vlast.x - vfirst.x;
     Dscalar dy = vlast.y - vfirst.y;
     Vperi += sqrt(dx*dx+dy*dy);
+
+    //it's more memory-access friendly to now fill in the VoroLastNext structure separately
+    vlast = d_vc[n_idx(neigh-1,idx)];
+    vfirst = d_vc[n_idx(0,idx)];
+    for (int nn = 0; nn < neigh; ++nn)
+        {
+        int idn = n_idx(nn+1,idx);
+        if(nn == neigh-1) idn = n_idx(0,idx);
+        vnext = d_vc[idn];
+
+        int idc = n_idx(nn,idx);
+        d_vln[idc].x = vlast.x;
+        d_vln[idc].y = vlast.y;
+        d_vln[idc].z = vnext.x;
+        d_vln[idc].w = vnext.y;
+
+        vlast = vfirst;
+        vfirst = vnext;
+        };
 
     d_AP[idx].x=Varea;
     d_AP[idx].y=Vperi;
