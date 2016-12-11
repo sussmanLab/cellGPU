@@ -228,7 +228,6 @@ void DelaunayMD::fullTriangulation()
     resetDelLocPoints();
     cout << "Resetting complete triangulation" << endl;
     //get neighbors of each cell in CW order
-    neigh_num.resize(N);
 
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
@@ -294,7 +293,6 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     Box.getBoxDims(b1,b2,b3,b4);
     dcgal.PeriodicTriangulation(Psnew,b1);
 
-    neigh_num.resize(N);
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
 

@@ -57,7 +57,7 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     int wcheck = Ceil(rad/boxsize);
 
     if(wcheck > xsize/2) wcheck = xsize/2;
-    rad = rad*rad*1.0000000001;
+    rad = rad*rad;
     for (int ii = -wcheck; ii <= wcheck; ++ii)
         {
         for (int jj = -wcheck; jj <= wcheck; ++jj)

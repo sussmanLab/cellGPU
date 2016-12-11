@@ -121,7 +121,7 @@ struct Matrix2x2
             };
     };
 
-HOSTDEVICE Matrix2x2 dyad(Dscalar2 &v1, Dscalar2 &v2)
+HOSTDEVICE Matrix2x2 dyad(const Dscalar2 &v1, const Dscalar2 &v2)
     {
     return Matrix2x2(v1.x*v2.x,v1.x*v2.y,v1.y*v2.x,v1.y*v2.y);
     };
