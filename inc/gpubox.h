@@ -138,17 +138,28 @@ void gpubox::putInBox(Dscalar2 &vp)
 
 void gpubox::minDist(const Dscalar2 &p1, const Dscalar2 &p2, Dscalar2 &pans)
     {
-    Dscalar2 vA,vB;
-    invTrans(p1,vA);
-    invTrans(p2,vB);
-    Dscalar2 disp= make_Dscalar2(vA.x-vB.x,vA.y-vB.y);
+    if (isSquare)
+        {
+        pans = make_Dscalar2(p1.x-p2.x,p1.y-p2.y);
+        while(pans.x < -0.5*x11) pans.x += x11;
+        while(pans.y < -0.5*x22) pans.y += x22;
+        while(pans.x > 0.5*x11) pans.x -= x11;
+        while(pans.y > 0.5*x22) pans.y -= x22;
+        }
+    else
+        {
+        Dscalar2 vA,vB;
+        invTrans(p1,vA);
+        invTrans(p2,vB);
+        Dscalar2 disp= make_Dscalar2(vA.x-vB.x,vA.y-vB.y);
 
-    while(disp.x < -0.5) disp.x +=1.0;
-    while(disp.y < -0.5) disp.y +=1.0;
-    while(disp.x > 0.5) disp.x -=1.0;
-    while(disp.y > 0.5) disp.y -=1.0;
+        while(disp.x < -0.5) disp.x +=1.0;
+        while(disp.y < -0.5) disp.y +=1.0;
+        while(disp.x > 0.5) disp.x -=1.0;
+        while(disp.y > 0.5) disp.y -=1.0;
 
-    Trans(disp,pans);
+        Trans(disp,pans);
+        };
     };
 
 void gpubox::move(Dscalar2 &p1, const Dscalar2 &disp)

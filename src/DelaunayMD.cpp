@@ -1,38 +1,69 @@
 #define EPSILON 1e-16
 #define ENABLE_CUDA
 
-#include <cmath>
-#include <algorithm>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <sys/time.h>
-
-using namespace std;
-
 #include "cuda_runtime.h"
-#include "vector_types.h"
-#include "vector_functions.h"
-
-#include "box.h"
-
-#include "gpubox.h"
-#include "gpuarray.h"
-#include "gpucell.cuh"
-#include "gpucell.h"
-
-#include "DelaunayMD.cuh"
 #include "DelaunayMD.h"
-//DelaunayMD.h included DelaunayCGAL, so gives access to the typedef PDT::Point Point structure
+#include "DelaunayMD.cuh"
 
+//a function that takes care of the initialization of the class.
+void DelaunayMD::initialize(int n)
+    {
+    timestep = 0;
+    GPUcompute = true;
+    //assorted
+    neighMax = 0;
+    neighMaxChange = false;
+    repPerFrame = 0.0;
+    skippedFrames = 0;
+    GlobalFixes = 0;
+    //set cellsize to about unity...magic number of order 1
+    //when the box area is of order N, this is fine.
+    cellsize = 1.25;
 
+    //set particle number and box
+    N = n;
+    Dscalar boxsize = sqrt((Dscalar)N);
+    Box.setSquare(boxsize,boxsize);
 
+    //set circumcenter array size
+    circumcenters.resize(2*(N+10));
+    NeighIdxs.resize(6*(N+10));
+
+    points.resize(N);
+    pts.resize(N);
+    repair.resize(N);
+    randomizePositions(boxsize,boxsize);
+
+    //initialize spatial sorting, but do not sort by default
+    itt.resize(N);
+    tti.resize(N);
+    idxToTag.resize(N);
+    tagToIdx.resize(N);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        itt[ii]=ii;
+        tti[ii]=ii;
+        idxToTag[ii]=ii;
+        tagToIdx[ii]=ii;
+        };
+
+    //cell list initialization
+    celllist.setNp(N);
+    celllist.setBox(Box);
+    celllist.setGridSize(cellsize);
+
+    //DelaunayLoc initialization
+    gpubox Bx(boxsize,boxsize);
+    delLoc.setBox(Bx);
+    resetDelLocPoints();
+
+    //make a full triangulation
+    FullFails = 1;
+    neigh_num.resize(N);
+    globalTriangulationCGAL();
+    };
+
+//just randomly initialize points by uniformly sampling between (0,0) and (boxx,boxy)
 void DelaunayMD::randomizePositions(Dscalar boxx, Dscalar boxy)
     {
     int randmax = 100000000;
@@ -46,6 +77,7 @@ void DelaunayMD::randomizePositions(Dscalar boxx, Dscalar boxy)
         };
     };
 
+//Always called after spatial sorting is performed, reIndexArrays shuffles the order of an array based on the spatial sort order
 void DelaunayMD::reIndexArray(GPUArray<Dscalar2> &array)
     {
     GPUArray<Dscalar2> TEMP = array;
@@ -79,10 +111,9 @@ void DelaunayMD::reIndexArray(GPUArray<int> &array)
         };
     };
 
+//take the current location of the points and sort them according the their order along a 2D Hilbert curve
 void DelaunayMD::spatiallySortPoints()
     {
-    //calling this should resort all particle data!
-    //
     //itt and tti are the changes that happen in the current sort
     //idxToTag and tagToIdx relate the current indexes to the original ones
     HilbertSorter hs(Box);
@@ -117,6 +148,7 @@ void DelaunayMD::spatiallySortPoints()
 
     };
 
+//The GPU moves the location of points in the GPU memory... this gets a local copy that can be used by the DelaunayLoc class
 void DelaunayMD::resetDelLocPoints()
     {
     ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
@@ -130,63 +162,7 @@ void DelaunayMD::resetDelLocPoints()
 
     };
 
-void DelaunayMD::initialize(int n)
-    {
-    timestep = 0;
-    GPUcompute = true;
-    //assorted
-    neighMax = 0;
-    neighMaxChange = false;
-    repPerFrame = 0.0;
-    skippedFrames = 0;
-    GlobalFixes = 0;
-    //set cellsize to about unity
-    cellsize = 1.25;
-
-    //set particle number and box
-    N = n;
-    Dscalar boxsize = sqrt((Dscalar)N);
-    Box.setSquare(boxsize,boxsize);
-    CPUbox.setSquare(boxsize,boxsize);
-
-    //set circumcenter array size
-    circumcenters.resize(2*(N+10));
-    NeighIdxs.resize(6*(N+10));
-
-    points.resize(N);
-    pts.resize(N);
-    repair.resize(N);
-    randomizePositions(boxsize,boxsize);
-
-    //initialize spatial sorting, but do not sort by default
-    itt.resize(N);
-    tti.resize(N);
-    idxToTag.resize(N);
-    tagToIdx.resize(N);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        itt[ii]=ii;
-        tti[ii]=ii;
-        idxToTag[ii]=ii;
-        tagToIdx[ii]=ii;
-        };
-
-    //cell list initialization
-    celllist.setNp(N);
-    celllist.setBox(Box);
-    celllist.setGridSize(cellsize);
-
-    //DelaunayLoc initialization
-    box Bx(boxsize,boxsize);
-    delLoc.setBox(Bx);
-    resetDelLocPoints();
-
-    //make a full triangulation
-    FullFails = 1;
-    neigh_num.resize(N);
-    globalTriangulationCGAL();
-    };
-
+//update which cell every particle belongs to (for spatial location)
 void DelaunayMD::updateCellList()
     {
     celllist.setNp(N);
@@ -219,29 +195,7 @@ void DelaunayMD::updateCellList()
 
     };
 
-void DelaunayMD::reportCellList()
-    {
-    ArrayHandle<unsigned int> h_cell_sizes(celllist.cell_sizes,access_location::host,access_mode::read);
-    ArrayHandle<int> h_idx(celllist.idxs,access_location::host,access_mode::read);
-    int numCells = celllist.getXsize()*celllist.getYsize();
-    for (int nn = 0; nn < numCells; ++nn)
-        {
-        cout << "cell " <<nn <<":     ";
-        for (int offset = 0; offset < h_cell_sizes.data[nn]; ++offset)
-            {
-            int clpos = celllist.cell_list_indexer(offset,nn);
-            cout << h_idx.data[clpos] << "   ";
-            };
-        cout << endl;
-        };
-    };
-
-void DelaunayMD::reportPos(int i)
-    {
-    ArrayHandle<Dscalar2> hp(points,access_location::host,access_mode::read);
-    printf("particle %i\t{%f,%f}\n",i,hp.data[i].x,hp.data[i].y);
-    };
-
+//take a vector of displacements, modify the position of the particles, and put them back in the box...all on the CPU
 void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::readwrite);
@@ -252,9 +206,9 @@ void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
         h_p.data[idx].y += h_d.data[idx].y;
         Box.putInBoxReal(h_p.data[idx]);
         };
-
     };
 
+//take a vector of displacements, modify the position of the particles, and put them back in the box...GPU
 void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::readwrite);
@@ -266,9 +220,9 @@ void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
         printf("movePoints GPUassert: %s \n", cudaGetErrorString(code));
         throw std::exception();
         };
-
     };
 
+//the function calls the DelaunayLoc and DelaunayNP classes to determine the Delaunay triangulation of the entire periodic domain
 void DelaunayMD::fullTriangulation()
     {
     resetDelLocPoints();
@@ -277,9 +231,7 @@ void DelaunayMD::fullTriangulation()
     neigh_num.resize(N);
 
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
-
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
-
     vector< vector<int> > allneighs(N);
     int totaln = 0;
     int nmax = 0;
@@ -297,13 +249,11 @@ void DelaunayMD::fullTriangulation()
         neighMax = nmax + 2;
     else
         neighMax = nmax + 1;
-    neighMax = nmax+1; cout << "new Nmax = " << nmax << "; total neighbors = " << totaln << endl;
     neighs.resize(neighMax*N);
 
     //store data in gpuarray
     n_idx = Index2D(neighMax,N);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
-
     for (int nn = 0; nn < N; ++nn)
         {
         int imax = neighnum.data[nn];
@@ -314,13 +264,6 @@ void DelaunayMD::fullTriangulation()
             };
         };
 
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        {
-        printf("FullTriangulation  GPUassert: %s \n", cudaGetErrorString(code));
-        throw std::exception();
-        };
-
     if(totaln != 6*N)
         {
         printf("CPU neighbor creation failed to match topology! NN = %i \n",totaln);
@@ -329,15 +272,13 @@ void DelaunayMD::fullTriangulation()
         ofstream output(fn);
         getCircumcenterIndices();
         writeTriangulation(output);
-
         throw std::exception();
         };
-
-
     getCircumcenterIndices();
     };
 
-
+//the function calls the DelaunayCGAL class to determine the Delaunay triangulation of the entire periodic domain
+//this method is, obviously, better than the hand-written version written by DMS, so should be the default option.
 void DelaunayMD::globalTriangulationCGAL(bool verbose)
     {
     GlobalFixes +=1;
@@ -411,6 +352,7 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         };
     };
 
+//this function updates the NeighIdx data structure, which helps cut down on the number of inactive threads in the force set computation function.
 void DelaunayMD::updateNeighIdxs()
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
@@ -429,8 +371,8 @@ void DelaunayMD::updateNeighIdxs()
     NeighIdxNum = idx;
     };
 
-
-
+//converts the neighbor list data structure into a list of the three particle indices defining all of the circumcenters in the triangulation
+//keeping this version of the topology on the GPU allows for fast testing of what points need to be retriangulated.
 void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
@@ -460,7 +402,6 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
                 cidx+=1;
                 };
             };
-
         };
     NumCircumCenters = cidx;
     if((totaln != 6*N || cidx != 2*N) && !secondtime)
@@ -477,7 +418,7 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
         };
     };
 
-
+//given a list of particle indices that need to be repaired, call CGAL to figure out their neighbors and then update the relevant data structures
 void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     {
     int fixes = fixlist.size();
@@ -529,13 +470,15 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     getCircumcenterIndices();
     };
 
+//call the GPU to test each circumcenter to see if it is still empty (i.e., how much of the triangulation from the last time step is still valid?)
+//Note that because gpu_test_circumcenters *always* copies at least a single integer back and forth (to answer the question "did any circumcircle come back non-empty?" for the cpu)this function is always an implicit cuda synchronization event
 void DelaunayMD::testTriangulation()
     {
     //first, update the cell list
     updateCellList();
 
     //access data handles
-    ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::read);
 
     ArrayHandle<unsigned int> d_cell_sizes(celllist.cell_sizes,access_location::device,access_mode::read);
     ArrayHandle<int> d_c_idx(celllist.idxs,access_location::device,access_mode::read);
@@ -561,6 +504,7 @@ void DelaunayMD::testTriangulation()
                            );
     };
 
+//perform the same check on the CPU... because of the cost of checking circumcircles and the relatively poor performance of the 1-ring calculation in DelaunayLoc, it is sometimes better to just re-triangulate the entire point set with CGAL. At the moment that is the default behavior of the cpu branch
 void DelaunayMD::testTriangulationCPU()
     {
     Fails=0;
@@ -572,8 +516,6 @@ void DelaunayMD::testTriangulationCPU()
     else
         {
         resetDelLocPoints();
-
-
 
         ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
         ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
@@ -599,7 +541,8 @@ void DelaunayMD::testTriangulationCPU()
         };
     };
 
-
+//calls the relevant testing and repairing functions. increments the timestep by one
+//the call to testTriangulation will synchronize the gpu via a memcpy of "Fails" variable
 void DelaunayMD::testAndRepairTriangulation(bool verb)
     {
     timestep +=1;
@@ -613,6 +556,7 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
         {
         testTriangulationCPU();
         };
+
     if(Fails == 1)
         {
         NeedsFixing.clear();
@@ -663,8 +607,7 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
         skippedFrames+=1;
     };
 
-
-
+//read a triangulation from a text file...used only for testing purposes. Any other use should call the Database class (see inc/Database.h")
 void DelaunayMD::readTriangulation(ifstream &infile)
     {
     string line;
@@ -694,6 +637,7 @@ void DelaunayMD::readTriangulation(ifstream &infile)
         };
     };
 
+//similarly, write a text file with particle positions. This is often called when an exception is thrown
 void DelaunayMD::writeTriangulation(ofstream &outfile)
     {
     ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
@@ -702,6 +646,7 @@ void DelaunayMD::writeTriangulation(ofstream &outfile)
         outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
     };
 
+//"repel" calculates the displacement due to a harmonic soft repulsion between neighbors. Mostly for testing purposes, but it could be expanded to full functionality later
 void DelaunayMD::repel(GPUArray<Dscalar2> &disp,Dscalar eps)
     {
     ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);

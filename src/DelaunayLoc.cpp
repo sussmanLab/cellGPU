@@ -26,15 +26,16 @@ void DelaunayLoc::setPoints(vector<Dscalar> &points)
     cellsize = 2.0;
     for (unsigned int ii = 0; ii<nV; ++ii)
         {
-        pt point(points[ii*2],points[ii*2+1]);
+        Dscalar2 point;
+        point.x=points[ii*2]; point.y=points[ii*2+1];
         pts[ii]=point;
-        pair<pt, int> pp;
+        pair<Dscalar2, int> pp;
         pp.first = point;
         pp.second=ii;
         };
     };
 
-void DelaunayLoc::setPoints(vector<pt> &points)
+void DelaunayLoc::setPoints(vector<Dscalar2> &points)
     {
     nV=points.size();
     pts.clear();pts.reserve(nV);
@@ -46,14 +47,14 @@ void DelaunayLoc::setPoints(vector<pt> &points)
     cellsize = 2.0;
     for (unsigned int ii = 0; ii<nV; ++ii)
         {
-        pair<pt, int> pp;
+        pair<Dscalar2, int> pp;
         pp.first.x=pts[ii].x;
         pp.first.y=pts[ii].y;
         pp.second=ii;
         };
     };
 
-void DelaunayLoc::setBox(box &bx)
+void DelaunayLoc::setBox(gpubox &bx)
     {
     Dscalar b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
@@ -74,15 +75,17 @@ void DelaunayLoc::initialize(Dscalar csize)
     clist.construct();
     };
 
-void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<pt> &P1)
+void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
     {
     vector<int> Pt(4,-1);
-    pt np(-1,-1); vector<pt> Pt2(4,np);
+    Dscalar2 np;
+    np.x=-1;np.y=-1;
+    vector<Dscalar2> Pt2(4,np);
     P0.resize(4);
     P1.resize(4);
 
     vector<Dscalar> dists(4,1e6);
-    pt v = pts[i];
+    Dscalar2 v = pts[i];
     int cidx = clist.posToCellIdx(v.x,v.y);
     vector<bool> found(4,false);
     int wmax = clist.getNx();
@@ -92,7 +95,7 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<pt> &P1)
     vector<int> cellneighs;cellneighs.reserve(25);
     vector<int> pincell;
     int idx;
-    pt disp;
+    Dscalar2 disp;
     Dscalar nrm;
     while(!found[0]||!found[1]||!found[2]||!found[3])
         {
@@ -104,7 +107,7 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<pt> &P1)
                 idx = clist.cells[cellneighs[cc]][pp];
                 if (idx == i ) continue;
                 Box.minDist(pts[idx],v,disp);
-                nrm = disp.norm();
+                nrm = sqrt(disp.x*disp.x+disp.y*disp.y);
                 int q = Quadrant(disp.x,disp.y);
                 if(!found[q]||nrm < dists[q])
                     {
@@ -122,22 +125,24 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<pt> &P1)
 
     };
 
-void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> &DTring)
+void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
     {
     cellschecked = 0;candidates = 0;
     //first, find a polygon enclosing vertex i
     vector<int> P0;//index of vertices forming surrounding sqaure
-    vector<pt> P1;//relative position of vertices forming surrounding square
+    vector<Dscalar2> P1;//relative position of vertices forming surrounding square
 
     getPolygon(i,P0,P1);
 
-    pt v(pts[i].x,pts[i].y);
+    Dscalar2 v;
+    v.x=pts[i].x;v.y=pts[i].y;
     DTring.clear();
     DTringIdx.clear();
 
     int reduceSize = 30;
     DTring.reserve(2*reduceSize); DTringIdx.reserve(2*reduceSize);
-    pt vc(0.0,0.0);
+    Dscalar2 vc;
+    vc.x=0.0; vc.y=0.0;
     DTring.push_back(vc);
     DTringIdx.push_back(i);
     for (int jj = 0; jj < P0.size();++jj)
@@ -146,8 +151,9 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
         DTring.push_back(P1[jj]);
         };
 
-    vector<pt> Q0;//vector of circumcenters formed by vertex i and the P_i
-    pt Qnew(0.0,0.0);
+    vector<Dscalar2> Q0;//vector of circumcenters formed by vertex i and the P_i
+    Dscalar2 Qnew;
+    Qnew.x=0.0;Qnew.y=0.0;
     bool valid;
     int Psize = P1.size();
     vector<Dscalar> rads;
@@ -183,8 +189,8 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
     sort(cellns.begin(),cellns.end());
     cellns.erase(unique(cellns.begin(),cellns.end() ), cellns.end() );
     cellschecked = cellns.size();
-    pt tocenter;
-    pt disp;
+    Dscalar2 tocenter;
+    Dscalar2 disp;
     bool repeat=false;
     Dscalar rr;
     for (int cc = 0; cc < cellns.size(); ++cc)
@@ -223,22 +229,23 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<pt> 
     candidates = DTring.size();
     };
 
-void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTring)
+void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
     {
     //basically, see if an enclosing polygon with a smaller sum of circumcircle radii can be found
     //start with the vertex i
     vector<int> newRingIdx; newRingIdx.reserve(50);
-    vector<pt> newRing;     newRing.reserve(50);
-    pt v(0.0,0.0);
+    vector<Dscalar2> newRing;     newRing.reserve(50);
+    Dscalar2 v;
+    v.x=0.0;v.y=0.0;
     newRing.push_back(v);
     newRingIdx.push_back(i);
 
-    vector<pt> Q0;//vector of circumcenters formed by vertex i and the P_i
-    pt Qnew(0.0,0.0);
-    pt Qnew2(0.0,0.0);
+    vector<Dscalar2> Q0;//vector of circumcenters formed by vertex i and the P_i
+    Dscalar2 Qnew,Qnew2;
+    Qnew.x=0.0;Qnew.y=0.0;Qnew2.x=0.0;Qnew2.y=0.0;
     bool valid;
     vector<int> P0(4);
-    vector<pt> P1(4);
+    vector<Dscalar2> P1(4);
     P0[0]=DTringIdx[1];
     P0[1]=DTringIdx[2];
     P0[2]=DTringIdx[3];
@@ -283,7 +290,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<pt> &DTrin
         };
 
     bool repeat = false;
-    pt tocenter;
+    Dscalar2 tocenter;
     Dscalar rr;
     for (int pp = 1; pp < DTring.size(); ++pp)
         {
@@ -314,7 +321,7 @@ void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
     {
     //first, get candidate 1-ring
     vector<int> DTringIdx;
-    vector<pt> DTring;
+    vector<Dscalar2> DTring;
     getOneRingCandidate(i,DTringIdx,DTring);
 
     //call another algorithm to triangulate the candidate set
@@ -337,7 +344,7 @@ void DelaunayLoc::getNeighbors(int i, vector<int> &neighbors)
     DelaunayCell DCell;
     //first, get candidate 1-ring
     vector<int> DTringIdx;
-    vector<pt> DTring;
+    vector<Dscalar2> DTring;
     getOneRingCandidate(i,DTringIdx,DTring);
 
 
@@ -352,7 +359,7 @@ void DelaunayLoc::getNeighbors(int i, vector<int> &neighbors)
     //get the Delaunay neighbors of that point
     del.DT.getNeighbors(sv,neighbors);
     DCell.setSize(neighbors.size());
-    pt pi;
+    Dscalar2 pi;
     for (int ii = 0; ii < DCell.n; ++ii)
         {
         del.getSortedPoint(neighbors[ii],pi);
@@ -382,7 +389,7 @@ void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &
     {
     //first, get candidate 1-ring
     vector<int> DTringIdx;
-    vector<pt> DTring;
+    vector<Dscalar2> DTring;
     getOneRingCandidate(i,DTringIdx,DTring);
 
 
@@ -396,7 +403,7 @@ void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &
     //get the Delaunay neighbors of that point
     del.DT.getNeighbors(sv,neighbors);
     DCell.setSize(neighbors.size());
-    pt pi;
+    Dscalar2 pi;
     for (int ii = 0; ii < DCell.n; ++ii)
         {
         del.getSortedPoint(neighbors[ii],pi);
@@ -424,24 +431,24 @@ void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &
 bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool timing)
     {
 
-    pt v = pts[i];
+    Dscalar2 v = pts[i];
     //for each circumcirlce, see if its empty
     int neigh1 = neighbors[neighbors.size()-1];
     vector<int> cns;
     Dscalar radius;
     Dscalar vx = 0.0; Dscalar vy = 0.0;
     bool repeat = false;
-    pt tocenter, disp;
+    Dscalar2 tocenter, disp;
 
     for (int nn = 0; nn < neighbors.size(); ++nn)
         {
         if (repeat) continue;
         int neigh2 = neighbors[nn];
-        pt pt1, pt2;
+        Dscalar2 pt1, pt2;
         Box.minDist(pts[neigh1],v,pt1);
         Box.minDist(pts[neigh2],v,pt2);
 
-        pt Q;
+        Dscalar2 Q;
         bool valid =CircumCircle(pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
         Dscalar rad2 = radius*radius;
 
@@ -487,8 +494,8 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
         int ii = ccs[3*c];
         int neigh1 = ccs[3*c+1];
         int neigh2 = ccs[3*c+2];
-        pt v=pts[ii];
-        pt pt1,pt2;
+        Dscalar2 v=pts[ii];
+        Dscalar2 pt1,pt2;
         Box.minDist(pts[neigh1],v,pt1);
         Box.minDist(pts[neigh2],v,pt2);
 
@@ -496,8 +503,8 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
         Dscalar radius;
         bool repeat = false;
 
-        pt tocenter,disp;
-        pt Q;
+        Dscalar2 tocenter,disp;
+        Dscalar2 Q;
         bool valid =CircumCircle(pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
         Dscalar rad2 = radius*radius;
 
@@ -576,7 +583,7 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
     cout << "Timing DelaunayLoc routine..." << endl;
     nV = numpts;
     Dscalar boxa = sqrt(numpts)+1.0;
-    box Bx(boxa,boxa);
+    gpubox Bx(boxa,boxa);
     setBox(Bx);
     vector<Dscalar> ps2(2*numpts);
     vector<Dscalar> ps3(2*numpts);

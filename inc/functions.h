@@ -78,10 +78,10 @@ HOSTDEVICE bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dsc
     return true;
     };
 
-HOSTDEVICE bool Circumcircle(pt &xt, pt &x1, pt &x2, pt &x3,
-                  pt &xc, Dscalar &rad)
+HOSTDEVICE bool Circumcircle(Dscalar2 &xt, Dscalar2 &x1, Dscalar2 &x2, Dscalar2 &x3,
+                  Dscalar2 &xc, Dscalar &rad)
     {
-    //overloaded version when the input/output are pt objects
+    //overloaded version when the input/output are Dscalar2 objects
 
     Dscalar xcen, ycen;
     bool valid = CircumCircle(x1.x,x1.y,x2.x,x2.y,x3.x,x3.y,xcen,ycen,rad);

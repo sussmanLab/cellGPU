@@ -2,10 +2,11 @@
 #ifndef DELAUNAYMD_H
 #define DELAUNAYMD_H
 
-using namespace std;
 #include "std_include.h"
+
 #include "gpubox.h"
 #include "gpuarray.h"
+#include "gpucell.cuh"
 #include "gpucell.h"
 #include "indexer.h"
 #include "HilbertSort.h"
@@ -50,14 +51,13 @@ class DelaunayMD
 
         //this class' time        
         int timestep;
-        std::vector<pt> pts;          //vector of points to triangulate...for delLoc purposes
+        std::vector<Dscalar2> pts;          //vector of points to triangulate...for delLoc purposes
 
 
     public:
         GPUArray<Dscalar2> points;      //vector of particle positions
         //the GPU and CPU boxes owned by this object
         gpubox Box;
-        box CPUbox;
 
         //the local Delaunay tester/updater
         DelaunayLoc delLoc;
@@ -98,8 +98,6 @@ class DelaunayMD
         void reIndexArray(GPUArray<Dscalar2> &array);
 
         void updateCellList();
-        void reportCellList();
-        void reportPos(int i);
         void updateNeighIdxs();
 
         void getPoints(GPUArray<Dscalar2> &ps){ps = points;};

@@ -22,34 +22,74 @@ inline Dscalar TriangleArea(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2);
 #endif
 
 
-struct pt
-    {//contains a {x,y} pair; can constuct as pt(x,y) or assign after
+struct DelaunayCell
+    {
+    //a class that has the number of delaunay neighbors, and their positions relative to the vertex
+    //can compute the voronoi cell's area and perimeter
     public:
-        Dscalar x;
-        Dscalar y;
-        HOSTDEVICE pt(){};
-        HOSTDEVICE ~pt(){};
-        HOSTDEVICE pt(Dscalar xn, Dscalar yn){x=xn;y=yn;};
+        int n; //number of delaunay neighbors
+        std::vector< Dscalar2 > Dneighs;
+        std::vector<std::pair <Dscalar,int> > CWorder;
+        std::vector< Dscalar2> Vpoints;
+        Dscalar Varea;
+        Dscalar Vperimeter;
+        bool Voro; //have the voronoi points of the cell already been calculated?
 
-        HOSTDEVICE bool operator < (const pt& other) const
+        DelaunayCell(){Voro=false;};
+
+        void setSize(int nn){n=nn;Dneighs.resize(n);Voro=false;};
+
+        //find CW order of neighbors
+        void getCW()
             {
-            return (x <other.x);
+            CWorder.resize(n);
+            Vpoints.resize(n);
+            for (int ii = 0; ii < n; ++ii)
+                {
+                CWorder[ii].first=atan2(Dneighs[ii].y,Dneighs[ii].x);
+                CWorder[ii].second=ii;
+                };
+            sort(CWorder.begin(),CWorder.begin()+n);
+            }
+
+        //find the positions of the voronoi cell around the vertex
+        void getVoro()
+            {
+            //first, put the points in clockwise order
+            getCW();
+
+            //calculate the voronoi points as the circumcenter of the origin,p_i,p_{i+1}
+            Dscalar2 ori;
+            ori.x=0.0;ori.y=0.0;
+            for (int ii=0; ii < n; ++ii)
+                {
+                Dscalar xc,yc,rad;
+                bool placeholder; // Circumcircle is a function with a type
+                Dscalar2 p1 = Dneighs[CWorder[ii].second];
+                Dscalar2 p2 = Dneighs[CWorder[((ii+1)%n)].second];
+                placeholder = CircumCircle(ori.x,ori.y,p1.x,p1.y,p2.x,p2.y,xc,yc,rad);
+                Vpoints[ii]=make_Dscalar2(xc,yc);
+                };
+
+            Voro=true;
             };
 
-        HOSTDEVICE pt operator+(const pt& other)
+        void Calculate()
             {
-            Dscalar result_x = x+other.x;
-            Dscalar result_y = y+other.y;
-            return pt(result_x,result_y);
+            if (!Voro) getVoro();
+            Varea = 0.0;
+            Vperimeter = 0.0;
+            for (int ii = 0; ii < n; ++ii)
+                {
+                Dscalar2 p1 = Vpoints[ii];
+                Dscalar2 p2 = Vpoints[((ii+1)%n)];
+                Varea += TriangleArea(p1.x,p1.y,p2.x,p2.y);
+                Dscalar dx = p1.x-p2.x;
+                Dscalar dy = p1.y-p2.y;
+                Vperimeter += sqrt(dx*dx+dy*dy);
+                };
             };
-        HOSTDEVICE pt operator-(const pt& other)
-            {
-            Dscalar result_x = x-other.x;
-            Dscalar result_y = y-other.y;
-            return pt(result_x,result_y);
-            };
-        HOSTDEVICE Dscalar norm(){return sqrt(x*x+y*y);};
-        HOSTDEVICE Dscalar norm2(){return x*x+y*y;};
+
     };
 
 struct edge
@@ -101,74 +141,7 @@ struct triangulation
 
     };
 
-struct DelaunayCell
-    {
-    //a class that has the number of delaunay neighbors, and their positions relative to the vertex
-    //can compute the voronoi cell's area and perimeter
-    public:
-        int n; //number of delaunay neighbors
-        std::vector< pt > Dneighs;
-        std::vector<std::pair <Dscalar,int> > CWorder;
-        std::vector< pt> Vpoints;
-        Dscalar Varea;
-        Dscalar Vperimeter;
-        bool Voro; //have the voronoi points of the cell already been calculated?
 
-        DelaunayCell(){Voro=false;};
-
-        void setSize(int nn){n=nn;Dneighs.resize(n);Voro=false;};
-
-        //find CW order of neighbors
-        void getCW()
-            {
-            CWorder.resize(n);
-            Vpoints.resize(n);
-            for (int ii = 0; ii < n; ++ii)
-                {
-                CWorder[ii].first=atan2(Dneighs[ii].y,Dneighs[ii].x);
-                CWorder[ii].second=ii;
-                };
-            sort(CWorder.begin(),CWorder.begin()+n);
-            }
-
-        //find the positions of the voronoi cell around the vertex
-        void getVoro()
-            {
-            //first, put the points in clockwise order
-            getCW();
-
-            //calculate the voronoi points as the circumcenter of the origin,p_i,p_{i+1}
-            pt ori(0.0,0.0);
-            for (int ii=0; ii < n; ++ii)
-                {
-                Dscalar xc,yc,rad;
-                bool placeholder; // Circumcircle is a function with a type
-                pt p1 = Dneighs[CWorder[ii].second];
-                pt p2 = Dneighs[CWorder[((ii+1)%n)].second];
-                placeholder = CircumCircle(ori.x,ori.y,p1.x,p1.y,p2.x,p2.y,xc,yc,rad);
-                Vpoints[ii]=pt(xc,yc);
-                };
-
-            Voro=true;
-            };
-
-        void Calculate()
-            {
-            if (!Voro) getVoro();
-            Varea = 0.0;
-            Vperimeter = 0.0;
-            for (int ii = 0; ii < n; ++ii)
-                {
-                pt p1 = Vpoints[ii];
-                pt p2 = Vpoints[((ii+1)%n)];
-                Varea += TriangleArea(p1.x,p1.y,p2.x,p2.y);
-                Dscalar dx = p1.x-p2.x;
-                Dscalar dy = p1.y-p2.y;
-                Vperimeter += sqrt(dx*dx+dy*dy);
-                };
-            };
-
-    };
 #undef HOSTDEVICE
 
 #endif
