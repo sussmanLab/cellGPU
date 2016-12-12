@@ -117,10 +117,15 @@ class SPV2D : public DelaunayMD
         //set exclusions...if a particle is excluded (ex[idx]=1) then its force is zeroed out (the external force to do this is stored in excluded_forces) and its motility is set to zero
         void setExclusions(vector<int> &exes);
 
-        //internal utility
+        //internal utilities...
+        //maintain topological data structures
         void getDelSets(int i);
         void allDelSets();
+        //resize neighMax-related lists
+        void resetLists();
+        //initialize the cuda RNG
         void setCurandStates(int i);
+        //sort points along a Hilbert curve for data locality
         void spatialSorting();
 
         //cell-dynamics related functions...these call functions in the next section
