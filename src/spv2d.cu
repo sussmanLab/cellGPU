@@ -19,6 +19,7 @@
 #include "Matrix.h"
 
 
+//initialize each thread with a different sequence of the same seed of a cudaRNG
 __global__ void init_curand_kernel(curandState *state, int N,int Timestep)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -30,6 +31,7 @@ __global__ void init_curand_kernel(curandState *state, int N,int Timestep)
     };
 
 
+//add up the force sets to get the force per particle
 __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
                                       Dscalar2* __restrict__ d_forces,
                                       const int* __restrict__      d_nn,
@@ -56,6 +58,7 @@ __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
 
     };
 
+//the same, but keep track of exclusions
 __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict__ d_forceSets,
                                       Dscalar2* __restrict__ d_forces,
                                       Dscalar2* __restrict__ d_external_forces,
@@ -92,6 +95,8 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict
 
     };
 
+//the force on a particle is decomposable into the force contribution from each of its voronoi vertices...
+//calculate those sets of forces
 __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
                                       const Dscalar2* __restrict__ d_AP,
                                       const Dscalar2*  __restrict__ d_APpref,
@@ -226,6 +231,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     return;
     };
 
+//the same, but add a tension term between cells of different type
 __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_points,
                                           const Dscalar2* __restrict__ d_AP,
                                           const Dscalar2* __restrict__ d_APpref,
@@ -394,7 +400,7 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
 
 
 
-
+//compute the voronoi vertices for each cell, along with its area and perimeter
 __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_points,
                                           Dscalar2* __restrict__ d_AP,
                                           const int* __restrict__ d_nn,
@@ -481,7 +487,7 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
     };
 
 
-
+//move particles according to their motility and forces
 __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
                                           Dscalar2 *d_force,
                                           Dscalar *d_directors,
