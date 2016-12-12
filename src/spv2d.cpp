@@ -100,6 +100,8 @@ void SPV2D::allDelSets()
     updateNeighIdxs();
     if(neighMaxChange)
         {
+        VoroCur.resize(neighMax*N);
+        VoroLastNext.resize(neighMax*N);
         delSets.resize(neighMax*N);
         delOther.resize(neighMax*N);
         forceSets.resize(neighMax*N);
@@ -441,8 +443,6 @@ void SPV2D::performTimestepGPU()
                 allDelSets();
                 if(neighMaxChange)
                     {
-                    VoroCur.resize(neighMax*N);
-                    VoroLastNext.resize(neighMax*N);
                     neighMaxChange = false;
                     };
                 }
