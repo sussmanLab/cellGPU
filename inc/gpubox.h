@@ -29,6 +29,7 @@ struct gpubox
     {
     private:
         Dscalar x11,x12,x21,x22;//the transformation matrix defining the box
+        Dscalar halfx11,halfx22;
         Dscalar xi11,xi12,xi21,xi22;//it's inverse
         bool isSquare;
 
@@ -69,6 +70,8 @@ void gpubox::setSquare(Dscalar x, Dscalar y)
     xi11 = 1./x11;xi22=1./x22;
     xi12=0.0;xi21=0.0;
     isSquare = true;
+    halfx11 = x11*0.5;
+    halfx22 = x22*0.5;
     };
 
 void gpubox::setGeneral(Dscalar a, Dscalar b,Dscalar c, Dscalar d)
@@ -76,6 +79,8 @@ void gpubox::setGeneral(Dscalar a, Dscalar b,Dscalar c, Dscalar d)
     x11=a;x12=b;x21=c;x22=d;
     xi11 = 1./x11;xi22=1./x22;
     Dscalar prefactor = 1.0/(a*d-b*c);
+    halfx11 = x11*0.5;
+    halfx22 = x22*0.5;
     if(fabs(prefactor)>0)
         {
         xi11=prefactor*d;
@@ -142,10 +147,10 @@ void gpubox::minDist(const Dscalar2 &p1, const Dscalar2 &p2, Dscalar2 &pans)
     if (isSquare)
         {
         pans = make_Dscalar2(p1.x-p2.x,p1.y-p2.y);
-        while(pans.x < -0.5*x11) pans.x += x11;
-        while(pans.y < -0.5*x22) pans.y += x22;
-        while(pans.x > 0.5*x11) pans.x -= x11;
-        while(pans.y > 0.5*x22) pans.y -= x22;
+        while(pans.x < -halfx11) pans.x += x11;
+        while(pans.y < -halfx22) pans.y += x22;
+        while(pans.x > halfx11) pans.x -= x11;
+        while(pans.y > halfx22) pans.y -= x22;
         }
     else
         {
