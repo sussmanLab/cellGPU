@@ -5,7 +5,7 @@
 #include "DelaunayMD.cuh"
 
 //a function that takes care of the initialization of the class.
-void DelaunayMD::initialize(int n)
+void DelaunayMD::initializeDelMD(int n)
     {
     timestep = 0;
     GPUcompute = true;
@@ -15,8 +15,8 @@ void DelaunayMD::initialize(int n)
     repPerFrame = 0.0;
     skippedFrames = 0;
     GlobalFixes = 0;
-    //set cellsize to about unity...magic number of order 1
-    //when the box area is of order N, this is fine.
+    //set cellsize to about unity...magic number should be of order 1
+    //when the box area is of order N (i.e. on average one particle per bin)
     cellsize = 1.25;
 
     //set particle number and box
@@ -425,14 +425,30 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
 
     //First, retriangulate the target points, and check if the neighbor list needs to be reset
-    vector<vector<int> > allneighs(fixes);
+    //the structure you want is vector<vector<int> > allneighs(fixes), but below a flattened version is implemented
+
+    vector<int> allneighs;
+    allneighs.reserve(fixes*neighMax);
+    vector<int> allneighidxstart(fixes);
+    vector<int> allneighidxstop(fixes);
+
+    //vector<vector<int> > allneighs(fixes);
+
     bool resetCCidx = false;
     for (int ii = 0; ii < fixes; ++ii)
         {
         int pidx = fixlist[ii];
         vector<int> neighTemp;
         delLoc.getNeighborsCGAL(pidx,neighTemp);
-        allneighs[ii]=neighTemp;
+
+        allneighidxstart[ii] = allneighs.size();
+        for (int nn = 0; nn < neighTemp.size(); ++nn)
+            {
+            allneighs.push_back(neighTemp[nn]);
+            };
+        //allneighs[ii]=neighTemp;
+
+        allneighidxstop[ii] = allneighs.size();
         if(neighTemp.size() > neighMax)
             {
             resetCCidx = true;
@@ -453,12 +469,14 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     for (int nn = 0; nn < fixes; ++nn)
         {
         int pidx = fixlist[nn];
-        int imax = allneighs[nn].size();
+        //int imax = allneighs[nn].size();
+        int imax = allneighidxstop[nn]-allneighidxstart[nn];
         neighnum.data[pidx] = imax;
         for (int ii = 0; ii < imax; ++ii)
             {
             int idxpos = n_idx(ii,pidx);
-            ns.data[idxpos] = allneighs[nn][ii];
+            //ns.data[idxpos] = allneighs[nn][ii];
+            ns.data[idxpos] = allneighs[ii+allneighidxstart[nn]];
             };
         };
 
@@ -522,6 +540,7 @@ void DelaunayMD::testTriangulationCPU()
             {
             h_repair.data[nn] = 0;
             vector<int> neighbors;
+            neighbors.reserve(neighMax);
             for (int ii = 0; ii < neighnum.data[nn];++ii)
                     {
                     int idxpos = n_idx(ii,nn);

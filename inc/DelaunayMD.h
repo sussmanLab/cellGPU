@@ -81,7 +81,7 @@ class DelaunayMD
         DelaunayMD(){cellsize=2.0;};
 
         //initialization functions
-        void initialize(int n);
+        void initializeDelMD(int n);
         void randomizePositions(Dscalar boxx, Dscalar boxy);
 
         //move particles
