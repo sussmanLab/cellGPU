@@ -57,7 +57,10 @@ void DelaunayLoc::setBox(gpubox &bx)
     {
     Dscalar b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
-    Box.setGeneral(b11,b12,b21,b22);
+    if (bx.isBoxSquare())
+        Box.setSquare(b11,b22);
+    else
+        Box.setGeneral(b11,b12,b21,b22);
     };
 
 void DelaunayLoc::initialize(Dscalar csize)

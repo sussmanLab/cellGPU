@@ -39,6 +39,7 @@ struct gpubox
         HOSTDEVICE gpubox(Dscalar a, Dscalar b, Dscalar c, Dscalar d){setGeneral(a,b,c,d);};
         HOSTDEVICE void getBoxDims(Dscalar &xx, Dscalar &xy, Dscalar &yx, Dscalar &yy)
             {xx=x11;xy=x12;yx=x21;yy=x22;};
+        HOSTDEVICE bool isBoxSquare(){return isSquare;};
         HOSTDEVICE void getBoxInvDims(Dscalar &xx, Dscalar &xy, Dscalar &yx, Dscalar &yy)
             {xx=xi11;xy=xi12;yx=xi21;yy=xi22;};
 

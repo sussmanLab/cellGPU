@@ -85,7 +85,7 @@ int main(int argc, char*argv[])
 
     SPV2D spv(numpts,1.0,p0);
     if (USE_GPU < 0)
-        spv.setCPU();
+        spv.setCPU(false);
 
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
