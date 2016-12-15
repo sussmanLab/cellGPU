@@ -3,8 +3,6 @@
 
 #define NVCC
 #define ENABLE_CUDA
-#define EPSILON 1e-16
-#define THRESHOLD 1e-16
 
 #include <cuda_runtime.h>
 #include "curand_kernel.h"

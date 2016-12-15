@@ -1,5 +1,4 @@
 //definitions needed for DelaunayLoc, and all GPU functions, respectively
-#define EPSILON 1e-16
 #define ENABLE_CUDA
 
 #include "spv2d.h"
@@ -59,8 +58,7 @@ void SPV2D::Initialize(int n)
         };
     devStates.resize(N);
     setCurandStates(Timestep);
-    VoroCur.resize(neighMax*N);
-    VoroLastNext.resize(neighMax*N);
+    resetLists();
     allDelSets();
     };
 
@@ -72,6 +70,7 @@ void SPV2D::spatialSorting()
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
     //get new DelSets and DelOthers
+    resetLists();
     allDelSets();
 
     //re-index all cell information arrays
@@ -94,18 +93,20 @@ void SPV2D::spatialSorting()
     reIndexArray(CellType);
     };
 
+//resize any lists that depend on neighMax
+void SPV2D::resetLists()
+    {
+    VoroCur.resize(neighMax*N);
+    VoroLastNext.resize(neighMax*N);
+    delSets.resize(neighMax*N);
+    delOther.resize(neighMax*N);
+    forceSets.resize(neighMax*N);
+    };
+
 //DelSets is a helper data structure keeping track of some ordering of the Delaunay vertices around a given vertex. This updates it
 void SPV2D::allDelSets()
     {
     updateNeighIdxs();
-    if(neighMaxChange)
-        {
-        VoroCur.resize(neighMax*N);
-        VoroLastNext.resize(neighMax*N);
-        delSets.resize(neighMax*N);
-        delOther.resize(neighMax*N);
-        forceSets.resize(neighMax*N);
-        };
     for (int ii = 0; ii < N; ++ii)
         getDelSets(ii);
     };
@@ -400,6 +401,15 @@ void SPV2D::performTimestepCPU()
     if(!spatialSortThisStep)
         {
         testAndRepairTriangulation();
+        if(neighMaxChange)
+            {
+            if(neighMaxChange)
+                {
+                resetLists();
+                };
+            neighMaxChange = false;
+            allDelSets();
+            };
         };
     };
 
@@ -440,11 +450,12 @@ void SPV2D::performTimestepGPU()
             //maintain the auxilliary lists for computing forces
             if(FullFails || neighMaxChange)
                 {
-                allDelSets();
                 if(neighMaxChange)
                     {
+                    resetLists();
                     neighMaxChange = false;
                     };
+                allDelSets();
                 }
             else
                 {

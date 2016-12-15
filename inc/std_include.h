@@ -7,6 +7,9 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
+#define THRESHOLD 1e-18
+#define EPSILON 1e-18
+
 #include <cmath>
 #include <algorithm>
 #include <ctype.h>

@@ -3,7 +3,6 @@
 
 #define NVCC
 #define ENABLE_CUDA
-#define EPSILON 1e-16
 
 #include <cuda_runtime.h>
 #include "gpucell.cuh"

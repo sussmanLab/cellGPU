@@ -1,5 +1,3 @@
-#define EPSILON 1e-16
-
 #include <cmath>
 #include <algorithm>
 #include <ctype.h>

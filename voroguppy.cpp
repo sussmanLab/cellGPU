@@ -18,49 +18,13 @@
 #include "vector_types.h"
 
 #define ENABLE_CUDA
-#define EPSILON 1e-16
-
 
 #include "spv2d.h"
+#include "cu_functions.h"
 //#include "Database.h"
 
 
 using namespace std;
-
-
-bool chooseGPU(int USE_GPU,bool verbose = false)
-    {
-    int nDev;
-    cudaGetDeviceCount(&nDev);
-    if (USE_GPU >= nDev)
-        {
-        cout << "Requested GPU (device " << USE_GPU<<") does not exist. Stopping triangulation" << endl;
-        return false;
-        };
-    if (USE_GPU <nDev)
-        cudaSetDevice(USE_GPU);
-    if(verbose)    cout << "Device # \t\t Device Name \t\t MemClock \t\t MemBusWidth" << endl;
-    for (int ii=0; ii < nDev; ++ii)
-        {
-        cudaDeviceProp prop;
-        cudaGetDeviceProperties(&prop,ii);
-        if (verbose)
-            {
-            if (ii == USE_GPU) cout << "********************************" << endl;
-            if (ii == USE_GPU) cout << "****Using the following gpu ****" << endl;
-            cout << ii <<"\t\t\t" << prop.name << "\t\t" << prop.memoryClockRate << "\t\t" << prop.memoryBusWidth << endl;
-            if (ii == USE_GPU) cout << "*******************************" << endl;
-            };
-        };
-    if (!verbose)
-        {
-        cudaDeviceProp prop;
-        cudaGetDeviceProperties(&prop,USE_GPU);
-        cout << "using " << prop.name << "\t ClockRate = " << prop.memoryClockRate << " memBusWidth = " << prop.memoryBusWidth << endl << endl;
-        };
-    return true;
-    };
-
 
 
 int main(int argc, char*argv[])
@@ -121,7 +85,7 @@ int main(int argc, char*argv[])
 
     SPV2D spv(numpts,1.0,p0);
     if (USE_GPU < 0)
-        spv.setCPU();
+        spv.setCPU(false);
 
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
