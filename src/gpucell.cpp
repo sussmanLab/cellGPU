@@ -90,19 +90,23 @@ void cellListGPU::resetCellSizes()
     {
     //set all cell sizes to zero
     totalCells=xsize*ysize;
-    cell_sizes.resize(totalCells);
-    ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::overwrite);
-    for (int cc = 0; cc < totalCells; ++cc)
-        h_cell_sizes.data[cc]=0;
+    if(cell_sizes.getNumElements() != totalCells)
+        cell_sizes.resize(totalCells);
+
+    ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::overwrite);
+    gpu_zero_array(d_cell_sizes.data,totalCells);
 
     //set all cell indexes to zero
     cell_list_indexer = Index2D(Nmax,totalCells);
-    idxs.resize(cell_list_indexer.getNumElements());
-    ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::overwrite);
-    for (int  cc = 0; cc < cell_list_indexer.getNumElements();++cc)
-        h_idx.data[cc] = 0;
+    if(idxs.getNumElements() != cell_list_indexer.getNumElements())
+        idxs.resize(cell_list_indexer.getNumElements());
 
-    assist.resize(2);
+    ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::overwrite);
+    gpu_zero_array(d_idx.data,(int) cell_list_indexer.getNumElements());
+
+
+    if(assist.getNumElements()!= 2)
+        assist.resize(2);
     ArrayHandle<int> h_assist(assist,access_location::host,access_mode::overwrite);
     h_assist.data[0]=Nmax;
     h_assist.data[1] = 0;
@@ -199,7 +203,7 @@ void cellListGPU::compute(GPUArray<Dscalar2> &points)
 void cellListGPU::computeGPU()
     {
     bool recompute = true;
-    resetCellSizes();
+    //resetCellSizes();
 
     while (recompute)
         {

@@ -164,9 +164,9 @@ void DelaunayMD::resetDelLocPoints()
 //update which cell every particle belongs to (for spatial location)
 void DelaunayMD::updateCellList()
     {
-    celllist.setNp(N);
-    celllist.setBox(Box);
-    celllist.setGridSize(cellsize);
+    //celllist.setNp(N);
+    //celllist.setBox(Box);
+    //celllist.setGridSize(cellsize);
 
     if(GPUcompute)
         {
