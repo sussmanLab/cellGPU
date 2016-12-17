@@ -146,7 +146,8 @@ void gpubox::minDist(const Dscalar2 &p1, const Dscalar2 &p2, Dscalar2 &pans)
     {
     if (isSquare)
         {
-        pans = make_Dscalar2(p1.x-p2.x,p1.y-p2.y);
+        pans.x = p1.x-p2.x;
+        pans.y = p1.y-p2.y;;
         while(pans.x < -halfx11) pans.x += x11;
         while(pans.y < -halfx22) pans.y += x22;
         while(pans.x > halfx11) pans.x -= x11;
