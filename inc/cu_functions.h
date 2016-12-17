@@ -69,11 +69,6 @@ HOSTDEVICE Dscalar dot(const Dscalar2 &p1, const Dscalar2 &p2)
     return p1.x*p2.x+p1.y*p2.y;
     };
 
-__device__ inline Dscalar norm(Dscalar2 p)
-    {
-    return sqrt(p.x*p.x+p.y*p.y);
-    };
-
 
 
 //calculate the area of a triangle with a vertex at the origin

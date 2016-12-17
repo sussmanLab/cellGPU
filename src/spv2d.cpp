@@ -33,7 +33,7 @@ void SPV2D::Initialize(int n)
     Timestep = 0;
     triangletiming = 0.0; forcetiming = 0.0;
     setDeltaT(0.01);
-    initialize(n);
+    initializeDelMD(n);
     setModuliUniform(1.0,1.0);
     sortPeriod = -1;
 

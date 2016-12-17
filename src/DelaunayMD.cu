@@ -168,6 +168,7 @@ bool gpu_test_circumcenters(int *d_repair,
     cudaFree(anyFail);
 
 
+    cudaThreadSynchronize();
     code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("testCircumcenters GPUassert: %s \n", cudaGetErrorString(code));
@@ -195,6 +196,7 @@ bool gpu_move_particles(Dscalar2 *d_points,
                                                 N,
                                                 Box
                                                 );
+    cudaThreadSynchronize();
     code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("moveParticle GPUassert: %s \n", cudaGetErrorString(code));

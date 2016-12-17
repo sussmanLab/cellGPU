@@ -20,5 +20,14 @@ bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                   Index2D &cli,
                                   int *d_assist
                                   );
+
+bool gpu_zero_array(int *arr,
+                    int N
+                    );
+bool gpu_zero_array(unsigned int *arr,
+                    int      N
+                    );
+
+
 #endif
 

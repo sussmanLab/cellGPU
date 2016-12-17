@@ -95,7 +95,8 @@ int main(int argc, char*argv[])
         {
         //compare with output of mattias' code
         char fn[256];
-        sprintf(fn,"/home/daniel/Dropbox/test.txt");
+        //sprintf(fn,"/home/daniel/Dropbox/test.txt");
+        sprintf(fn,"/Users/danielsussman/Dropbox/test.txt");
         ifstream input(fn);
         spv.readTriangulation(input);
         spv.globalTriangulationCGAL();
