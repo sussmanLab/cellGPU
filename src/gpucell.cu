@@ -147,6 +147,7 @@ bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                                           cli,
                                                           d_assist
                                                           );
+    cudaThreadSynchronize();
     code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("compute_cell_list GPUassert: %s \n", cudaGetErrorString(code));
