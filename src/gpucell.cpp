@@ -302,17 +302,6 @@ void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
             }
         //get cell list arrays
         recompute = false;
-        {
-        ArrayHandle<int> h_a(assist,access_location::host,access_mode::read);
-        if(h_a.data[0]> Nmax)
-            {
-            Nmax = h_a.data[0];
-            if (Nmax%2 == 0 ) Nmax +=2;
-            if (Nmax%2 == 1 ) Nmax +=1;
-            recompute = true;
-            };
-        };
-        /*
         if (true)
             {
             ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
@@ -330,7 +319,6 @@ void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
                 };
 
             };
-        */
         };
     cell_list_indexer = Index2D(Nmax,totalCells);
     };
