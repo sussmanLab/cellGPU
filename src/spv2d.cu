@@ -184,7 +184,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[pidx].x - d_APpref[pidx].x);
-    Pdiff = KA*(d_AP[pidx].y - d_APpref[pidx].y);
+    Pdiff = KP*(d_AP[pidx].y - d_APpref[pidx].y);
 
     //replace all "multiply-by-two's" with a single one at the end...saves 10 mult operations
     dEdv.x  = Adiff*dAdv.x + Pdiff*dPdv.x;
@@ -201,7 +201,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     dPdv.x = -dnc.x/dncnorm - dnext.x/dnnorm;
     dPdv.y = -dnc.y/dncnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
-    Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
+    Pdiff = KP*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
 
     dEdv.x  += Adiff*dAdv.x + Pdiff*dPdv.x;
     dEdv.y  += Adiff*dAdv.y + Pdiff*dPdv.y;
@@ -216,7 +216,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     dPdv.x = -dnext.x/dnnorm + dcl.x/dclnorm;
     dPdv.y = -dnext.y/dnnorm + dcl.y/dclnorm;
     Adiff = KA*(d_AP[neighs.x].x - d_APpref[neighs.x].x);
-    Pdiff = KA*(d_AP[neighs.x].y - d_APpref[neighs.x].y);
+    Pdiff = KP*(d_AP[neighs.x].y - d_APpref[neighs.x].y);
 
     dEdv.x  += Adiff*dAdv.x + Pdiff*dPdv.x;
     dEdv.y  += Adiff*dAdv.y + Pdiff*dPdv.y;
@@ -330,7 +330,7 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
         };
 
     Adiff = KA*(d_AP[pidx].x - d_APpref[pidx].x);
-    Pdiff = KA*(d_AP[pidx].y - d_APpref[pidx].y);
+    Pdiff = KP*(d_AP[pidx].y - d_APpref[pidx].y);
 
     //defer a global factor of two to the very end...saves six multiplications...
     dEdv.x  =  Adiff*dAdv.x + Pdiff*dPdv.x + 0.5*gamma*dTdv.x;
@@ -347,7 +347,7 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     dPdv.x = dnc.x/dncnorm - dnext.x/dnnorm;
     dPdv.y = dnc.y/dncnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);
-    Pdiff = KA*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
+    Pdiff = KP*(d_AP[neighs.y].y - d_APpref[neighs.y].y);
     dTdv.x = 0.0; dTdv.y = 0.0;
     if(Tik)
         {
@@ -372,7 +372,7 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
     dPdv.x = dlast.x/dlnorm - dcl.x/dclnorm;
     dPdv.y = dlast.y/dlnorm - dcl.y/dclnorm;
     Adiff = KA*(d_AP[neighs.x].x - d_APpref[neighs.x].x);
-    Pdiff = KA*(d_AP[neighs.x].y - d_APpref[neighs.x].y);
+    Pdiff = KP*(d_AP[neighs.x].y - d_APpref[neighs.x].y);
     dTdv.x = 0.0; dTdv.y = 0.0;
     if(Tij)
         {
