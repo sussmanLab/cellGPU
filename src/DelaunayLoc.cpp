@@ -86,6 +86,12 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
     P0.resize(4);
     P1.resize(4);
 
+    //also make a list of all points found, and keep track of what their angle around the central point is
+    //allNeighs will store (angle, idx, location)
+//    vector< tuple<Dscalar,int,Dscalar2> > allNeighs;
+    //typically not more than 25 candidates...
+//    allNeighs.reserve(25);
+
     vector<Dscalar> dists(4,1e6);
     Dscalar2 v = pts[i];
     int cidx = clist.posToCellIdx(v.x,v.y);
@@ -118,13 +124,16 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
                     P1[q]=disp;
                     P0[q]=idx;
                     };
+//                Dscalar angle = atan2(disp.y,disp.x);
+//                allNeighs.push_back(make_tuple(angle,idx,disp));
                 };
             };
 
         width +=1;
         if (width >= wmax) return;
-        };
+        };//end loop over cells
 
+//        sort(allNeighs.begin(),allNeighs.end());
     };
 
 void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
