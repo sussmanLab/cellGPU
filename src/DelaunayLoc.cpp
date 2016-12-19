@@ -156,7 +156,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
     vc.x=0.0; vc.y=0.0;
     DTring.push_back(vc);
     DTringIdx.push_back(i);
-    for (int jj = 0; jj < P0.size();++jj)
+    for (int jj = 0; jj < 4;++jj)
         {
         DTringIdx.push_back(P0[jj]);
         DTring.push_back(P1[jj]);
@@ -166,15 +166,14 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
     Dscalar2 Qnew;
     Qnew.x=0.0;Qnew.y=0.0;
     bool valid;
-    int Psize = P1.size();
     vector<Dscalar> rads;
     Q0.reserve(4);
     rads.reserve(4);
     Dscalar radius;
     Dscalar vx = 0.0;Dscalar vy = 0.0;
-    for (int ii = 0; ii < Psize; ++ii)
+    for (int ii = 0; ii < 4; ++ii)
         {
-        valid = CircumCircle(P1[ii].x,P1[ii].y,P1[(ii+1)%Psize].x,P1[(ii+1)%Psize].y,Qnew.x,Qnew.y,radius);
+        valid = CircumCircle(P1[ii].x,P1[ii].y,P1[(ii+1)%4].x,P1[(ii+1)%4].y,Qnew.x,Qnew.y,radius);
         Q0.push_back(Qnew);
         rads.push_back(radius*1.0001);
         };
@@ -185,7 +184,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
     vector<int> pincell;
     vector<int> cns;
     int idx;
-    for (int ii = 0; ii < Q0.size(); ++ii)
+    for (int ii = 0; ii < 4; ++ii)
         {
         int cix = clist.posToCellIdx(v.x+Q0[ii].x,v.y+Q0[ii].y);
 
@@ -215,7 +214,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
             Box.minDist(pts[idx],v,disp);
             //how far is the point from the circumcircle's center?
             repeat = false;
-            for (int qq = 0; qq < Q0.size(); ++qq)
+            for (int qq = 0; qq < 4; ++qq)
                 {
                 if (repeat) continue;
                 rr=rads[qq];
@@ -331,22 +330,23 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
 void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
     {
     //first, get candidate 1-ring
-    vector<int> DTringIdx;
-    vector<Dscalar2> DTring;
-    getOneRingCandidate(i,DTringIdx,DTring);
+    //vector<int> DTringIdx;
+    //vector<Dscalar2> DTring;
+    //getOneRingCandidate(i,DTringIdx,DTring);
+    getOneRingCandidate(i,DTringIdxCGAL,DTringCGAL);
 
     //call another algorithm to triangulate the candidate set
     DelaunayCGAL delcgal;
 
-    vector<pair<LPoint,int> > Pnts(DTring.size());
-    for (int ii = 0; ii < DTring.size(); ++ii)
+    vector<pair<LPoint,int> > Pnts(DTringCGAL.size());
+    for (int ii = 0; ii < DTringCGAL.size(); ++ii)
         {
-        Pnts[ii] = make_pair(LPoint(DTring[ii].x,DTring[ii].y),ii);
+        Pnts[ii] = make_pair(LPoint(DTringCGAL[ii].x,DTringCGAL[ii].y),ii);
         };
     delcgal.LocalTriangulation(Pnts, neighbors);
 
     for (int nn = 0; nn < neighbors.size(); ++nn)
-        neighbors[nn] = DTringIdx[neighbors[nn]];
+        neighbors[nn] = DTringIdxCGAL[neighbors[nn]];
     };
 
 
