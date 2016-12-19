@@ -164,9 +164,6 @@ void DelaunayMD::resetDelLocPoints()
 //update which cell every particle belongs to (for spatial location)
 void DelaunayMD::updateCellList()
     {
-    //celllist.setNp(N);
-    //celllist.setBox(Box);
-    //celllist.setGridSize(cellsize);
 
     if(GPUcompute)
         {
@@ -433,12 +430,13 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     vector<int> allneighidxstop(fixes);
 
     //vector<vector<int> > allneighs(fixes);
+    vector<int> neighTemp;
+    neighTemp.reserve(10);
 
     bool resetCCidx = false;
     for (int ii = 0; ii < fixes; ++ii)
         {
         int pidx = fixlist[ii];
-        vector<int> neighTemp;
         delLoc.getNeighborsCGAL(pidx,neighTemp);
 
         allneighidxstart[ii] = allneighs.size();

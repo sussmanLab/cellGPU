@@ -18,7 +18,9 @@ class DelaunayLoc
         Dscalar cellsize;
         grid clist;
         gpubox Box;
-
+    
+        vector<int> DTringIdxCGAL;
+        vector<Dscalar2> DTringCGAL;
 
     public:
         Dscalar polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
