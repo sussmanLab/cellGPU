@@ -330,9 +330,6 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
 void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
     {
     //first, get candidate 1-ring
-    //vector<int> DTringIdx;
-    //vector<Dscalar2> DTring;
-    //getOneRingCandidate(i,DTringIdx,DTring);
     getOneRingCandidate(i,DTringIdxCGAL,DTringCGAL);
 
     //call another algorithm to triangulate the candidate set
