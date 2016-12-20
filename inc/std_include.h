@@ -64,6 +64,11 @@ HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)
     return a.x<b.x;
     }
 
+HOSTDEVICE bool operator==(const Dscalar2 &a, const Dscalar2 &b)
+    {
+    return (a.x==b.x &&a.y==b.y);
+    }
+
 HOSTDEVICE Dscalar2 make_Dscalar2(Dscalar x, Dscalar y)
     {
     Dscalar2 ans;
