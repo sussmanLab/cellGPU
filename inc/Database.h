@@ -60,6 +60,10 @@ private:
 public:
     void SetCurrentRec(int r);
     int  GetCurrentRec();
+    int GetNumRecs(){
+                    NcDim *rd = File.get_dim("rec");
+                    return rd->size();
+                    };
 
     void WriteState(STATE &c, Dscalar time = -1.0, int rec=-1);
     void ReadState(STATE &c, int rec);
@@ -219,25 +223,49 @@ void SPVDatabase::ReadState(STATE &t, int rec)
 
     //set the box
     BoxMatrixVar-> set_cur(rec);
-    std::vector<double> boxdata(4,0.0);
-//    BoxMatrixVar->get(&boxdata[0],1, boxDim->size());
+    std::vector<Dscalar> boxdata(4,0.0);
+    BoxMatrixVar->get(&boxdata[0],1, boxDim->size());
 //    t._box.setBox(boxdata[0],boxdata[3]);
 
     //get the positions
+    //t.Initialize(NvDim->size());
+
     posVar-> set_cur(rec);
-    std::vector<double> posdata(2*Nv,0.0);
+    std::vector<Dscalar> posdata(2*Nv,0.0);
     posVar->get(&posdata[0],1, dofDim->size());
+
     int idx = 0;
     ArrayHandle<Dscalar2> h_p(t.points,access_location::host,access_mode::overwrite);
     for (int idx = 0; idx < Nv; ++idx)
         {
-        double px = posdata[(2*idx)];
-        double py = posdata[(2*idx)+1];
+        Dscalar px = posdata[(2*idx)];
+        Dscalar py = posdata[(2*idx)+1];
         h_p.data[idx].x=px;
         h_p.data[idx].y=py;
         };
+
+    typeVar->set_cur(rec);
+    std::vector<int> ctdata(Nv,0.0);
+    typeVar->get(&ctdata[0],1, NvDim->size());
+    ArrayHandle<int> h_ct(t.CellType,access_location::host,access_mode::overwrite);
+
+    directorVar->set_cur(rec);
+    std::vector<Dscalar> cddata(Nv,0.0);
+    directorVar->get(&cddata[0],1, NvDim->size());
+    ArrayHandle<Dscalar> h_cd(t.cellDirectors,access_location::host,access_mode::overwrite);
+    for (int idx = 0; idx < Nv; ++idx)
+        {
+        h_cd.data[idx]=cddata[idx];;
+        h_ct.data[idx]=ctdata[idx];;
+        };
+
     t.resetDelLocPoints();
     t.updateCellList();
+    t.globalTriangulationCGAL();
+    if(t.GPUcompute)
+        t.computeGeometryGPU();
+    else
+        t.computeGeometryCPU();
 
 }
 
