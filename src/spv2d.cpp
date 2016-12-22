@@ -463,6 +463,13 @@ void SPV2D::performTimestepGPU()
                     getDelSets(NeedsFixing[jj]);
                 };
             };
+
+        //pre-copy some data back to device; this will overlap with some CPU time
+        //...these are the arrays that are used by force_sets but not geometry, and should be switched to Async
+        ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
+        ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
+        ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
+
         };
     };
 
