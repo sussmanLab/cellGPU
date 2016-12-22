@@ -53,7 +53,7 @@ class DelaunayLoc
         //"neighbors" returns a vector of the index of Delaunay neighbors of vertex i, sorted in clockwise order
         void getNeighbors(int i, vector<int> &neighbors);
         //"neighbors" returns a vector of the index of Delaunay neighbors of vertex i, sorted in clockwise order...calculated via CGAL
-        void getNeighborsCGAL(int i, vector<int> &neighbors);
+        void getNeighborsCGAL(int i, vector<int> &neighbors, bool &success);
 
 
         //test triangulations... "neighbors" must be in CW or CCW order!

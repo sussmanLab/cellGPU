@@ -326,7 +326,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
     //candidates = DTring.size();
     };
 
-void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
+void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors, bool &success)
     {
     //first, get candidate 1-ring
     getOneRingCandidate(i,DTringIdxCGAL,DTringCGAL);
@@ -339,7 +339,7 @@ void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
         {
         Pnts[ii] = make_pair(LPoint(DTringCGAL[ii].x,DTringCGAL[ii].y),ii);
         };
-    delcgal.LocalTriangulation(Pnts, neighbors);
+    success = delcgal.LocalTriangulation(Pnts, neighbors);
 
     for (int nn = 0; nn < neighbors.size(); ++nn)
         neighbors[nn] = DTringIdxCGAL[neighbors[nn]];

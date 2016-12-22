@@ -297,7 +297,7 @@ void SPV2D::setCurandStates(int i)
     {
     ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
 
-    gpu_init_curand(d_cs.data,N,i);
+    gpu_init_curand(d_cs.data,N,i,136);
 
     };
 

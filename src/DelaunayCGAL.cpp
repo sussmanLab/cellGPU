@@ -5,7 +5,7 @@
 #include "DelaunayCGAL.h"
 using namespace std;
 
-void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> & neighs)
+bool DelaunayCGAL::LocalTriangulation(const vector<pair<LPoint,int> > &V, vector<int> & neighs)
     {
     neighs.clear();
     int size = V.size();
@@ -18,9 +18,18 @@ void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> 
     LPoint p=V[0].first;
 
     face= T.locate(p);
-    if (face->vertex(0)->info()==0) li = 0;
-    if (face->vertex(1)->info()==0) li = 1;
-    if (face->vertex(2)->info()==0) li = 2;
+    
+    if(face ==NULL)
+        return false;
+
+    if (face->vertex(0)->info()==0)
+        li = 0;
+    else if (face->vertex(1)->info()==0) 
+        li = 1;
+    else if (face->vertex(2)->info()==0)
+        li = 2;
+    else
+        return false;
 
     Delaunay::Vertex_handle vh = face->vertex(li);
     Delaunay::Vertex_circulator vc(vh,face);
@@ -33,6 +42,8 @@ void DelaunayCGAL::LocalTriangulation(vector<pair<LPoint,int> > &V, vector<int> 
         ++vc;
         };
     cout.flush();
+
+    return true;
 
     };
 
