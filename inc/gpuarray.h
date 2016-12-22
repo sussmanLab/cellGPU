@@ -275,7 +275,7 @@ template<class T> void GPUArray<T>::allocate()
         }
 
 #ifdef ENABLE_CUDA
-//    if(RegisterArray)
+    if(RegisterArray)
         cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
     cudaMalloc(&d_data, Num_elements*sizeof(T));
 #endif
@@ -290,7 +290,7 @@ template<class T> void GPUArray<T>::deallocate()
     // free memory
 #ifdef ENABLE_CUDA
     cudaFree(d_data);
-//    if(RegisterArray)
+    if(RegisterArray)
         cudaHostUnregister(h_data);
 #endif
 
@@ -475,7 +475,7 @@ template<class T> T* GPUArray<T>::resizeHostArray(unsigned int num_elements)
         }
 
 #ifdef ENABLE_CUDA
-//    if(RegisterArray)
+    if(RegisterArray)
         cudaHostRegister(h_tmp,Num_elements*sizeof(T),cudaHostRegisterDefault);
 #endif
 
@@ -488,7 +488,7 @@ template<class T> T* GPUArray<T>::resizeHostArray(unsigned int num_elements)
     memcpy(h_tmp, h_data, sizeof(T)*num_copy_elements);
 
 #ifdef ENABLE_CUDA
-//    if(RegisterArray)
+    if(RegisterArray)
         cudaHostUnregister(h_data);
 #endif
 
