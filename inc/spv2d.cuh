@@ -10,7 +10,8 @@
 
 bool gpu_init_curand(curandState *states,
                     int N,
-                    int Timestep
+                    int Timestep,
+                    int GlobalSeed
                     );
 
 

@@ -101,7 +101,6 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
     //while a data point in a quadrant hasn't been found, expand the size of the search grid and keep looking
     int width = 0;
     vector<int> cellneighs;cellneighs.reserve(25);
-    vector<int> pincell;
     int idx;
     Dscalar2 disp;
     Dscalar nrm;
@@ -138,7 +137,7 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
 
 void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
     {
-    cellschecked = 0;candidates = 0;
+    //cellschecked = 0;candidates = 0;
     //first, find a polygon enclosing vertex i
     vector<int> P0;//index of vertices forming surrounding sqaure
     vector<Dscalar2> P1;//relative position of vertices forming surrounding square
@@ -181,7 +180,6 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
 
     vector<int> cellns;
     cellns.reserve(100);//often 16*4 or 25*4
-    vector<int> pincell;
     vector<int> cns;
     int idx;
     for (int ii = 0; ii < 4; ++ii)
@@ -191,14 +189,15 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
         //implementation improvement: can sometimes substract 1 from wcheck by considering the distance to cell boundary
         int wcheck = ceil(rads[ii]/clist.getCellSize())+1;
         clist.cellNeighborsShort(cix,wcheck,cns);
-        cellschecked += cns.size();
+        //cellschecked += cns.size();
         for (int cc = 0; cc < cns.size(); ++cc)
             cellns.push_back(cns[cc]);
         };
     //only look in each cell once
     sort(cellns.begin(),cellns.end());
     cellns.erase(unique(cellns.begin(),cellns.end() ), cellns.end() );
-    cellschecked = cellns.size();
+    //cellschecked = cellns.size();
+
     Dscalar2 tocenter;
     Dscalar2 disp;
     bool repeat=false;
@@ -236,7 +235,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
         {
         reduceOneRing(i,DTringIdx,DTring);
         };
-    candidates = DTring.size();
+    //candidates = DTring.size();
     };
 
 void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
@@ -324,10 +323,10 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
 
     DTring.swap(newRing);
     DTringIdx.swap(newRingIdx);
-    candidates = DTring.size();
+    //candidates = DTring.size();
     };
 
-void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
+void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors, bool &success)
     {
     //first, get candidate 1-ring
     getOneRingCandidate(i,DTringIdxCGAL,DTringCGAL);
@@ -340,7 +339,7 @@ void DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
         {
         Pnts[ii] = make_pair(LPoint(DTringCGAL[ii].x,DTringCGAL[ii].y),ii);
         };
-    delcgal.LocalTriangulation(Pnts, neighbors);
+    success = delcgal.LocalTriangulation(Pnts, neighbors);
 
     for (int nn = 0; nn < neighbors.size(); ++nn)
         neighbors[nn] = DTringIdxCGAL[neighbors[nn]];

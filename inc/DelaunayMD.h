@@ -46,7 +46,6 @@ class DelaunayMD
         vector<int> NeedsFixing;
 
         //flags...should the GPU be used? If no, what CPU routine should be run (global vs. local retriangulations)?
-        bool GPUcompute;
         bool globalOnly;
 
         //this class' time        
@@ -58,6 +57,7 @@ class DelaunayMD
         GPUArray<Dscalar2> points;      //vector of particle positions
         //the GPU and CPU boxes owned by this object
         gpubox Box;
+        bool GPUcompute;
 
         //the local Delaunay tester/updater
         DelaunayLoc delLoc;

@@ -60,7 +60,9 @@ void grid::initialize()
     Dscalar bx,bxx,by,byy;
     Box.getBoxDims(bx,bxx,byy,by);
     cellnumx = (int)floor(bx/cellsize);
+    if(cellnumx%2==1) cellnumx +=1;
     cellnumy= (int) floor(by/cellsize);
+    if(cellnumy%2==1) cellnumy +=1;
     totalCells = cellnumx*cellnumy;
     cellsize = bx/cellnumx;
     cells.clear();
@@ -74,8 +76,8 @@ void grid::construct()
     for (int nn = 0; nn < N; ++nn)
         {
         int idx = posToCellIdx(points[nn].x,points[nn].y);
-        if (idx >= cells.size() || idx < 0)
-            cout << "bad idx for particle" << nn << " : " << idx << "  " << points[nn].x << "  " << points[nn].y << endl; cout.flush();
+//        if (idx >= cells.size() || idx < 0)
+//            cout << "bad idx for particle" << nn << " : " << idx << "  " << points[nn].x << "  " << points[nn].y << endl; cout.flush();
         cells[idx].push_back(nn);
         };
     };

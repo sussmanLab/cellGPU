@@ -1,5 +1,6 @@
 //This file is based on GPUArray.h, from the HOOMD-Blue simulation package.
-//It is, however, simplified. It takes care of cuda memory copying for templated arrays,
+//It is, however, simplified. It takes care of cuda memory copying for templated arrays.
+//A flag (default to false) when declaring a GPUArray controls whether the memory is HostRegistered
 //but only handles synchronous copy operatations (no Asynch, no HostRegister, etc.)
 //It is also only for 1D arrays of data
 
@@ -80,8 +81,8 @@ template<class T> class ArrayHandle
 template<class T> class GPUArray
     {
     public:
-        GPUArray();
-        GPUArray(unsigned int num_elements);
+        GPUArray(bool _register=false);
+        GPUArray(unsigned int num_elements,bool _register=false);
         virtual ~GPUArray();
 
 
@@ -94,6 +95,12 @@ template<class T> class GPUArray
             {
             return Num_elements;
             }
+
+        void setRegistered(bool _reg)
+            {
+            RegisterArray=_reg;
+            cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
+            };
 
         virtual void resize(unsigned int num_elements);
 
@@ -110,6 +117,7 @@ template<class T> class GPUArray
     private:
         mutable unsigned int Num_elements;            //!< Number of elements
         mutable bool Acquired;                //!< Tracks whether the data has been acquired
+        bool RegisterArray;                //!< Tracks whether the data has been acquired
         mutable data_location::Enum Data_location;    //!< Tracks the current location of the data
 
     protected:
@@ -161,8 +169,8 @@ template<class T> ArrayHandle<T>::~ArrayHandle()
 //******************************************
 // GPUArray implementation
 // *****************************************
-template<class T> GPUArray<T>::GPUArray() :
-        Num_elements(0), Acquired(false), Data_location(data_location::host),
+template<class T> GPUArray<T>::GPUArray(bool _register) :
+        Num_elements(0), Acquired(false), Data_location(data_location::host), RegisterArray(_register),
 #ifdef ENABLE_CUDA
         d_data(NULL),
 #endif
@@ -170,8 +178,8 @@ template<class T> GPUArray<T>::GPUArray() :
     {
     }
 
-template<class T> GPUArray<T>::GPUArray(unsigned int num_elements) :
-        Num_elements(num_elements), Acquired(false), Data_location(data_location::host),
+template<class T> GPUArray<T>::GPUArray(unsigned int num_elements, bool _register) :
+        Num_elements(num_elements), Acquired(false), Data_location(data_location::host), RegisterArray(_register),
 #ifdef ENABLE_CUDA
         d_data(NULL),
 #endif
@@ -272,6 +280,8 @@ template<class T> void GPUArray<T>::allocate()
         }
 
 #ifdef ENABLE_CUDA
+    if(RegisterArray)
+        cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
     cudaMalloc(&d_data, Num_elements*sizeof(T));
 #endif
     }
@@ -285,6 +295,8 @@ template<class T> void GPUArray<T>::deallocate()
     // free memory
 #ifdef ENABLE_CUDA
     cudaFree(d_data);
+    if(RegisterArray)
+        cudaHostUnregister(h_data);
 #endif
 
     free(h_data);
@@ -467,12 +479,23 @@ template<class T> T* GPUArray<T>::resizeHostArray(unsigned int num_elements)
         throw std::runtime_error("Error allocating GPUArray.");
         }
 
+#ifdef ENABLE_CUDA
+    if(RegisterArray)
+        cudaHostRegister(h_tmp,Num_elements*sizeof(T),cudaHostRegisterDefault);
+#endif
+
+
     // clear memory
     memset(h_tmp, 0, sizeof(T)*num_elements);
 
     // copy over data
     unsigned int num_copy_elements = Num_elements > num_elements ? num_elements : Num_elements;
     memcpy(h_tmp, h_data, sizeof(T)*num_copy_elements);
+
+#ifdef ENABLE_CUDA
+    if(RegisterArray)
+        cudaHostUnregister(h_data);
+#endif
 
     // free old memory location
     free(h_data);

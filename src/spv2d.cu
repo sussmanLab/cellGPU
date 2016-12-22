@@ -18,13 +18,13 @@
 
 
 //initialize each thread with a different sequence of the same seed of a cudaRNG
-__global__ void init_curand_kernel(curandState *state, int N,int Timestep)
+__global__ void init_curand_kernel(curandState *state, int N,int Timestep,int GlobalSeed)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     if (idx >=N)
         return;
 
-    curand_init(1337,idx,Timestep,&state[idx]);
+    curand_init(GlobalSeed,idx,Timestep,&state[idx]);
     return;
     };
 
@@ -532,14 +532,15 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
 
 bool gpu_init_curand(curandState *states,
                     int N,
-                    int Timestep)
+                    int Timestep,
+                    int GlobalSeed)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
 
 
-    init_curand_kernel<<<nblocks,block_size>>>(states,N,Timestep);
+    init_curand_kernel<<<nblocks,block_size>>>(states,N,Timestep,GlobalSeed);
     //cudaThreadSynchronize();
     return cudaSuccess;
     };

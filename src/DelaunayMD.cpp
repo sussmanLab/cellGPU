@@ -434,10 +434,17 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     neighTemp.reserve(10);
 
     bool resetCCidx = false;
+    bool LocalFailure = false;
+    bool localTest = false;
     for (int ii = 0; ii < fixes; ++ii)
         {
         int pidx = fixlist[ii];
-        delLoc.getNeighborsCGAL(pidx,neighTemp);
+        delLoc.getNeighborsCGAL(pidx,neighTemp,localTest);
+        if(!localTest)
+            {
+            LocalFailure = true;
+            cout << "local triangulation failed...attempting a global triangulation to save the day..." << endl;
+            };
 
         allneighidxstart[ii] = allneighs.size();
         for (int nn = 0; nn < neighTemp.size(); ++nn)
@@ -447,7 +454,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         //allneighs[ii]=neighTemp;
 
         allneighidxstop[ii] = allneighs.size();
-        if(neighTemp.size() > neighMax)
+        if(neighTemp.size() > neighMax || LocalFailure)
             {
             resetCCidx = true;
             };

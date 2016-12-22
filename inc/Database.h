@@ -60,10 +60,13 @@ private:
 public:
     void SetCurrentRec(int r);
     int  GetCurrentRec();
+    int GetNumRecs(){
+                    NcDim *rd = File.get_dim("rec");
+                    return rd->size();
+                    };
 
     void WriteState(STATE &c, Dscalar time = -1.0, int rec=-1);
-    void ReadState(STATE &c, int rec);
-    void ReadNextState(STATE &c);
+    void ReadState(STATE &c, int rec,bool geometry=true);
 };
 
 
@@ -213,31 +216,84 @@ void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
 }
 
 //overwrites a tissue that needs to have the correct number of cells when passed to this function
-void SPVDatabase::ReadState(STATE &t, int rec)
+void SPVDatabase::ReadState(STATE &t, int rec,bool geometry)
 {
+    //initialize the NetCDF dimensions and variables
+    //test if there is exclusion data to read...
+    int tester = File.num_vars();
+    if (tester == 7)
+        exclusions = true;
     GetDimVar();
+
+    //get the current time
+    timeVar-> set_cur(rec);
+    timeVar->get(&t.SimTime,1,1);
+
 
     //set the box
     BoxMatrixVar-> set_cur(rec);
-    std::vector<double> boxdata(4,0.0);
-//    BoxMatrixVar->get(&boxdata[0],1, boxDim->size());
-//    t._box.setBox(boxdata[0],boxdata[3]);
+    std::vector<Dscalar> boxdata(4,0.0);
+    BoxMatrixVar->get(&boxdata[0],1, boxDim->size());
+    t.Box.setGeneral(boxdata[0],boxdata[1],boxdata[2],boxdata[3]);
 
     //get the positions
     posVar-> set_cur(rec);
-    std::vector<double> posdata(2*Nv,0.0);
+    std::vector<Dscalar> posdata(2*Nv,0.0);
     posVar->get(&posdata[0],1, dofDim->size());
-    int idx = 0;
+
     ArrayHandle<Dscalar2> h_p(t.points,access_location::host,access_mode::overwrite);
     for (int idx = 0; idx < Nv; ++idx)
         {
-        double px = posdata[(2*idx)];
-        double py = posdata[(2*idx)+1];
+        Dscalar px = posdata[(2*idx)];
+        Dscalar py = posdata[(2*idx)+1];
         h_p.data[idx].x=px;
         h_p.data[idx].y=py;
         };
-    t.resetDelLocPoints();
-    t.updateCellList();
+
+    //get cell types and cell directors
+    typeVar->set_cur(rec);
+    std::vector<int> ctdata(Nv,0.0);
+    typeVar->get(&ctdata[0],1, NvDim->size());
+    ArrayHandle<int> h_ct(t.CellType,access_location::host,access_mode::overwrite);
+
+    directorVar->set_cur(rec);
+    std::vector<Dscalar> cddata(Nv,0.0);
+    directorVar->get(&cddata[0],1, NvDim->size());
+    ArrayHandle<Dscalar> h_cd(t.cellDirectors,access_location::host,access_mode::overwrite);
+    for (int idx = 0; idx < Nv; ++idx)
+        {
+        h_cd.data[idx]=cddata[idx];;
+        h_ct.data[idx]=ctdata[idx];;
+        };
+
+    //read in excluded forces if applicable...
+    if (tester == 7)
+        {
+        exVar-> set_cur(rec);
+        std::vector<Dscalar> efdata(2*Nv,0.0);
+        exVar->get(&posdata[0],1, dofDim->size());
+        ArrayHandle<Dscalar2> h_ef(t.external_forces,access_location::host,access_mode::overwrite);
+        for (int idx = 0; idx < Nv; ++idx)
+            {
+            Dscalar efx = efdata[(2*idx)];
+            Dscalar efy = efdata[(2*idx)+1];
+            h_ef.data[idx].x=efx;
+            h_ef.data[idx].y=efy;
+            };
+        };
+
+
+    //by default, compute the triangulation and geometrical information
+    if(geometry)
+        {
+        t.resetDelLocPoints();
+        t.updateCellList();
+        t.globalTriangulationCGAL();
+        if(t.GPUcompute)
+            t.computeGeometryGPU();
+        else
+            t.computeGeometryCPU();
+        };
 
 }
 

@@ -21,7 +21,7 @@
 
 #include "spv2d.h"
 #include "cu_functions.h"
-//#include "Database.h"
+#include "Database.h"
 
 
 using namespace std;
@@ -91,6 +91,31 @@ int main(int argc, char*argv[])
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
 
+    if(program_switch == -3)
+        {
+        sprintf(dataname,"/hdd2/data/spv/Plates/Plates_N5000_p4.000_v0.100_Dr1.000_g0.100.nc");
+        SPVDatabase ncdat(numpts,dataname,NcFile::ReadOnly);
+        for (int rr = 0; rr <ncdat.GetNumRecs(); ++rr)
+            {
+            ncdat.ReadState(spv,rr);
+            cout << "frame " << rr << "  q= " <<  spv.reportq() << endl;
+            };
+        return 0;
+
+        };
+    if(program_switch == -2)
+        {
+        sprintf(dataname,"/hdd2/data/spv/MSD/monodisperse_N5000_p3.84_v0.01_Dr1.000.nc");
+        SPVDatabase ncdat(numpts,dataname,NcFile::ReadOnly);
+        for (int rr = 0; rr <ncdat.GetNumRecs(); ++rr)
+            {
+            ncdat.ReadState(spv,rr);
+            cout << "frame " << rr << "  q= " <<  spv.reportq() << endl;
+            };
+        return 0;
+
+        };
+
     if(program_switch == -1)
         {
         //compare with output of mattias' code
@@ -138,6 +163,6 @@ int main(int argc, char*argv[])
 
 
 //    ncdat.WriteState(spv);
-
+    cudaDeviceReset();
     return 0;
 };
