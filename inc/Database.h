@@ -227,7 +227,7 @@ void SPVDatabase::ReadState(STATE &t, int rec,bool geometry)
 
     //get the current time
     timeVar-> set_cur(rec);
-    timeVar->get(&t.SimTime,1);
+    timeVar->get(&t.SimTime,1,1);
 
 
     //set the box
