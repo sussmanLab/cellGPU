@@ -163,6 +163,6 @@ int main(int argc, char*argv[])
 
 
 //    ncdat.WriteState(spv);
-
+    cudaDeviceReset();
     return 0;
 };
