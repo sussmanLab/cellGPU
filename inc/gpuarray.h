@@ -96,7 +96,12 @@ template<class T> class GPUArray
             return Num_elements;
             }
 
-        void setRegistered(bool _reg){RegisterArray=_reg;};
+        void setRegistered(bool _reg)
+            {
+            RegisterArray=_reg;
+            cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
+            };
+
         virtual void resize(unsigned int num_elements);
 
     protected:
