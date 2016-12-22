@@ -6,18 +6,20 @@
 #include "cuda_profiler_api.h"
 
 //simple constructor
-SPV2D::SPV2D(int n)
+SPV2D::SPV2D(int n, bool reprod)
     {
-    printf("Initializing %i cells with random positions in a square box\n",n);
+    printf("Initializing %i cells with random positions in a square box... ",n);
+    Reproducible = reprod;
     Initialize(n);
     setCellPreferencesUniform(1.0,4.0);
     setCellTypeUniform(0);
     };
 
 //most common constructor...sets uniform cell preferences and types
-SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0)
+SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod)
     {
-    printf("Initializing %i cells with random positions in a square box\n",n);
+    printf("Initializing %i cells with random positions in a square box... ",n);
+    Reproducible = reprod;
     Initialize(n);
     setCellPreferencesUniform(A0,P0);
     setCellTypeUniform(0);
@@ -296,8 +298,15 @@ void SPV2D::setExclusions(vector<int> &exes)
 void SPV2D::setCurandStates(int i)
     {
     ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
-
-    gpu_init_curand(d_cs.data,N,i,136);
+    
+    int globalseed = 136;
+    if(!Reproducible)
+        {
+        clock_t t1=clock();
+        globalseed = (int)t1 % 100000;
+        printf("initializing curand RNG with seed %i\n",globalseed);
+        };
+    gpu_init_curand(d_cs.data,N,i,globalseed);
 
     };
 

@@ -22,6 +22,9 @@
 class SPV2D : public DelaunayMD
     {
     protected:
+        //should the gpu rng be the same every time? Default to randomness, but maintain the option for testing.
+        bool Reproducible;
+        
 
         //are inter-cell tensions to be added? are there any force exclusions?
         bool useTension;
@@ -83,9 +86,9 @@ class SPV2D : public DelaunayMD
 
         //constructors and destructors
         //initialize with random positions in a square box
-        SPV2D(int n);
+        SPV2D(int n,bool reprod = false);
         //additionally set all cells to have uniform target A_0 and P_0 parameters
-        SPV2D(int n, Dscalar A0, Dscalar P0);
+        SPV2D(int n, Dscalar A0, Dscalar P0,bool reprod = false);
         //previous iterations of the code needed an explicit destructor for some
         //"cudaFree" calls
         //~SPV2D()
