@@ -60,6 +60,8 @@ class SPV2D : public DelaunayMD
         GPUArray<Dscalar2> forceSets;
 
     public:
+        //What is the current time in the simulation...only for database reading purposes
+        Dscalar SimTime;
         //how many times has "performTimeStep" been called?
         int Timestep;
         //how frequently should the spatial sorter be used?

@@ -225,6 +225,11 @@ void SPVDatabase::ReadState(STATE &t, int rec,bool geometry)
         exclusions = true;
     GetDimVar();
 
+    //get the current time
+    timeVar-> set_cur(rec);
+    timeVar->get(&SimTime,1);
+
+
     //set the box
     BoxMatrixVar-> set_cur(rec);
     std::vector<Dscalar> boxdata(4,0.0);
