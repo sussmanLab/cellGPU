@@ -443,7 +443,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         if(!localTest)
             {
             LocalFailure = true;
-            cout << "local triangulation failed...attempting a global triangulation to save the day" << "Note that a particle position has probably become NaN, in which case CGAL will give an assertion violation" << endl;
+            cout << "local triangulation failed...attempting a global triangulation to save the day" << endl << "Note that a particle position has probably become NaN, in which case CGAL will give an assertion violation" << endl;
             break;
             };
 

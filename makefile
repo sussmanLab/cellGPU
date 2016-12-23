@@ -23,7 +23,7 @@ CXXFLAGS += $(COMMONFLAGS)
 CXXFLAGS += -w -frounding-math
 CFLAGS += $(COMMONFLAGS) -frounding-math
 
-CUOBJ_DIR=cuobj
+CUOBJ_DIR=obj/cuobj
 OBJ_DIR=obj
 SRC_DIR=src
 #target rules
@@ -45,7 +45,7 @@ PROG_OBJS= obj/runellipse.o obj/voroguppy.o obj/runplates.o obj/runMakeDatabase.
 
 CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/gpucell.o obj/DelaunayMD.o obj/spv2d.o
 
-CUOBJS= cuobj/gpucell.cu.o cuobj/DelaunayMD.cu.o cuobj/spv2d.cu.o
+CUOBJS= obj/cuobj/gpucell.cu.o obj/cuobj/DelaunayMD.cu.o obj/cuobj/spv2d.cu.o
 
 #cuda objects
 $(CUOBJ_DIR)/%.cu.o: $(SRC_DIR)/%.cu
