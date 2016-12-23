@@ -1,19 +1,11 @@
 #ifndef STRUCTURES_H
 #define STRUCTURES_H
 
-/////////////////
+//
 //This header file defines useful structures for computing triangulations...
 //... points as a pair of coordinates, edges as a pair of vertex numbers, triangles as a triplet
-//... etc.
-/////////////////
-
-//a few function protocols needed below...definitions are in functions.h
-//since some structures need to be able to call this function...
 
 #include "std_include.h"
-
-bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dscalar x3, Dscalar y3,Dscalar &xc, Dscalar &yc, Dscalar &r);
-inline Dscalar TriangleArea(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2);
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
@@ -21,25 +13,33 @@ inline Dscalar TriangleArea(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2);
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
+//a few function protocols needed below...definitions are in functions.h
+//since some structures need to be able to call this function...
+bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dscalar x3, Dscalar y3,Dscalar &xc, Dscalar &yc, Dscalar &r);
+inline Dscalar TriangleArea(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2);
 
+/*!
+ * Really the Voronoi cell of a Delaunay vertex. Given the relative positions of the vertices 
+ * Delaunay neighbors, this puts the neighbors in clockwise order and calculates the Voronoi vertices
+ * of the Voronoi cell. Also calculates the area and perimeter of the Voronoi cell.
+ */
 struct DelaunayCell
     {
-    //a class that has the number of delaunay neighbors, and their positions relative to the vertex
-    //can compute the voronoi cell's area and perimeter
     public:
-        int n; //number of delaunay neighbors
-        std::vector< Dscalar2 > Dneighs;
-        std::vector<std::pair <Dscalar,int> > CWorder;
-        std::vector< Dscalar2> Vpoints;
-        Dscalar Varea;
-        Dscalar Vperimeter;
-        bool Voro; //have the voronoi points of the cell already been calculated?
+        int n; //!<number of delaunay neighbors
+        std::vector< Dscalar2 > Dneighs; //!< The relative positions of the Delaunay neighbors
+        std::vector<std::pair <Dscalar,int> > CWorder; //!< A structure to put the neighbors in oriented order
+        std::vector< Dscalar2> Vpoints; //!< The voronoi vertices
+        Dscalar Varea; //!< The area of the cell
+        Dscalar Vperimeter; //!< The perimeter of the cell
+        bool Voro; //!<have the voronoi points of the cell already been calculated?
 
         DelaunayCell(){Voro=false;};
 
+        //! Declare how many neighbors the cell has
         void setSize(int nn){n=nn;Dneighs.resize(n);Voro=false;};
 
-        //find CW order of neighbors
+        //!find CW order of neighbors
         void getCW()
             {
             CWorder.resize(n);
@@ -52,7 +52,7 @@ struct DelaunayCell
             sort(CWorder.begin(),CWorder.begin()+n);
             }
 
-        //find the positions of the voronoi cell around the vertex
+        //!Find the positions of the voronoi cell around the vertex
         void getVoro()
             {
             //first, put the points in clockwise order
@@ -74,6 +74,7 @@ struct DelaunayCell
             Voro=true;
             };
 
+        //!Calculate the area and perimeter of the voronoi cell.
         void Calculate()
             {
             if (!Voro) getVoro();
@@ -92,8 +93,9 @@ struct DelaunayCell
 
     };
 
+/// contains a pair of integers of vertex labels
 struct edge
-    {//contains a pair of integers {i,j} of vertex labels
+    {
     public:
         int i;
         int j;
@@ -102,8 +104,9 @@ struct edge
         edge(int ii, int jj){i=ii;j=jj;};
     };
 
+//contains a triplet of integers {i,j,k} of vertex labels
 struct triangle
-    {//contains a triplet of integers {i,j,k} of vertex labels
+    {
     public:
         int i;
         int j;
@@ -113,19 +116,20 @@ struct triangle
         triangle(int ii, int jj,int kk){i=ii;j=jj;k=kk;};
     };
 
+/*!
+ * Contains the information needed to specify a triangulation of vertices.
+ * It has vectors of edges and triangles, and getNeighbors will sift through the
+ * triangles to look for neighbors of vertex i
+ */
 struct triangulation
-    {//information to specific a triangulation of verticies,
-     //has vectors of edges and triangles
-     //contains a triplet of integers {i,j,k} of vertex labels
-     //getNeighbors will sift through the triangles to look for neighbors of vertex i
+    {
     public:
-        int nTriangles;
-        int nEdges;
-        std::vector<edge> edges;
-        std::vector<triangle> triangles;
+        int nTriangles; //!<The number of triangles
+        int nEdges; //!< the number of edges
+        std::vector<edge> edges; //!< a vector of edges
+        std::vector<triangle> triangles; //!<a vector of triangles
 
-        //searches for vertices that are in triangles with vertex i.
-        //Returns a sorted list (according to integer value, NOT CW order!), with no duplicates
+        //!searches for vertices that are in triangles with vertex i. Returns a sorted list (according to integer value, NOT CW order!), with no duplicates.
         void getNeighbors(int i, std::vector<int> &neighs)
             {
             neighs.clear();

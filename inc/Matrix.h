@@ -10,28 +10,29 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-
+///contains a {{x11,x12},{x21,x22}} set, and matrix manipulations
 struct Matrix2x2
-    {//contains a {{x11,x12},{x21,x22}} set, and matrix manipulations
+    {
     private:
 
     public:
+        //!The entries of the matrix
         Dscalar x11, x12, x21, x22;
         HOSTDEVICE Matrix2x2() : x11(1.0), x12(0.0), x21(0.0),x22(1.0) {};
         HOSTDEVICE Matrix2x2(Dscalar y11, Dscalar y12, Dscalar y21,Dscalar y22) : x11(y11), x12(y12), x21(y21),x22(y22) {};
 
-
+        //!Set the values to some desired set
         HOSTDEVICE void set(Dscalar y11, Dscalar y12, Dscalar y21, Dscalar y22)
                             {
                             x11=y11; x12=y12;x21=y21;x22=y22;
                             };
 
-        //assignment
+        //!assignment operator
         HOSTDEVICE void operator=(const Matrix2x2 &m2)
                             {
                             set(m2.x11,m2.x12,m2.x21,m2.x22);
                             };
-        //matrix multiplication
+        //!matrix multiplication operator
         HOSTDEVICE void operator*=(const Matrix2x2 &m2)
                             {
                             set(x11*m2.x11 + x12*m2.x21,
@@ -40,6 +41,7 @@ struct Matrix2x2
                                 x21*m2.x12 + x22*m2.x22
                                 );
                             };
+
         HOSTDEVICE friend Matrix2x2 operator*(const Matrix2x2 &m1,const Matrix2x2 &m2)
                             {
                             Matrix2x2 temp(m1);
@@ -47,17 +49,19 @@ struct Matrix2x2
                             return temp;
                             };
 
-        //scalar multiplication
+        //!scalar multiplication operator
         HOSTDEVICE void operator*=(Dscalar a)
                             {
                             set(a*x11,a*x12,a*x21,a*x22);
                             };
+
         HOSTDEVICE friend Matrix2x2 operator*(const Matrix2x2 &m,const Dscalar a)
                             {
                             Matrix2x2 temp(m);
                             temp*=a;
                             return temp;
                             };
+
         HOSTDEVICE friend Matrix2x2 operator*(const Dscalar a, const Matrix2x2 &m)
                             {
                             Matrix2x2 temp(m);
@@ -65,7 +69,7 @@ struct Matrix2x2
                             return temp;
                             };
 
-        //Matrix addition
+        //!Matrix addition operator
         HOSTDEVICE void operator+=(const Matrix2x2 &m2)
                             {
                             set(x11+m2.x11,
@@ -74,6 +78,7 @@ struct Matrix2x2
                                 x22+m2.x22
                                );
                             };
+
         HOSTDEVICE friend Matrix2x2 operator+(const Matrix2x2 &m1,const Matrix2x2 &m2)
                             {
                             Matrix2x2 temp(m1);
@@ -81,7 +86,7 @@ struct Matrix2x2
                             return temp;
                             };
 
-        //Matrix subtraction
+        //!Matrix subtraction operator
         HOSTDEVICE void operator-=(const Matrix2x2 &m2)
                             {
                             set(x11-m2.x11,
@@ -97,7 +102,7 @@ struct Matrix2x2
                             return temp;
                             };
 
-        //matrix-vector multiplication
+        //!matrix-vector multiplication operator
         HOSTDEVICE friend Dscalar2 operator*(const Dscalar2 &v, const Matrix2x2 &m)
                             {
                             Dscalar2 temp;
@@ -114,16 +119,14 @@ struct Matrix2x2
                             return temp;
                             };
 
-        //utility
-        HOSTDEVICE void show()
-            {
-            //printf("{%f,%f,%f,%f}\n",x11,x12,x21,x22);
-            };
     };
 
+//! Form a matrix by the dyadic product of two vectors
 HOSTDEVICE Matrix2x2 dyad(const Dscalar2 &v1, const Dscalar2 &v2)
     {
     return Matrix2x2(v1.x*v2.x,v1.x*v2.y,v1.y*v2.x,v1.y*v2.y);
     };
+
+#undef HOSTDEVICE
 
 #endif

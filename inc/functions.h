@@ -13,7 +13,7 @@ using namespace std;
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-//the circumcenter of (x1,y1),(x2,y2), and the origin...
+//!Calculate the circumcenter of (x1,y1),(x2,y2), and the origin...
 HOSTDEVICE void CircumCenter(Dscalar x1,Dscalar y1,Dscalar x2,Dscalar y2, Dscalar &xc, Dscalar &yc)
     {
     Dscalar x1norm2,x2norm2,denominator;
@@ -26,6 +26,7 @@ HOSTDEVICE void CircumCenter(Dscalar x1,Dscalar y1,Dscalar x2,Dscalar y2, Dscala
     return;
     };
 
+//!Calculate the circumcenter and radius given 2 points (the third is at the origin)
 HOSTDEVICE bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2,
                   Dscalar &xc, Dscalar &yc, Dscalar &r)
     {
@@ -36,8 +37,7 @@ HOSTDEVICE bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2,
     return true;
     };
 
-
-
+//!Calculate the circumcenter and radius for three points on the circumcircle
 HOSTDEVICE bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dscalar x3, Dscalar y3,
                   Dscalar &xc, Dscalar &yc, Dscalar &r)
     {
@@ -78,11 +78,10 @@ HOSTDEVICE bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dsc
     return true;
     };
 
+//!An overloaded version of the above function when the input/output are Dscalar2's
 HOSTDEVICE bool Circumcircle(Dscalar2 &xt, Dscalar2 &x1, Dscalar2 &x2, Dscalar2 &x3,
                   Dscalar2 &xc, Dscalar &rad)
     {
-    //overloaded version when the input/output are Dscalar2 objects
-
     Dscalar xcen, ycen;
     bool valid = CircumCircle(x1.x,x1.y,x2.x,x2.y,x3.x,x3.y,xcen,ycen,rad);
     if (!valid) return false;
@@ -95,7 +94,7 @@ HOSTDEVICE bool Circumcircle(Dscalar2 &xt, Dscalar2 &x1, Dscalar2 &x2, Dscalar2 
     return ((drsqr <=rad)? true: false);
     };
 
-//given a separation and a scale, returns true if (xc, yc) is on the same half plane with normal \vec{sep} and passing through midScale*\vec{sep} as the origin
+//!Given a separation and a scale, returns true if (xc, yc) is on the same half plane with normal \vec{sep} and passing through midScale*\vec{sep} as the origin
 HOSTDEVICE bool halfPlane(Dscalar sepx, Dscalar sepy, Dscalar midScale, Dscalar xc, Dscalar yc)
     {
     Dscalar norm = sqrt(sepx*sepx+sepy*sepy);
@@ -112,12 +111,13 @@ HOSTDEVICE bool halfPlane(Dscalar sepx, Dscalar sepy, Dscalar midScale, Dscalar 
     return (psign==cSign);
     };
 
-//calculates the area of a triangle with one vertex at the origin
+//!Calculates the area of a triangle with one vertex at the origin
 HOSTDEVICE Dscalar TriangleArea(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2)
     {
     return 0.5*(x1*y2-x2*y1);
     };
 
+//!Calculate which quadrant the point (x,y) is in
 HOSTDEVICE int Quadrant(Dscalar x, Dscalar y)
     {
     if(x>=0)
@@ -136,9 +136,6 @@ HOSTDEVICE int Quadrant(Dscalar x, Dscalar y)
         };
     return -1;
     };
-
-
-
 
 // undefine HOSTDEVICE so we don't interfere with other headers
 #undef HOSTDEVICE

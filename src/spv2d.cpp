@@ -1191,7 +1191,7 @@ void SPV2D::meanForce()
         fx += h_f.data[i].x;
         fy += h_f.data[i].y;
         };
-    printf("Mean force = (%e,%e)\n" ,fx,fy);
+    printf("Mean force = (%e,%e)\n" ,fx/N,fy/N);
     };
 
 //a utility/testing function, report the current average value of the shape parameter P/sqrt(A)

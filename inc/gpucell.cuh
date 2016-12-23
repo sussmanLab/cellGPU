@@ -7,6 +7,7 @@
 #include "indexer.h"
 #include "gpubox.h"
 
+//!Find the set indices of points in every cell bucket in the grid
 bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                   unsigned int *d_cell_sizes,
                                   int *d_idx,
@@ -20,10 +21,11 @@ bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                   Index2D &cli,
                                   int *d_assist
                                   );
-
+//!convenience function to zero out an array on the GPU
 bool gpu_zero_array(int *arr,
                     int N
                     );
+//!convenience function to zero out an array on the GPU
 bool gpu_zero_array(unsigned int *arr,
                     int      N
                     );

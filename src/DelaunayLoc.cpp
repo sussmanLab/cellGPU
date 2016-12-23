@@ -496,6 +496,7 @@ bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool tim
     return (!repeat);
     };
 
+//!Circumcircles should be a vector of length 3*(number of ccs in the system), where each set of three consequtive entries are the indicies of the points on that circumcircle
 void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool timing)
     {
     Dscalar vx = 0.0; Dscalar vy = 0.0;

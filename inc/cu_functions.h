@@ -1,13 +1,15 @@
 #ifndef CUFUNCTIONS_H
 #define CUFUNCTIONS_H
+
+
+#include "std_include.h"
+#include "Matrix.h"
+
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
-
-#include "std_include.h"
-#include "Matrix.h"
 
 //!Calculate the determinant of a 2x2 matrix
 HOSTDEVICE Dscalar Det2x2(const Dscalar &x11,const Dscalar &x12, const Dscalar &x21, const Dscalar &x22)

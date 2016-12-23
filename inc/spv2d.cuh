@@ -7,14 +7,14 @@
 #include "indexer.h"
 #include "gpubox.h"
 
-
+//!Initialize the GPU's random number generator
 bool gpu_init_curand(curandState *states,
                     int N,
                     int Timestep,
                     int GlobalSeed
                     );
 
-
+//!Given the positions, forces, and cell directors, move the particles and add noise to the director direction
 bool gpu_displace_and_rotate(
                     Dscalar2 *d_points,
                     Dscalar2 *d_force,
@@ -27,6 +27,7 @@ bool gpu_displace_and_rotate(
                     gpubox &Box
                     );
 
+//!compute the area and perimeter of all Voronoi cells, and save the voronoi vertices
 bool gpu_compute_geometry(
                     Dscalar2 *d_points,
                     Dscalar2 *d_AP,
@@ -39,6 +40,7 @@ bool gpu_compute_geometry(
                     gpubox &Box
                     );
 
+//!Compute the contribution to the net force on vertex i from each of i's voronoi vertices
 bool gpu_force_sets(
                     Dscalar2 *d_points,
                     Dscalar2 *d_AP,
@@ -55,7 +57,7 @@ bool gpu_force_sets(
                     Index2D &n_idx,
                     gpubox &Box
                     );
-
+//!compute the contributions to the net force if, additionally, there are added tensions between cells of different types
 bool gpu_force_sets_tensions(
                     Dscalar2 *d_points,
                     Dscalar2 *d_AP,
@@ -75,6 +77,7 @@ bool gpu_force_sets_tensions(
                     gpubox &Box
                     );
 
+//!Add up the force contributions to get the net force on each particle
 bool gpu_sum_force_sets(
                     Dscalar2 *d_forceSets,
                     Dscalar2 *d_forces,
@@ -83,6 +86,7 @@ bool gpu_sum_force_sets(
                     Index2D &n_idx
                     );
 
+//!Add up the force constributions, but in the condidtion where some exclusions exist
 bool gpu_sum_force_sets_with_exclusions(
                     Dscalar2 *d_forceSets,
                     Dscalar2 *d_forces,
