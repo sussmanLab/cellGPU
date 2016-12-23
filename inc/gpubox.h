@@ -3,12 +3,6 @@
 
 using namespace std;
 #include "std_include.h"
-#include <cmath>
-#include <vector>
-#include "cuda.h"
-#include "vector_types.h"
-#include "vector_functions.h"
-
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline

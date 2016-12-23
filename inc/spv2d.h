@@ -4,19 +4,13 @@
 
 
 #include "std_include.h"
-#include <stdio.h>
-#include <cmath>
-#include <random>
-#include <sys/time.h>
+
 #include "cuda_runtime.h"
 #include "curand.h"
 #include "curand_kernel.h"
-#include "vector_types.h"
-#include "vector_functions.h"
 
 #include "Matrix.h"
 #include "cu_functions.h"
-
 #include "DelaunayMD.h"
 
 /*!

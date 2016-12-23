@@ -2,7 +2,6 @@
 #define Matrix_H
 
 #include "std_include.h"
-#include "vector_types.h"
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
