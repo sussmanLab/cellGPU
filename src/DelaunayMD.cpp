@@ -439,11 +439,12 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     for (int ii = 0; ii < fixes; ++ii)
         {
         int pidx = fixlist[ii];
-        delLoc.getNeighborsCGAL(pidx,neighTemp,localTest);
+        localTest = delLoc.getNeighborsCGAL(pidx,neighTemp);
         if(!localTest)
             {
             LocalFailure = true;
-            cout << "local triangulation failed...attempting a global triangulation to save the day..." << endl;
+            cout << "local triangulation failed...attempting a global triangulation to save the day" << endl << "Note that a particle position has probably become NaN, in which case CGAL will give an assertion violation" << endl;
+            break;
             };
 
         allneighidxstart[ii] = allneighs.size();
@@ -454,17 +455,17 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         //allneighs[ii]=neighTemp;
 
         allneighidxstop[ii] = allneighs.size();
-        if(neighTemp.size() > neighMax || LocalFailure)
+        if(neighTemp.size() > neighMax)
             {
             resetCCidx = true;
             };
         };
 
     //if needed, regenerate the "neighs" structure...hopefully don't do this too much
-    if(resetCCidx)
+    if(resetCCidx || LocalFailure)
         {
-        neighMaxChange = true;
-        cout << "Resetting the neighbor structure... new Nmax = "<<neighMax << endl;
+        if(resetCCidx)
+            neighMaxChange = true;
         globalTriangulationCGAL();
         return;
         };

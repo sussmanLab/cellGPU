@@ -114,7 +114,7 @@ void SPV2D::allDelSets()
     };
 
 //update the delSet and delOther structure just for a particular particle
-void SPV2D::getDelSets(int i)
+bool SPV2D::getDelSets(int i)
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
     ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
@@ -143,10 +143,16 @@ void SPV2D::getDelSets(int i)
         ds.data[n_idx(nn,i)].x= nm1;
         ds.data[n_idx(nn,i)].y= n1;
 
+        //is "delOther" a copy of i or either of the delSet points? if so, the local topology is inconsistent
+        if(nm1 == dother.data[n_idx(nn,i)] || n1 == dother.data[n_idx(nn,i)] || i == dother.data[n_idx(nn,i)])
+            return false;
+
         nm2=nm1;
         nm1=n1;
         n1=n2;
+
         };
+    return true;
     };
 
 //set all cell K_A, K_P preferences to uniform values
@@ -298,7 +304,7 @@ void SPV2D::setExclusions(vector<int> &exes)
 void SPV2D::setCurandStates(int i)
     {
     ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
-    
+
     int globalseed = 136;
     if(!Reproducible)
         {
@@ -468,9 +474,23 @@ void SPV2D::performTimestepGPU()
                 }
             else
                 {
+                bool localFail = false;
                 for (int jj = 0;jj < NeedsFixing.size(); ++jj)
-                    getDelSets(NeedsFixing[jj]);
+                    {
+                    if(!getDelSets(NeedsFixing[jj]))
+                        localFail=true;
+                    };
+                if (localFail)
+                    {
+                    cout << "Local triangulation failed to return a consistent set of topological information..." << endl;
+                    cout << "Now attempting a global re-triangulation to save the day." << endl;
+                    globalTriangulationCGAL();
+                    //get new DelSets and DelOthers
+                    resetLists();
+                    allDelSets();
+                    };
                 };
+
             };
 
         //pre-copy some data back to device; this will overlap with some CPU time
