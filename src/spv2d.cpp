@@ -143,21 +143,10 @@ bool SPV2D::getDelSets(int i)
         ds.data[n_idx(nn,i)].x= nm1;
         ds.data[n_idx(nn,i)].y= n1;
 
+        //is "delOther" a copy of i or either of the delSet points? if so, the local topology is inconsistent
         if(nm1 == dother.data[n_idx(nn,i)] || n1 == dother.data[n_idx(nn,i)] || i == dother.data[n_idx(nn,i)])
-            {
-            /*
-            //a bit of debugging code... delete with the next commit
-            for (int nn2 = 0; nn2 < nextNeighs; ++nn2)
-                {
-                printf("dset loop: %i %i %i %i\n",i,n1,n2,ns.data[n_idx(nn2,n1)]);
-                };
-            printf("iNeighs: ");
-            for (int in = 0; in < iNeighs; ++in)
-                printf("%i, ",ns.data[n_idx(in,i)]);
-            printf("\n");
-            */
             return false;
-            };
+
         nm2=nm1;
         nm1=n1;
         n1=n2;
@@ -323,8 +312,7 @@ void SPV2D::setCurandStates(int i)
         globalseed = (int)t1 % 100000;
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
-    //gpu_init_curand(d_cs.data,N,i,globalseed);
-    gpu_init_curand(d_cs.data,N,i,1337);
+    gpu_init_curand(d_cs.data,N,i,globalseed);
 
     };
 
