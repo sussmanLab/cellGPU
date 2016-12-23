@@ -124,7 +124,7 @@ class SPV2D : public DelaunayMD
 
         //internal utilities...
         //maintain topological data structures
-        void getDelSets(int i);
+        bool getDelSets(int i); // returns false if there was a problem...triggers a global re-triangulation
         void allDelSets();
         //resize neighMax-related lists
         void resetLists();
