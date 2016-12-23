@@ -6,3 +6,5 @@
 callgrind*
 *.dsym
 *.sh
+doc/html/*
+doc/latex/*

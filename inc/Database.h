@@ -9,13 +9,15 @@
 
 
 using namespace std;
+///A base class that controls a netCDF-based data implementation
 class BaseDatabase
 {
 public:
-    string filename;
-    const int Mode;
-    NcFile File;
+    string filename; //!< The name of the file
+    const int Mode;  //!< The desired netCDF mode (repalce, new, readonly, etc.)
+    NcFile File;    //!< The NcFile itself
 
+    //!The default constructor takes starts a bland filename in readonly mode
     BaseDatabase(string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
 };
 
@@ -32,21 +34,18 @@ BaseDatabase::BaseDatabase(string fn, NcFile::FileMode mode)
 }
 
 
-/////////////////////////////////////////////////////////////////////////////////
-//class for a state database for a 2d delaunay triangulation
-//the box dimensions are stored, the 2d unwrapped coordinate of the delaunay vertices,
-//and the shape index parameter for each vertex
-/////////////////////////////////////////////////////////////////////////////////
-
+///Class for a state database for a 2d delaunay triangulation
+///the box dimensions are stored, the 2d unwrapped coordinate of the delaunay vertices,
+///and the shape index parameter for each vertex/
 class SPVDatabase : public BaseDatabase
 {
 private:
     typedef SPV2D STATE;
-    int Nv; // number of vertices in delaunay triangulation
-    NcDim *recDim, *NvDim, *dofDim, *boxDim, *unitDim;
-    NcVar *posVar, *typeVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var,*exVar;
-    bool exclusions;
-    int Current;
+    int Nv; //!< number of vertices in delaunay triangulation
+    NcDim *recDim, *NvDim, *dofDim, *boxDim, *unitDim; //!< NcDims we'll use
+    NcVar *posVar, *typeVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var,*exVar; //!<NcVars we'll use
+    bool exclusions; //!< Keep track of whether particle exlucsions should be saved
+    int Current;    //!< keeps track of the current record when in write mode
 
 
 public:
@@ -58,14 +57,16 @@ private:
     void GetDimVar();
 
 public:
-    void SetCurrentRec(int r);
-    int  GetCurrentRec();
+    int  GetCurrentRec(); //!<Return the current record of the database
+    //!Get the total number of records in the database
     int GetNumRecs(){
                     NcDim *rd = File.get_dim("rec");
                     return rd->size();
                     };
 
+    //!Write the current state of the system to the database. If the default value of "rec=-1" is used, just append the current state to a new record at the end of the database
     void WriteState(STATE &c, Dscalar time = -1.0, int rec=-1);
+    //!Read the "rec"th entry of the database into SPV2D state c. If geometry=true, after reading a CPU-based triangulation is performed, and local geometry of cells computed.
     void ReadState(STATE &c, int rec,bool geometry=true);
 };
 
@@ -137,16 +138,6 @@ void SPVDatabase::GetDimVar()
         exVar = File.get_var("externalForce");
 }
 
-void SPVDatabase::SetCurrentRec(int r)
-{
-    Current = r;
-}
-
-int SPVDatabase::GetCurrentRec()
-{
-    return Current;
-}
-
 void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
 {
     if(rec<0)   rec = recDim->size();
@@ -215,7 +206,6 @@ void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
     File.sync();
 }
 
-//overwrites a tissue that needs to have the correct number of cells when passed to this function
 void SPVDatabase::ReadState(STATE &t, int rec,bool geometry)
 {
     //initialize the NetCDF dimensions and variables
