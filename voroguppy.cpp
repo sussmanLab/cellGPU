@@ -83,7 +83,7 @@ int main(int argc, char*argv[])
 
 
 
-    SPV2D spv(numpts,1.0,p0);
+    SPV2D spv(numpts,1.0,p0,true);
     if (USE_GPU < 0)
         spv.setCPU(false);
 

@@ -13,10 +13,22 @@ void DelaunayLoc::setPoints(vector<Dscalar> &points)
         Dscalar2 point;
         point.x=points[ii*2]; point.y=points[ii*2+1];
         pts[ii]=point;
-        pair<Dscalar2, int> pp;
-        pp.first = point;
-        pp.second=ii;
         };
+    };
+
+void DelaunayLoc::setPoints(GPUArray<Dscalar2> &points)
+    {
+    nV=points.getNumElements();
+    pts.clear();
+    pts.resize(nV);
+    ArrayHandle<Dscalar2> hp(points,access_location::host,access_mode::read);
+    for (int ii = 0; ii < nV; ++ii)
+        {
+        pts[ii].x=hp.data[ii].x;
+        pts[ii].y=hp.data[ii].y;
+        };
+    triangulated = false;
+    cellsize = 2.0;
     };
 
 void DelaunayLoc::setPoints(vector<Dscalar2> &points)
@@ -29,13 +41,6 @@ void DelaunayLoc::setPoints(vector<Dscalar2> &points)
         };
     triangulated = false;
     cellsize = 2.0;
-    for (unsigned int ii = 0; ii<nV; ++ii)
-        {
-        pair<Dscalar2, int> pp;
-        pp.first.x=pts[ii].x;
-        pp.first.y=pts[ii].y;
-        pp.second=ii;
-        };
     };
 
 void DelaunayLoc::setBox(gpubox &bx)
