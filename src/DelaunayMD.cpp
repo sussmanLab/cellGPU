@@ -272,8 +272,12 @@ void DelaunayMD::fullTriangulation()
     getCircumcenterIndices();
     };
 
-//the function calls the DelaunayCGAL class to determine the Delaunay triangulation of the entire periodic domain
-//this method is, obviously, better than the hand-written version written by DMS, so should be the default option.
+/*!
+This function calls the DelaunayCGAL class to determine the Delaunay triangulation of the entire
+square periodic domain this method is, obviously, better than the version written by DMS, so
+should be the default option. In addition to performing a triangulation, the function also automatically
+calls updateNeighIdxs and getCircumcenterIndices/
+*/
 void DelaunayMD::globalTriangulationCGAL(bool verbose)
     {
     GlobalFixes +=1;
@@ -365,8 +369,11 @@ void DelaunayMD::updateNeighIdxs()
     NeighIdxNum = idx;
     };
 
-//converts the neighbor list data structure into a list of the three particle indices defining all of the circumcenters in the triangulation
-//keeping this version of the topology on the GPU allows for fast testing of what points need to be retriangulated.
+/*!
+Converts the neighbor list data structure into a list of the three particle indices defining
+all of the circumcenters in the triangulation. Keeping this version of the topology on the GPU
+allows for fast testing of what points need to be retriangulated.
+*/
 void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
     {
     ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
@@ -412,7 +419,10 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
         };
     };
 
-//given a list of particle indices that need to be repaired, call CGAL to figure out their neighbors and then update the relevant data structures
+/*!
+Given a list of particle indices that need to be repaired, call CGAL to figure out their neighbors
+and then update the relevant data structures.
+*/
 void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     {
     int fixes = fixlist.size();
@@ -491,8 +501,13 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     getCircumcenterIndices();
     };
 
-//call the GPU to test each circumcenter to see if it is still empty (i.e., how much of the triangulation from the last time step is still valid?)
-//Note that because gpu_test_circumcenters *always* copies at least a single integer back and forth (to answer the question "did any circumcircle come back non-empty?" for the cpu)this function is always an implicit cuda synchronization event
+/*!
+Call the GPU to test each circumcenter to see if it is still empty (i.e., how much of the
+triangulation from the last time step is still valid?). Note that because gpu_test_circumcenters
+*always* copies at least a single integer back and forth (to answer the question "did any
+circumcircle come back non-empty?" for the cpu) this function is always an implicit cuda
+synchronization event. At least until non-default streams are added to the code.
+*/
 void DelaunayMD::testTriangulation()
     {
     //first, update the cell list
@@ -525,7 +540,12 @@ void DelaunayMD::testTriangulation()
                            );
     };
 
-//perform the same check on the CPU... because of the cost of checking circumcircles and the relatively poor performance of the 1-ring calculation in DelaunayLoc, it is sometimes better to just re-triangulate the entire point set with CGAL. At the moment that is the default behavior of the cpu branch
+/*!
+perform the same check on the CPU... because of the cost of checking circumcircles and the
+relatively poor performance of the 1-ring calculation in DelaunayLoc, it is sometimes better
+to just re-triangulate the entire point set with CGAL. At the moment that is the default
+behavior of the cpu branch.
+*/
 void DelaunayMD::testTriangulationCPU()
     {
     anyCircumcenterTestFailed=0;

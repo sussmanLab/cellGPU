@@ -4,7 +4,10 @@
 
 #include "DelaunayCGAL.h"
 using namespace std;
-
+/*!
+\param V a vector of pairs (Delaunay::Lpoint, particle index)
+\param neighs the desired output: a CW-ordered list of the particle indices that neighbor V[0]
+*/
 bool DelaunayCGAL::LocalTriangulation(const vector<pair<LPoint,int> > &V, vector<int> & neighs)
     {
     neighs.clear();
@@ -18,13 +21,13 @@ bool DelaunayCGAL::LocalTriangulation(const vector<pair<LPoint,int> > &V, vector
     LPoint p=V[0].first;
 
     face= T.locate(p);
-    
+
     if(face ==NULL)
         return false;
 
     if (face->vertex(0)->info()==0)
         li = 0;
-    else if (face->vertex(1)->info()==0) 
+    else if (face->vertex(1)->info()==0)
         li = 1;
     else if (face->vertex(2)->info()==0)
         li = 2;
@@ -46,7 +49,13 @@ bool DelaunayCGAL::LocalTriangulation(const vector<pair<LPoint,int> > &V, vector
     return true;
 
     };
+/*!
+Perform a periodic triangulation in a SQUARE domain
+\param V A complete set of the points to be triangulated along with their indices
+\param size the side length of the square periodic domain
 
+After the routine is called, the class member allneighs will store a list of particle neighbors, each sorted in CW order
+*/
 void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, Dscalar size)
     {
     int vnum = V.size();

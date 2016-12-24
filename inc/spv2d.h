@@ -127,15 +127,8 @@ class SPV2D : public DelaunayMD
         //!Set cells to different "type"
         void setCellType(vector<int> &types);
         //!A specialty function for setting cell types within a central ellipse to type 0, and those outside to type 1
-        /*/
-         * \param frac is fraction of area for the ellipse to take up
-         * \param aspectRatio is (r_x/r_y)
-         */
         void setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio);
         //!A specialty function for setting cells within a central strip (surface normal to x) to type 0, and others to type 1
-        /*/
-         * \param frac is fraction of area for the strip to occupy
-         */
         void setCellTypeStrip(Dscalar frac);
 
         //!Set the time between spatial sorting operations.
