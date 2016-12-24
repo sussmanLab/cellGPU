@@ -1,19 +1,7 @@
 #ifndef HILBERTSORT
 #define HILBERTSORT
 
-///
-/*
-This structure can help sort scalar2's according to their position along a hilbert curve of order M... some code straight from wikipedia!
-*/
-///
-
 #include "std_include.h"
-#include <cmath>
-#include <vector>
-#include "cuda.h"
-#include "vector_types.h"
-#include "vector_functions.h"
-
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
@@ -22,13 +10,21 @@ This structure can help sort scalar2's according to their position along a hilbe
 #endif
 
 
+/*!
+This structure can help sort scalar2's according to their position along a hilbert curve of order M...
+This sorting can improve data locality (i.e. particles that are close to each other in physical space reside
+close to each other in memory). This is a small boost for CPU-based code, but can be very important
+for the efficiency of GPU-based execution.
+Some of the code here is straight from wikipedia!
+*/
+//!Spatially sort points in 2D according to a 1D Hilbert curve
 struct HilbertSorter
     {
     private:
-        gpubox box;
-        int M;
+        gpubox box; //!<A box to put the particles in the unit square for easy sorting
+        int M;      //!<The integer order of the Hilbert curve to use
     public:
-        //the only constructor requires a box
+        //!The only constructor requires a box
         HOSTDEVICE HilbertSorter(gpubox Box)
             {
             Dscalar x11,x12,x21,x22;
@@ -44,11 +40,13 @@ struct HilbertSorter
                 };
             setOrder((int)min(30,mm+4));
             }
+
         //some functions to help out...
-        //set the order of the desired HC
+
+        //!Set the order of the desired HC
         HOSTDEVICE void setOrder(int m){M=m;};
 
-        //hand-write a function to take integer powers of integers
+        //!A hand-written function to take integer powers of integers
         HOSTDEVICE int int_power(int i, int j)
             {
             int value;
@@ -73,7 +71,7 @@ struct HilbertSorter
             return value;
             };
 
-            //rotate
+            //!Rotate...from wikipedia
             HOSTDEVICE void HilbertRotate(int n, int &x, int &y, int rx, int ry)
                 {
                 int t;
@@ -93,9 +91,8 @@ struct HilbertSorter
                 return;
                 };
 
-
-
-        //converts a real(x,y) pair to a nearby integer pair, and then gets the 1D hilbert coordinate of that point. The number of cells is 2^M (M is the index of the hc))
+        //!Convert a real(x,y) pair to a nearby integer pair, and then gets the 1D Hilbert coordinate of that point.
+        //!The number of cells is 2^M (M is the index of the HC))
         HOSTDEVICE int getIdx(Dscalar2 point)
             {
 
@@ -108,7 +105,7 @@ struct HilbertSorter
             x = (int) floor(n*virtualPos.x);
             y = (int) floor(n*virtualPos.y);
 
-
+            //The following bit-operating code is from wikipedia
             int d = 0;
             int  rx,ry;
             for (int s = n/2; s > 0; s= s/2)
@@ -123,10 +120,6 @@ struct HilbertSorter
             };
     };
 
-
-// undefine HOSTDEVICE so we don't interfere with other headers
 #undef HOSTDEVICE
 
-
 #endif
-

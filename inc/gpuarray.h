@@ -1,107 +1,100 @@
-//This file is based on GPUArray.h, from the HOOMD-Blue simulation package.
-//It is, however, simplified. It takes care of cuda memory copying for templated arrays.
-//A flag (default to false) when declaring a GPUArray controls whether the memory is HostRegistered
-//but only handles synchronous copy operatations (no Asynch, no HostRegister, etc.)
-//It is also only for 1D arrays of data
-
-
 #ifdef NVCC
-#error This header cannot be compiled by nvcc
+#error This header cannot be compiled by nvcc?
 #endif
 #ifndef GPUARRAY_H
 #define GPUARRAY_H
 
 // for vector types
+#include "std_include.h"
 #include <cuda_runtime.h>
 #include <cuda.h>
 
-#include <string.h>
-#include <iostream>
-#include <stdexcept>
-#include <algorithm>
-#include <stdlib.h>
 
-//first, declare access_location settings (can be host or device, as in HOOMD version)
+//!A structure for declaring where we want to access data
 struct access_location
     {
+    //!An enumeration of possibilities
     enum Enum
         {
-        host,   //We want to access the data on the CPU
-        device  //We want to access the data on the GPU
+        host,   //!<We want to access the data on the CPU
+        device  //!<We want to access the data on the GPU
         };
     };
 
-//where is the data currently?
+//!A structure for declaring where the current version of the data is
 struct data_location
     {
+    //!An enumeration of possibilities
     enum Enum
         {
-        host,       // data was last modified on host
-        device,     // data was last modified on device
-        hostdevice  // data is current on both host and device
+        host,       //!< data was last modified on host
+        device,     //!< data was last modified on device
+        hostdevice  //!< data is current on both host and device
         };
     };
 
-//How do we want to access the data (read, write, overwrite?)
+//!A structure for declaring how we want to access data (read, write, overwrite?)
 struct access_mode
     {
+    //!An enumeration of possibilities
     enum Enum
         {
-        read,       // we just want to read
-        readwrite,  // we intend to both read and write
-        overwrite   // we will completely overwrite all of the data
+        read,       //!< we just want to read
+        readwrite,  //!< we intend to both read and write
+        overwrite   //!< we will completely overwrite all of the data
         };
     };
 
-//declare the GPUArray class
+/*!This class and accessor are based on GPUArray.h, from the HOOMD-Blue simulation package.
+It is, however, simplified. It takes care of cuda memory copying for templated arrays.
+A flag (default to false) when declaring a GPUArray controls whether the memory is HostRegistered
+but only handles synchronous copy operatations (no Asynch, no HostRegister, etc.)
+It is also only for 1D arrays of data. Importantly, the user accesses and handles data through the ArrayHandle class.
+*/
+//!A class for handling data simultaneously on the CPU and GPU
 template<class T> class GPUArray;
 
-//define the ArrayHandle to, well, handle the data in the GPUArray
-//as in HOOMD version, this is intended to be used within a limiting scope
+///The ArrayHandle, well, handles the data in the GPUArray. Given, e.g., an ArrayHandle<int> h(gpuarray,access_location::host, access_mode::readwrite); The user would access one of the integers via h.data[i];
+///As in HOOMD version, this is intended to be used within a limiting scope
 template<class T> class ArrayHandle
     {
     public:
-        //the only constructor takes a reference to the GPUArray, a location and a mode
+        //!the only constructor takes a reference to the GPUArray, a location and a mode
         inline ArrayHandle(const GPUArray<T>& gpu_array, const access_location::Enum location = access_location::host,
                            const access_mode::Enum mode = access_mode::readwrite);
-
         inline ~ArrayHandle();
 
-        T* const data;          // a pointer to the GPUArray's data
+        T* const data;          //!< a pointer to the GPUArray's data
 
     private:
-        const GPUArray<T>& gpu_array;
+        const GPUArray<T>& gpu_array; //!< The GPUarray that the Handle was initialized with
     };
 
-
-
-
 //GPUArray, a class for managing a 1d array of elements on the GPU and the CPU simultaneously. The array has a flat data pointer with some number of elements, keeping a copy on both the host and device. An ArrayHandle instance allows access to the data, which either simply returns the pointer (if the data was last changed from the same location) or first copied over and then returned.
-//
 template<class T> class GPUArray
     {
     public:
         GPUArray(bool _register=false);
+        //! The most common constructor takes in the desired size of the array
         GPUArray(unsigned int num_elements,bool _register=false);
         virtual ~GPUArray();
 
-
         GPUArray(const GPUArray& from);
         GPUArray& operator=(const GPUArray& rhs);
-
+        //!Swap two GPUarrays efficiently
         inline void swap(GPUArray& from);
-
+        //!Get the size of the array
         unsigned int getNumElements() const
             {
             return Num_elements;
             }
-
+        //! Switch from simple memcpys to HostRegister pinned memory copies. Not currently fully functional
         void setRegistered(bool _reg)
             {
             RegisterArray=_reg;
             cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
             };
-
+        //!Resize the array...performs operations on both the CPU and GPU
         virtual void resize(unsigned int num_elements);
 
     protected:
@@ -122,11 +115,9 @@ template<class T> class GPUArray
 
     protected:
 #ifdef ENABLE_CUDA
-        mutable T* d_data; //pointer to memory on device
+        mutable T* d_data; //!<pointer to memory on device
 #endif
-        mutable T* h_data; //pointer to memory on host
-
-
+        mutable T* h_data; //!<pointer to memory on host
 
     private:
         inline void allocate();
@@ -145,15 +136,9 @@ template<class T> class GPUArray
         friend class ArrayHandle<T>;
     };
 
-
-
-
-
-
-//******************************************
+// ******************************************
 // ArrayHandle implementation
 // *****************************************
-
 template<class T> ArrayHandle<T>::ArrayHandle(const GPUArray<T>& _gpu_array, const access_location::Enum location,
                                               const access_mode::Enum mode) :
         data(_gpu_array.acquire(location, mode)), gpu_array(_gpu_array)
@@ -165,8 +150,7 @@ template<class T> ArrayHandle<T>::~ArrayHandle()
     gpu_array.Acquired = false;
     }
 
-
-//******************************************
+// ******************************************
 // GPUArray implementation
 // *****************************************
 template<class T> GPUArray<T>::GPUArray(bool _register) :
@@ -190,12 +174,10 @@ template<class T> GPUArray<T>::GPUArray(unsigned int num_elements, bool _registe
     memclear();
     }
 
-
 template<class T> GPUArray<T>::~GPUArray()
     {
     deallocate();
     }
-
 
 template<class T> GPUArray<T>::GPUArray(const GPUArray& from) : Num_elements(from.Num_elements), 
         Acquired(false), Data_location(data_location::host),
@@ -225,7 +207,7 @@ template<class T> GPUArray<T>& GPUArray<T>::operator=(const GPUArray& rhs)
 
         // copy over basic elements
         Num_elements = rhs.Num_elements;
-        
+
         // initialize state variables
         Data_location = data_location::host;
 
@@ -244,13 +226,11 @@ template<class T> GPUArray<T>& GPUArray<T>::operator=(const GPUArray& rhs)
     return *this;
     }
 
-
-/*
+/*!
     a.swap(b) is:
         GPUArray c(a);
         a = b;
         b = c;
-
     It just swaps internal pointers
 */
 template<class T> void GPUArray<T>::swap(GPUArray& from)
@@ -263,8 +243,6 @@ template<class T> void GPUArray<T>::swap(GPUArray& from)
 #endif
     std::swap(h_data, from.h_data);
     }
-
-
 
 template<class T> void GPUArray<T>::allocate()
     {
@@ -285,7 +263,6 @@ template<class T> void GPUArray<T>::allocate()
     cudaMalloc(&d_data, Num_elements*sizeof(T));
 #endif
     }
-
 
 template<class T> void GPUArray<T>::deallocate()
     {
@@ -345,9 +322,8 @@ template<class T> void GPUArray<T>::memcpyHostToDevice() const
     }
 #endif
 
-
-/*
-    acquire does all the work, keeping track of when data needs to be copied, etc.
+/*!
+    Acquire does all the work, keeping track of when data needs to be copied, etc.
     It is called by the ArrayHandle class
 */
 template<class T> T* GPUArray<T>::acquire(const access_location::Enum location, const access_mode::Enum mode) const
@@ -483,7 +459,6 @@ template<class T> T* GPUArray<T>::resizeHostArray(unsigned int num_elements)
     if(RegisterArray)
         cudaHostRegister(h_tmp,Num_elements*sizeof(T),cudaHostRegisterDefault);
 #endif
-
 
     // clear memory
     memset(h_tmp, 0, sizeof(T)*num_elements);

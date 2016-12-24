@@ -1,58 +1,60 @@
 #ifndef GPUBOX
 #define GPUBOX
 
-///////////////////////
-//Periodic Box for the gpu
-//
-//Description
-//      This is a class that defines periodic boundary conditions in 2d
-//
-//Implements
-//      Computes minimal distances using periodic boundary conditions.
-//      Displaces particles while respecting the periodic boundary conditions.
 using namespace std;
 #include "std_include.h"
-#include <cmath>
-#include <vector>
-#include "cuda.h"
-#include "vector_types.h"
-#include "vector_functions.h"
-
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
-
+/*!
+gpubox  periodic boundary conditions in 2D, computing minimum distances between
+periodic images, displacing particles and putting them back in the central unit cell,
+etc.
+*/
+//!A simple box defining a 2D periodic domain
 struct gpubox
     {
     private:
+        //!The transformation matrix defining the periodic box
         Dscalar x11,x12,x21,x22;//the transformation matrix defining the box
         Dscalar halfx11,halfx22;
+        //!The inverse of the transformation matrix
         Dscalar xi11,xi12,xi21,xi22;//it's inverse
         bool isSquare;
 
 
     public:
         HOSTDEVICE gpubox(){isSquare = false;};
+        //!Construct a rectangular box containing the unit cell ((0,0),(x,0),(x,y),(0,y))
         HOSTDEVICE gpubox(Dscalar x, Dscalar y){setSquare(x,y);};
+        //!Construct a non-rectangular box
         HOSTDEVICE gpubox(Dscalar a, Dscalar b, Dscalar c, Dscalar d){setGeneral(a,b,c,d);};
+        //!Get the dimensions of the box
         HOSTDEVICE void getBoxDims(Dscalar &xx, Dscalar &xy, Dscalar &yx, Dscalar &yy)
             {xx=x11;xy=x12;yx=x21;yy=x22;};
+        //!Check if the box is rectangular or not (as certain optimizations can then be used)
         HOSTDEVICE bool isBoxSquare(){return isSquare;};
+        //!Get the inverse of the box transformation matrix
         HOSTDEVICE void getBoxInvDims(Dscalar &xx, Dscalar &xy, Dscalar &yx, Dscalar &yy)
             {xx=xi11;xy=xi12;yx=xi21;yy=xi22;};
 
+        //!Set the box to some new rectangular specification
         HOSTDEVICE void setSquare(Dscalar x, Dscalar y);
+        //!Set the box to some new generic specification
         HOSTDEVICE void setGeneral(Dscalar a, Dscalar b,Dscalar c, Dscalar d);
 
+        //!Take the point and put it back in the unit cell
         HOSTDEVICE void putInBoxReal(Dscalar2 &p1);
-        HOSTDEVICE void putInBox(Dscalar2 &vp);
+        //! Take a point in the unit square and find its position in the box
         HOSTDEVICE void Trans(const Dscalar2 &p1, Dscalar2 &pans);
+        //! Take a point in the box and find its position in the unit square
         HOSTDEVICE void invTrans(const Dscalar2 p1, Dscalar2 &pans);
+        //!Calculate the minimum distance between two points
         HOSTDEVICE void minDist(const Dscalar2 &p1, const Dscalar2 &p2, Dscalar2 &pans);
-
+        //!Move p1 by the amount disp, then put it in the box
         HOSTDEVICE void move(Dscalar2 &p1, const Dscalar2 &disp);
 
         HOSTDEVICE void operator=(gpubox &other)
@@ -61,6 +63,8 @@ struct gpubox
             other.getBoxDims(b11,b12,b21,b22);
             setGeneral(b11,b12,b21,b22);
             };
+    private:
+        HOSTDEVICE void putInBox(Dscalar2 &vp);
     };
 
 void gpubox::setSquare(Dscalar x, Dscalar y)

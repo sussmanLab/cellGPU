@@ -12,8 +12,6 @@
 #include <CGAL/Triangulation_2.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
-#include <cassert>
-#include <fstream>
 using namespace std;
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -41,17 +39,21 @@ typedef PDT::Vertex_handle     Vertex_handle;
 typedef PDT::Locate_type       Locate_type;
 typedef PDT::Face_handle       Face_handle;
 typedef PDT::Vertex_circulator Vertex_circulator;
-
+/*!
+A class for interfacing with the CGAL library. In particular, this lets the user access the
+functionality of the 2D periodic and non-periodic schemes for performing a Delaunay Triangulation.
+ */
 class DelaunayCGAL
     {
     private:
         int N;
 
     public:
-        vector< vector<int> > allneighs;
+        vector< vector<int> > allneighs; //!<The list of neighbors of every point in the periodic triangulation
 
-        //void PeriodicTriangulation(vector<Point> &points,Dscalar size);
+        //! Given a vector of points (in the form of pair<PDT::Point p ,int index>), fill the allneighs structure with the neighbor list
         void PeriodicTriangulation(vector<pair<Point,int> > &points,Dscalar size);
+        //! given a similar vector of points, calculate the neighbors of the first point in a non-periodic domain.
         bool LocalTriangulation(const vector<pair<LPoint,int> > &points, vector<int> &neighs);
 
     };

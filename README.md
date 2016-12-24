@@ -4,6 +4,8 @@ DelGPU (''DELayed froGPUnch:Delaunay on GPUS) implements highly parallelizable a
 
 The primary engine -- the DelaunayMD class -- is a hybrid CPU/GPU algorithm intended to be used in ''molecular dynamics'' simulations where the particles are either Delaunay vertices or are derivable from them (as in the self-propelled Voronoi models of cells). It specializes in situations where the entire triangulation does not need to be recomputed at every time step, but rather only a small portion of the triangulation is to be repaired at a given time.
 
+Documentation of the code is maintained via Doxygen... go to the "/doc" directory, type "doxygen Doxyfile", and go from there.
+
 
 ##Basic idea
 
@@ -31,6 +33,10 @@ The following describes the basic operation of the DelaunayMD class
 * DelaunayMD -- A core engine that operates as described above in ''Basic idea''
 
 * SPV2D -- A child class of DelaunayMD that implements the 2D SPV model forces.
+
+##CURRENT LIMITATION
+
+At the moment everything is optimized assuming the box is square. For this assumption to change, many edits would need to be made to the DelaunayCGAL and especially gpucell class. Also the grid class, and some changes in how higher-level classes interact with this objects.
 
 ##CITATIONS
 

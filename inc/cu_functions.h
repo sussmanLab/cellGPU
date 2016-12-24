@@ -1,21 +1,23 @@
 #ifndef CUFUNCTIONS_H
 #define CUFUNCTIONS_H
+
+
+#include "std_include.h"
+#include "Matrix.h"
+
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-#include "std_include.h"
-#include "Matrix.h"
-
-//calculates the determinant of a 2x2 matrix
+//!Calculate the determinant of a 2x2 matrix
 HOSTDEVICE Dscalar Det2x2(const Dscalar &x11,const Dscalar &x12, const Dscalar &x21, const Dscalar &x22)
     {
     return x11*x22-x12*x21;
     };
 
-//calculates the circumcenter of the circle passing through x1, x2 and the origin
+//!Calculates the circumcenter of the circle passing through x1, x2 and the origin
 HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, Dscalar2 &xc)
     {
     Dscalar x1norm2,x2norm2,denominator;
@@ -27,7 +29,7 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, Dscalar2 &x
     xc.y = denominator * Det2x2(x1.x,x1norm2,x2.x,x2norm2);
     };
 
-//calculates the circumcenter through x1,x2,x3
+//!Calculates the circumcenter through x1,x2,x3
 HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscalar2 &x3, Dscalar2 &xc)
     {
     Dscalar amcx,amcy,bmcx,bmcy,amcnorm2,bmcnorm2,denominator;
@@ -46,7 +48,7 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
 
     };
 
-//get the circumcenter and radius, given one of the points on the circumcircle is the origin...
+//!Get the circumcenter and radius, given one of the points on the circumcircle is the origin...
 HOSTDEVICE void Circumcircle(const Dscalar2 &x1, const Dscalar2 &x2, Dscalar2 &xc, Dscalar &radius)
     {
     Circumcenter(x1,x2,xc);
@@ -55,6 +57,7 @@ HOSTDEVICE void Circumcircle(const Dscalar2 &x1, const Dscalar2 &x2, Dscalar2 &x
     radius = sqrt(dx*dx+dy*dy);
     };
 
+//!Get the circumcenter and radius given three distinct points on the circumcirle
 HOSTDEVICE void Circumcircle(const Dscalar2 &x1, const Dscalar2 &x2, const Dscalar2 &x3, Dscalar2 &xc, Dscalar &radius)
     {
     Circumcenter(x1,x2,x3,xc);
@@ -63,21 +66,20 @@ HOSTDEVICE void Circumcircle(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
     radius = sqrt(dx*dx+dy*dy);
     };
 
-
+//!The dot product between two vectors of length two.
 HOSTDEVICE Dscalar dot(const Dscalar2 &p1, const Dscalar2 &p2)
     {
     return p1.x*p2.x+p1.y*p2.y;
     };
 
 
-
-//calculate the area of a triangle with a vertex at the origin
+//!Calculate the area of a triangle with a vertex at the origin
 HOSTDEVICE Dscalar TriangleArea(const Dscalar2 &p1, const Dscalar2 &p2)
     {
     return abs(0.5*(p1.x*p2.y-p1.y*p2.x));
     };
 
-//calculate matrix of derivatives
+//!Calculate matrix of derivatives needed in the 2D SPV model... this is the change in a voronoi vertex given a change of a Delaunay vertex at the origin, given that rij and rik tell you where the other two Delaunay vertices are.
 HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     {
     Matrix2x2 Id;
@@ -128,6 +130,7 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
 
 #ifdef ENABLE_CUDA
 #include "cuda_runtime.h"
+//!Get basic stats about the chosen GPU (if it exists)
 __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
     {
     int nDev;

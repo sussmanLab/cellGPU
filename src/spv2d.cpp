@@ -95,7 +95,9 @@ void SPV2D::spatialSorting()
     reIndexArray(CellType);
     };
 
-//resize any lists that depend on neighMax
+/*!
+As the code is modified, all GPUArrays whose size depend on neighMax should be added to this function
+*/
 void SPV2D::resetLists()
     {
     VoroCur.resize(neighMax*N);
@@ -155,7 +157,11 @@ bool SPV2D::getDelSets(int i)
     return true;
     };
 
-//set all cell K_A, K_P preferences to uniform values
+/*!
+set all cell K_A, K_P preferences to uniform values.
+PLEASE NOTE that as an optimization this data is not actually used at the moment,
+but the code could be trivially altered to use this
+*/
 void SPV2D::setModuliUniform(Dscalar KA, Dscalar KP)
     {
     Moduli.resize(N);
@@ -200,7 +206,10 @@ void SPV2D::setCellType(vector<int> &types)
         };
     };
 
-//a specialty function...set all cells within an ellipse of given aspect ratio occupying a given fraction of the box area to one type, and everything else to a different type
+/*!
+ * \param frac is fraction of area for the ellipse to take up
+ * \param aspectRatio is (r_x/r_y)
+ */
 void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
     {
     Dscalar x11,x12,x21,x22;
@@ -227,7 +236,9 @@ void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
         };
     };
 
-//same thing, but for particles in a strip geometry
+/*!
+ * \param frac is fraction of area for the strip to occupy
+ */
 void SPV2D::setCellTypeStrip(Dscalar frac)
     {
     Dscalar x11,x12,x21,x22;
@@ -249,7 +260,10 @@ void SPV2D::setCellTypeStrip(Dscalar frac)
         };
     };
 
-//set all cell v0 and Dr values to the same thing
+/*!
+\param v0new the new value of velocity for all cells
+\param drnew the new value of the rotational diffusion of cell directors for all cells
+*/
 void SPV2D::setv0Dr(Dscalar v0new,Dscalar drnew)
     {
     Motility.resize(N);
@@ -266,7 +280,10 @@ void SPV2D::setv0Dr(Dscalar v0new,Dscalar drnew)
         };
     };
 
-//set v0 and Dr per cell by passing vectors of desired motility parameters
+/*!
+\param v0s the per-particle vector of what all velocities will be
+\param drs the per-particle vector of what all rotational diffusions will be
+*/
 void SPV2D::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs)
     {
     Motility.resize(N);
@@ -278,7 +295,9 @@ void SPV2D::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs)
         };
     };
 
-//set a list of particles to be excluded (forces on them will be set to zero, and motility is set to zero)
+/*!
+\param exes a list of per-particle indications of whether a particle should be excluded (exes[i] !=0) or not/
+*/
 void SPV2D::setExclusions(vector<int> &exes)
     {
     particleExclusions=true;
@@ -300,7 +319,11 @@ void SPV2D::setExclusions(vector<int> &exes)
         };
     };
 
-//initialize the cuda RNG
+/*!
+\param i the value of the offset that should be sent to the cuda RNG...
+This is one part of what would be required to support reproducibly being able to load a state
+from a databse and continue the dynamics in the same way every time. This is not currently supported.
+*/
 void SPV2D::setCurandStates(int i)
     {
     ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
@@ -316,12 +339,10 @@ void SPV2D::setCurandStates(int i)
 
     };
 
-/////////////////
-//Dynamics
-/////////////////
-
-
-//generic function to call the basic parts of a time step
+/*!
+Call all relevant functions to advance the system one time step; every sortPeriod also call the
+spatial sorting routine.
+*/
 void SPV2D::performTimestep()
     {
     Timestep += 1;
@@ -344,7 +365,10 @@ void SPV2D::performTimestep()
         spatialSorting();
     };
 
-//if forces have already been computed, displace particles according to net force and motility, and rotate the cell directors
+/*!
+if forces have already been computed, displace particles according to net force and motility,
+and rotate the cell directors via a cuda call
+*/
 void SPV2D::DisplacePointsAndRotate()
     {
 
@@ -366,7 +390,10 @@ void SPV2D::DisplacePointsAndRotate()
 
     };
 
-//Do the same thing, but on the CPU
+/*!
+if forces have already been computed, displace particles according to net force and motility,
+and rotate the cell directors via the CPU
+*/
 void SPV2D::calculateDispCPU()
     {
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
@@ -428,7 +455,11 @@ void SPV2D::performTimestepCPU()
         };
     };
 
-//compute force sets on the gpu
+/*!
+If the geoemtry has already been calculated, call the right function to calculate the
+contribution to the net force on every particle from each of its voronoi vertices via
+a cuda call
+*/
 void SPV2D::ComputeForceSetsGPU()
     {
     if(!useTension)
@@ -437,7 +468,10 @@ void SPV2D::ComputeForceSetsGPU()
         computeSPVForceSetsWithTensionsGPU();
     };
 
-//add up the already-computed force sets on the gpu
+/*!
+If the force_sets are already computed, call the right function to add them up to get the
+net force per particle via a cuda call
+*/
 void SPV2D::SumForcesGPU()
     {
     if(!particleExclusions)
@@ -460,10 +494,10 @@ void SPV2D::performTimestepGPU()
         {
         testAndRepairTriangulation();
 
-        if(Fails == 1)
+        if(anyCircumcenterTestFailed == 1)
             {
             //maintain the auxilliary lists for computing forces
-            if(FullFails || neighMaxChange)
+            if(completeRetriangulationPerformed || neighMaxChange)
                 {
                 if(neighMaxChange)
                     {
@@ -502,7 +536,9 @@ void SPV2D::performTimestepGPU()
         };
     };
 
-//call a GPU routine to compute cell area and perimeters
+/*!
+If the topology is up-to-date on the GPU, calculate all cell areas, perimenters, and voronoi neighbors
+*/
 void SPV2D::computeGeometryGPU()
     {
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
@@ -520,11 +556,12 @@ void SPV2D::computeGeometryGPU()
                         d_vc.data,
                         d_vln.data,
                         N, n_idx,Box);
-
-
     };
 
-//if force sets have been computed on the GPU, add them up
+/*!
+If the force_sets are already computed, add them up to get the net force per particle
+via a cuda call
+*/
 void SPV2D::sumForceSets()
     {
 
@@ -539,7 +576,10 @@ void SPV2D::sumForceSets()
                     N,n_idx);
     };
 
-//same thing, but with particle exclusions
+/*!
+If the force_sets are already computed, add them up to get the net force per particle
+via a cuda call, assuming some particle exclusions have been defined
+*/
 void SPV2D::sumForceSetsWithExclusions()
     {
 
@@ -559,8 +599,10 @@ void SPV2D::sumForceSetsWithExclusions()
     };
 
 
-//compute force sets on the GPU
-//these are the contributions to the net force on particle "i" from each of particle i's voronoi vertices
+/*!
+Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
+vertices
+*/
 void SPV2D::computeSPVForceSetsGPU()
     {
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
@@ -590,7 +632,10 @@ void SPV2D::computeSPVForceSetsGPU()
                     NeighIdxNum,n_idx,Box);
     };
 
-//same thing, but add a tension between cells of different type
+/*!
+Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
+vertices, assuming that there are additional tension terms added between cells of different indices
+*/
 void SPV2D::computeSPVForceSetsWithTensionsGPU()
     {
     ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
@@ -683,10 +728,12 @@ void SPV2D::computeGeometryCPU()
         };
     };
 
-//compute force on particle i on the CPU
+/*!
+\param i The particle index for which to compute the net force
+*/
 void SPV2D::computeSPVForceCPU(int i)
     {
-    Dscalar Pthreshold = 1e-8;
+    Dscalar Pthreshold = THRESHOLD;
 
     //read in all the data we'll need
     ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
@@ -890,10 +937,15 @@ void SPV2D::computeSPVForceCPU(int i)
     h_f.data[i].y=forceSum.y;
     };
 
-//same thing, but with additional tension terms between cells of different types
+/*!
+\param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
+This function should be deprecated and included in the above CPU function...For the GPU it makes
+sense to optimize by defining different functions, but not on the CPU. This function is legacy testing
+code, basically.
+*/
 void SPV2D::computeSPVForceWithTensionsCPU(int i,bool verbose)
     {
-    Dscalar Pthreshold = 1e-8;
+    Dscalar Pthreshold = THRESHOLD;
 
     //read in all the data we'll need
     ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
@@ -1191,7 +1243,7 @@ void SPV2D::meanForce()
         fx += h_f.data[i].x;
         fy += h_f.data[i].y;
         };
-    printf("Mean force = (%e,%e)\n" ,fx,fy);
+    printf("Mean force = (%e,%e)\n" ,fx/N,fy/N);
     };
 
 //a utility/testing function, report the current average value of the shape parameter P/sqrt(A)

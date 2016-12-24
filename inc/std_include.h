@@ -13,6 +13,7 @@
 #include <cmath>
 #include <algorithm>
 #include <ctype.h>
+#include <random>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -22,6 +23,9 @@
 #include <sstream>
 #include <vector>
 #include <sys/time.h>
+#include <string.h>
+#include <stdexcept>
+#include <cassert>
 
 using namespace std;
 

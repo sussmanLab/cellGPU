@@ -7,6 +7,7 @@
 #include "indexer.h"
 #include "gpubox.h"
 
+//!Test an array of circumcenters for the empty-circumcircle property
 bool gpu_test_circumcenters(
                             int *d_repair,
                             int3 *d_ccs,
@@ -24,7 +25,7 @@ bool gpu_test_circumcenters(
                             int &fail
                             );
 
-
+//!Move particles according to a set of displacements, and put them back in the unit cell
 bool gpu_move_particles(Dscalar2 *d_points,
                     Dscalar2 *d_disp,
                     int N,
