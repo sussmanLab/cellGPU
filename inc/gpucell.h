@@ -17,29 +17,39 @@ using namespace std;
 class cellListGPU
     {
     public:
+        //!Blank constructor
         cellListGPU(){};
+        //!construct with a given set of points
         cellListGPU(vector<Dscalar> &points);
+        //! constructor with points, a box, and a size for the underlying grid
         cellListGPU(Dscalar a, vector<Dscalar> &points, gpubox &bx);
 
+        //!Set the object's points to a given vector
         void setParticles(const vector<Dscalar> &points);
+        //!Set the objects box object
         void setBox(gpubox &bx);
+        //!Set the number of particles to put in the buckets
         void setNp(int nn){Np=nn;};
 
         //!call setGridSize if the particles and box already set, as this doubles as a general initialization of data structures
         void setGridSize(Dscalar a);
-        Dscalar getGridSize() {return boxsize;};
+        //!Get am upper bound on the maximum number of particles in a given bucket
         int getNmax() {return Nmax;};
+        //!The number of cells in the x-direction
         int getXsize() {return xsize;};
+        //!The number of cells in the y-direction
         int getYsize() {return ysize;};
+        //!Returns the length of the square that forms the base grid size
         Dscalar getBoxsize() {return boxsize;};
 
         //!Initialization and helper
         void resetCellSizes();
-
+        //!Return the array of particles per cell
         const GPUArray<unsigned int>& getCellSizeArray() const
             {
             return cell_sizes;
             };
+        //!Return the array of cell indices in the different cells
         const GPUArray<int>& getIdxArray() const
             {
             return idxs;

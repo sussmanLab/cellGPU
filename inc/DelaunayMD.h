@@ -20,12 +20,13 @@
  * those triangulations are valid on either the CPU or GPU, and locally repair
  * invalid triangulations on the CPU.
  */
+//! Perform and test triangulations in an MD setting
 class DelaunayMD
     {
     protected:
-        int N;                       //!The number of vertices
-        cellListGPU celllist;        //!The associated cell list structure
-        Dscalar cellsize;            //!The size of the cell list's underlying grid
+        int N;                       //!<The number of vertices
+        cellListGPU celllist;        //!<The associated cell list structure
+        Dscalar cellsize;            //!<The size of the cell list's underlying grid
 
         //!The number of neighbors each cell has
         GPUArray<int> neigh_num;
@@ -36,22 +37,20 @@ class DelaunayMD
         //!An upper bound for the maximum number of neighbors that any cell has
         int neighMax;
 
-        //!An array that holds (particle, neighbor_number) info to avoid intra-warp divergence in GPU-based force calculations
-        //!that might be used by child classes
+        //!An array that holds (particle, neighbor_number) info to avoid intra-warp divergence in GPU-based force calculations that might be used by child classes
         GPUArray<int2> NeighIdxs;
         //!A utility integer to help with NeighIdxs
         int NeighIdxNum;
 
         //!A data structure that holds the indices of particles forming the circumcircles of the Delaunay Triangulation
         GPUArray<int3> circumcenters;
-        //!The number of circumcircles...for a periodic system, this should never change. This provides one check that
-        //! local updates to the triangulation are globally consistent
+        //!The number of circumcircles...for a periodic system, this should never change. This provides one check that local updates to the triangulation are globally consistent
         int NumCircumCenters;
 
         //!A flag that can be accessed by child classes... serves as notification that any change in the network topology has occured
-        int Fails;
+        int anyCircumcenterTestFailed;
         //!A flag that notifies that a global re-triangulation has been performed
-        int FullFails;
+        int completeRetriangulationPerformed;
         //!A flag that notifies that the maximum number of neighbors may have changed, necessitating resizing of some data arrays
         bool neighMaxChange;
 
@@ -60,8 +59,12 @@ class DelaunayMD
         //!A smaller vector that, after testing the triangulation, contains the particle indices that need their local topology to be updated.
         vector<int> NeedsFixing;
 
-        //!When running on the CPU, should only global retriangulations be performed, or should local test-and-updates still be performed?
-        //!Depending on parameters simulated, performance here can be quite difference, since the circumcircle test itself is CPU expensive
+        /*!When running on the CPU, should only global retriangulations be performed,
+        or should local test-and-updates still be performed? Depending on parameters
+        simulated, performance here can be quite difference, since the circumcircle test
+        itself is CPU expensive
+        */
+        //!When true, the CPU branch will execute global retriangulations through CGAL on every time step
         bool globalOnly;
 
         //!Count the number of times that testAndRepair has been called
@@ -71,7 +74,7 @@ class DelaunayMD
 
 
     public:
-        GPUArray<Dscalar2> points;      //!The GPUArray of particle positions
+        GPUArray<Dscalar2> points;      //!<The GPUArray of particle positions
         //!the box defining the periodic domain
         gpubox Box;
         //!A flag that, when true, does the circumcenter test on the GPU
@@ -87,8 +90,9 @@ class DelaunayMD
         //!How often were global re-triangulations performed?
         int GlobalFixes;
 
+        /*!sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
+        */
         //!A map between particle index and the spatially sorted version.
-        //!sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
         vector<int> itt;
         //!A temporary structure that inverts itt
         vector<int> tti;
@@ -131,7 +135,13 @@ class DelaunayMD
         //!Get a copy of the particle positions
         void getPoints(GPUArray<Dscalar2> &ps){ps = points;};
 
-        //!Enforce CPU-only operation. Additionall, pass the global = false option to try doing the local repair scheme for the CPU-only calculation (usually slow, but in some parameter regimes this will be faster)
+        /*!
+        \param global defaults to true.
+        When global is set to true, the CPU branch will try the local repair scheme.
+        This is generally slower, but if working in a regime where things change
+        very infrequently, it may be faster.
+        */
+        //!Enforce CPU-only operation.
         void setCPU(bool global = true){GPUcompute = false;globalOnly=global;};
 
         //!construct the global periodic triangulation point-by-point using non-CGAL methods

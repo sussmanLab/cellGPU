@@ -83,7 +83,7 @@ class SPV2D : public DelaunayMD
         Dscalar deltaT;
         //!An array of integers labeling cell type...an easy way of determining if cells are different
         GPUArray<int> CellType;
-        //An array of angles (relative to \hat{x}) that the cell directors point
+        //!An array of angles (relative to \hat{x}) that the cell directors point
         GPUArray<Dscalar> cellDirectors;
         //!an array of net forces on cels
         GPUArray<Dscalar2> forces;
@@ -203,7 +203,7 @@ class SPV2D : public DelaunayMD
         void meanForce();
         //!Report the mean area per cell in the system
         void meanArea();
-        //! Report the average value of p/\sqrt{A} for the cells in the system
+        //! Report the average value of p/sqrt(A) for the cells in the system
         Dscalar reportq();
 
         //!Some function-timing-related scalars

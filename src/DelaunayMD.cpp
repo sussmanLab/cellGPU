@@ -57,7 +57,7 @@ void DelaunayMD::initializeDelMD(int n)
     resetDelLocPoints();
 
     //make a full triangulation
-    FullFails = 1;
+    completeRetriangulationPerformed = 1;
     neigh_num.resize(N);
     globalTriangulationCGAL();
     };
@@ -277,7 +277,7 @@ void DelaunayMD::fullTriangulation()
 void DelaunayMD::globalTriangulationCGAL(bool verbose)
     {
     GlobalFixes +=1;
-    FullFails = 1;
+    completeRetriangulationPerformed = 1;
     DelaunayCGAL dcgal;
     ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
     vector<pair<Point,int> > Psnew(N);
@@ -521,14 +521,14 @@ void DelaunayMD::testTriangulation()
                            Box,
                            celllist.cell_indexer,
                            celllist.cell_list_indexer,
-                           Fails
+                           anyCircumcenterTestFailed
                            );
     };
 
 //perform the same check on the CPU... because of the cost of checking circumcircles and the relatively poor performance of the 1-ring calculation in DelaunayLoc, it is sometimes better to just re-triangulate the entire point set with CGAL. At the moment that is the default behavior of the cpu branch
 void DelaunayMD::testTriangulationCPU()
     {
-    Fails=0;
+    anyCircumcenterTestFailed=0;
     if (globalOnly)
         {
         globalTriangulationCGAL();
@@ -541,7 +541,7 @@ void DelaunayMD::testTriangulationCPU()
         ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
         ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
         ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
-        Fails = 0;
+        anyCircumcenterTestFailed = 0;
         for (int nn = 0; nn < N; ++nn)
             {
             h_repair.data[nn] = 0;
@@ -557,14 +557,14 @@ void DelaunayMD::testTriangulationCPU()
             if(!good)
                 {
                 h_repair.data[nn] = 1;
-                Fails=1;
+                anyCircumcenterTestFailed=1;
                 };
             };
         };
     };
 
 //calls the relevant testing and repairing functions. increments the timestep by one
-//the call to testTriangulation will synchronize the gpu via a memcpy of "Fails" variable
+//the call to testTriangulation will synchronize the gpu via a memcpy of "anyCircumcenterTestFailed" variable
 void DelaunayMD::testAndRepairTriangulation(bool verb)
     {
     timestep +=1;
@@ -579,7 +579,7 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
         testTriangulationCPU();
         };
 
-    if(Fails == 1)
+    if(anyCircumcenterTestFailed == 1)
         {
         NeedsFixing.clear();
         ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
@@ -616,12 +616,12 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
 
         if (NeedsFixing.size() > (N/6))
             {
-            FullFails = 1;
+            completeRetriangulationPerformed = 1;
             globalTriangulationCGAL();
             }
         else
             {
-            FullFails = 0;
+            completeRetriangulationPerformed = 0;
             repairTriangulation(NeedsFixing);
             };
         }

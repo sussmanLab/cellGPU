@@ -9,7 +9,7 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-///contains a {{x11,x12},{x21,x22}} set, and matrix manipulations
+//!contains a {{x11,x12},{x21,x22}} set, and matrix manipulations
 struct Matrix2x2
     {
     private:
@@ -17,7 +17,9 @@ struct Matrix2x2
     public:
         //!The entries of the matrix
         Dscalar x11, x12, x21, x22;
+        //!Default constructor is the identity matrix
         HOSTDEVICE Matrix2x2() : x11(1.0), x12(0.0), x21(0.0),x22(1.0) {};
+        //!Generic constructor is whatever you wnat it to be
         HOSTDEVICE Matrix2x2(Dscalar y11, Dscalar y12, Dscalar y21,Dscalar y22) : x11(y11), x12(y12), x21(y21),x22(y22) {};
 
         //!Set the values to some desired set

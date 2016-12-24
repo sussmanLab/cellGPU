@@ -460,10 +460,10 @@ void SPV2D::performTimestepGPU()
         {
         testAndRepairTriangulation();
 
-        if(Fails == 1)
+        if(anyCircumcenterTestFailed == 1)
             {
             //maintain the auxilliary lists for computing forces
-            if(FullFails || neighMaxChange)
+            if(completeRetriangulationPerformed || neighMaxChange)
                 {
                 if(neighMaxChange)
                     {
