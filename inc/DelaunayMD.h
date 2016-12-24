@@ -13,6 +13,7 @@
 
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
+#include "DelaunayMD.cuh"
 
 /*!
  * DelaunayMD is a core engine class, capable of taking a set of points

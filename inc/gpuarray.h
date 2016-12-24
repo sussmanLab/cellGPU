@@ -5,14 +5,10 @@
 #define GPUARRAY_H
 
 // for vector types
+#include "std_include.h"
 #include <cuda_runtime.h>
 #include <cuda.h>
 
-#include <string.h>
-#include <iostream>
-#include <stdexcept>
-#include <algorithm>
-#include <stdlib.h>
 
 //!A structure for declaring where we want to access data
 struct access_location

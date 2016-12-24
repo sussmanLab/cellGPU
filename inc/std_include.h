@@ -23,6 +23,9 @@
 #include <sstream>
 #include <vector>
 #include <sys/time.h>
+#include <string.h>
+#include <stdexcept>
+#include <cassert>
 
 using namespace std;
 

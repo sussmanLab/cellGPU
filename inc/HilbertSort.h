@@ -1,11 +1,7 @@
 #ifndef HILBERTSORT
 #define HILBERTSORT
 
-
 #include "std_include.h"
-#include <cmath>
-#include <vector>
-
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline

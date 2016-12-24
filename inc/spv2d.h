@@ -12,6 +12,7 @@
 #include "Matrix.h"
 #include "cu_functions.h"
 #include "DelaunayMD.h"
+#include "spv2d.cuh"
 
 /*!
  *A child class of DelaunayMD, this implements the SPV model in 2D. This involves mostly calculating

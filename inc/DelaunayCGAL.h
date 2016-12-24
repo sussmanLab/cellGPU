@@ -12,8 +12,6 @@
 #include <CGAL/Triangulation_2.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
-#include <cassert>
-#include <fstream>
 using namespace std;
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
