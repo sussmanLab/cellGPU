@@ -14,6 +14,7 @@ based triangulations), but if for some reason CGAL is not available this can be 
 In particular, it will be slower and more prone to crashes, as CGAL has a robust error catching
 scheme.
  */
+ //! construct Delaunay Triangulation of a 2D, non-periodic point set via Bowyer-Watson algorithm
 class DelaunayNP
     {
 

@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <stdlib.h>
 
-///A structure for declaring where we want to access data
+//!A structure for declaring where we want to access data
 struct access_location
     {
     //!An enumeration of possibilities
@@ -25,7 +25,7 @@ struct access_location
         };
     };
 
-///A structure for declaring where the current version of the data is
+//!A structure for declaring where the current version of the data is
 struct data_location
     {
     //!An enumeration of possibilities
@@ -37,7 +37,7 @@ struct data_location
         };
     };
 
-///A structure for declaring how we want to access data (read, write, overwrite?)
+//!A structure for declaring how we want to access data (read, write, overwrite?)
 struct access_mode
     {
     //!An enumeration of possibilities
@@ -49,11 +49,13 @@ struct access_mode
         };
     };
 
-///This class and accessor are based on GPUArray.h, from the HOOMD-Blue simulation package.
-///It is, however, simplified. It takes care of cuda memory copying for templated arrays.
-///A flag (default to false) when declaring a GPUArray controls whether the memory is HostRegistered
-///but only handles synchronous copy operatations (no Asynch, no HostRegister, etc.)
-///It is also only for 1D arrays of data. Importantly, the user accesses and handles data through the ArrayHandle class.
+/*!This class and accessor are based on GPUArray.h, from the HOOMD-Blue simulation package.
+It is, however, simplified. It takes care of cuda memory copying for templated arrays.
+A flag (default to false) when declaring a GPUArray controls whether the memory is HostRegistered
+but only handles synchronous copy operatations (no Asynch, no HostRegister, etc.)
+It is also only for 1D arrays of data. Importantly, the user accesses and handles data through the ArrayHandle class.
+*/
+//!A class for handling data simultaneously on the CPU and GPU
 template<class T> class GPUArray;
 
 ///The ArrayHandle, well, handles the data in the GPUArray. Given, e.g., an ArrayHandle<int> h(gpuarray,access_location::host, access_mode::readwrite); The user would access one of the integers via h.data[i];

@@ -21,6 +21,7 @@ close to each other in memory). This is a small boost for CPU-based code, but ca
 for the efficiency of GPU-based execution.
 Some of the code here is straight from wikipedia!
 */
+//!Spatially sort points in 2D according to a 1D Hilbert curve
 struct HilbertSorter
     {
     private:

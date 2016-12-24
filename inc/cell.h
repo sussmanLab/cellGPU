@@ -14,6 +14,7 @@ using namespace std;
 The grid class implements a simple cell/bucket structure. It is currently used by the DelaunayLoc and DelaunayNP classes, but should be deprecated in favor of a general gpucell class that functions both for CPU and GPU calculations. Since the lifetime should be short, I will not document this class. Every time I read these sentences I will feel guilty and get a nudge to actually refactor the code.
 As an important note, this and gpucell are currently restricted to square boxes.
 */
+//!A simple cell/bucket structure
 class grid
     {
     private:

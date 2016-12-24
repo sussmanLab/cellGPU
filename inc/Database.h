@@ -9,7 +9,7 @@
 
 
 using namespace std;
-///A base class that controls a netCDF-based data implementation
+//!A base class that controls a netCDF-based data implementation
 class BaseDatabase
 {
 public:
@@ -34,9 +34,12 @@ BaseDatabase::BaseDatabase(string fn, NcFile::FileMode mode)
 }
 
 
-///Class for a state database for a 2d delaunay triangulation
-///the box dimensions are stored, the 2d unwrapped coordinate of the delaunay vertices,
-///and the shape index parameter for each vertex/
+/*!
+Class for a state database for a 2d delaunay triangulation
+the box dimensions are stored, the 2d unwrapped coordinate of the delaunay vertices,
+and the shape index parameter for each vertex
+*/
+//!Simple databse for reading/writing 2d spv states
 class SPVDatabase : public BaseDatabase
 {
 private:

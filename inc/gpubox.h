@@ -14,6 +14,7 @@ gpubox  periodic boundary conditions in 2D, computing minimum distances between
 periodic images, displacing particles and putting them back in the central unit cell,
 etc.
 */
+//!A simple box defining a 2D periodic domain
 struct gpubox
     {
     private:

@@ -20,6 +20,7 @@ using namespace std;
  *
  * This function operates strictly on the CPU
  */
+ //!A CPU-based class for locally constructing the Delaunay triangulation of part of a point set
 class DelaunayLoc
     {
     private:

@@ -14,6 +14,7 @@ using namespace std;
  * Note that at the moment this class (and some of the classes above it) can only handle square boxes. This is
  * not a fundamental limitation, though.
  */
+ //! Construct simple cell/bucket structures on the GPU
 class cellListGPU
     {
     public:

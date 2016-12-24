@@ -20,6 +20,7 @@
   data structures that capture different features of the local topology and local geoemetry for each
   cell.
  */
+ //!Implement the 2D SPV model, with and without some extra bells and whistles
 class SPV2D : public DelaunayMD
     {
     protected:
