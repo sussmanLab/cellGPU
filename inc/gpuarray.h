@@ -92,7 +92,8 @@ template<class T> class GPUArray
         void setRegistered(bool _reg)
             {
             RegisterArray=_reg;
-            cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
+            if(RegisterArray)
+                cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
             };
         //!Resize the array...performs operations on both the CPU and GPU
         virtual void resize(unsigned int num_elements);
@@ -205,6 +206,9 @@ template<class T> GPUArray<T>& GPUArray<T>::operator=(const GPUArray& rhs)
         // free current memory
         deallocate();
 
+        // is the array registered
+        RegisterArray = rhs.RegisterArray;
+
         // copy over basic elements
         Num_elements = rhs.Num_elements;
 
@@ -258,8 +262,8 @@ template<class T> void GPUArray<T>::allocate()
         }
 
 #ifdef ENABLE_CUDA
-    if(RegisterArray)
-        cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
+//    if(RegisterArray)
+//        cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
     cudaMalloc(&d_data, Num_elements*sizeof(T));
 #endif
     }
@@ -272,8 +276,8 @@ template<class T> void GPUArray<T>::deallocate()
     // free memory
 #ifdef ENABLE_CUDA
     cudaFree(d_data);
-    if(RegisterArray)
-        cudaHostUnregister(h_data);
+//    if(RegisterArray)
+//        cudaHostUnregister(h_data);
 #endif
 
     free(h_data);
@@ -456,8 +460,8 @@ template<class T> T* GPUArray<T>::resizeHostArray(unsigned int num_elements)
         }
 
 #ifdef ENABLE_CUDA
-    if(RegisterArray)
-        cudaHostRegister(h_tmp,Num_elements*sizeof(T),cudaHostRegisterDefault);
+//    if(RegisterArray)
+//        cudaHostRegister(h_tmp,Num_elements*sizeof(T),cudaHostRegisterDefault);
 #endif
 
     // clear memory
@@ -468,8 +472,8 @@ template<class T> T* GPUArray<T>::resizeHostArray(unsigned int num_elements)
     memcpy(h_tmp, h_data, sizeof(T)*num_copy_elements);
 
 #ifdef ENABLE_CUDA
-    if(RegisterArray)
-        cudaHostUnregister(h_data);
+//    if(RegisterArray)
+//        cudaHostUnregister(h_data);
 #endif
 
     // free old memory location
