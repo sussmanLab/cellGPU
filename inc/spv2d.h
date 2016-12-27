@@ -76,7 +76,7 @@ class SPV2D : public DelaunayMD
         Dscalar SimTime;
         //! Count the number of times "performTimeStep" has been called
         int Timestep;
-        //! Determines how frequently he spatial sorter be called...once per sortPeriod Timesteps
+        //! Determines how frequently he spatial sorter be called...once per sortPeriod Timesteps. When sortPeriod < 0 no sorting occurs
         int sortPeriod;
         //!A flag that determins if a spatial sorting is due to occur this Timestep
         bool spatialSortThisStep;

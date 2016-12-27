@@ -64,7 +64,10 @@ void SPV2D::Initialize(int n)
     allDelSets();
     };
 
-//call DelaunayMD's underlying Hilbert sort scheme, and re-index spv2d's arrays
+/*
+ When sortPeriod < 0, this routine does not get called
+call DelaunayMD's underlying Hilbert sort scheme, and re-index spv2d's arrays
+*/
 void SPV2D::spatialSorting()
     {
     spatiallySortPoints();
