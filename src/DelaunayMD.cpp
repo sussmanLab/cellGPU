@@ -158,7 +158,6 @@ void DelaunayMD::resetDelLocPoints()
         };
     delLoc.setPoints(pts);
     delLoc.initialize(cellsize);
-
     };
 
 //update which cell every particle belongs to (for spatial location)

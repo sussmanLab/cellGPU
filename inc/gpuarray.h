@@ -1,6 +1,19 @@
-#ifdef NVCC
-#error This header cannot be compiled by nvcc?
-#endif
+/*
+This file is based on part of the HOOMD-blue project, released under the BSD 3-Clause License:
+
+HOOMD-blue Open Source Software License Copyright 2009-2016 The Regents of
+the University of Michigan All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+1. Redistributions of source code must retain the above copyright notice, this list of conditions, and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions, and the following disclaimer both in the code and prominently in any materials provided with the distribution.
+3. Neither the name ofthe copyright holder nor the names of its contributors may be used to enorse or promote products derived from this software without specific prior written permission
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND/OR ANY WARRANTIES THAT THIS SOFTWARE IS FREE OF INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+//As you might suspect from the above, the classes and structures in this file are modifications of the GPUArray.h file from the HOOMD-Blue package. Credit to Joshua A. Anderson
+
 #ifndef GPUARRAY_H
 #define GPUARRAY_H
 
@@ -92,7 +105,8 @@ template<class T> class GPUArray
         void setRegistered(bool _reg)
             {
             RegisterArray=_reg;
-            cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
+            if(RegisterArray)
+                cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
             };
         //!Resize the array...performs operations on both the CPU and GPU
         virtual void resize(unsigned int num_elements);
@@ -205,6 +219,9 @@ template<class T> GPUArray<T>& GPUArray<T>::operator=(const GPUArray& rhs)
         // free current memory
         deallocate();
 
+        // is the array registered
+        RegisterArray = rhs.RegisterArray;
+
         // copy over basic elements
         Num_elements = rhs.Num_elements;
 
@@ -258,8 +275,8 @@ template<class T> void GPUArray<T>::allocate()
         }
 
 #ifdef ENABLE_CUDA
-    if(RegisterArray)
-        cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
+//    if(RegisterArray)
+//        cudaHostRegister(h_data,Num_elements*sizeof(T),cudaHostRegisterDefault);
     cudaMalloc(&d_data, Num_elements*sizeof(T));
 #endif
     }
@@ -272,8 +289,8 @@ template<class T> void GPUArray<T>::deallocate()
     // free memory
 #ifdef ENABLE_CUDA
     cudaFree(d_data);
-    if(RegisterArray)
-        cudaHostUnregister(h_data);
+//    if(RegisterArray)
+//        cudaHostUnregister(h_data);
 #endif
 
     free(h_data);
@@ -456,8 +473,8 @@ template<class T> T* GPUArray<T>::resizeHostArray(unsigned int num_elements)
         }
 
 #ifdef ENABLE_CUDA
-    if(RegisterArray)
-        cudaHostRegister(h_tmp,Num_elements*sizeof(T),cudaHostRegisterDefault);
+//    if(RegisterArray)
+//        cudaHostRegister(h_tmp,Num_elements*sizeof(T),cudaHostRegisterDefault);
 #endif
 
     // clear memory
@@ -468,8 +485,8 @@ template<class T> T* GPUArray<T>::resizeHostArray(unsigned int num_elements)
     memcpy(h_tmp, h_data, sizeof(T)*num_copy_elements);
 
 #ifdef ENABLE_CUDA
-    if(RegisterArray)
-        cudaHostUnregister(h_data);
+//    if(RegisterArray)
+//        cudaHostUnregister(h_data);
 #endif
 
     // free old memory location

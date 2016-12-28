@@ -1,3 +1,9 @@
+/*
+Some code in the HilbertRotate and getIdx functions is from John Burkardt's HILBERT_CURVE code:
+https://people.sc.fsu.edu/~jburkardt/cpp_src/hilbert_curve/hilbert_curve.html
+which is released under the GNU LGPL license
+*/
+
 #ifndef HILBERTSORT
 #define HILBERTSORT
 
@@ -15,7 +21,6 @@ This structure can help sort scalar2's according to their position along a hilbe
 This sorting can improve data locality (i.e. particles that are close to each other in physical space reside
 close to each other in memory). This is a small boost for CPU-based code, but can be very important
 for the efficiency of GPU-based execution.
-Some of the code here is straight from wikipedia!
 */
 //!Spatially sort points in 2D according to a 1D Hilbert curve
 struct HilbertSorter
@@ -71,7 +76,7 @@ struct HilbertSorter
             return value;
             };
 
-            //!Rotate...from wikipedia
+            //!Rotate/flip quadrants appropriately
             HOSTDEVICE void HilbertRotate(int n, int &x, int &y, int rx, int ry)
                 {
                 int t;
@@ -105,7 +110,6 @@ struct HilbertSorter
             x = (int) floor(n*virtualPos.x);
             y = (int) floor(n*virtualPos.y);
 
-            //The following bit-operating code is from wikipedia
             int d = 0;
             int  rx,ry;
             for (int s = n/2; s > 0; s= s/2)

@@ -168,11 +168,12 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     dnext.x = vcur.x-vnext.x;
     dnext.y = vcur.y-vnext.y;
     dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+#ifdef SCALARFLOAT
     if(dnnorm < THRESHOLD)
         dnnorm = THRESHOLD;
     if(dlnorm < THRESHOLD)
         dlnorm = THRESHOLD;
-
+#endif
     //save a few of these differences for later...
     //dcl.x = -dlast.x;dcl.y = -dlast.y;
     //dnc.x=-dnext.x;dnc.y=-dnext.y;
@@ -196,8 +197,10 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     dnext.x = vcur.x-vother.x;
     dnext.y = vcur.y-vother.y;
     dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+#ifdef SCALARFLOAT
     if(dnnorm < THRESHOLD)
         dnnorm = THRESHOLD;
+#endif
     dPdv.x = -dnc.x/dncnorm - dnext.x/dnnorm;
     dPdv.y = -dnc.y/dncnorm - dnext.y/dnnorm;
     Adiff = KA*(d_AP[neighs.y].x - d_APpref[neighs.y].x);

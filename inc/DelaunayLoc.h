@@ -4,6 +4,7 @@
 
 using namespace std;
 #include "std_include.h"
+#include "gpuarray.h"
 #include "gpubox.h"
 #include "cell.h"
 #include "Delaunay1.h"
@@ -46,6 +47,7 @@ class DelaunayLoc
         //!constructor via a vector of scalars, {x1,y1,x2,y2,...}
         DelaunayLoc(std::vector<Dscalar> &points,gpubox &bx){setPoints(points);setBox(bx);};
 
+        void setPoints(GPUArray<Dscalar2> &points); //!<Set points via a GPUarray of Dscalar2's
         void setPoints(std::vector<Dscalar2> &points); //!<Set points via a vector of Dscalar2's
         void setPoints(std::vector<Dscalar> &points);   //!<Set the points via a vector of Dscalar's
         void setBox(gpubox &bx);                        //!<Set the box
