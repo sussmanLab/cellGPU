@@ -1,21 +1,7 @@
 #include "std_include.h"
-#include <cmath>
-#include <algorithm>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <sys/time.h>
-
 
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
-#include "vector_types.h"
 
 #define ENABLE_CUDA
 
@@ -70,21 +56,25 @@ int main(int argc, char*argv[])
         };
     clock_t t1,t2;
 
-
+    bool reproducible = true;
+    bool initializeGPU = true;
     if (USE_GPU >= 0)
         {
         bool gpu = chooseGPU(USE_GPU);
         if (!gpu) return 0;
         cudaSetDevice(USE_GPU);
         }
+    else
+        initializeGPU = false;
+
     char dataname[256];
     sprintf(dataname,"/hdd2/data/spv/test.nc");
 //    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
 
 
 
-    SPV2D spv(numpts,1.0,p0,true);
-    if (USE_GPU < 0)
+    SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
+    if (!initializeGPU)
         spv.setCPU(false);
 
     spv.setCellPreferencesUniform(1.0,p0);
@@ -144,7 +134,8 @@ int main(int argc, char*argv[])
     spv.meanForce();
     spv.repPerFrame = 0.0;
 
-    cudaProfilerStart();
+    if(initializeGPU)
+        cudaProfilerStart();
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
@@ -157,12 +148,14 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
     t2=clock();
-    cudaProfilerStop();
+    if(initializeGPU)
+        cudaProfilerStop();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
 
 
 //    ncdat.WriteState(spv);
-    cudaDeviceReset();
+    if(initializeGPU)
+        cudaDeviceReset();
     return 0;
 };

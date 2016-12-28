@@ -6,27 +6,27 @@
 #include "cuda_profiler_api.h"
 
 //simple constructor
-SPV2D::SPV2D(int n, bool reprod)
+SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
     {
     printf("Initializing %i cells with random positions in a square box... ",n);
     Reproducible = reprod;
-    Initialize(n);
+    Initialize(n,initGPURNG);
     setCellPreferencesUniform(1.0,4.0);
     setCellTypeUniform(0);
     };
 
 //most common constructor...sets uniform cell preferences and types
-SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod)
+SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     {
     printf("Initializing %i cells with random positions in a square box... ",n);
     Reproducible = reprod;
-    Initialize(n);
+    Initialize(n,initGPURNG);
     setCellPreferencesUniform(A0,P0);
     setCellTypeUniform(0);
     };
 
 //take care of all class initialization functions
-void SPV2D::Initialize(int n)
+void SPV2D::Initialize(int n,bool initGPU)
     {
     N=n;
     gamma = 0.;
@@ -59,7 +59,8 @@ void SPV2D::Initialize(int n)
         h_cd.data[ii] = theta;
         };
     devStates.resize(N);
-    setCurandStates(Timestep);
+    if(initGPU)
+        setCurandStates(Timestep);
     resetLists();
     allDelSets();
     };
