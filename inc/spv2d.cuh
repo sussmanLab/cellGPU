@@ -7,6 +7,10 @@
 #include "indexer.h"
 #include "gpubox.h"
 
+/*!
+A file providing an interface to the relevant cuda calls
+*/
+
 //!Initialize the GPU's random number generator
 bool gpu_init_curand(curandState *states,
                     int N,

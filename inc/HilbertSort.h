@@ -1,5 +1,5 @@
 /*
-Some code in the HilbertRotate and getIdx functions is from John Burkardt's HILBERT_CURVE code:
+Some code in the HilbertRotate and getIdx functions calls John Burkardt's HILBERT_CURVE code:
 https://people.sc.fsu.edu/~jburkardt/cpp_src/hilbert_curve/hilbert_curve.html
 which is released under the GNU LGPL license
 */
@@ -8,6 +8,7 @@ which is released under the GNU LGPL license
 #define HILBERTSORT
 
 #include "std_include.h"
+#include "hilbert_curve.hpp"
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
@@ -79,20 +80,8 @@ struct HilbertSorter
             //!Rotate/flip quadrants appropriately
             HOSTDEVICE void HilbertRotate(int n, int &x, int &y, int rx, int ry)
                 {
-                int t;
-                if (ry == 0)
-                    {
-                    //reflect
-                    if(ry == 1)
-                        {
-                        x = n-1-x;
-                        y=n-1-y;
-                        };
-                    //flip
-                    t = x;
-                    x = y;
-                    y = t;
-                    };
+                //call Burkardt code...this is no longer needed, and can be deprecated
+                rot(n,x,y,rx,ry);
                 return;
                 };
 
@@ -110,16 +99,8 @@ struct HilbertSorter
             x = (int) floor(n*virtualPos.x);
             y = (int) floor(n*virtualPos.y);
 
-            int d = 0;
-            int  rx,ry;
-            for (int s = n/2; s > 0; s= s/2)
-                {
-                rx = ( x & s) > 0;
-                ry = ( y & s) > 0;
-                d = d + s * s * ( ( 3* rx ) ^ ry);
-                HilbertRotate(s,x,y,rx,ry);
-                };
-
+            //call Burkardt code
+            int d = xy2d(M,x,y);
             return d;
             };
     };

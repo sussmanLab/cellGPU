@@ -2,10 +2,10 @@
 #ifndef DELAUNAY1_H
 #define DELAUNAY1_H
 
-using namespace std;
 #include "std_include.h"
 #include "functions.h"
 #include "structures.h"
+using namespace std;
 
 /*!
 DelaunayNP implements a naive Bowyer-watson algorithm to compute the Delaunay Triangulation

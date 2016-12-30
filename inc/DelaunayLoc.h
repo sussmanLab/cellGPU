@@ -2,12 +2,12 @@
 #ifndef DELAUNAYLOC_H
 #define DELAUNAYLOC_H
 
-using namespace std;
 #include "std_include.h"
 #include "gpuarray.h"
 #include "gpubox.h"
 #include "cell.h"
 #include "Delaunay1.h"
+using namespace std;
 
 /*!
  * One of the workhorse engines of the hybrid scheme, DelaunayLoc provides methods for finding

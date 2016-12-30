@@ -56,6 +56,9 @@ class SPV2D : public DelaunayMD
         //!An array random-number-generators for use on the GPU branch of the code
         GPUArray<curandState> devStates;
 
+        //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
+        bool initializeGPURNG;
+
         //!delSet.data[n_idx(nn,i)] are the previous and next consecutive delaunay neighbors,
         //!orientationally ordered, of point i (for use in computing forces on GPU)
         GPUArray<int2> delSets;
@@ -96,16 +99,16 @@ class SPV2D : public DelaunayMD
         GPUArray<int> exclusions;
 
         //!initialize with random positions in a square box
-        SPV2D(int n,bool reprod = false);
+        SPV2D(int n,bool reprod = false,bool initGPURNG=true);
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        SPV2D(int n, Dscalar A0, Dscalar P0,bool reprod = false);
+        SPV2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true);
         //previous iterations of the code needed an explicit destructor for some "cudaFree" calls
         //~SPV2D()
         //    {
         //    };
 
         //!Initialize DelaunayMD, set random orientations for cell directors, prepare data structures
-        void Initialize(int n);
+        void Initialize(int n,bool initGPU = true);
 
 
         //!Set the simulation time stepsize
@@ -146,7 +149,7 @@ class SPV2D : public DelaunayMD
         //!resize all neighMax-related arrays
         void resetLists();
         //!initialize the cuda RNG
-        void setCurandStates(int i);
+        void setCurandStates(int gs, int i);
         //!sort points along a Hilbert curve for data locality
         void spatialSorting();
 
@@ -169,8 +172,6 @@ class SPV2D : public DelaunayMD
         void computeGeometryCPU();
         //!Compute the net force on particle i on the CPU
         void computeSPVForceCPU(int i);
-        //!Compute the net force on particle i with tensions between cells of different type
-        void computeSPVForceWithTensionsCPU(int i,bool verbose = false);
         //!Calculates the displacements and cell director changes on the CPU. Uses a non-reproducible RNG
         void calculateDispCPU();
 

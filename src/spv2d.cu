@@ -16,8 +16,11 @@
 #include <stdio.h>
 #include "Matrix.h"
 
+/*!
+A file defining some global kernels for use in the spv2d class
+*/
 
-//initialize each thread with a different sequence of the same seed of a cudaRNG
+//!initialize each thread with a different sequence of the same seed of a cudaRNG
 __global__ void init_curand_kernel(curandState *state, int N,int Timestep,int GlobalSeed)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -29,7 +32,7 @@ __global__ void init_curand_kernel(curandState *state, int N,int Timestep,int Gl
     };
 
 
-//add up the force sets to get the force per particle
+//!add up the force sets to get the force per particle
 __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
                                       Dscalar2* __restrict__ d_forces,
                                       const int* __restrict__      d_nn,
@@ -56,7 +59,7 @@ __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
 
     };
 
-//the same, but keep track of exclusions
+//! add up force sets, but keep track of exclusions
 __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict__ d_forceSets,
                                       Dscalar2* __restrict__ d_forces,
                                       Dscalar2* __restrict__ d_external_forces,
@@ -93,8 +96,7 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict
 
     };
 
-//the force on a particle is decomposable into the force contribution from each of its voronoi vertices...
-//calculate those sets of forces
+//!the force on a particle is decomposable into the force contribution from each of its voronoi vertices...calculate those sets of forces
 __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
                                       const Dscalar2* __restrict__ d_AP,
                                       const Dscalar2*  __restrict__ d_APpref,
@@ -232,7 +234,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     return;
     };
 
-//the same, but add a tension term between cells of different type
+//!the force on a particle is decomposable into the force contribution from each of its voronoi vertices...calculate those sets of forces with an additional tension term between cells of different type
 __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_points,
                                           const Dscalar2* __restrict__ d_AP,
                                           const Dscalar2* __restrict__ d_APpref,
@@ -401,7 +403,7 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
 
 
 
-//compute the voronoi vertices for each cell, along with its area and perimeter
+//!compute the voronoi vertices for each cell, along with its area and perimeter
 __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_points,
                                           Dscalar2* __restrict__ d_AP,
                                           const int* __restrict__ d_nn,
@@ -491,7 +493,7 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
     };
 
 
-//move particles according to their motility and forces
+//!move particles according to their motility and forces
 __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
                                           Dscalar2 *d_force,
                                           Dscalar *d_directors,
@@ -526,13 +528,11 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
     return;
     };
 
-
 ////////////////
 //kernel callers
 ////////////////
 
-
-
+//!Call the kernel to initialize a different RNG for each particle
 bool gpu_init_curand(curandState *states,
                     int N,
                     int Timestep,
@@ -548,7 +548,7 @@ bool gpu_init_curand(curandState *states,
     return cudaSuccess;
     };
 
-
+//!Call the kernel to compute the geometry
 bool gpu_compute_geometry(Dscalar2 *d_points,
                         Dscalar2   *d_AP,
                         int      *d_nn,
@@ -584,7 +584,7 @@ bool gpu_compute_geometry(Dscalar2 *d_points,
     return cudaSuccess;
     };
 
-
+//!Call the kernel to move particles around
 bool gpu_displace_and_rotate(Dscalar2 *d_points,
                         Dscalar2 *d_force,
                         Dscalar  *d_directors,
@@ -620,6 +620,7 @@ bool gpu_displace_and_rotate(Dscalar2 *d_points,
     return cudaSuccess;
     };
 
+//!Call the kernel to compute the force sets
 bool gpu_force_sets(Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
@@ -668,7 +669,7 @@ bool gpu_force_sets(Dscalar2 *d_points,
 
 
 
-
+//!Call the kernel to compute force sets with additional tension terms
 bool gpu_force_sets_tensions(Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
@@ -718,6 +719,7 @@ bool gpu_force_sets_tensions(Dscalar2 *d_points,
     return cudaSuccess;
     };
 
+//!call the kernel to add up the forces
 bool gpu_sum_force_sets(
                         Dscalar2 *d_forceSets,
                         Dscalar2 *d_forces,
@@ -745,6 +747,7 @@ bool gpu_sum_force_sets(
     };
 
 
+//!call the kernel to add up forces with particle exclusions
 bool gpu_sum_force_sets_with_exclusions(
                         Dscalar2 *d_forceSets,
                         Dscalar2 *d_forces,

@@ -1,5 +1,4 @@
 #define ENABLE_CUDA
-using namespace std;
 
 #include "cuda_runtime.h"
 
@@ -8,6 +7,7 @@ using namespace std;
 #include "indexer.h"
 #include "gpucell.cuh"
 #include "gpucell.h"
+using namespace std;
 
 //DEFINE functions here
 
