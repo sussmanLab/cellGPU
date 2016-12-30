@@ -149,7 +149,7 @@ class SPV2D : public DelaunayMD
         //!resize all neighMax-related arrays
         void resetLists();
         //!initialize the cuda RNG
-        void setCurandStates(int i);
+        void setCurandStates(int gs, int i);
         //!sort points along a Hilbert curve for data locality
         void spatialSorting();
 
@@ -172,8 +172,6 @@ class SPV2D : public DelaunayMD
         void computeGeometryCPU();
         //!Compute the net force on particle i on the CPU
         void computeSPVForceCPU(int i);
-        //!Compute the net force on particle i with tensions between cells of different type
-        void computeSPVForceWithTensionsCPU(int i,bool verbose = false);
         //!Calculates the displacements and cell director changes on the CPU. Uses a non-reproducible RNG
         void calculateDispCPU();
 
