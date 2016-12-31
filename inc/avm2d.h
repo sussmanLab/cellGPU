@@ -4,6 +4,9 @@
 
 
 #include "std_include.h"
+#include "curand.h"
+#include "curand_kernel.h"
+#include "gpuarray.h"
 
 /*!
 A class that implements an active vertex model in 2D. This involves calculating forces on 
@@ -14,7 +17,7 @@ class AVM2D
     {
     public:
         //! the constructor: initialize as a Delaunay configuration with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        SPV2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true);
+        AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true);
 
         //! Count the number of times "performTimeStep" has been called
         int Timestep;
@@ -26,7 +29,10 @@ class AVM2D
         void setDeltaT(Dscalar dt){deltaT = dt;};
         
         //!initialize the cuda RNG
-        void initializeCurandStates(int i);
+        void initializeCurandStates(int gs, int i);
+
+        //!Initialize AVM2D, set random orientations for vertex directors, prepare data structures
+        void Initialize(int n,bool initGPU = true);
 
     protected:
         //!Number of cells in the simulation

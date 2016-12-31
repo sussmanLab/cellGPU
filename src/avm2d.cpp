@@ -1,6 +1,7 @@
 #define ENABLE_CUDA
 
 #include "avm2d.h"
+#include "avm2d.cuh"
 
 AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     {
@@ -14,7 +15,7 @@ AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
 void AVM2D::Initialize(int n,bool initGPU)
     {
     Ncells=n;
-    Nvertics = 6*Ncells;
+    Nvertices = 6*Ncells;
 
     Timestep = 0;
     setDeltaT(0.01);
@@ -29,7 +30,7 @@ void AVM2D::Initialize(int n,bool initGPU)
     
     devStates.resize(Nvertices);
     if(initGPU)
-        initializeCurandStates(Timestep);
+        initializeCurandStates(1337,Timestep);
     };
 
 //set all cell area and perimeter preferences to uniform values
@@ -37,7 +38,7 @@ void AVM2D::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
     {
     AreaPeriPreferences.resize(Ncells);
     ArrayHandle<Dscalar2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
+    for (int ii = 0; ii < Ncells; ++ii)
         {
         h_p.data[ii].x = A0;
         h_p.data[ii].y = P0;
@@ -49,18 +50,18 @@ void AVM2D::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
 This is one part of what would be required to support reproducibly being able to load a state
 from a databse and continue the dynamics in the same way every time. This is not currently supported.
 */
-void SPV2D::initializeCurandStates(int i)
+void AVM2D::initializeCurandStates(int gs, int i)
     {
     ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
 
-    int globalseed = 136;
+    int globalseed = gs;
     if(!Reproducible)
         {
         clock_t t1=clock();
         globalseed = (int)t1 % 100000;
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
-    gpu_init_curand(d_cs.data,N,i,globalseed);
+    gpu_initialize_curand(d_cs.data,Nvertices,i,globalseed);
 
     };
 
