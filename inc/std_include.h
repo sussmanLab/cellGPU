@@ -15,7 +15,7 @@
 #include <ctype.h>
 #include <random>
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
 #include <iostream>
 #include <iomanip>

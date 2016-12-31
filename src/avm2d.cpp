@@ -11,23 +11,58 @@ AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     setCellPreferencesUniform(A0,P0);
     };
 
+void AVM2D::setCellsVoronoiTesselation(int n)
+    {
+    //set number of cells, and a square box
+    Ncells=n;
+    CellPositions.resize(Ncells);
+    Dscalar boxsize = sqrt((Dscalar)Ncells);
+    Box.setSquare(boxsize,boxsize);
+
+    //put cells in box randomly
+    ArrayHandle<Dscalar2> h_p(CellPositions,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        Dscalar x =EPSILON+boxsize/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
+        Dscalar y =EPSILON+boxsize/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
+        if(x >=boxsize) x = boxsize-EPSILON;
+        if(y >=boxsize) y = boxsize-EPSILON;
+        h_p.data[ii].x = x;
+        h_p.data[ii].y = y;
+        };
+
+    //call CGAL to get Delaunay triangulation
+    vector<pair<Point,int> > Psnew(N);
+    for (int ii = 0; ii < N; ++ii)
+        {
+        Psnew[ii]=make_pair(Point(h_p.data[ii].x,h_p.data[ii].y),ii);
+        };
+    dcgal.PeriodicTriangulation(Psnew,boxsize);
+
+    //....now figure out indexing scheme to get voronoi vertices in some sensible way while simultaneously building the cell-vertex lists and vertex-vertes lists
+
+    //set number of vertices
+    Nvertices = 2*Ncells;
+    VertexPositions.resize(Nvertices);
+
+    //randomly set vertex directors
+    vertexDirectors.resize(Nvertices);
+    ArrayHandle<Dscalar> h_vd(vertexDirectors,access_location::host, access_mode::overwrite);
+    for (int ii = 0; ii < Nvertices; ++ii)
+        h_vd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
+
+   };
+
 //take care of all class initialization functions
 void AVM2D::Initialize(int n,bool initGPU)
     {
-    Ncells=n;
-    Nvertices = 6*Ncells;
+    setCellsVoronoiTesselation(n);
 
     Timestep = 0;
     setDeltaT(0.01);
 
     AreaPeri.resize(Ncells);
 
-    vertexDirectors.resize(Nvertices);
-    ArrayHandle<Dscalar> h_vd(vertexDirectors,access_location::host, access_mode::overwrite);
-    int randmax = 100000000;
-    for (int ii = 0; ii < Nvertices; ++ii)
-        h_vd.data[ii] = 2.0*PI/(Dscalar)(randmax)* (Dscalar)(rand()%randmax);
-    
     devStates.resize(Nvertices);
     if(initGPU)
         initializeCurandStates(1337,Timestep);
