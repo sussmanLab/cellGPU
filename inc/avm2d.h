@@ -33,6 +33,15 @@ class AVM2D
         //! Cell neighbors of every voronoi vertex
         GPUArray<int> vertexCellNeighbors;
 
+        //!an array containing net force on each vertex
+        GPUArray<Dscalar> vertexForces;
+        //!an array containing the three contributions to the force on each vertex
+        GPUArray<Dscalar> vertexForceSets;
+        //!3*Nvertices length array of the position of voro vertex
+        GPUArray<Dscalar2> voroCur;
+        //!3*Nvertices length array of the position of the last and next voro vertices along the cell
+        GPUArray<Dscalar4> voroLastNext;
+
         //! Count the number of times "performTimeStep" has been called
         int Timestep;
 

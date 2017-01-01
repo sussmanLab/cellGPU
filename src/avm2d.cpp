@@ -62,7 +62,7 @@ void AVM2D::setCellsVoronoiTesselation(int n)
     vertexNeighbors.resize(3*Nvertices);
     vertexCellNeighbors.resize(3*Nvertices);
     ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::overwrite);
-    ArrayHandle<int> h_vcn(vertexNeighbors,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::overwrite);
     for(PDT::Face_iterator fit = T.faces_begin(); fit != T.faces_end(); ++fit)
         {
         int vidx = faceToVoroIdx[fit];
@@ -116,7 +116,6 @@ void AVM2D::setCellsVoronoiTesselation(int n)
             };
         };
 
-
     //randomly set vertex directors
     vertexDirectors.resize(Nvertices);
     ArrayHandle<Dscalar> h_vd(vertexDirectors,access_location::host, access_mode::overwrite);
@@ -136,6 +135,10 @@ void AVM2D::Initialize(int n,bool initGPU)
     AreaPeri.resize(Ncells);
 
     devStates.resize(Nvertices);
+    vertexForces.resize(Nvertices);
+    vertexForceSets.resize(3*Nvertices);
+    voroCur.resize(3*Nvertices);
+    voroLastNext.resize(3*Nvertices);
     if(initGPU)
         initializeCurandStates(1337,Timestep);
     };
@@ -179,6 +182,9 @@ void AVM2D::computeGeometryCPU()
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_vc(voroCur,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar4> h_vln(voroLastNext,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
 
     //compute the geometry for each cell
@@ -186,19 +192,36 @@ void AVM2D::computeGeometryCPU()
         {
         int neighs = h_nn.data[i];
         Dscalar2 cellPos = h_p.data[i];
-        Dscalar2 vlast, vnext;
+        Dscalar2 vlast, vcur,vnext;
         Dscalar Varea = 0.0;
         Dscalar Vperi = 0.0;
         //compute the vertex position relative to the cell position
-        Box.minDist(h_v.data[h_n.data[n_idx(neighs-1,i)]],cellPos,vlast);
+        int vidx = h_n.data[n_idx(neighs-2,i)];
+        Box.minDist(h_v.data[vidx],cellPos,vlast);
+        vidx = h_n.data[n_idx(neighs-1,i)];
+        Box.minDist(h_v.data[vidx],cellPos,vcur);
         for (int nn = 0; nn < neighs; ++nn)
             {
-            Box.minDist(h_v.data[h_n.data[n_idx(nn,i)]],cellPos,vnext);
-            Varea += TriangleArea(vlast,vnext);
-            Dscalar dx = vlast.x-vnext.x;
-            Dscalar dy = vlast.y-vnext.y;
+            //for easy force calculation, save the current, last, and next voronoi vertex position in the approprate spot.
+            int forceSetIdx= -1;
+            for (int ff = 0; ff < 3; ++ff)
+                if(h_vcn.data[3*vidx+ff]==i)
+                    forceSetIdx = 3*vidx+ff;
+
+            vidx = h_n.data[n_idx(nn,i)];
+            Box.minDist(h_v.data[vidx],cellPos,vnext);
+
+            //compute area contribution
+            Varea += TriangleArea(vcur,vnext);
+            Dscalar dx = vcur.x-vnext.x;
+            Dscalar dy = vcur.y-vnext.y;
             Vperi += sqrt(dx*dx+dy*dy);
-            vlast = vnext;
+            //save voronoi positions in a convenient form
+            h_vc.data[forceSetIdx] = vcur;
+            h_vln.data[forceSetIdx] = make_Dscalar4(vlast.x,vlast.y,vnext.x,vnext.y);
+            //advance the loop
+            vlast = vcur;
+            vcur = vnext;
             };
         h_AP.data[i].x = Varea;
         h_AP.data[i].y = Vperi;
@@ -210,17 +233,23 @@ Very similar to the function in spv2d.cpp, but optimized since we already have s
 */
 void AVM2D::computeGeometryGPU()
     {
-    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
-    ArrayHandle<int> d_nn(cellVertexNum,access_location::device,access_mode::read);
-    ArrayHandle<int> d_n(cellVertices,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_p(cellPositions,        access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_v(vertexPositions,      access_location::device,access_mode::read);
+    ArrayHandle<int>      d_nn(cellVertexNum,       access_location::device,access_mode::read);
+    ArrayHandle<int>      d_n(cellVertices,         access_location::device,access_mode::read);
+    ArrayHandle<int>      d_vcn(vertexCellNeighbors,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_vc(voroCur,             access_location::device,access_mode::overwrite);
+    ArrayHandle<Dscalar4> d_vln(voroLastNext,       access_location::device,access_mode::overwrite);
+    ArrayHandle<Dscalar2> d_AP(AreaPeri,            access_location::device,access_mode::overwrite);
 
     gpu_avm_geometry(
                     d_p.data,
                     d_v.data,
                     d_nn.data,
                     d_n.data,
+                    d_vcn.data,
+                    d_vc.data,
+                    d_vln.data,
                     d_AP.data,
                     Ncells,n_idx,Box);
     };

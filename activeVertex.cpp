@@ -62,11 +62,21 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU);
-    if(USE_GPU > 0)
-        avm.computeGeometryGPU();
-    else
-        avm.computeGeometryCPU();
-    avm.reportAP();
+
+    t1=clock();
+    for (int timestep = 0; timestep < tSteps; ++timestep)
+        {
+        if(USE_GPU > 0)
+            {
+            avm.computeGeometryGPU();
+            }
+        else
+            {
+            avm.computeGeometryCPU();
+            }
+        };
+    t2=clock();
+    cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl;
 
     return 0;
     };
