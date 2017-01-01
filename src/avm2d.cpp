@@ -32,18 +32,51 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         };
 
     //call CGAL to get Delaunay triangulation
-    vector<pair<Point,int> > Psnew(N);
-    for (int ii = 0; ii < N; ++ii)
+    vector<pair<Point,int> > Psnew(Ncells);
+    for (int ii = 0; ii < Ncells; ++ii)
         {
         Psnew[ii]=make_pair(Point(h_p.data[ii].x,h_p.data[ii].y),ii);
         };
-    dcgal.PeriodicTriangulation(Psnew,boxsize);
-
-    //....now figure out indexing scheme to get voronoi vertices in some sensible way while simultaneously building the cell-vertex lists and vertex-vertes lists
+    Iso_rectangle domain(0.0,0.0,boxsize,boxsize);
+    PDT T(Psnew.begin(),Psnew.end(),domain);
+    T.convert_to_1_sheeted_covering();
 
     //set number of vertices
     Nvertices = 2*Ncells;
     VertexPositions.resize(Nvertices);
+    ArrayHandle<Dscalar2> h_v(VertexPositions,access_location::host,access_mode::overwrite);
+
+    map<PDT::Face_handle,int> faceToVoroIdx;
+    int idx = 0;
+    //first, ask CGAL for the circumcenter of the face, and add it to the list of vertices, and make a map between the iterator and the vertex idx
+    for(PDT::Face_iterator fit = T.faces_begin(); fit != T.faces_end(); ++fit)
+        {
+        PDT::Point p(T.dual(fit));
+        h_v.data[idx].x = p.x();
+        h_v.data[idx].y = p.y();
+        faceToVoroIdx[fit] = idx;
+        idx +=1;
+        };
+
+    //great... now, what is the maximum number of vertices for a cell?
+    vertexMax = 0;
+    for(PDT::Vertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); ++vit)
+        {
+        Vertex_circulator vc(vit);
+        int base = vc ->info();
+        int neighs = 1;
+        ++vc;
+        while(vc->info() != base)
+            {
+            neighs += 1;
+            ++vc;
+            };
+        if (neighs > vertexMax) vertexMax = neighs;
+        };
+    vertexMax += 2;
+    cout << "vM = " <<vertexMax << endl;
+    //....now figure out indexing scheme to get voronoi vertices in some sensible way while simultaneously building the cell-vertex lists and vertex-vertes lists
+
 
     //randomly set vertex directors
     vertexDirectors.resize(Nvertices);

@@ -37,11 +37,12 @@ debug: CXXFLAGS += -g
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info
 debug: build
 
-PROGS= delGPU.out
+PROGS= delGPU.out avmGPU.out
 
 build: $(PROGS)
 
 PROG_OBJS= obj/runellipse.o obj/voroguppy.o obj/runplates.o obj/runMakeDatabase.o
+PROG_OBJS+=obj/activeVertex.o
 
 CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/gpucell.o obj/DelaunayMD.o obj/spv2d.o obj/hilbert_curve.o obj/avm2d.o
 
@@ -74,12 +75,15 @@ $(OBJ_DIR)/%.o: %.cpp
 #	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
 
 
+avmGPU.out: obj/activeVertex.o $(CLASS_OBJS) $(CUOBJS)
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 
 run: build
 	./delGPU.out
+	./avmGPU.out
 
 clean:
 	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) delGPU.out
