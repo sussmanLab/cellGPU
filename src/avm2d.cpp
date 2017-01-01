@@ -5,7 +5,7 @@
 
 AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     {
-    printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... ",n);
+    printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
     Reproducible = reprod;
     Initialize(n,initGPURNG);
     setCellPreferencesUniform(A0,P0);
@@ -57,12 +57,29 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         faceToVoroIdx[fit] = idx;
         idx +=1;
         };
+    //create a list of what vertices are connected to what vertices
+    VertexNeighbors.resize(3*Nvertices);
+    ArrayHandle<int> h_vn(VertexNeighbors,access_location::host,access_mode::overwrite);
+    for(PDT::Face_iterator fit = T.faces_begin(); fit != T.faces_end(); ++fit)
+        {
+        int vidx = faceToVoroIdx[fit];
+        for(int ff =0; ff<3; ++ff)
+            {
+            PDT::Face_handle neighFace = fit->neighbor(ff);
+            int vnidx = faceToVoroIdx[neighFace];
+            h_vn.data[3*vidx+ff] = vnidx;
+            };
+        };
 
-    //great... now, what is the maximum number of vertices for a cell?
+    //now create a list of what vertices are associated with each cell
+    //first get the maximum number of vertices for a cell, and the number of vertices per cell
+    cellVertexNum.resize(Ncells);
+    ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::overwrite);
     vertexMax = 0;
+    int nnum = 0;
     for(PDT::Vertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); ++vit)
         {
-        Vertex_circulator vc(vit);
+        PDT::Vertex_circulator vc(vit);
         int base = vc ->info();
         int neighs = 1;
         ++vc;
@@ -71,11 +88,29 @@ void AVM2D::setCellsVoronoiTesselation(int n)
             neighs += 1;
             ++vc;
             };
+        h_cvn.data[vit->info()] = neighs;
         if (neighs > vertexMax) vertexMax = neighs;
+        nnum += neighs;
         };
     vertexMax += 2;
-    cout << "vM = " <<vertexMax << endl;
-    //....now figure out indexing scheme to get voronoi vertices in some sensible way while simultaneously building the cell-vertex lists and vertex-vertes lists
+    cout << "Total number of neighs = " << nnum << endl;
+    cellVertices.resize(vertexMax*Ncells);
+    n_idx = Index2D(vertexMax,Ncells);
+
+    //now use face circulators and the map to get the vertices associated with each cell
+    ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::overwrite);
+    for(PDT::Vertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); ++vit)
+        {
+        int cellIdx = vit->info();
+        PDT::Face_circulator fc(vit);
+        int fidx = 0;
+        for (int ff = 0; ff < h_cvn.data[vit->info()]; ++ff)
+            {
+            h_cv.data[n_idx(fidx,cellIdx)] = faceToVoroIdx[fc];
+            ++fidx;
+            ++fc;
+            };
+        };
 
 
     //randomly set vertex directors

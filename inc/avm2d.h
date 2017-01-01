@@ -27,6 +27,9 @@ class AVM2D
         GPUArray<Dscalar2> VertexPositions;
         //! Cell positions... useful for computing the geometry of cells
         GPUArray<Dscalar2> CellPositions;
+        //!neighbors of every voronoi vertex
+        GPUArray<int> VertexNeighbors;
+
         //! Count the number of times "performTimeStep" has been called
         int Timestep;
 
