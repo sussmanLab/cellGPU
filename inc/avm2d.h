@@ -24,11 +24,13 @@ class AVM2D
         AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true);
 
         //! Position of the vertices
-        GPUArray<Dscalar2> VertexPositions;
+        GPUArray<Dscalar2> vertexPositions;
         //! Cell positions... useful for computing the geometry of cells
-        GPUArray<Dscalar2> CellPositions;
-        //!neighbors of every voronoi vertex
-        GPUArray<int> VertexNeighbors;
+        GPUArray<Dscalar2> cellPositions;
+        //! VERTEX neighbors of every voronoi vertex
+        GPUArray<int> vertexNeighbors;
+        //! Cell neighbors of every voronoi vertex
+        GPUArray<int> vertexCellNeighbors;
 
         //! Count the number of times "performTimeStep" has been called
         int Timestep;

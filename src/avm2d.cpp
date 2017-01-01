@@ -15,12 +15,12 @@ void AVM2D::setCellsVoronoiTesselation(int n)
     {
     //set number of cells, and a square box
     Ncells=n;
-    CellPositions.resize(Ncells);
+    cellPositions.resize(Ncells);
     Dscalar boxsize = sqrt((Dscalar)Ncells);
     Box.setSquare(boxsize,boxsize);
 
     //put cells in box randomly
-    ArrayHandle<Dscalar2> h_p(CellPositions,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         Dscalar x =EPSILON+boxsize/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
@@ -43,8 +43,8 @@ void AVM2D::setCellsVoronoiTesselation(int n)
 
     //set number of vertices
     Nvertices = 2*Ncells;
-    VertexPositions.resize(Nvertices);
-    ArrayHandle<Dscalar2> h_v(VertexPositions,access_location::host,access_mode::overwrite);
+    vertexPositions.resize(Nvertices);
+    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::overwrite);
 
     map<PDT::Face_handle,int> faceToVoroIdx;
     int idx = 0;
@@ -57,9 +57,12 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         faceToVoroIdx[fit] = idx;
         idx +=1;
         };
-    //create a list of what vertices are connected to what vertices
-    VertexNeighbors.resize(3*Nvertices);
-    ArrayHandle<int> h_vn(VertexNeighbors,access_location::host,access_mode::overwrite);
+    //create a list of what vertices are connected to what vertices,
+    //and what cells each vertex is part of
+    vertexNeighbors.resize(3*Nvertices);
+    vertexCellNeighbors.resize(3*Nvertices);
+    ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> h_vcn(vertexNeighbors,access_location::host,access_mode::overwrite);
     for(PDT::Face_iterator fit = T.faces_begin(); fit != T.faces_end(); ++fit)
         {
         int vidx = faceToVoroIdx[fit];
@@ -68,6 +71,7 @@ void AVM2D::setCellsVoronoiTesselation(int n)
             PDT::Face_handle neighFace = fit->neighbor(ff);
             int vnidx = faceToVoroIdx[neighFace];
             h_vn.data[3*vidx+ff] = vnidx;
+            h_vcn.data[3*vidx+ff] = fit->vertex(ff)->info();
             };
         };
 
