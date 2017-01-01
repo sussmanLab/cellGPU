@@ -320,3 +320,35 @@ void AVM2D::computeGeometryGPU()
                     Ncells,n_idx,Box);
     };
 
+/*!
+call kernels to (1) do force sets calculation, then (2) add them up
+*/
+void AVM2D::computeForcesGPU()
+    {
+    ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_fs(vertexForceSets,access_location::device, access_mode::overwrite);
+    ArrayHandle<Dscalar2> d_f(vertexForces,access_location::device, access_mode::overwrite);
+
+    int nForceSets = voroCur.getNumElements();
+    gpu_avm_force_sets(
+                    d_vcn.data,
+                    d_vc.data,
+                    d_vln.data,
+                    d_AP.data,
+                    d_APpref.data,
+                    d_fs.data,
+                    nForceSets,
+                    KA,
+                    KP
+                    );
+
+    gpu_avm_sum_force_sets(
+                    d_fs.data,
+                    d_f.data,
+                    Nvertices);
+    };
+

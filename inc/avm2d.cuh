@@ -29,4 +29,21 @@ bool gpu_avm_geometry(
                     Index2D  &n_idx, 
                     gpubox   &Box);
 
+bool gpu_avm_force_sets(
+                    int      *d_vcn,
+                    Dscalar2 *d_vc,
+                    Dscalar4 *d_vln,
+                    Dscalar2 *d_AP,
+                    Dscalar2 *d_APpref,
+                    Dscalar2 *d_fs,
+                    int nForceSets,
+                    Dscalar KA, Dscalar KP);
+
+bool gpu_avm_sum_force_sets(
+                    Dscalar2 *d_fs,
+                    Dscalar2 *d_f,
+                    int      Nvertices);
+                    
+
+
 #endif
