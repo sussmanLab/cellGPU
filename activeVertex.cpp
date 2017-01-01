@@ -69,6 +69,7 @@ int main(int argc, char*argv[])
         if(USE_GPU >= 0)
             {
             avm.computeGeometryGPU();
+            avm.computeForcesGPU();
             }
         else
             {
