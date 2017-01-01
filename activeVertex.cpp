@@ -66,7 +66,7 @@ int main(int argc, char*argv[])
     t1=clock();
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
-        if(USE_GPU > 0)
+        if(USE_GPU >= 0)
             {
             avm.computeGeometryGPU();
             }
