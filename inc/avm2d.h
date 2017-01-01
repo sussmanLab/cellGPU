@@ -90,7 +90,20 @@ class AVM2D
         Index2D n_idx;
         //!An upper bound for the maximum number of neighbors that any cell has
         int vertexMax;
-    };
 
+    //reporting functions
+    public:
+        void reportAP()
+                {
+                ArrayHandle<Dscalar2> ap(AreaPeri,access_location::host,access_mode::read);
+                Dscalar vtot= 0.0;
+                for (int i = 0; i < Ncells; ++i)
+                    {
+                    printf("%i: (%f,%f)\n",i,ap.data[i].x,ap.data[i].y);
+                    vtot+=ap.data[i].x;
+                    };
+                printf("total area = %f\n",vtot);
+                };
+    };
 
 #endif

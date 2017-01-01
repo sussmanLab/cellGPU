@@ -62,7 +62,11 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU);
-    avm.computeGeometryCPU();
+    if(USE_GPU > 0)
+        avm.computeGeometryGPU();
+    else
+        avm.computeGeometryCPU();
+    avm.reportAP();
 
     return 0;
     };
