@@ -160,7 +160,6 @@ from a databse and continue the dynamics in the same way every time. This is not
 void AVM2D::initializeCurandStates(int gs, int i)
     {
     ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
-
     int globalseed = gs;
     if(!Reproducible)
         {
@@ -169,7 +168,60 @@ void AVM2D::initializeCurandStates(int gs, int i)
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
     gpu_initialize_curand(d_cs.data,Nvertices,i,globalseed);
-
     };
 
+/*!
+Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the voronoi vertices)
+*/
+void AVM2D::computeGeometryCPU()
+    {
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
+
+    //compute the geometry for each cell
+    for (int i = 0; i < Ncells; ++i)
+        {
+        int neighs = h_nn.data[i];
+        Dscalar2 cellPos = h_p.data[i];
+        Dscalar2 vlast, vnext;
+        Dscalar Varea = 0.0;
+        Dscalar Vperi = 0.0;
+        //compute the vertex position relative to the cell position
+        Box.minDist(h_v.data[h_n.data[n_idx(neighs-1,i)]],cellPos,vlast);
+        for (int nn = 0; nn < neighs; ++nn)
+            {
+            Box.minDist(h_v.data[h_n.data[n_idx(nn,i)]],cellPos,vnext);
+            Varea += TriangleArea(vlast,vnext);
+            Dscalar dx = vlast.x-vnext.x;
+            Dscalar dy = vlast.y-vnext.y;
+            Vperi += sqrt(dx*dx+dy*dy);
+            vlast = vnext;
+            };
+        h_AP.data[i].x = Varea;
+        h_AP.data[i].y = Vperi;
+        };
+    };
+
+/*!
+Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the voronoi vertices)
+*/
+void AVM2D::computeGeometryGPU()
+    {
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
+    ArrayHandle<int> d_nn(cellVertexNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_n(cellVertices,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
+
+    gpu_avm_geometry(
+                    d_p.data,
+                    d_v.data,
+                    d_nn.data,
+                    d_n.data,
+                    d_AP.data,
+                    Ncells,n_idx,Box);
+    };
 

@@ -9,6 +9,7 @@
 #include "gpuarray.h"
 #include "gpubox.h"
 #include "indexer.h"
+#include "cu_functions.h"
 
 #include "DelaunayCGAL.h"
 
@@ -52,6 +53,11 @@ class AVM2D
 
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(int n);
+
+        //!Compute the geometry (area & perimeter) of the cells on the CPU
+        void computeGeometryCPU();
+        //!Compute the geometry (area & perimeter) of the cells on the GPU
+        void computeGeometryGPU();
 
     protected:
         //!Number of cells in the simulation
