@@ -73,6 +73,7 @@ int main(int argc, char*argv[])
         else
             {
             avm.computeGeometryCPU();
+            avm.computeForcesCPU();
             }
         };
     t2=clock();

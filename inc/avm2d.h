@@ -34,9 +34,9 @@ class AVM2D
         GPUArray<int> vertexCellNeighbors;
 
         //!an array containing net force on each vertex
-        GPUArray<Dscalar> vertexForces;
+        GPUArray<Dscalar2> vertexForces;
         //!an array containing the three contributions to the force on each vertex
-        GPUArray<Dscalar> vertexForceSets;
+        GPUArray<Dscalar2> vertexForceSets;
         //!3*Nvertices length array of the position of voro vertex
         GPUArray<Dscalar2> voroCur;
         //!3*Nvertices length array of the position of the last and next voro vertices along the cell
@@ -68,6 +68,12 @@ class AVM2D
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         void computeGeometryGPU();
 
+        //!Compute the geometry (area & perimeter) of the cells on the CPU
+        void computeForcesCPU();
+        //!Compute the geometry (area & perimeter) of the cells on the GPU
+        void computeForcesGPU();
+
+
     protected:
         //!Number of cells in the simulation
         int Ncells;
@@ -76,6 +82,11 @@ class AVM2D
 
         //!The time stepsize of the simulation
         Dscalar deltaT;
+
+        //!the area modulus
+        Dscalar KA;
+        //!The perimeter modulus
+        Dscalar KP;
 
         //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
         bool initializeGPURNG;

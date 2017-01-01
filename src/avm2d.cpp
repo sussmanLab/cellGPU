@@ -9,6 +9,8 @@ AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     Reproducible = reprod;
     Initialize(n,initGPURNG);
     setCellPreferencesUniform(A0,P0);
+    KA = 1.0;
+    KP = 1.0;
     };
 
 void AVM2D::setCellsVoronoiTesselation(int n)
@@ -227,6 +229,70 @@ void AVM2D::computeGeometryCPU()
         h_AP.data[i].y = Vperi;
         };
     };
+
+/*!
+Use the data pre-computed in the geometry routine to rapidly compute the net force on each verte
+*/
+void AVM2D::computeForcesCPU()
+    {
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_vc(voroCur,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar4> h_vln(voroLastNext,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+
+    ArrayHandle<Dscalar2> h_fs(vertexForceSets,access_location::host, access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_f(vertexForces,access_location::host, access_mode::overwrite);
+   
+    //first, compute the contribution to the force on each vertex from each of its three cells
+    Dscalar2 vlast,vcur,vnext;
+    Dscalar2 dlast,dnext;
+    Dscalar2 dAdv, dPdv;
+    for(int fsidx = 0; fsidx < vertexForceSets.getNumElements(); ++fsidx)
+        {
+        int cellIdx = h_vcn.data[fsidx];
+        
+        Dscalar Adiff = KA*(h_AP.data[cellIdx].x - h_APpref.data[cellIdx].x);
+        Dscalar Pdiff = KP*(h_AP.data[cellIdx].y - h_APpref.data[cellIdx].y);
+
+        vcur = h_vc.data[fsidx];
+        vlast.x = h_vln.data[fsidx].x;
+        vlast.y = h_vln.data[fsidx].y;
+        vnext.x = h_vln.data[fsidx].z;
+        vnext.y = h_vln.data[fsidx].w;
+
+        dAdv.x = 0.5*(vlast.y-vnext.y);
+        dAdv.y = 0.5*(vlast.x-vnext.x);
+
+        dlast.x = vlast.x-vcur.x;
+        dlast.y = vlast.y-vcur.y;
+        Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+        dnext.x = vcur.x-vnext.x;
+        dnext.y = vcur.y-vnext.y;
+        Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+        dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+
+        h_fs.data[fsidx].x = 2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
+        h_fs.data[fsidx].y = 2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
+        };
+
+    //now sum these up to get the force on each vertex
+    Dscalar2 ftot = make_Dscalar2(0.0,0.0);
+    for (int v = 0; v < Nvertices; ++v)
+        {
+        Dscalar2 ftemp = make_Dscalar2(0.0,0.0);
+        for (int ff = 0; ff < 3; ++ff)
+            {
+            ftemp.x += h_fs.data[3*v+ff].x;
+            ftemp.y += h_fs.data[3*v+ff].y;
+            };
+        h_f.data[v] = ftemp;
+        ftot.x +=ftemp.x;ftot.y+=ftemp.y;
+
+        };
+    };
+
 
 /*!
 Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the voronoi vertices)
