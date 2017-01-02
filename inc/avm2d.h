@@ -125,6 +125,19 @@ class AVM2D
 
     //reporting functions
     public:
+        void reportMeanForce()
+                {
+                ArrayHandle<Dscalar2> f(vertexForces,access_location::host,access_mode::read);
+                Dscalar fx= 0.0;
+                Dscalar fy = 0.0;
+                for (int i = 0; i < Nvertices; ++i)
+                    {
+                    fx += f.data[i].x;
+                    fy += f.data[i].y;
+                    };
+                printf("mean force area = (%g,%g)\n",fx/Nvertices, fy/Nvertices);
+                };
+
         void reportAP()
                 {
                 ArrayHandle<Dscalar2> ap(AreaPeri,access_location::host,access_mode::read);

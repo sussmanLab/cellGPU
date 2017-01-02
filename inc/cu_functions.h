@@ -128,6 +128,33 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     return;
     };
 
+
+/*! Given three consecutive voronoi vertices and some cell information, compute -dE/dv
+ Adiff = KA*(A_i-A_0)
+ Pdiff = KP*(P_i-P_0)
+ */
+HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, const Dscalar2 &vnext,
+                                   const Dscalar &Adiff, const Dscalar &Pdiff,
+                                   Dscalar2 &dEdv)
+    {
+    Dscalar2 dlast,dnext,dAdv,dPdv;
+
+    dAdv.x = 0.5*(vlast.y-vnext.y);
+    dAdv.y = 0.5*(vlast.x-vnext.x);
+    dlast.x = vlast.x-vcur.x;
+    dlast.y = vlast.y-vcur.y;
+    Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+    dnext.x = vcur.x-vnext.x;
+    dnext.y = vcur.y-vnext.y;
+    Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+
+    dEdv.x = 2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
+    dEdv.y = 2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
+    }
+
+
 #ifdef ENABLE_CUDA
 #include "cuda_runtime.h"
 //!Get basic stats about the chosen GPU (if it exists)

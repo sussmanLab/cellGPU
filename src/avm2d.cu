@@ -91,34 +91,18 @@ __global__ void avm_force_sets_kernel(
     if (fsidx >= nForceSets)
         return;
 
-    Dscalar2 vlast,vcur,vnext;
-    Dscalar2 dlast,dnext;
-    Dscalar2 dAdv, dPdv;
+    Dscalar2 vlast,vnext;
 
     int cellIdx = d_vcn[fsidx];
     Dscalar Adiff = KA*(d_AP[cellIdx].x - d_APpref[cellIdx].x);
     Dscalar Pdiff = KP*(d_AP[cellIdx].y - d_APpref[cellIdx].y);
 
-    vcur = d_vc[fsidx];
+    //vcur = d_vc[fsidx];
     vlast.x = d_vln[fsidx].x;
     vlast.y = d_vln[fsidx].y;
     vnext.x = d_vln[fsidx].z;
     vnext.y = d_vln[fsidx].w;
-
-    dAdv.x = 0.5*(vlast.y-vnext.y);
-    dAdv.y = 0.5*(vlast.x-vnext.x);
-
-    dlast.x = vlast.x-vcur.x;
-    dlast.y = vlast.y-vcur.y;
-    Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
-    dnext.x = vcur.x-vnext.x;
-    dnext.y = vcur.y-vnext.y;
-    Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
-
-    d_fs[fsidx].x = 2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
-    d_fs[fsidx].y = 2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
+    computeForceSetAVM(d_vc[fsidx],vlast,vnext,Adiff,Pdiff,d_fs[fsidx]);
     };
 
 

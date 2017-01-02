@@ -292,35 +292,20 @@ void AVM2D::computeForcesCPU()
    
     //first, compute the contribution to the force on each vertex from each of its three cells
     Dscalar2 vlast,vcur,vnext;
-    Dscalar2 dlast,dnext;
-    Dscalar2 dAdv, dPdv;
+    Dscalar2 dEdv;
+    Dscalar Adiff, Pdiff;
     for(int fsidx = 0; fsidx < vertexForceSets.getNumElements(); ++fsidx)
         {
         int cellIdx = h_vcn.data[fsidx];
-        
         Dscalar Adiff = KA*(h_AP.data[cellIdx].x - h_APpref.data[cellIdx].x);
         Dscalar Pdiff = KP*(h_AP.data[cellIdx].y - h_APpref.data[cellIdx].y);
-
         vcur = h_vc.data[fsidx];
-        vlast.x = h_vln.data[fsidx].x;
-        vlast.y = h_vln.data[fsidx].y;
-        vnext.x = h_vln.data[fsidx].z;
-        vnext.y = h_vln.data[fsidx].w;
+        vlast.x = h_vln.data[fsidx].x;  vlast.y = h_vln.data[fsidx].y;
+        vnext.x = h_vln.data[fsidx].z;  vnext.y = h_vln.data[fsidx].w;
 
-        dAdv.x = 0.5*(vlast.y-vnext.y);
-        dAdv.y = 0.5*(vlast.x-vnext.x);
-
-        dlast.x = vlast.x-vcur.x;
-        dlast.y = vlast.y-vcur.y;
-        Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
-        dnext.x = vcur.x-vnext.x;
-        dnext.y = vcur.y-vnext.y;
-        Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-        dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
-        dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
-
-        h_fs.data[fsidx].x = 2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
-        h_fs.data[fsidx].y = 2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
+        computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
+        h_fs.data[fsidx].x = dEdv.x;
+        h_fs.data[fsidx].y = dEdv.y;
         };
 
     //now sum these up to get the force on each vertex
