@@ -186,7 +186,7 @@ void AVM2D::performTimestep()
         performTimestepGPU();
     else
         performTimestepCPU();
-    }:
+    };
 
 /*!
 go through the parts of a timestep on the CPU
@@ -196,7 +196,7 @@ void AVM2D::performTimestepCPU()
     computeGeometryCPU();
     computeForcesCPU();
     //move vertices
-    
+
     //test for T1 transitions
     
     //as needed, update the cell-vertex, vertex-vertex, vertex-cell data structures et al.
