@@ -56,4 +56,14 @@ bool gpu_avm_displace_and_rotate(
                     gpubox &Box,
                     int Nvertices);
 
+bool gpu_avm_get_cell_positions(
+                    Dscalar2 *d_p,
+                    Dscalar2 *d_v,
+                    int      *d_nn,
+                    int      *d_n,
+                    int      N, 
+                    Index2D  &n_idx, 
+                    gpubox   &Box);
+
+
 #endif

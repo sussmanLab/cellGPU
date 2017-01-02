@@ -198,10 +198,10 @@ void AVM2D::performTimestepCPU()
     displaceAndRotateCPU();
 
     //test for T1 transitions
-    
+
     //as needed, update the cell-vertex, vertex-vertex, vertex-cell data structures et al.
 
-    //recompute the "cell positions" for convenience
+    getCellPositionsCPU();
     };
 
 /*!
@@ -217,8 +217,7 @@ void AVM2D::performTimestepGPU()
     
     //as needed, update the cell-vertex, vertex-vertex, vertex-cell data structures et al.
 
-    //recompute the "cell positions" for convenience
-
+    getCellPositionsGPU();
     };
 
 /*!
@@ -352,6 +351,40 @@ void AVM2D::displaceAndRotateCPU()
         };
     };
 
+
+/*!
+One would prefer the cell position to be defined as the centroid, requiring an additional computation of the cell area.
+This may be implemented some day, but for now we define the cell position as the straight average of the vertex positions.
+*/
+void AVM2D::getCellPositionsCPU()
+    {
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
+
+    Dscalar2 vertex,oldCellPos,pos;
+    for (int cell = 0; cell < Ncells; ++cell)
+        {
+        int neighs = h_nn.data[cell];
+        oldCellPos = h_p.data[cell];
+        pos.x=0.0;pos.y=0.0;
+        //compute the vertex position relative to the cell position
+        for (int n = 0; n < neighs; ++n)
+            {
+            int vidx = h_n.data[n_idx(n,cell)];
+            Box.minDist(h_v.data[vidx],oldCellPos,vertex);
+            pos.x += vertex.x;
+            pos.y += vertex.y;
+            };
+        pos.x /= neighs;
+        pos.y /= neighs;
+        Box.putInBoxReal(pos);
+        h_p.data[cell] = pos;
+        };
+    };
+
+
 /*!
 Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the voronoi vertices)
 */
@@ -426,5 +459,21 @@ void AVM2D::displaceAndRotateGPU()
                                 d_cs.data,
                                 v0,Dr,deltaT,
                                 Timestep, Box, Nvertices);
+    };
+
+void AVM2D::getCellPositionsGPU()
+    {
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
+    ArrayHandle<int> d_nn(cellVertexNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_n(cellVertices,access_location::device,access_mode::read);
+
+    gpu_avm_get_cell_positions(d_p.data,
+                               d_v.data,
+                               d_nn.data,
+                               d_n.data,
+                               Ncells,
+                               n_idx,
+                               Box);
     };
 

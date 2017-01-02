@@ -16,6 +16,9 @@
 /*!
 A class that implements an active vertex model in 2D. This involves calculating forces on
 vertices, moving them around, and updating the topology of the cells according to some criteria.
+
+From the point of view of reusing code this could have been a child of SPV2D, but logically since
+the AVM does not refer to an underlying triangulation I have decided to implement it separately.
 */
 //!Implement a 2D active vertex model
 class AVM2D
@@ -26,7 +29,7 @@ class AVM2D
 
         //! Position of the vertices
         GPUArray<Dscalar2> vertexPositions;
-        //! Cell positions... useful for computing the geometry of cells
+        //! Cell positions... useful for computing the geometry of cells. At the moment cellPositions just ensures that the origin is enclosed by the vertices of a cell. This is irrelevant in almost all of the code, so an optimization would be to remove this.
         GPUArray<Dscalar2> cellPositions;
         //! VERTEX neighbors of every voronoi vertex
         GPUArray<int> vertexNeighbors;
@@ -90,6 +93,11 @@ class AVM2D
         void displaceAndRotateCPU();
         //!Displace vertices and rotate directors on the GPU
         void displaceAndRotateGPU();
+
+        //!Get the cell position from the vertices on the CPU
+        void getCellPositionsCPU();
+        //!Get the cell position from the vertices on the GPU
+        void getCellPositionsGPU();
 
 
     protected:

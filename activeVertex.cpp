@@ -64,27 +64,18 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU);
+    if(USE_GPU < 0)
+        avm.setCPU();
     avm.setv0Dr(v0,Dr);
 
     t1=clock();
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
-        if(USE_GPU >= 0)
-            {
-            avm.computeGeometryGPU();
-            avm.computeForcesGPU();
-            avm.displaceAndRotateGPU();
-            }
-        else
-            {
-            avm.computeGeometryCPU();
-            avm.computeForcesCPU();
-            avm.displaceAndRotateCPU();
-            }
+        avm.performTimestep();
         };
     t2=clock();
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl;
-    
+
     avm.reportMeanForce();
 
 

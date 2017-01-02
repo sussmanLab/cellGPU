@@ -158,6 +158,42 @@ __global__ void avm_displace_and_rotate_kernel(
     d_cs[idx] = randState;
     };
 
+
+//!compute the average position of the vertices of each cell, store as the "cell position"
+__global__ void avm_get_cell_positions_kernel(Dscalar2* d_p,
+                                              Dscalar2* d_v,
+                                              int    * d_nn,
+                                              int    * d_n,
+                                              int N,
+                                              Index2D n_idx,
+                                              gpubox Box)
+    {
+    // read in the cell index that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+
+    Dscalar2 vertex, oldCellPos,pos;
+    pos.x=0.0;pos.y=0.0;
+    oldCellPos=d_p[idx];
+    int neighs = d_nn[idx];
+    for (int n = 0; n < neighs; ++n)
+        {
+        Box.minDist(d_v[ d_n[n_idx(n,idx)] ],oldCellPos,vertex);
+        pos.x += vertex.x;
+        pos.y += vertex.y;
+        };
+    pos.x /= neighs;
+    pos.y /= neighs;
+    Box.putInBoxReal(pos);
+    d_p[idx] = pos;
+    };
+
+
+
+
+
+
 //!Call the kernel to initialize a different RNG for each particle
 bool gpu_initialize_curand(curandState *states,
                     int N,
@@ -198,6 +234,7 @@ bool gpu_avm_geometry(
     return cudaSuccess;
     };
 
+//!Call the kernel to calculate force sets
 bool gpu_avm_force_sets(
                     int      *d_vcn,
                     Dscalar2 *d_vc,
@@ -217,6 +254,7 @@ bool gpu_avm_force_sets(
     return cudaSuccess;
     };
 
+//!Call the kernel to sum up the force sets to get net force on each vertex
 bool gpu_avm_sum_force_sets(
                     Dscalar2 *d_fs,
                     Dscalar2 *d_f,
@@ -251,6 +289,26 @@ bool gpu_avm_displace_and_rotate(
 
 
     avm_displace_and_rotate_kernel<<<nblocks,block_size>>>(d_v,d_f,d_vd,d_cs,v0,Dr,deltaT,Timestep,Box,N);
+    //cudaThreadSynchronize();
+    return cudaSuccess;
+    };
+
+//!Call the kernel to calculate the position of each cell from the position of its vertices
+bool gpu_avm_get_cell_positions(
+                    Dscalar2 *d_p,
+                    Dscalar2 *d_v,
+                    int      *d_nn,
+                    int      *d_n,
+                    int      N, 
+                    Index2D  &n_idx, 
+                    gpubox   &Box)
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
+
+
+    avm_get_cell_positions_kernel<<<nblocks,block_size>>>(d_p,d_v,d_nn,d_n,N, n_idx, Box);
     //cudaThreadSynchronize();
     return cudaSuccess;
     };
