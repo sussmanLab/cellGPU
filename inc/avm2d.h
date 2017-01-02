@@ -54,6 +54,9 @@ class AVM2D
         //!Set uniform cell area and perimeter preferences
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
 
+        //!Set uniform motility
+        void setv0Dr(Dscalar _v0,Dscalar _Dr){v0=_v0; Dr = _Dr;};
+
         //!Set the simulation time stepsize
         void setDeltaT(Dscalar dt){deltaT = dt;};
 
@@ -83,6 +86,11 @@ class AVM2D
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         void computeForcesGPU();
 
+        //!Displace vertices and rotate directors on the CPU
+        void displaceAndRotateCPU();
+        //!Displace vertices and rotate directors on the GPU
+        void displaceAndRotateGPU();
+
 
     protected:
         //!Number of cells in the simulation
@@ -99,6 +107,11 @@ class AVM2D
         Dscalar KA;
         //!The perimeter modulus
         Dscalar KP;
+
+        //!velocity of vertices
+        Dscalar v0;
+        //!rotational diffusion of vertex directors
+        Dscalar Dr;
 
         //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
         bool initializeGPURNG;

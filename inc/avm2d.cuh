@@ -44,6 +44,16 @@ bool gpu_avm_sum_force_sets(
                     Dscalar2 *d_f,
                     int      Nvertices);
                     
-
+bool gpu_avm_displace_and_rotate(
+                    Dscalar2 *d_v,
+                    Dscalar2 *d_f,
+                    Dscalar *d_vd,
+                    curandState *d_cs,
+                    Dscalar v0,
+                    Dscalar Dr,
+                    Dscalar deltaT,
+                    int Timestep,
+                    gpubox &Box,
+                    int Nvertices);
 
 #endif

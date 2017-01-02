@@ -20,10 +20,11 @@ int main(int argc, char*argv[])
     Dscalar p0 = 4.0;
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.1;
+    Dscalar Dr = 1.0;
     Dscalar gamma = 0.0;
 
     int program_switch = 0;
-    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
+    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:d:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
@@ -37,6 +38,7 @@ int main(int argc, char*argv[])
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
             case 'v': v0 = atof(optarg); break;
+            case 'd': Dr = atof(optarg); break;
             case '?':
                     if(optopt=='c')
                         std::cerr<<"Option -" << optopt << "requires an argument.\n";
@@ -62,6 +64,7 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU);
+    avm.setv0Dr(v0,Dr);
 
     t1=clock();
     for (int timestep = 0; timestep < tSteps; ++timestep)
@@ -70,11 +73,13 @@ int main(int argc, char*argv[])
             {
             avm.computeGeometryGPU();
             avm.computeForcesGPU();
+            avm.displaceAndRotateGPU();
             }
         else
             {
             avm.computeGeometryCPU();
             avm.computeForcesCPU();
+            avm.displaceAndRotateCPU();
             }
         };
     t2=clock();

@@ -195,7 +195,7 @@ void AVM2D::performTimestepCPU()
     {
     computeGeometryCPU();
     computeForcesCPU();
-    //move vertices
+    displaceAndRotateCPU();
 
     //test for T1 transitions
     
@@ -211,7 +211,7 @@ void AVM2D::performTimestepGPU()
     {
     computeGeometryGPU();
     computeForcesGPU();
-    //move vertices
+    displaceAndRotateGPU();
     
     //test for T1 transitions
     
@@ -324,6 +324,33 @@ void AVM2D::computeForcesCPU()
         };
     };
 
+/*!
+Move every vertex according to the net force on it and its motility...CPU routine
+*/
+void AVM2D::displaceAndRotateCPU()
+    {
+    ArrayHandle<Dscalar2> h_f(vertexForces,access_location::host, access_mode::read);
+    ArrayHandle<Dscalar> h_vd(vertexDirectors,access_location::host, access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host, access_mode::readwrite);
+    
+    random_device rd;
+    mt19937 gen(rd());
+    normal_distribution<> normal(0.0,1.0);
+
+    Dscalar directorx,directory;
+    Dscalar2 disp;
+    for (int i = 0; i < Nvertices; ++i)
+        {
+        //move vertices
+        directorx = cos(h_vd.data[i]);
+        directory = sin(h_vd.data[i]);
+        h_v.data[i].x += deltaT*(v0*directorx+h_f.data[i].x);
+        h_v.data[i].y += deltaT*(v0*directory+h_f.data[i].y);
+        Box.putInBoxReal(h_v.data[i]);
+        //add some noise to the vertex director
+        h_vd.data[i] += normal(gen)*sqrt(2.0*deltaT*Dr);
+        };
+    };
 
 /*!
 Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the voronoi vertices)
@@ -381,5 +408,23 @@ void AVM2D::computeForcesGPU()
                     d_fs.data,
                     d_f.data,
                     Nvertices);
+    };
+
+/*!
+Move every vertex according to the net force on it and its motility...GPU routine
+*/
+void AVM2D::displaceAndRotateGPU()
+    {
+    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device, access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_f(vertexForces,access_location::device, access_mode::read);
+    ArrayHandle<Dscalar> d_vd(vertexDirectors,access_location::device, access_mode::readwrite);
+    ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::read);
+
+    gpu_avm_displace_and_rotate(d_v.data,
+                                d_f.data,
+                                d_vd.data,
+                                d_cs.data,
+                                v0,Dr,deltaT,
+                                Timestep, Box, Nvertices);
     };
 
