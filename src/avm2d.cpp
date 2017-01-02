@@ -164,7 +164,7 @@ call this function first to copy over the cellVertices structure into a larger a
  */
 void AVM2D::growCellVerticesList(int newVertexMax)
     {
-    cout << "maximum number of Voronoi vertices per cell grew from " <<vertexMax << " to " << newVertexMax << endl;
+    cout << "maximum number of vertices per cell grew from " <<vertexMax << " to " << newVertexMax << endl;
     vertexMax = newVertexMax;
     Index2D old_idx = n_idx;
     n_idx = Index2D(vertexMax,Ncells);
@@ -239,16 +239,16 @@ void AVM2D::performTimestepGPU()
     computeGeometryGPU();
     computeForcesGPU();
 //    displaceAndRotateGPU();
-    
+
     //test for T1 transitions
-    
+
     //as needed, update the cell-vertex, vertex-vertex, vertex-cell data structures et al.
 
     getCellPositionsGPU();
     };
 
 /*!
-Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the voronoi vertices)
+Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the vertices)
 */
 void AVM2D::computeGeometryCPU()
     {
@@ -276,7 +276,7 @@ void AVM2D::computeGeometryCPU()
         Box.minDist(h_v.data[vidx],cellPos,vcur);
         for (int nn = 0; nn < neighs; ++nn)
             {
-            //for easy force calculation, save the current, last, and next voronoi vertex position in the approprate spot.
+            //for easy force calculation, save the current, last, and next vertex position in the approprate spot.
             int forceSetIdx= -1;
             for (int ff = 0; ff < 3; ++ff)
                 if(h_vcn.data[3*vidx+ff]==i)
@@ -290,7 +290,7 @@ void AVM2D::computeGeometryCPU()
             Dscalar dx = vcur.x-vnext.x;
             Dscalar dy = vcur.y-vnext.y;
             Vperi += sqrt(dx*dx+dy*dy);
-            //save voronoi positions in a convenient form
+            //save vertex positions in a convenient form
             h_vc.data[forceSetIdx] = vcur;
             h_vln.data[forceSetIdx] = make_Dscalar4(vlast.x,vlast.y,vnext.x,vnext.y);
             //advance the loop
@@ -556,7 +556,7 @@ void AVM2D::getCellPositionsCPU()
 
 
 /*!
-Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the voronoi vertices)
+Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the vertices)
 */
 void AVM2D::computeGeometryGPU()
     {

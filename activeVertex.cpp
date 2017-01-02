@@ -6,6 +6,7 @@
 
 #include "avm2d.h"
 #include "cu_functions.h"
+#include "DatabaseAVM.h"
 
 int main(int argc, char*argv[])
 {
@@ -67,12 +68,22 @@ int main(int argc, char*argv[])
     if(USE_GPU < 0)
         avm.setCPU();
     avm.setv0Dr(v0,Dr);
+    avm.setDeltaT(dt);
+
+    for (int timestep = 0; timestep < initSteps; ++timestep)
+        {
+        avm.performTimestep();
+        };
 
     t1=clock();
+    if(initializeGPU)
+        cudaProfilerStart();
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
         avm.performTimestep();
         };
+    if(initializeGPU)
+        cudaProfilerStop();
     t2=clock();
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl;
 

@@ -31,9 +31,12 @@ class AVM2D
         GPUArray<Dscalar2> vertexPositions;
         //! Cell positions... useful for computing the geometry of cells. At the moment cellPositions just ensures that the origin is enclosed by the vertices of a cell. This is irrelevant in almost all of the code, so an optimization would be to remove this.
         GPUArray<Dscalar2> cellPositions;
-        //! VERTEX neighbors of every voronoi vertex
+        //!An array of angles (relative to \hat{x}) that the vertex directors point
+        GPUArray<Dscalar> vertexDirectors;
+
+        //! VERTEX neighbors of every vertex
         GPUArray<int> vertexNeighbors;
-        //! Cell neighbors of every voronoi vertex
+        //! Cell neighbors of every vertex
         GPUArray<int> vertexCellNeighbors;
 
         //!an array containing net force on each vertex
@@ -47,6 +50,9 @@ class AVM2D
 
         //! Count the number of times "performTimeStep" has been called
         int Timestep;
+
+        //!The time stepsize of the simulation
+        Dscalar deltaT;
 
         //!the box defining the periodic domain
         gpubox Box;
@@ -115,8 +121,6 @@ class AVM2D
         //!Number of vertices (i.e, degrees of freedom)
         int Nvertices;
 
-        //!The time stepsize of the simulation
-        Dscalar deltaT;
         //!A flag that, when true, has performTimestep call the GPU routines
         bool GPUcompute;
 
@@ -141,8 +145,6 @@ class AVM2D
 
         //! A flag that determines whether the GPU RNG is the same every time.
         bool Reproducible;
-        //!An array of angles (relative to \hat{x}) that the vertex directors point
-        GPUArray<Dscalar> vertexDirectors;
 
         //!The number of vertices defining each cell
         GPUArray<int> cellVertexNum;

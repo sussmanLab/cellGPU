@@ -6,6 +6,7 @@
 #include <netcdfcpp.h>
 #include <string>
 #include "vector_types.h"
+#include "spv2d.h" //this is bad form, but I don't want to break existing compilation paths when I merge avm with master....fix this later
 
 
 using namespace std;
