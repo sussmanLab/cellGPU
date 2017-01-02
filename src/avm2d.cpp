@@ -7,6 +7,7 @@ AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     {
     printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
     Reproducible = reprod;
+    GPUcompute=true;
     Initialize(n,initGPURNG);
     setCellPreferencesUniform(A0,P0);
     KA = 1.0;
@@ -173,6 +174,51 @@ void AVM2D::initializeCurandStates(int gs, int i)
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
     gpu_initialize_curand(d_cs.data,Nvertices,i,globalseed);
+    };
+
+/*!
+increment the time step, call the right routine
+*/
+void AVM2D::performTimestep()
+    {
+    Timestep += 1;
+    if(GPUcompute)
+        performTimestepGPU();
+    else
+        performTimestepCPU();
+    }:
+
+/*!
+go through the parts of a timestep on the CPU
+*/
+void AVM2D::performTimestepCPU()
+    {
+    computeGeometryCPU();
+    computeForcesCPU();
+    //move vertices
+    
+    //test for T1 transitions
+    
+    //as needed, update the cell-vertex, vertex-vertex, vertex-cell data structures et al.
+
+    //recompute the "cell positions" for convenience
+    };
+
+/*!
+go through the parts of a timestep on the GPU
+*/
+void AVM2D::performTimestepGPU()
+    {
+    computeGeometryGPU();
+    computeForcesGPU();
+    //move vertices
+    
+    //test for T1 transitions
+    
+    //as needed, update the cell-vertex, vertex-vertex, vertex-cell data structures et al.
+
+    //recompute the "cell positions" for convenience
+
     };
 
 /*!

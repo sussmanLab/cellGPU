@@ -48,6 +48,9 @@ class AVM2D
         //!the box defining the periodic domain
         gpubox Box;
 
+        //!Enforce CPU-only operation.
+        void setCPU(){GPUcompute = false;};
+
         //!Set uniform cell area and perimeter preferences
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
 
@@ -62,6 +65,13 @@ class AVM2D
 
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(int n);
+
+        //!progress through the parts of a time step...simply an interface to the correct other procedure
+        void performTimestep();
+        //!progress through the parts of a time step on the CPU
+        void performTimestepCPU();
+        //!progress through the parts of a time step on the GPU
+        void performTimestepGPU();
 
         //!Compute the geometry (area & perimeter) of the cells on the CPU
         void computeGeometryCPU();
@@ -82,6 +92,8 @@ class AVM2D
 
         //!The time stepsize of the simulation
         Dscalar deltaT;
+        //!A flag that, when true, has performTimestep call the GPU routines
+        bool GPUcompute;
 
         //!the area modulus
         Dscalar KA;
