@@ -72,6 +72,11 @@ HOSTDEVICE Dscalar dot(const Dscalar2 &p1, const Dscalar2 &p2)
     return p1.x*p2.x+p1.y*p2.y;
     };
 
+//!The norm of a 2-component vector
+HOSTDEVICE Dscalar norm(const Dscalar2 &p)
+    {
+    return sqrt(p.x*p.x+p.y*p.y);
+    };
 
 //!Calculate the area of a triangle with a vertex at the origin
 HOSTDEVICE Dscalar TriangleArea(const Dscalar2 &p1, const Dscalar2 &p2)

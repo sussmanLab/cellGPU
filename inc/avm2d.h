@@ -72,6 +72,9 @@ class AVM2D
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(int n);
 
+        //!if the maximum number of vertices per cell increases, grow the cellVertices list
+        void growCellVerticesList(int newVertexMax);
+
         //!progress through the parts of a time step...simply an interface to the correct other procedure
         void performTimestep();
         //!progress through the parts of a time step on the CPU
@@ -93,6 +96,12 @@ class AVM2D
         void displaceAndRotateCPU();
         //!Displace vertices and rotate directors on the GPU
         void displaceAndRotateGPU();
+
+        //!Simple test for T1 transitions (edge length less than threshold) on the CPU
+        void testAndPerformT1TransitionsCPU();
+        //!Simple test for T1 transitions (edge length less than threshold) on the GPU
+        void testForT1GPU();
+
 
         //!Get the cell position from the vertices on the CPU
         void getCellPositionsCPU();
