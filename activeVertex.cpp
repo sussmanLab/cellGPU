@@ -64,6 +64,11 @@ int main(int argc, char*argv[])
     else
         initializeGPU = false;
 
+    char dataname[256];
+    sprintf(dataname,"/home/daniel/test.nc");
+    AVMDatabase ncdat(2*numpts,dataname,NcFile::Replace);
+
+
     AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU);
     if(USE_GPU < 0)
         avm.setCPU();
@@ -73,6 +78,8 @@ int main(int argc, char*argv[])
     for (int timestep = 0; timestep < initSteps; ++timestep)
         {
         avm.performTimestep();
+        ncdat.WriteState(avm);
+
         };
 
     t1=clock();
