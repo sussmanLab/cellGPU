@@ -23,7 +23,7 @@ private:
     typedef AVM2D STATE;
     int Nv; //!< number of vertices in AVM
     int Nvn; //!< the number of vertex-vertex connections
-    NcDim *recDim, *NvDim, *NvnDim, *boxDim, *unitDim; //!< NcDims we'll use
+    NcDim *recDim, *NvDim, *dofDim, *NvnDim, *boxDim, *unitDim; //!< NcDims we'll use
     NcVar *posVar, *vneighVar, *directorVar, *BoxMatrixVar, *timeVar; //!<NcVars we'll use
     int Current;    //!< keeps track of the current record when in write mode
 
@@ -80,17 +80,18 @@ void AVMDatabase::SetDimVar()
 {
     //Set the dimensions
     recDim = File.add_dim("rec");
-    NvDim  = File.add_dim("dof",  Nv*2);
+    NvDim  = File.add_dim("Nv",  Nv);
+    dofDim  = File.add_dim("dof",  Nv*2);
     NvnDim = File.add_dim("Nvn", Nv*3);
     boxDim = File.add_dim("boxdim",4);
     unitDim = File.add_dim("unit",1);
 
     //Set the variables
-    timeVar          = File.add_var("time",     ncDscalar,recDim, unitDim);
-    posVar          = File.add_var("pos",       ncDscalar,recDim, NvDim);
+    posVar          = File.add_var("pos",       ncDscalar,recDim, dofDim);
     vneighVar          = File.add_var("Vneighs",         ncInt,recDim, NvnDim );
     directorVar          = File.add_var("director",         ncDscalar,recDim, NvDim );
     BoxMatrixVar    = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
+    timeVar          = File.add_var("time",     ncDscalar,recDim, unitDim);
 }
 
 void AVMDatabase::GetDimVar()
@@ -98,7 +99,8 @@ void AVMDatabase::GetDimVar()
     //Get the dimensions
     recDim = File.get_dim("rec");
     boxDim = File.get_dim("boxdim");
-    NvDim  = File.get_dim("dof");
+    NvDim  = File.get_dim("Nv");
+    dofDim  = File.get_dim("dof");
     NvnDim = File.get_dim("Nvn");
     unitDim = File.get_dim("unit");
     //Get the variables
@@ -135,11 +137,15 @@ void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
     for (int ii = 0; ii < Nv; ++ii)
         {
         int pidx = ii;
+        directordat[ii] = h_cd.data[pidx];
+        };
+    for (int ii = 0; ii < Nv; ++ii)
+        {
+        int pidx = ii;
         Dscalar px = h_p.data[pidx].x;
         Dscalar py = h_p.data[pidx].y;
         posdat[(2*idx)] = px;
         posdat[(2*idx)+1] = py;
-        directordat[ii] = h_cd.data[pidx];
         idx +=1;
         };
     for (int ii = 0; ii < 3*Nv; ++ii)

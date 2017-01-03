@@ -66,7 +66,8 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"/home/daniel/test.nc");
-    AVMDatabase ncdat(2*numpts,dataname,NcFile::Replace);
+    int Nvert = 2*numpts;
+    AVMDatabase ncdat(Nvert,dataname,NcFile::Replace);
 
 
     AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU);
@@ -75,6 +76,7 @@ int main(int argc, char*argv[])
     avm.setv0Dr(v0,Dr);
     avm.setDeltaT(dt);
 
+    ncdat.WriteState(avm);
     for (int timestep = 0; timestep < initSteps; ++timestep)
         {
         avm.performTimestep();
