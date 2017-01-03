@@ -157,7 +157,7 @@ class AVM2D
 
 
         //utility functions
-        void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, bool &growList);
+        void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
 
     //reporting functions
     public:
