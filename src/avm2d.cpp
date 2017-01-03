@@ -193,7 +193,7 @@ from a databse and continue the dynamics in the same way every time. This is not
 */
 void AVM2D::initializeCurandStates(int gs, int i)
     {
-    ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::overwrite);
+    ArrayHandle<curandState> d_curandRNGs(devStates,access_location::device,access_mode::overwrite);
     int globalseed = gs;
     if(!Reproducible)
         {
@@ -201,7 +201,7 @@ void AVM2D::initializeCurandStates(int gs, int i)
         globalseed = (int)t1 % 100000;
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
-    gpu_initialize_curand(d_cs.data,Nvertices,i,globalseed);
+    gpu_initialize_curand(d_curandRNGs.data,Nvertices,i,globalseed);
     };
 
 /*!
@@ -358,7 +358,7 @@ void AVM2D::displaceAndRotateCPU()
     ArrayHandle<Dscalar2> h_f(vertexForces,access_location::host, access_mode::read);
     ArrayHandle<Dscalar> h_vd(vertexDirectors,access_location::host, access_mode::readwrite);
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host, access_mode::readwrite);
-    
+
     random_device rd;
     mt19937 gen(rd());
     normal_distribution<> normal(0.0,1.0);
