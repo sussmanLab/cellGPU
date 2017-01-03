@@ -349,11 +349,6 @@ void AVM2D::computeForcesCPU()
         vnext.x = h_vln.data[fsidx].z;  vnext.y = h_vln.data[fsidx].w;
 
         computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
-        if(norm(dEdv) > 50)
-            {
-            printf("vertex %i,%i: F = (%f,%f)\n",fsidx/3,cellIdx,dEdv.x,dEdv.y);
-            printf("Adiff = %f\t Pdiff = %f;\t (%f,%f), (%f,%f), (%f,%f)\n\n",Adiff,Pdiff,vcur.x,vcur.y,vlast.x,vlast.y,vnext.x,vnext.y);
-            };
         h_fs.data[fsidx].x = dEdv.x;
         h_fs.data[fsidx].y = dEdv.y;
         };
@@ -544,7 +539,7 @@ This function also performs the transition and maintains the auxiliary data stru
  */
 void AVM2D::testAndPerformT1TransitionsCPU()
     {
-    Dscalar T1THRESHOLD = 0.01;
+    Dscalar T1THRESHOLD = 0.04;
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::readwrite);
