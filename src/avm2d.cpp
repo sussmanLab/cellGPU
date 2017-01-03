@@ -184,7 +184,7 @@ void AVM2D::growCellVerticesList(int newVertexMax)
 
     GPUArray<int> newCellVertices;
     newCellVertices.resize(vertexMax*Ncells);
-
+    {//scope for array handles
     ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n_old(cellVertices,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(newCellVertices,access_location::host,access_mode::read);
@@ -197,6 +197,8 @@ void AVM2D::growCellVerticesList(int newVertexMax)
             h_n.data[n_idx(n,cell)] = h_n_old.data[old_idx(n,cell)];
             };
         };
+    };//scope for array handles
+    cellVertices = newCellVertices;
     };
 
 /*!
@@ -347,6 +349,11 @@ void AVM2D::computeForcesCPU()
         vnext.x = h_vln.data[fsidx].z;  vnext.y = h_vln.data[fsidx].w;
 
         computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
+        if(norm(dEdv) > 50)
+            {
+            printf("vertex %i,%i: F = (%f,%f)\n",fsidx/3,cellIdx,dEdv.x,dEdv.y);
+            printf("Adiff = %f\t Pdiff = %f;\t (%f,%f), (%f,%f), (%f,%f)\n\n",Adiff,Pdiff,vcur.x,vcur.y,vlast.x,vlast.y,vnext.x,vnext.y);
+            };
         h_fs.data[fsidx].x = dEdv.x;
         h_fs.data[fsidx].y = dEdv.y;
         };
@@ -362,7 +369,6 @@ void AVM2D::computeForcesCPU()
             ftemp.y += h_fs.data[3*v+ff].y;
             };
         h_f.data[v] = ftemp;
-        //printf("vertex %i: fx = %f\n",v,h_f.data[v].x);
         ftot.x +=ftemp.x;ftot.y+=ftemp.y;
 
         };
@@ -440,8 +446,6 @@ void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 
         vlast = vcur;
         vcur = vnext;
         };
-    vertexSet.z = vnext;
-    vertexSet.w = vlast;
 
     //classify cell1
     cneigh = h_cvn.data[cell1];
@@ -461,8 +465,6 @@ void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 
     else
         {
         cellSet.y = cell1;
-        vertexSet.x = vlast;
-        vertexSet.y = vnext;
         };
 
     //classify cell2
@@ -483,14 +485,12 @@ void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 
     else
         {
         cellSet.y = cell2;
-        vertexSet.x = vlast;
-        vertexSet.y = vnext;
         };
 
     //classify cell3
     cneigh = h_cvn.data[cell3];
     vlast = h_cv.data[ n_idx(cneigh-2,cell3) ];
-    vcur = h_cv.data[ n_idx(cneigh-1,cell1) ];
+    vcur = h_cv.data[ n_idx(cneigh-1,cell3) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
         vnext = h_cv.data[n_idx(cn,cell3)];
@@ -505,9 +505,33 @@ void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 
     else
         {
         cellSet.y = cell3;
-        vertexSet.x = vlast;
-        vertexSet.y = vnext;
         };
+
+    //get the vertexSet by examining cells j and l
+    cneigh = h_cvn.data[cellSet.y];
+    vlast = h_cv.data[ n_idx(cneigh-2,cellSet.y) ];
+    vcur = h_cv.data[ n_idx(cneigh-1,cellSet.y) ];
+    for (int cn = 0; cn < cneigh; ++cn)
+        {
+        vnext = h_cv.data[n_idx(cn,cellSet.y)];
+        if(vcur == vertex1) break;
+        vlast = vcur;
+        vcur = vnext;
+        };
+    vertexSet.x=vlast;
+    vertexSet.y=vnext;
+    cneigh = h_cvn.data[cellSet.w];
+    vlast = h_cv.data[ n_idx(cneigh-2,cellSet.w) ];
+    vcur = h_cv.data[ n_idx(cneigh-1,cellSet.w) ];
+    for (int cn = 0; cn < cneigh; ++cn)
+        {
+        vnext = h_cv.data[n_idx(cn,cellSet.w)];
+        if(vcur == vertex2) break;
+        vlast = vcur;
+        vcur = vnext;
+        };
+    vertexSet.w=vlast;
+    vertexSet.z=vnext;
 
     //Does the cell-vertex-neighbor data structure need to be bigger?
     if(h_cvn.data[cellSet.x] == vertexMax || h_cvn.data[cellSet.z] == vertexMax)
@@ -565,7 +589,12 @@ void AVM2D::testAndPerformT1TransitionsCPU()
                     bool growCellVertexList = false;
                     getCellVertexSetForT1(vertex1,vertex2,cellSet,vertexSet,growCellVertexList);
 
-printf("Vertices (%i,%i)\t CellSet = (%i,%i,%i,%i)\t vertexSet = (%i,%i,%i,%i)\n",vertex1,vertex2,cellSet.x,cellSet.y,cellSet.z,cellSet.w,vertexSet.x,vertexSet.y,vertexSet.z,vertexSet.w);
+//printf("Vertices (%i,%i)\t CellSet = (%i,%i,%i,%i)\t vertexSet = (%i,%i,%i,%i)\n",vertex1,vertex2,cellSet.x,cellSet.y,cellSet.z,cellSet.w,vertexSet.x,vertexSet.y,vertexSet.z,vertexSet.w);
+
+//reportNeighborsCell(cellSet.x);
+//reportNeighborsCell(cellSet.y);
+//reportNeighborsCell(cellSet.z);
+//reportNeighborsCell(cellSet.w);
                     //Does the cell-vertex-neighbor data structure need to be bigger?
                     if(growCellVertexList)
                         {
@@ -615,9 +644,9 @@ printf("Vertices (%i,%i)\t CellSet = (%i,%i,%i,%i)\t vertexSet = (%i,%i,%i,%i)\n
                         h_cv.data[n_idx(cc,cellSet.x)] = h_cv.data[n_idx(cidx,cellSet.x)];
                         cidx +=1;
                         };
-                    h_cvn.data[cellSet.x] = cneigh - 1;
+                    h_cvn.data[cellSet.x] -= 1;
 
-                    //cell j gains v2 in between b and v1
+                    //cell j gains v2 in between v1 and b
                     cneigh = h_cvn.data[cellSet.y];
                     vector<int> cvcopy1(cneigh+1);
                     cidx = 0;
@@ -626,7 +655,7 @@ printf("Vertices (%i,%i)\t CellSet = (%i,%i,%i,%i)\t vertexSet = (%i,%i,%i,%i)\n
                         int cellIndex = h_cv.data[n_idx(cc,cellSet.y)];
                         cvcopy1[cidx] = cellIndex;
                         cidx +=1;
-                        if(cellIndex == vertexSet.y)
+                        if(cellIndex == vertex1)
                             {
                             cvcopy1[cidx] = vertex2;
                             cidx +=1;
@@ -634,7 +663,7 @@ printf("Vertices (%i,%i)\t CellSet = (%i,%i,%i,%i)\t vertexSet = (%i,%i,%i,%i)\n
                         };
                     for (int cc = 0; cc < cneigh+1; ++cc)
                         h_cv.data[n_idx(cc,cellSet.y)] = cvcopy1[cc];
-                    h_cvn.data[cellSet.z] = cneigh + 1;
+                    h_cvn.data[cellSet.y] += 1;
 
                     //cell k loses v1 as a neighbor
                     cneigh = h_cvn.data[cellSet.z];
@@ -646,7 +675,7 @@ printf("Vertices (%i,%i)\t CellSet = (%i,%i,%i,%i)\t vertexSet = (%i,%i,%i,%i)\n
                         h_cv.data[n_idx(cc,cellSet.z)] = h_cv.data[n_idx(cidx,cellSet.z)];
                         cidx +=1;
                         };
-                    h_cvn.data[cellSet.z] = cneigh - 1;
+                    h_cvn.data[cellSet.z] -= 1;
 
                     //cell l gains v1 in between v2 and c
                     cneigh = h_cvn.data[cellSet.w];
@@ -666,6 +695,10 @@ printf("Vertices (%i,%i)\t CellSet = (%i,%i,%i,%i)\t vertexSet = (%i,%i,%i,%i)\n
                     for (int cc = 0; cc < cneigh+1; ++cc)
                         h_cv.data[n_idx(cc,cellSet.w)] = cvcopy2[cc];
                     h_cvn.data[cellSet.w] = cneigh + 1;
+//reportNeighborsCell(cellSet.x);
+//reportNeighborsCell(cellSet.y);
+//reportNeighborsCell(cellSet.z);
+//reportNeighborsCell(cellSet.w);
 
                     };//end condition that a T1 transition should occur
                 };
@@ -684,22 +717,24 @@ void AVM2D::getCellPositionsCPU()
     ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
 
-    Dscalar2 vertex,oldCellPos,pos;
+    Dscalar2 vertex,baseVertex,pos;
     for (int cell = 0; cell < Ncells; ++cell)
         {
+        baseVertex = h_v.data[h_n.data[n_idx(0,cell)]];
         int neighs = h_nn.data[cell];
-        oldCellPos = h_p.data[cell];
         pos.x=0.0;pos.y=0.0;
         //compute the vertex position relative to the cell position
-        for (int n = 0; n < neighs; ++n)
+        for (int n = 1; n < neighs; ++n)
             {
             int vidx = h_n.data[n_idx(n,cell)];
-            Box.minDist(h_v.data[vidx],oldCellPos,vertex);
+            Box.minDist(h_v.data[vidx],baseVertex,vertex);
             pos.x += vertex.x;
             pos.y += vertex.y;
             };
         pos.x /= neighs;
         pos.y /= neighs;
+        pos.x += baseVertex.x;
+        pos.y += baseVertex.y;
         Box.putInBoxReal(pos);
         h_p.data[cell] = pos;
         };

@@ -65,7 +65,7 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     char dataname[256];
-    sprintf(dataname,"/home/daniel/test.nc");
+    sprintf(dataname,"../test.nc");
     int Nvert = 2*numpts;
     AVMDatabase ncdat(Nvert,dataname,NcFile::Replace);
 

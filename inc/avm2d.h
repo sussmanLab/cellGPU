@@ -185,6 +185,18 @@ class AVM2D
                     };
                 printf("total area = %f\n",vtot);
                 };
+        void reportNeighborsCell(int i)
+            {
+            ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::read);
+            ArrayHandle<int> h_cv(cellVertices,access_location::host,access_mode::read);
+            int cn = h_cvn.data[i];
+            printf("Cell %i's neighbors:\n",i);
+            for (int n = 0; n < cn; ++n)
+                {
+                printf("%i, ",h_cv.data[n_idx(n,i)]);
+                }
+            cout <<endl;
+            };
     };
 
 #endif

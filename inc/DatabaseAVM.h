@@ -24,7 +24,7 @@ private:
     int Nc; //!< number of cells in AVM
     int Nvn; //!< the number of vertex-vertex connections
     NcDim *recDim, *NvDim, *dofDim, *NvnDim, *ncDim, *boxDim, *unitDim; //!< NcDims we'll use
-    NcVar *posVar, *vneighVar, *directorVar, *BoxMatrixVar, *timeVar; //!<NcVars we'll use
+    NcVar *posVar, *forceVar, *vneighVar, *directorVar, *BoxMatrixVar, *timeVar; //!<NcVars we'll use
     int Current;    //!< keeps track of the current record when in write mode
 
 
@@ -92,6 +92,7 @@ void AVMDatabase::SetDimVar()
 
     //Set the variables
     posVar          = File.add_var("pos",       ncDscalar,recDim, dofDim);
+    forceVar          = File.add_var("force",       ncDscalar,recDim, dofDim);
     vneighVar          = File.add_var("Vneighs",         ncInt,recDim, NvnDim );
     directorVar          = File.add_var("director",         ncDscalar,recDim, ncDim );
     BoxMatrixVar    = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
@@ -109,6 +110,7 @@ void AVMDatabase::GetDimVar()
     unitDim = File.get_dim("unit");
     //Get the variables
     posVar          = File.get_var("pos");
+    forceVar          = File.get_var("force");
     vneighVar          = File.get_var("Vneighs");
     directorVar          = File.get_var("director");
     BoxMatrixVar    = File.get_var("BoxMatrix");
@@ -130,11 +132,13 @@ void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
     boxdat[3]=x22;
 
     std::vector<Dscalar> posdat(2*Nv);
+    std::vector<Dscalar> forcedat(2*Nv);
     std::vector<Dscalar> directordat(Nc);
     std::vector<int> vndat(3*Nv);
     int idx = 0;
 
     ArrayHandle<Dscalar2> h_p(s.vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_f(s.vertexForces,access_location::host,access_mode::read);
     ArrayHandle<Dscalar> h_cd(s.cellDirectors,access_location::host,access_mode::read);
     ArrayHandle<int> h_vn(s.vertexNeighbors,access_location::host,access_mode::read);
 
@@ -150,6 +154,10 @@ void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
         Dscalar py = h_p.data[pidx].y;
         posdat[(2*idx)] = px;
         posdat[(2*idx)+1] = py;
+        Dscalar fx = h_f.data[pidx].x;
+        Dscalar fy = h_f.data[pidx].y;
+        forcedat[(2*idx)] = fx;
+        forcedat[(2*idx)+1] = fy;
         idx +=1;
         };
     for (int ii = 0; ii < 3*Nv; ++ii)
@@ -158,6 +166,7 @@ void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
     //Write all the data
     timeVar      ->put_rec(&time,      rec);
     posVar      ->put_rec(&posdat[0],     rec);
+    forceVar      ->put_rec(&forcedat[0],     rec);
     vneighVar       ->put_rec(&vndat[0],      rec);
     directorVar       ->put_rec(&directordat[0],      rec);
     BoxMatrixVar->put_rec(&boxdat[0],     rec);

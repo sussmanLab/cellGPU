@@ -406,7 +406,7 @@ void SPV2D::calculateDispCPU()
     ArrayHandle<Dscalar2> h_motility(Motility,access_location::host,access_mode::read);
 
     random_device rd;
-    mt19937 gen(rd());
+    mt19937 gen(rand());
     normal_distribution<> normal(0.0,1.0);
     for (int ii = 0; ii < N; ++ii)
         {
