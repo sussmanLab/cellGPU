@@ -76,8 +76,6 @@ int main(int argc, char*argv[])
     avm.setv0Dr(v0,Dr);
     avm.setDeltaT(dt);
 
-    if(program_switch <0)
-        ncdat.WriteState(avm);
     for (int timestep = 0; timestep < initSteps; ++timestep)
         {
         avm.performTimestep();
@@ -95,7 +93,7 @@ int main(int argc, char*argv[])
     if(initializeGPU)
         cudaProfilerStop();
     t2=clock();
-    cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl;
+    cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
 
 //    avm.reportMeanForce();
 

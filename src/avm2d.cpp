@@ -2,6 +2,7 @@
 
 #include "avm2d.h"
 #include "avm2d.cuh"
+#include "spv2d.h"
 
 AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     {
@@ -33,6 +34,19 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         h_p.data[ii].x = x;
         h_p.data[ii].y = y;
         };
+
+    //use the SPV class to relax the initial configuration just a bit
+    SPV2D spv(Ncells,1.0,3.8,false);
+    spv.setCPU(false);
+    spv.setv0Dr(0.1,1.0);
+    spv.setDeltaT(0.1);
+    for (int ii = 0; ii < 100;++ii)
+        spv.performTimestep();
+
+    ArrayHandle<Dscalar2> h_pp(spv.points,access_location::host,access_mode::read);
+    for (int ii = 0; ii < Ncells; ++ii)
+        h_p.data[ii] = h_pp.data[ii];
+
 
     //call CGAL to get Delaunay triangulation
     vector<pair<Point,int> > Psnew(Ncells);
@@ -224,8 +238,6 @@ void AVM2D::performTimestepCPU()
     computeForcesCPU();
     displaceAndRotateCPU();
     testAndPerformT1TransitionsCPU();
-    
-    //as needed, update the cell-vertex, vertex-vertex, vertex-cell data structures et al.
 
     getCellPositionsCPU();
     };
@@ -281,6 +293,12 @@ void AVM2D::computeGeometryCPU()
                 if(h_vcn.data[3*vidx+ff]==i)
                     forceSetIdx = 3*vidx+ff;
 
+            if(forceSetIdx <0)
+                {
+                printf("Timestep %i\n",Timestep);
+                printf("fsidx %i  i %i  neigh num %i\n",forceSetIdx,i,nn);
+                printf("vidx = %i, cell neighs = (%i,%i,%i)\n",vidx,h_vcn.data[3*vidx+0],h_vcn.data[3*vidx+1],h_vcn.data[3*vidx+2]);
+                };
             vidx = h_n.data[n_idx(nn,i)];
             Box.minDist(h_v.data[vidx],cellPos,vnext);
 
@@ -314,12 +332,12 @@ void AVM2D::computeForcesCPU()
 
     ArrayHandle<Dscalar2> h_fs(vertexForceSets,access_location::host, access_mode::overwrite);
     ArrayHandle<Dscalar2> h_f(vertexForces,access_location::host, access_mode::overwrite);
-   
+
     //first, compute the contribution to the force on each vertex from each of its three cells
     Dscalar2 vlast,vcur,vnext;
     Dscalar2 dEdv;
     Dscalar Adiff, Pdiff;
-    for(int fsidx = 0; fsidx < vertexForceSets.getNumElements(); ++fsidx)
+    for(int fsidx = 0; fsidx < Nvertices*3; ++fsidx)
         {
         int cellIdx = h_vcn.data[fsidx];
         Dscalar Adiff = KA*(h_AP.data[cellIdx].x - h_APpref.data[cellIdx].x);
@@ -344,6 +362,7 @@ void AVM2D::computeForcesCPU()
             ftemp.y += h_fs.data[3*v+ff].y;
             };
         h_f.data[v] = ftemp;
+        //printf("vertex %i: fx = %f\n",v,h_f.data[v].x);
         ftot.x +=ftemp.x;ftot.y+=ftemp.y;
 
         };
@@ -359,8 +378,9 @@ void AVM2D::displaceAndRotateCPU()
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host, access_mode::readwrite);
     ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
 
-    random_device rd;
-    mt19937 gen(rd());
+    //random_device rd;
+    //uncomment last line and change the below from rand() to rd() to get more random random numbers
+    mt19937 gen(rand());
     normal_distribution<> normal(0.0,1.0);
 
     Dscalar directorx,directory;
@@ -488,7 +508,7 @@ void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 
         vertexSet.x = vlast;
         vertexSet.y = vnext;
         };
-    
+
     //Does the cell-vertex-neighbor data structure need to be bigger?
     if(h_cvn.data[cellSet.x] == vertexMax || h_cvn.data[cellSet.z] == vertexMax)
         growList = true;
@@ -500,7 +520,7 @@ This function also performs the transition and maintains the auxiliary data stru
  */
 void AVM2D::testAndPerformT1TransitionsCPU()
     {
-    Dscalar T1THRESHOLD = 1e-3;
+    Dscalar T1THRESHOLD = 0.01;
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::readwrite);
@@ -512,7 +532,7 @@ void AVM2D::testAndPerformT1TransitionsCPU()
     int vertex2;
     //keep track of whether vertexMax needs to be increased
     int vMax = vertexMax;
-    /* 
+    /*
      IF v1 is above v2, the following is the convention (otherwise flip CW and CCW)
      cell i: contains both vertex 1 and vertex 2, in CW order
      cell j: contains only vertex 1
@@ -545,13 +565,14 @@ void AVM2D::testAndPerformT1TransitionsCPU()
                     bool growCellVertexList = false;
                     getCellVertexSetForT1(vertex1,vertex2,cellSet,vertexSet,growCellVertexList);
 
+printf("Vertices (%i,%i)\t CellSet = (%i,%i,%i,%i)\t vertexSet = (%i,%i,%i,%i)\n",vertex1,vertex2,cellSet.x,cellSet.y,cellSet.z,cellSet.w,vertexSet.x,vertexSet.y,vertexSet.z,vertexSet.w);
                     //Does the cell-vertex-neighbor data structure need to be bigger?
                     if(growCellVertexList)
                         {
                         vMax +=1;
                         growCellVerticesList(vMax);
                         };
-                
+
                     //Rotate the vertices in the edge and set them at some distance
                     Dscalar2 midpoint;
                     midpoint.x = v2.x + 0.5*edge.x;
