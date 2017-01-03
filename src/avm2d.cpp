@@ -124,7 +124,6 @@ void AVM2D::setCellsVoronoiTesselation(int n)
     ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
-
    };
 
 //take care of all class initialization functions
@@ -390,6 +389,86 @@ void AVM2D::displaceAndRotateCPU()
     };
 
 /*!
+A utility function for the CPU routine. Given two vertex indices representing an edge that will undergo
+a T1 transition, return in the pass-by-reference variables a helpful representation of the cells in the T1 and the vertices to be re-wired
+*/
+void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, bool &growList)
+    {
+    int cell1,cell2,cell3,cell4,ctest;
+    int vlast, vcur, vnext, cneigh;
+    ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::read);
+    ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
+    cell1 = h_vcn.data[3*vertex1];
+    cell2 = h_vcn.data[3*vertex1+1];
+    cell3 = h_vcn.data[3*vertex1+2];
+    //cell_l doesn't contain vertex 1, so its the cell neighbor of vertex 2 we haven't found yet
+    for (int ff = 0; ff < 3; ++ff)
+        {
+        ctest = h_vcn.data[3*vertex2+ff];
+        if(ctest != cell1 && ctest != cell2 && ctest != cell3)
+            cellSet.w=ctest;
+        };
+    //classify cell1
+    cneigh = h_cvn.data[cell1];
+    vlast = h_cv.data[ n_idx(cneigh-2,cell1) ];
+    vcur = h_cv.data[ n_idx(cneigh-1,cell1) ];
+    for (int cn = 0; cn < cneigh; ++cn)
+        {
+        vnext = h_cv.data[n_idx(cn,cell1)];
+        if(vcur == vertex1) break;
+        vlast = vcur;
+        vcur = vnext;
+        };
+    if(vlast == vertex2) 
+        cellSet.x = cell1;
+    else if(vnext == vertex2)
+        cellSet.z = cell1;
+    else
+        cellSet.y = cell1;
+
+    //classify cell2
+    cneigh = h_cvn.data[cell2];
+    vlast = h_cv.data[ n_idx(cneigh-2,cell2) ];
+    vcur = h_cv.data[ n_idx(cneigh-1,cell2) ];
+    for (int cn = 0; cn < cneigh; ++cn)
+        {
+        vnext = h_cv.data[n_idx(cn,cell2)];
+        if(vcur == vertex1) break;
+        vlast = vcur;
+        vcur = vnext;
+        };
+    if(vlast == vertex2) 
+        cellSet.x = cell2;
+    else if(vnext == vertex2)
+        cellSet.z = cell2;
+    else
+        cellSet.y = cell2;
+
+    //classify cell3
+    cneigh = h_cvn.data[cell3];
+    vlast = h_cv.data[ n_idx(cneigh-2,cell3) ];
+    vcur = h_cv.data[ n_idx(cneigh-1,cell1) ];
+    for (int cn = 0; cn < cneigh; ++cn)
+        {
+        vnext = h_cv.data[n_idx(cn,cell3)];
+        if(vcur == vertex1) break;
+        vlast = vcur;
+        vcur = vnext;
+        };
+    if(vlast == vertex2) 
+        cellSet.x = cell3;
+    else if(vnext == vertex2)
+        cellSet.z = cell3;
+    else
+        cellSet.y = cell3;
+    
+    //Does the cell-vertex-neighbor data structure need to be bigger?
+    if(h_cvn.data[cellSet.x] == vertexMax || h_cvn.data[cellSet.z] == vertexMax)
+        growList = true;
+    };
+
+/*!
 Test whether a T1 needs to be performed on any edge by simply checking if the edge length is beneath a threshold.
 This function also performs the transition and maintains the auxiliary data structures
  */
@@ -397,10 +476,7 @@ void AVM2D::testAndPerformT1TransitionsCPU()
     {
     Dscalar T1THRESHOLD = 1e-3;
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
-    ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::readwrite);
-    ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::readwrite);
 
     Dscalar2 edge;
     //first, scan through the list for any T1 transitions...
@@ -416,94 +492,33 @@ void AVM2D::testAndPerformT1TransitionsCPU()
      cell l: contains only vertex 2
      */
     vector<int4> cellTransitions;
-    int cell1,cell2,cell3,cell4,ctest;
-    int vlast, vcur, vnext, cneigh;
     int4 cellSet;
     Dscalar2 v1,v2;
-    for (int vertex = 0; vertex < Nvertices; ++vertex)
+    for (int vertex1 = 0; vertex1 < Nvertices; ++vertex1)
         {
-        v1 = h_v.data[vertex];
+        v1 = h_v.data[vertex1];
         //look at vertexNeighbors list for neighbors of vertex, compute edge length
         for (int vv = 0; vv < 3; ++vv)
             {
-            vertex2 = h_vn.data[3*vertex+vv];
+            vertex2 = h_vn.data[3*vertex1+vv];
             //only look at each pair once
-            if(vertex < vertex2)
+            if(vertex1 < vertex2)
                 {
                 v2 = h_v.data[vertex2];
                 Box.minDist(v1,v2,edge);
                 if(norm(edge) < T1THRESHOLD)
                     {
-                    cell1 = h_vcn.data[3*vertex];
-                    cell2 = h_vcn.data[3*vertex+1];
-                    cell3 = h_vcn.data[3*vertex+2];
-                    //cell_l doesn't contain vertex 1, so its the cell neighbor of vertex 2 we haven't found yet
-                    for (int ff = 0; ff < 3; ++ff)
-                        {
-                        ctest = h_vcn.data[3*vertex2+ff];
-                        if(ctest != cell1 && ctest != cell2 && ctest != cell3)
-                            cellSet.w=ctest;
-                        };
-                    //classify cell1
-                    cneigh = h_cvn.data[cell1];
-                    vlast = h_cv.data[ n_idx(cneigh-2,cell1) ];
-                    vcur = h_cv.data[ n_idx(cneigh-1,cell1) ];
-                    for (int cn = 0; cn < cneigh; ++cn)
-                        {
-                        vnext = h_cv.data[n_idx(cn,cell1)];
-                        if(vcur == vertex) break;
-                        vlast = vcur;
-                        vcur = vnext;
-                        };
-                    if(vlast == vertex2) 
-                        cellSet.x = cell1;
-                    else if(vnext == vertex2)
-                        cellSet.z = cell1;
-                    else
-                        cellSet.y = cell1;
+                    bool growCellVertexList = false;
+                    getCellVertexSetForT1(vertex1,vertex2,cellSet,growCellVertexList);
 
-                    //classify cell2
-                    cneigh = h_cvn.data[cell2];
-                    vlast = h_cv.data[ n_idx(cneigh-2,cell2) ];
-                    vcur = h_cv.data[ n_idx(cneigh-1,cell2) ];
-                    for (int cn = 0; cn < cneigh; ++cn)
+                    //Does the cell-vertex-neighbor data structure need to be bigger?
+                    if(growCellVertexList)
                         {
-                        vnext = h_cv.data[n_idx(cn,cell2)];
-                        if(vcur == vertex) break;
-                        vlast = vcur;
-                        vcur = vnext;
-                        };
-                    if(vlast == vertex2) 
-                        cellSet.x = cell2;
-                    else if(vnext == vertex2)
-                        cellSet.z = cell2;
-                    else
-                        cellSet.y = cell2;
-
-                    //classify cell3
-                    cneigh = h_cvn.data[cell3];
-                    vlast = h_cv.data[ n_idx(cneigh-2,cell3) ];
-                    vcur = h_cv.data[ n_idx(cneigh-1,cell1) ];
-                    for (int cn = 0; cn < cneigh; ++cn)
-                        {
-                        vnext = h_cv.data[n_idx(cn,cell3)];
-                        if(vcur == vertex) break;
-                        vlast = vcur;
-                        vcur = vnext;
-                        };
-                    if(vlast == vertex2) 
-                        cellSet.x = cell3;
-                    else if(vnext == vertex2)
-                        cellSet.z = cell3;
-                    else
-                        cellSet.y = cell3;
-
-                    if(cellSet.x == vMax ||cellSet.z == vMax)
                         vMax +=1;
-                    cellTransitions.push_back(cellSet);
-                   // printf("Timestep %i: Need a transition (%i,%i,%i,%i)... norm = %f\n",Timestep,cellSet.x,cellSet.y,cellSet.z,cellSet.w,norm(edge));
+                        growCellVerticesList(vMax);
+                        };
                 
-                    //finally, rotate the vertices in the edge and set them at some distance
+                    //Rotate the vertices in the edge and set them at some distance
                     Dscalar2 midpoint;
                     midpoint.x = v2.x + 0.5*edge.x;
                     midpoint.y = v2.y + 0.5*edge.y;
@@ -512,26 +527,16 @@ void AVM2D::testAndPerformT1TransitionsCPU()
                     v2.x = midpoint.x+edge.y;v2.y = midpoint.y-edge.x;
                     Box.putInBoxReal(v1);
                     Box.putInBoxReal(v2);
-                    h_v.data[vertex] = v1;
+                    h_v.data[vertex1] = v1;
                     h_v.data[vertex2] = v2;
+
+                    //re-wire the cells and vertices
 
                     };//end condition that a T1 transition should occur
                 };
             };//end loop over vertex2
         };//end loop over vertices
-
-    if(vMax > vertexMax)
-        growCellVerticesList(vMax);
-
-    //Now, rewire all connections for the cells in cellTransitions
-    for (int i = 0; i < cellTransitions.size(); ++i)
-        {
-
-
-        };
-
     };
-
 
 /*!
 One would prefer the cell position to be defined as the centroid, requiring an additional computation of the cell area.

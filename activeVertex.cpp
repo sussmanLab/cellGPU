@@ -76,12 +76,13 @@ int main(int argc, char*argv[])
     avm.setv0Dr(v0,Dr);
     avm.setDeltaT(dt);
 
-    ncdat.WriteState(avm);
+    if(program_switch <0)
+        ncdat.WriteState(avm);
     for (int timestep = 0; timestep < initSteps; ++timestep)
         {
         avm.performTimestep();
-        ncdat.WriteState(avm);
-
+        if(program_switch <0)
+            ncdat.WriteState(avm);
         };
 
     t1=clock();

@@ -155,6 +155,10 @@ class AVM2D
         //!An upper bound for the maximum number of neighbors that any cell has
         int vertexMax;
 
+
+        //utility functions
+        void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, bool &growList);
+
     //reporting functions
     public:
         void reportMeanForce()
