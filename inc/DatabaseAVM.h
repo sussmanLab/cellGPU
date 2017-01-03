@@ -23,7 +23,7 @@ private:
     int Nv; //!< number of vertices in AVM
     int Nc; //!< number of cells in AVM
     int Nvn; //!< the number of vertex-vertex connections
-    NcDim *recDim, *NvDim, *dofDim, *NvnDim, *NcDim, *boxDim, *unitDim; //!< NcDims we'll use
+    NcDim *recDim, *NvDim, *dofDim, *NvnDim, *ncDim, *boxDim, *unitDim; //!< NcDims we'll use
     NcVar *posVar, *vneighVar, *directorVar, *BoxMatrixVar, *timeVar; //!<NcVars we'll use
     int Current;    //!< keeps track of the current record when in write mode
 
@@ -84,7 +84,7 @@ void AVMDatabase::SetDimVar()
     //Set the dimensions
     recDim = File.add_dim("rec");
     NvDim  = File.add_dim("Nv",  Nv);
-    NcDim  = File.add_dim("Nc",  Nc);
+    ncDim  = File.add_dim("Nc",  Nc);
     dofDim  = File.add_dim("dof",  Nv*2);
     NvnDim = File.add_dim("Nvn", Nv*3);
     boxDim = File.add_dim("boxdim",4);
@@ -93,7 +93,7 @@ void AVMDatabase::SetDimVar()
     //Set the variables
     posVar          = File.add_var("pos",       ncDscalar,recDim, dofDim);
     vneighVar          = File.add_var("Vneighs",         ncInt,recDim, NvnDim );
-    directorVar          = File.add_var("director",         ncDscalar,recDim, NcDim );
+    directorVar          = File.add_var("director",         ncDscalar,recDim, ncDim );
     BoxMatrixVar    = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
     timeVar          = File.add_var("time",     ncDscalar,recDim, unitDim);
 }
