@@ -45,16 +45,17 @@ bool gpu_avm_sum_force_sets(
                     int      Nvertices);
                     
 bool gpu_avm_displace_and_rotate(
-                    Dscalar2 *d_v,
-                    Dscalar2 *d_f,
-                    Dscalar *d_vd,
-                    curandState *d_cs,
+                    Dscalar2 *d_vertexPositions,
+                    Dscalar2 *d_vertexForces,
+                    Dscalar  *d_cellDirectors,
+                    int      *d_vertexCellNeighbors,
+                    curandState *d_curandRNGs,
                     Dscalar v0,
                     Dscalar Dr,
                     Dscalar deltaT,
-                    int Timestep,
                     gpubox &Box,
-                    int Nvertices);
+                    int Nvertices,
+                    int Ncells);
 
 bool gpu_avm_get_cell_positions(
                     Dscalar2 *d_p,

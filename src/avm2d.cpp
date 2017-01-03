@@ -120,10 +120,10 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         };
 
     //randomly set vertex directors
-    vertexDirectors.resize(Nvertices);
-    ArrayHandle<Dscalar> h_vd(vertexDirectors,access_location::host, access_mode::overwrite);
-    for (int ii = 0; ii < Nvertices; ++ii)
-        h_vd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
+    cellDirectors.resize(Ncells);
+    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
 
    };
 
@@ -201,7 +201,7 @@ void AVM2D::initializeCurandStates(int gs, int i)
         globalseed = (int)t1 % 100000;
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
-    gpu_initialize_curand(d_curandRNGs.data,Nvertices,i,globalseed);
+    gpu_initialize_curand(d_curandRNGs.data,Ncells,i,globalseed);
     };
 
 /*!
@@ -356,8 +356,9 @@ Move every vertex according to the net force on it and its motility...CPU routin
 void AVM2D::displaceAndRotateCPU()
     {
     ArrayHandle<Dscalar2> h_f(vertexForces,access_location::host, access_mode::read);
-    ArrayHandle<Dscalar> h_vd(vertexDirectors,access_location::host, access_mode::readwrite);
+    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::readwrite);
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host, access_mode::readwrite);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
 
     random_device rd;
     mt19937 gen(rd());
@@ -367,15 +368,25 @@ void AVM2D::displaceAndRotateCPU()
     Dscalar2 disp;
     for (int i = 0; i < Nvertices; ++i)
         {
+        //for uniform v0, the vertex director is the straight average of the directors of the cell neighbors
+
+        directorx  = cos(h_cd.data[ h_vcn.data[3*i] ]);
+        directorx += cos(h_cd.data[ h_vcn.data[3*i+1] ]);
+        directorx += cos(h_cd.data[ h_vcn.data[3*i+2] ]);
+        directorx /= 3.0;
+        directory  = sin(h_cd.data[ h_vcn.data[3*i] ]);
+        directory += sin(h_cd.data[ h_vcn.data[3*i+1] ]);
+        directory += sin(h_cd.data[ h_vcn.data[3*i+2] ]);
+        directory /= 3.0;
         //move vertices
-        directorx = cos(h_vd.data[i]);
-        directory = sin(h_vd.data[i]);
         h_v.data[i].x += deltaT*(v0*directorx+h_f.data[i].x);
         h_v.data[i].y += deltaT*(v0*directory+h_f.data[i].y);
         Box.putInBoxReal(h_v.data[i]);
-        //add some noise to the vertex director
-        h_vd.data[i] += normal(gen)*sqrt(2.0*deltaT*Dr);
         };
+
+    //update cell directors
+    for (int i = 0; i < Ncells; ++i)
+        h_cd.data[i] += normal(gen)*sqrt(2.0*deltaT*Dr);
     };
 
 /*!
@@ -620,15 +631,17 @@ void AVM2D::displaceAndRotateGPU()
     {
     ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device, access_mode::readwrite);
     ArrayHandle<Dscalar2> d_f(vertexForces,access_location::device, access_mode::read);
-    ArrayHandle<Dscalar> d_vd(vertexDirectors,access_location::device, access_mode::readwrite);
+    ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device, access_mode::readwrite);
     ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::read);
+    ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
 
     gpu_avm_displace_and_rotate(d_v.data,
                                 d_f.data,
-                                d_vd.data,
+                                d_cd.data,
+                                d_vcn.data,
                                 d_cs.data,
                                 v0,Dr,deltaT,
-                                Timestep, Box, Nvertices);
+                                Box, Nvertices,Ncells);
     };
 
 void AVM2D::getCellPositionsGPU()

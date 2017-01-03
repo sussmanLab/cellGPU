@@ -127,34 +127,46 @@ __global__ void avm_sum_force_sets_kernel(
     };
 
 //!sum up the force sets to get the force on each vertex
-__global__ void avm_displace_and_rotate_kernel(
+__global__ void avm_displace_vertices_kernel(
                                         Dscalar2 *d_v,
                                         Dscalar2 *d_f,
-                                        Dscalar  *d_vd,
-                                        curandState *d_cs,
+                                        Dscalar  *d_cd,
+                                        int      *d_vcn,
                                         Dscalar  v0,
-                                        Dscalar  Dr,
                                         Dscalar  deltaT,
-                                        int      Timestep,
                                         gpubox   Box,
-                                        int      N)
+                                        int      Nvertices)
     {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= N)
+    if (idx >= Nvertices)
         return;
 
+    //the vertex motility is the average of th motility of the connected cells
+    Dscalar directorx = (Cos(d_cd[d_vcn[3*idx]])+Cos(d_cd[d_vcn[3*idx+1]])+Cos(d_cd[d_vcn[3*idx+2]]))/3.0;
+    Dscalar directory = (Sin(d_cd[d_vcn[3*idx]])+Sin(d_cd[d_vcn[3*idx+1]])+Sin(d_cd[d_vcn[3*idx+2]]))/3.0;
     //update positions from forces and motility
-    d_v[idx].x += deltaT*(v0*Cos(d_vd[idx]) + d_f[idx].x);
-    d_v[idx].y += deltaT*(v0*Sin(d_vd[idx]) + d_f[idx].y);
+    d_v[idx].x += deltaT*(v0*directorx + d_f[idx].x);
+    d_v[idx].y += deltaT*(v0*directory + d_f[idx].y);
     //make sure the vertices stay in the box
     Box.putInBoxReal(d_v[idx]);
+    };
 
-    //rotate the vertex director by some random amount
+//!sum up the force sets to get the force on each vertex
+__global__ void avm_rotate_directors_kernel(
+                                        Dscalar  *d_cd,
+                                        curandState *d_cs,
+                                        Dscalar  Dr,
+                                        Dscalar  deltaT,
+                                        int      Ncells)
+    {
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= Ncells)
+        return;
+
+    //get the per-cell RNG, rotate the director, return the RNG
     curandState_t randState;
     randState=d_cs[idx];
-
-    d_vd[idx] += cur_norm(&randState)*sqrt(2.0*deltaT*Dr);
-
+    d_cd[idx] += cur_norm(&randState)*sqrt(2.0*deltaT*Dr);
     d_cs[idx] = randState;
     };
 
@@ -274,22 +286,29 @@ bool gpu_avm_sum_force_sets(
 bool gpu_avm_displace_and_rotate(
                     Dscalar2 *d_v,
                     Dscalar2 *d_f,
-                    Dscalar  *d_vd,
+                    Dscalar  *d_cd,
+                    int      *d_vcn,
                     curandState *d_cs,
                     Dscalar  v0,
                     Dscalar  Dr,
                     Dscalar  deltaT,
-                    int      Timestep,
                     gpubox   &Box,
-                    int      N)
+                    int      Nvertices,
+                    int      Ncells)
     {
     unsigned int block_size = 128;
-    if (N < 128) block_size = 32;
-    unsigned int nblocks  = N/block_size + 1;
+    if (Nvertices < 128) block_size = 32;
+    unsigned int nblocks  = Nvertices/block_size + 1;
 
+    //displace vertices
+    avm_displace_vertices_kernel<<<nblocks,block_size>>>(d_v,d_f,d_cd,d_vcn,v0,deltaT,Box,Nvertices);
+    cudaThreadSynchronize();
+    //rotate cell directors
+    if (Ncells < 128) block_size = 32;
+    nblocks = Ncells/block_size + 1;
+    avm_rotate_directors_kernel<<<nblocks,block_size>>>(d_cd,d_cs,Dr,deltaT,Ncells);
+    cudaThreadSynchronize();
 
-    avm_displace_and_rotate_kernel<<<nblocks,block_size>>>(d_v,d_f,d_vd,d_cs,v0,Dr,deltaT,Timestep,Box,N);
-    //cudaThreadSynchronize();
     return cudaSuccess;
     };
 

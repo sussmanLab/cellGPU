@@ -1,7 +1,6 @@
 #ifndef DATABASEAVM_H
 #define DATABASEAVM_H
 
-
 #include "std_include.h"
 #include "avm2d.h"
 #include "spv2d.h"
@@ -22,14 +21,16 @@ class AVMDatabase : public BaseDatabase
 private:
     typedef AVM2D STATE;
     int Nv; //!< number of vertices in AVM
+    int Nc; //!< number of cells in AVM
     int Nvn; //!< the number of vertex-vertex connections
-    NcDim *recDim, *NvDim, *dofDim, *NvnDim, *boxDim, *unitDim; //!< NcDims we'll use
+    NcDim *recDim, *NvDim, *dofDim, *NvnDim, *NcDim, *boxDim, *unitDim; //!< NcDims we'll use
     NcVar *posVar, *vneighVar, *directorVar, *BoxMatrixVar, *timeVar; //!<NcVars we'll use
     int Current;    //!< keeps track of the current record when in write mode
 
 
 public:
-    AVMDatabase(int np, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
+    //!The default constructor takes the number of *vertices* as the parameter
+    AVMDatabase(int nv, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
     ~AVMDatabase(){File.close();};
 
 private:
@@ -39,10 +40,11 @@ private:
 public:
     int  GetCurrentRec(); //!<Return the current record of the database
     //!Get the total number of records in the database
-    int GetNumRecs(){
-                    NcDim *rd = File.get_dim("rec");
-                    return rd->size();
-                    };
+    int GetNumRecs()
+        {
+        recDim = File.get_dim("rec");
+        return recDim->size();
+        };
 
     //!Write the current state of the system to the database. If the default value of "rec=-1" is used, just append the current state to a new record at the end of the database
     void WriteState(STATE &c, Dscalar time = -1.0, int rec=-1);
@@ -58,6 +60,7 @@ AVMDatabase::AVMDatabase(int np, string fn, NcFile::FileMode mode)
       Nv(np),
       Current(0)
 {
+    Nc = np/2;
     switch(Mode)
         {
         case NcFile::ReadOnly:
@@ -81,6 +84,7 @@ void AVMDatabase::SetDimVar()
     //Set the dimensions
     recDim = File.add_dim("rec");
     NvDim  = File.add_dim("Nv",  Nv);
+    NcDim  = File.add_dim("Nc",  Nc);
     dofDim  = File.add_dim("dof",  Nv*2);
     NvnDim = File.add_dim("Nvn", Nv*3);
     boxDim = File.add_dim("boxdim",4);
@@ -89,7 +93,7 @@ void AVMDatabase::SetDimVar()
     //Set the variables
     posVar          = File.add_var("pos",       ncDscalar,recDim, dofDim);
     vneighVar          = File.add_var("Vneighs",         ncInt,recDim, NvnDim );
-    directorVar          = File.add_var("director",         ncDscalar,recDim, NvDim );
+    directorVar          = File.add_var("director",         ncDscalar,recDim, NcDim );
     BoxMatrixVar    = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
     timeVar          = File.add_var("time",     ncDscalar,recDim, unitDim);
 }
@@ -126,15 +130,15 @@ void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
     boxdat[3]=x22;
 
     std::vector<Dscalar> posdat(2*Nv);
-    std::vector<Dscalar> directordat(Nv);
+    std::vector<Dscalar> directordat(Nc);
     std::vector<int> vndat(3*Nv);
     int idx = 0;
 
     ArrayHandle<Dscalar2> h_p(s.vertexPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(s.vertexDirectors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> h_cd(s.cellDirectors,access_location::host,access_mode::read);
     ArrayHandle<int> h_vn(s.vertexNeighbors,access_location::host,access_mode::read);
 
-    for (int ii = 0; ii < Nv; ++ii)
+    for (int ii = 0; ii < Nc; ++ii)
         {
         int pidx = ii;
         directordat[ii] = h_cd.data[pidx];

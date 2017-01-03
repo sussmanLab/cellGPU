@@ -31,8 +31,8 @@ class AVM2D
         GPUArray<Dscalar2> vertexPositions;
         //! Cell positions... useful for computing the geometry of cells. At the moment cellPositions just ensures that the origin is enclosed by the vertices of a cell. This is irrelevant in almost all of the code, so an optimization would be to remove this.
         GPUArray<Dscalar2> cellPositions;
-        //!An array of angles (relative to \hat{x}) that the vertex directors point
-        GPUArray<Dscalar> vertexDirectors;
+        //!An array of angles (relative to \hat{x}) that the cell directors point
+        GPUArray<Dscalar> cellDirectors;
 
         //! VERTEX neighbors of every vertex
         GPUArray<int> vertexNeighbors;
