@@ -36,18 +36,18 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         };
 
     //use the SPV class to relax the initial configuration just a bit?
-    /*
+    
     SPV2D spv(Ncells,1.0,3.8,false);
     spv.setCPU(false);
     spv.setv0Dr(0.1,1.0);
     spv.setDeltaT(0.1);
-    for (int ii = 0; ii < 100;++ii)
+    for (int ii = 0; ii < 10;++ii)
         spv.performTimestep();
 
     ArrayHandle<Dscalar2> h_pp(spv.points,access_location::host,access_mode::read);
     for (int ii = 0; ii < Ncells; ++ii)
         h_p.data[ii] = h_pp.data[ii];
-    */
+    
 
     //call CGAL to get Delaunay triangulation
     vector<pair<Point,int> > Psnew(Ncells);

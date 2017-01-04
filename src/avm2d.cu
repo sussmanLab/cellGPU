@@ -55,8 +55,6 @@ __global__ void avm_geometry_kernel(const Dscalar2* __restrict__ d_p,
            if(d_vcn[3*vidx+ff]==idx)
                 forceSetIdx = 3*vidx+ff;
             };
-        if(forceSetIdx <0)
-            printf("forceset problem %i %i (%i, %i, %i\n",idx,vidx,3*vidx,3*vidx+1,3*vidx+2);
 
         vidx = d_n[n_idx(nn,idx)];
         Box.minDist(d_v[vidx],cellPos,vnext);
@@ -242,7 +240,9 @@ __global__ void avm_flip_edges_kernel(int* d_vflip,
         return;
     int vertex1 = idx/3;
     int vertex2 = d_vn[idx];
-printf("edge flip %i -- %i\n",vertex1,vertex2);
+
+//    printf("%i %i vertices...\n",vertex1,vertex2);
+    
     //Rotate the vertices in the edge and set them at twice their original distance
     Dscalar2 edge;
     Dscalar2 v1 = d_v[vertex1];
@@ -400,6 +400,29 @@ printf("edge flip %i -- %i\n",vertex1,vertex2);
         };
     //now rewire the cells
     //cell i loses v2 as a neighbor
+
+//    printf("(%i,%i)\t cells: (%i %i %i %i), vertices: (%i,%i,%i,%i)\n",vertex1,vertex2,cellSet.x,cellSet.y,cellSet.z,cellSet.w,vertexSet.x,vertexSet.y,vertexSet.z,vertexSet.w);
+/*
+if(cellSet.x<0)
+    {
+    printf("(%i,%i)\t cells: (%i %i %i %i), vertices: (%i,%i,%i,%i)\n",vertex1,vertex2,cellSet.x,cellSet.y,cellSet.z,cellSet.w,vertexSet.x,vertexSet.y,vertexSet.z,vertexSet.w);
+    cneigh = d_cvn[d_vcn[3*vertex1]];
+    printf("Cell 1, Cellidx %i:",d_vcn[3*vertex1]);
+    for (int c1 = 0; c1 < cneigh; ++c1)
+        printf("%i\t",d_cv[n_idx(c1,d_vcn[3*vertex1])] );
+    printf("\n");
+    cneigh = d_cvn[d_vcn[3*vertex1+1]];
+    printf("Cell 2, Cellidx %i:",d_vcn[3*vertex1+1]);
+    for (int c1 = 0; c1 < cneigh; ++c1)
+        printf("%i\t",d_cv[n_idx(c1,d_vcn[3*vertex1+1])] );
+    printf("\n");
+    cneigh = d_cvn[d_vcn[3*vertex1+2]];
+    printf("Cell 3, Cellidx %i:",d_vcn[3*vertex1+2]);
+    for (int c1 = 0; c1 < cneigh; ++c1)
+        printf("%i\t",d_cv[n_idx(c1,d_vcn[3*vertex1+2])] );
+    printf("\n");
+    };
+*/
     cneigh = d_cvn[cellSet.x];
     int cidx = 0;
     for (int cc = 0; cc < cneigh-1; ++cc)
@@ -415,9 +438,17 @@ printf("edge flip %i -- %i\n",vertex1,vertex2);
     cneigh = d_cvn[cellSet.y];
     cidx = cneigh;
     int vLocation = cneigh;
+//printf("\ncell j before\n");
+/*
+for (int c1 = 0; c1 <cneigh; ++c1)
+    printf("%i\t",d_cv[n_idx(c1,cellSet.y)]);
+printf("\n");
+*/
+//    printf("cell j neighs\n");
     for (int cc = cneigh-1;cc >=0; --cc)
         {
         int cellIndex = d_cv[n_idx(cc,cellSet.y)];
+//        printf("%i\t",cellIndex);
         if(cellIndex == vertex1)
             {
             vLocation = cidx;
@@ -426,12 +457,19 @@ printf("edge flip %i -- %i\n",vertex1,vertex2);
         d_cv[n_idx(cidx,cellSet.y)] = cellIndex;
         cidx -= 1;
         };
+//printf("\n v2 location %i\n",vLocation);
     if(cidx ==0)
         d_cv[n_idx(0,cellSet.y)] = vertex2;
     else
         d_cv[n_idx(vLocation,cellSet.y)] = vertex2;
     d_cvn[cellSet.y] += 1;
 
+/*
+printf("\ncell j after\n");
+for (int c1 = 0; c1 <=cneigh; ++c1)
+    printf("%i\t",d_cv[n_idx(c1,cellSet.y)]);
+printf("\n");
+*/
     //cell k loses v1 as a neighbor
     cneigh = d_cvn[cellSet.z];
     cidx = 0;
@@ -568,10 +606,7 @@ bool gpu_avm_force_sets(
     avm_force_sets_kernel<<<nblocks,block_size>>>(d_vcn,d_vc,d_vln,d_AP,d_APpref,d_fs,nForceSets,KA,KP);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
-        {
         printf("compute force sets GPUassert: %s \n", cudaGetErrorString(code));
-        throw std::exception();
-        };
     cudaThreadSynchronize();
     return cudaSuccess;
     };
