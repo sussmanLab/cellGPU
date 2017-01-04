@@ -133,6 +133,22 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     return;
     };
 
+/*!
+compute the sign of a Dscalar, and return zero if x = 0
+*/
+HOSTDEVICE int computeSign(Dscalar x)
+    {
+    return ((x>0)-(x<0));
+    };
+/*!
+compute the sign of a Dscalar, and return zero if x = 0...but return a Dscalar to avoid expensive casts on the GPU
+*/
+HOSTDEVICE Dscalar computeSignNoCast(Dscalar x)
+    {
+    if (x > 0.) return 1.0;
+    if (x < 0.) return -1.0;
+    if (x == 0.) return 0.;
+    };
 
 /*! Given three consecutive voronoi vertices and some cell information, compute -dE/dv
  Adiff = KA*(A_i-A_0)
@@ -144,6 +160,8 @@ HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, 
     {
     Dscalar2 dlast,dnext,dAdv,dPdv;
 
+    //compute the area of the triangle to know if it is positive (convex cell) or not
+    Dscalar TriAreaTimes2 = -vnext.x*vlast.y+vcur.y*(vnext.x-vlast.x)+vcur.x*(vlast.y-vnext.x)+vlast.x+vnext.y;
     dAdv.x = 0.5*(vlast.y-vnext.y);
     dAdv.y = 0.5*(vlast.x-vnext.x);
     dlast.x = vlast.x-vcur.x;
@@ -155,8 +173,8 @@ HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, 
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-    dEdv.x = 2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
-    dEdv.y = 2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
+    dEdv.x = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
+    dEdv.y = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
     }
 
 

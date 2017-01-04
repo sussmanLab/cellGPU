@@ -35,7 +35,7 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         h_p.data[ii].y = y;
         };
 
-    //use the SPV class to relax the initial configuration just a bit
+    //use the SPV class to relax the initial configuration just a bit?
     SPV2D spv(Ncells,1.0,3.8,false);
     spv.setCPU(false);
     spv.setv0Dr(0.1,1.0);
@@ -295,12 +295,6 @@ void AVM2D::computeGeometryCPU()
                 if(h_vcn.data[3*vidx+ff]==i)
                     forceSetIdx = 3*vidx+ff;
 
-            if(forceSetIdx <0)
-                {
-                printf("Timestep %i\n",Timestep);
-                printf("fsidx %i  i %i  neigh num %i\n",forceSetIdx,i,nn);
-                printf("vidx = %i, cell neighs = (%i,%i,%i)\n",vidx,h_vcn.data[3*vidx+0],h_vcn.data[3*vidx+1],h_vcn.data[3*vidx+2]);
-                };
             vidx = h_n.data[n_idx(nn,i)];
             Box.minDist(h_v.data[vidx],cellPos,vnext);
 
@@ -318,6 +312,7 @@ void AVM2D::computeGeometryCPU()
             };
         h_AP.data[i].x = Varea;
         h_AP.data[i].y = Vperi;
+//printf("cell %i: A = %.2f\t P=%.2f\n",i,Varea,Vperi);
         };
     };
 
@@ -349,12 +344,13 @@ void AVM2D::computeForcesCPU()
         vnext.x = h_vln.data[fsidx].z;  vnext.y = h_vln.data[fsidx].w;
 
         computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
+
         h_fs.data[fsidx].x = dEdv.x;
         h_fs.data[fsidx].y = dEdv.y;
         };
 
     //now sum these up to get the force on each vertex
-    Dscalar2 ftot = make_Dscalar2(0.0,0.0);
+    //Dscalar2 ftot = make_Dscalar2(0.0,0.0);
     for (int v = 0; v < Nvertices; ++v)
         {
         Dscalar2 ftemp = make_Dscalar2(0.0,0.0);
@@ -364,8 +360,7 @@ void AVM2D::computeForcesCPU()
             ftemp.y += h_fs.data[3*v+ff].y;
             };
         h_f.data[v] = ftemp;
-        ftot.x +=ftemp.x;ftot.y+=ftemp.y;
-
+        //ftot.x +=ftemp.x;ftot.y+=ftemp.y;
         };
     };
 

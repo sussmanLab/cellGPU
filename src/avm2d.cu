@@ -198,11 +198,10 @@ __global__ void avm_get_cell_positions_kernel(Dscalar2* d_p,
     pos.x /= neighs;
     pos.y /= neighs;
     pos.x += baseVertex.x;
-    pos.y + =baseVertex.y;
+    pos.y += baseVertex.y;
     Box.putInBoxReal(pos);
     d_p[idx] = pos;
     };
-
 
 
 
