@@ -78,7 +78,7 @@ int main(int argc, char*argv[])
 
     for (int timestep = 0; timestep < initSteps; ++timestep)
         {
-        avm.performTimestep();
+        avm.performTimestepGPU();
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {
             cout << timestep << endl;
@@ -100,6 +100,8 @@ int main(int argc, char*argv[])
 
 //    avm.reportMeanForce();
 
+    if(initializeGPU)
+        cudaDeviceReset();
 
     return 0;
     };

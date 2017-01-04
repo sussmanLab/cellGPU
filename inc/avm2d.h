@@ -38,6 +38,8 @@ class AVM2D
         GPUArray<int> vertexNeighbors;
         //! Cell neighbors of every vertex
         GPUArray<int> vertexCellNeighbors;
+        //! flags that indicate whether an edge should be GPU-flipped (1) or not (0)
+        GPUArray<int> vertexEdgeFlips;
 
         //!an array containing net force on each vertex
         GPUArray<Dscalar2> vertexForces;
@@ -106,7 +108,7 @@ class AVM2D
         //!Simple test for T1 transitions (edge length less than threshold) on the CPU
         void testAndPerformT1TransitionsCPU();
         //!Simple test for T1 transitions (edge length less than threshold) on the GPU
-        void testForT1GPU();
+        void testAndPerformT1TransitionsGPU();
 
 
         //!Get the cell position from the vertices on the CPU

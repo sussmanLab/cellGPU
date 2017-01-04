@@ -148,6 +148,7 @@ HOSTDEVICE Dscalar computeSignNoCast(Dscalar x)
     if (x > 0.) return 1.0;
     if (x < 0.) return -1.0;
     if (x == 0.) return 0.;
+    return 0.0;
     };
 
 /*! Given three consecutive voronoi vertices and some cell information, compute -dE/dv

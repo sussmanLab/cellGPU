@@ -43,7 +43,7 @@ bool gpu_avm_sum_force_sets(
                     Dscalar2 *d_fs,
                     Dscalar2 *d_f,
                     int      Nvertices);
-                    
+
 bool gpu_avm_displace_and_rotate(
                     Dscalar2 *d_vertexPositions,
                     Dscalar2 *d_vertexForces,
@@ -56,6 +56,30 @@ bool gpu_avm_displace_and_rotate(
                     gpubox &Box,
                     int Nvertices,
                     int Ncells);
+
+bool gpu_avm_test_edges_for_T1(
+                    Dscalar2 *d_v,
+                    int      *d_vn,
+                    int      *d_vflip,
+                    int      *d_vcn,
+                    int      *d_cvn,
+                    gpubox   &Box,
+                    Dscalar  T1THRESHOLD,
+                    int      Nvertices,
+                    int      vertexMax,
+                    int      &growCellVertexList);
+
+bool gpu_avm_flip_edges(
+                    int      *d_vflip,
+                    Dscalar2 *d_v,
+                    int      *d_vn,
+                    int      *d_vcn,
+                    int      *d_cvn,
+                    int      *d_cv,
+                    gpubox   &Box,
+                    Index2D  &n_idx, 
+                    int      Nvertices);
+
 
 bool gpu_avm_get_cell_positions(
                     Dscalar2 *d_p,

@@ -36,6 +36,7 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         };
 
     //use the SPV class to relax the initial configuration just a bit?
+    /*
     SPV2D spv(Ncells,1.0,3.8,false);
     spv.setCPU(false);
     spv.setv0Dr(0.1,1.0);
@@ -46,7 +47,7 @@ void AVM2D::setCellsVoronoiTesselation(int n)
     ArrayHandle<Dscalar2> h_pp(spv.points,access_location::host,access_mode::read);
     for (int ii = 0; ii < Ncells; ++ii)
         h_p.data[ii] = h_pp.data[ii];
-
+    */
 
     //call CGAL to get Delaunay triangulation
     vector<pair<Point,int> > Psnew(Ncells);
@@ -132,6 +133,11 @@ void AVM2D::setCellsVoronoiTesselation(int n)
             ++fc;
             };
         };
+    //initialize edge flips to zero
+    vertexEdgeFlips.resize(3*Nvertices);
+    ArrayHandle<int> h_vflip(vertexEdgeFlips,access_location::host,access_mode::overwrite);
+    for (int i = 0; i < 3*Nvertices; ++i)
+        h_vflip.data[i]=0;
 
     //randomly set vertex directors
     cellDirectors.resize(Ncells);
@@ -251,12 +257,8 @@ void AVM2D::performTimestepGPU()
     {
     computeGeometryGPU();
     computeForcesGPU();
-//    displaceAndRotateGPU();
-
-    //test for T1 transitions
-
-    //as needed, update the cell-vertex, vertex-vertex, vertex-cell data structures et al.
-
+    displaceAndRotateGPU();
+    testAndPerformT1TransitionsGPU();
     getCellPositionsGPU();
     };
 
@@ -410,7 +412,7 @@ a T1 transition, return in the pass-by-reference variables a helpful representat
 */
 void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 &vertexSet, bool &growList)
     {
-    int cell1,cell2,cell3,cell4,ctest;
+    int cell1,cell2,cell3,ctest;
     int vlast, vcur, vnext, cneigh;
     ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::read);
     ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::read);
@@ -418,7 +420,7 @@ void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 
     cell1 = h_vcn.data[3*vertex1];
     cell2 = h_vcn.data[3*vertex1+1];
     cell3 = h_vcn.data[3*vertex1+2];
-    //cell_l doesn't contain vertex 1, so its the cell neighbor of vertex 2 we haven't found yet
+    //cell_l doesn't contain vertex 1, so it is the cell neighbor of vertex 2 we haven't found yet
     for (int ff = 0; ff < 3; ++ff)
         {
         ctest = h_vcn.data[3*vertex2+ff];
@@ -592,7 +594,7 @@ void AVM2D::testAndPerformT1TransitionsCPU()
                         growCellVerticesList(vMax);
                         };
 
-                    //Rotate the vertices in the edge and set them at some distance
+                    //Rotate the vertices in the edge and set them at twice their original distance
                     Dscalar2 midpoint;
                     midpoint.x = v2.x + 0.5*edge.x;
                     midpoint.y = v2.y + 0.5*edge.y;
@@ -794,6 +796,7 @@ Move every vertex according to the net force on it and its motility...GPU routin
 */
 void AVM2D::displaceAndRotateGPU()
     {
+{
     ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device, access_mode::readwrite);
     ArrayHandle<Dscalar2> d_f(vertexForces,access_location::device, access_mode::read);
     ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device, access_mode::readwrite);
@@ -807,6 +810,47 @@ void AVM2D::displaceAndRotateGPU()
                                 d_cs.data,
                                 v0,Dr,deltaT,
                                 Box, Nvertices,Ncells);
+}
+    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
+//    printf("%f\t%f\n",h_v.data[0].x,h_v.data[0].y);
+    };
+
+void AVM2D::testAndPerformT1TransitionsGPU()
+    {
+    Dscalar T1THRESHOLD = 0.04;
+    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::overwrite);
+    ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
+
+    //first, test every edge, and check if the cellVertices list needs to be grown
+    int growCellVertexList=0;
+    gpu_avm_test_edges_for_T1(d_v.data,
+                              d_vn.data,
+                              d_vflip.data,
+                              d_vcn.data,
+                              d_cvn.data,
+                              Box,
+                              T1THRESHOLD,
+                              Nvertices,
+                              vertexMax,
+                              growCellVertexList);
+    if(growCellVertexList == 1)
+        growCellVerticesList(vertexMax+1);
+
+    //now perform the requested edge flips
+    gpu_avm_flip_edges(d_vflip.data,
+                       d_v.data,
+                       d_vn.data,
+                       d_vcn.data,
+                       d_cvn.data,
+                       d_cv.data,
+                       Box,
+                       n_idx,
+                       Nvertices);
+
     };
 
 void AVM2D::getCellPositionsGPU()
