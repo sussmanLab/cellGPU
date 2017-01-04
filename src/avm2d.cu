@@ -185,18 +185,20 @@ __global__ void avm_get_cell_positions_kernel(Dscalar2* d_p,
     if (idx >= N)
         return;
 
-    Dscalar2 vertex, oldCellPos,pos;
+    Dscalar2 vertex, pos, baseVertex;
     pos.x=0.0;pos.y=0.0;
-    oldCellPos=d_p[idx];
+    baseVertex = d_v[ d_n[n_idx(0,idx)] ];
     int neighs = d_nn[idx];
-    for (int n = 0; n < neighs; ++n)
+    for (int n = 1; n < neighs; ++n)
         {
-        Box.minDist(d_v[ d_n[n_idx(n,idx)] ],oldCellPos,vertex);
+        Box.minDist(d_v[ d_n[n_idx(n,idx)] ],baseVertex,vertex);
         pos.x += vertex.x;
         pos.y += vertex.y;
         };
     pos.x /= neighs;
     pos.y /= neighs;
+    pos.x += baseVertex.x;
+    pos.y + =baseVertex.y;
     Box.putInBoxReal(pos);
     d_p[idx] = pos;
     };
