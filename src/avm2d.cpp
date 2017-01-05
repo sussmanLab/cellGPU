@@ -36,7 +36,7 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         };
 
     //use the SPV class to relax the initial configuration just a bit?
-    
+    /*
     SPV2D spv(Ncells,1.0,3.8,false);
     spv.setCPU(false);
     spv.setv0Dr(0.1,1.0);
@@ -47,7 +47,7 @@ void AVM2D::setCellsVoronoiTesselation(int n)
     ArrayHandle<Dscalar2> h_pp(spv.points,access_location::host,access_mode::read);
     for (int ii = 0; ii < Ncells; ++ii)
         h_p.data[ii] = h_pp.data[ii];
-    
+    */
 
     //call CGAL to get Delaunay triangulation
     vector<pair<Point,int> > Psnew(Ncells);
@@ -745,8 +745,8 @@ void AVM2D::computeGeometryGPU()
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,        access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_v(vertexPositions,      access_location::device,access_mode::read);
-    ArrayHandle<int>      d_nn(cellVertexNum,       access_location::device,access_mode::read);
-    ArrayHandle<int>      d_n(cellVertices,         access_location::device,access_mode::read);
+    ArrayHandle<int>      d_cvn(cellVertexNum,       access_location::device,access_mode::read);
+    ArrayHandle<int>      d_cv(cellVertices,         access_location::device,access_mode::read);
     ArrayHandle<int>      d_vcn(vertexCellNeighbors,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_vc(voroCur,             access_location::device,access_mode::overwrite);
     ArrayHandle<Dscalar4> d_vln(voroLastNext,       access_location::device,access_mode::overwrite);
@@ -755,8 +755,8 @@ void AVM2D::computeGeometryGPU()
     gpu_avm_geometry(
                     d_p.data,
                     d_v.data,
-                    d_nn.data,
-                    d_n.data,
+                    d_cvn.data,
+                    d_cv.data,
                     d_vcn.data,
                     d_vc.data,
                     d_vln.data,

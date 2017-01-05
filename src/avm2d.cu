@@ -21,8 +21,8 @@ __global__ void initialize_curand_kernel(curandState *state, int N,int Timestep,
 //!compute the voronoi vertices for each cell, along with its area and perimeter
 __global__ void avm_geometry_kernel(const Dscalar2* __restrict__ d_p,
                                     const Dscalar2* __restrict__ d_v,
-                                    const      int* __restrict__ d_nn,
-                                    const      int* __restrict__ d_n,
+                                    const      int* __restrict__ d_cvn,
+                                    const      int* __restrict__ d_cv,
                                     const      int* __restrict__ d_vcn,
                                           Dscalar2*  d_vc,
                                           Dscalar4*  d_vln,
@@ -36,15 +36,15 @@ __global__ void avm_geometry_kernel(const Dscalar2* __restrict__ d_p,
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= N)
         return;
-    int neighs = d_nn[idx];
+    int neighs = d_cvn[idx];
     Dscalar2 cellPos = d_p[idx];
     Dscalar2 vlast, vcur,vnext;
     Dscalar Varea = 0.0;
     Dscalar Vperi = 0.0;
 
-    int vidx = d_n[n_idx(neighs-2,idx)];
+    int vidx = d_cv[n_idx(neighs-2,idx)];
     Box.minDist(d_v[vidx],cellPos,vlast);
-    vidx = d_n[n_idx(neighs-1,idx)];
+    vidx = d_cv[n_idx(neighs-1,idx)];
     Box.minDist(d_v[vidx],cellPos,vcur);
     for (int nn = 0; nn < neighs; ++nn)
         {
@@ -55,8 +55,17 @@ __global__ void avm_geometry_kernel(const Dscalar2* __restrict__ d_p,
            if(d_vcn[3*vidx+ff]==idx)
                 forceSetIdx = 3*vidx+ff;
             };
-
-        vidx = d_n[n_idx(nn,idx)];
+/*
+if (forceSetIdx <0 || forceSetIdx >= 6*N)
+{
+printf("forceSetIdx = %i\t vidx = %i\n",forceSetIdx,vidx);
+printf("cell = %i;  vidx is connected to:",idx);
+for (int ff = 0; ff < 3; ++ff)
+    printf("%i, ",d_vcn[3*vidx+ff]);
+printf("\n");
+};
+*/
+        vidx = d_cv[n_idx(nn,idx)];
         Box.minDist(d_v[vidx],cellPos,vnext);
 
         //compute area contribution
@@ -198,22 +207,33 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_v,
         Box.minDist(d_v[vertex1],d_v[vertex2],edge);
         if(norm(edge) < T1THRESHOLD)
             {
-            d_vflip[idx]=1;
-            //test the number of neighbors of the cells connected to v1 and v2 to see if the cell list should grow
-            //this is kind of slow, and I wish I could optimize it away, or at least not test for it during
-            //every time step. The latter seems pretty doable.
-            if(d_cvn[d_vcn[3*vertex1]] == vertexMax)
-                d_grow[0] = 1;
-            if(d_cvn[d_vcn[3*vertex1+1]] == vertexMax)
-                d_grow[0] = 1;
-            if(d_cvn[d_vcn[3*vertex1+2]] == vertexMax)
-                d_grow[0] = 1;
-            if(d_cvn[d_vcn[3*vertex2]] == vertexMax)
-                d_grow[0] = 1;
-            if(d_cvn[d_vcn[3*vertex2+1]] == vertexMax)
-                d_grow[0] = 1;
-            if(d_cvn[d_vcn[3*vertex2+2]] == vertexMax)
-                d_grow[0] = 1;
+            //Test if either vertex is already involved in a flip
+            if(d_vflip[3*vertex1]!= 1 &&
+                    d_vflip[3*vertex1+1] != 1&&
+                    d_vflip[3*vertex1+2] != 1&&
+                    d_vflip[3*vertex2] != 1&&
+                    d_vflip[3*vertex2+1] != 1&&
+                    d_vflip[3*vertex2+2] != 1)
+                {
+                d_vflip[idx]=1;
+                //test the number of neighbors of the cells connected to v1 and v2 to see if the cell list should grow
+                //this is kind of slow, and I wish I could optimize it away, or at least not test for it during
+                //every time step. The latter seems pretty doable.
+                if(d_cvn[d_vcn[3*vertex1]] == vertexMax)
+                    d_grow[0] = 1;
+                if(d_cvn[d_vcn[3*vertex1+1]] == vertexMax)
+                    d_grow[0] = 1;
+                if(d_cvn[d_vcn[3*vertex1+2]] == vertexMax)
+                    d_grow[0] = 1;
+                if(d_cvn[d_vcn[3*vertex2]] == vertexMax)
+                    d_grow[0] = 1;
+                if(d_cvn[d_vcn[3*vertex2+1]] == vertexMax)
+                    d_grow[0] = 1;
+                if(d_cvn[d_vcn[3*vertex2+2]] == vertexMax)
+                    d_grow[0] = 1;
+                }
+            else
+                d_vflip[idx]=0;
             }
         else
             d_vflip[idx]=0;
@@ -434,21 +454,13 @@ if(cellSet.x<0)
         };
     d_cvn[cellSet.x] -= 1;
 
-    //cell j gains v2 in between v1 and b, so step through list backwards
+    //cell j gains v2 in between v1 and b, so step through list backwards and insert
     cneigh = d_cvn[cellSet.y];
     cidx = cneigh;
     int vLocation = cneigh;
-//printf("\ncell j before\n");
-/*
-for (int c1 = 0; c1 <cneigh; ++c1)
-    printf("%i\t",d_cv[n_idx(c1,cellSet.y)]);
-printf("\n");
-*/
-//    printf("cell j neighs\n");
     for (int cc = cneigh-1;cc >=0; --cc)
         {
         int cellIndex = d_cv[n_idx(cc,cellSet.y)];
-//        printf("%i\t",cellIndex);
         if(cellIndex == vertex1)
             {
             vLocation = cidx;
@@ -457,19 +469,12 @@ printf("\n");
         d_cv[n_idx(cidx,cellSet.y)] = cellIndex;
         cidx -= 1;
         };
-//printf("\n v2 location %i\n",vLocation);
     if(cidx ==0)
         d_cv[n_idx(0,cellSet.y)] = vertex2;
     else
         d_cv[n_idx(vLocation,cellSet.y)] = vertex2;
     d_cvn[cellSet.y] += 1;
 
-/*
-printf("\ncell j after\n");
-for (int c1 = 0; c1 <=cneigh; ++c1)
-    printf("%i\t",d_cv[n_idx(c1,cellSet.y)]);
-printf("\n");
-*/
     //cell k loses v1 as a neighbor
     cneigh = d_cvn[cellSet.z];
     cidx = 0;
@@ -482,7 +487,7 @@ printf("\n");
         };
     d_cvn[cellSet.z] -= 1;
 
-    //cell l gains v1 in between v2 and c
+    //cell l gains v1 in between v2 and c...copy the logic of cell j
     cneigh = d_cvn[cellSet.w];
     cidx = cneigh;
     vLocation = cneigh;
@@ -565,8 +570,8 @@ bool gpu_initialize_curand(curandState *states,
 bool gpu_avm_geometry(
                     Dscalar2 *d_p,
                     Dscalar2 *d_v,
-                    int      *d_nn,
-                    int      *d_n,
+                    int      *d_cvn,
+                    int      *d_cv,
                     int      *d_vcn,
                     Dscalar2 *d_vc,
                     Dscalar4 *d_vln,
@@ -580,7 +585,7 @@ bool gpu_avm_geometry(
     unsigned int nblocks  = N/block_size + 1;
 
 
-    avm_geometry_kernel<<<nblocks,block_size>>>(d_p,d_v,d_nn,d_n,d_vcn,d_vc,d_vln,d_AP,N, n_idx, Box);
+    avm_geometry_kernel<<<nblocks,block_size>>>(d_p,d_v,d_cvn,d_cv,d_vcn,d_vc,d_vln,d_AP,N, n_idx, Box);
     cudaThreadSynchronize();
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
