@@ -753,7 +753,10 @@ bool gpu_avm_get_cell_positions(
     cudaThreadSynchronize();
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
+        {
         printf("get cell positions GPUassert: %s \n", cudaGetErrorString(code));
+        throw std::exception();
+        };
     return cudaSuccess;
     };
 
