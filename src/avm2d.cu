@@ -46,6 +46,8 @@ __global__ void avm_geometry_kernel(const Dscalar2* __restrict__ d_p,
     Box.minDist(d_v[vidx],cellPos,vlast);
     vidx = d_cv[n_idx(neighs-1,idx)];
     Box.minDist(d_v[vidx],cellPos,vcur);
+if (d_cvn[n_idx(d_cvn[idx]-1, idx)] ==d_cvn[n_idx(d_cvn[idx]-2,idx)])
+printf("cell double%i\n",idx);
     for (int nn = 0; nn < neighs; ++nn)
         {
         //for easy force calculation, save the current, last, and next voronoi vertex position in the approprate spot.
@@ -55,16 +57,19 @@ __global__ void avm_geometry_kernel(const Dscalar2* __restrict__ d_p,
            if(d_vcn[3*vidx+ff]==idx)
                 forceSetIdx = 3*vidx+ff;
             };
-/*
-if (forceSetIdx <0 || forceSetIdx >= 6*N)
+
+if (forceSetIdx <0 || forceSetIdx >= 6*N || idx == 171)
 {
-printf("forceSetIdx = %i\t vidx = %i\n",forceSetIdx,vidx);
+printf("forceSetIdx = %i\t vidx = %i\t nn=%i\n",forceSetIdx,vidx,nn);
 printf("cell = %i;  vidx is connected to:",idx);
 for (int ff = 0; ff < 3; ++ff)
     printf("%i, ",d_vcn[3*vidx+ff]);
+printf("\ncell is connected to:");
+int cneigh = d_cvn[idx];
+for (int ff = 0; ff < cneigh; ++ff)
+    printf("%i, ",d_cvn[n_idx(ff,idx)]);
 printf("\n");
 };
-*/
         vidx = d_cv[n_idx(nn,idx)];
         Box.minDist(d_v[vidx],cellPos,vnext);
 
@@ -184,6 +189,57 @@ __global__ void avm_rotate_directors_kernel(
     d_cs[idx] = randState;
     };
 
+/*!
+Because operations are performed in parallel, the GPU routine will break if the same vertex
+is involved in multiple T1 transitions in the same time step. Defend against that by limiting
+the number of flips to one.
+*/
+__global__ void avm_defend_against_multiple_T1_kernel(
+                                        int *d_flip,
+                                        int *d_vn,
+                                        int Nvertices)
+    {
+    unsigned int vertex1 = blockDim.x * blockIdx.x + threadIdx.x;
+    if (vertex1 >= Nvertices)
+        return;
+    //if the first vertex-neighbor is to be flipped, prevent any other flips of the two vertices
+    if (d_flip[3*vertex1] == 1)
+        {
+        for (int ff = 0; ff < 3; ++ff)
+            {
+            int vertex2 = d_vn[3*vertex1+ff];
+            for(int f2=0;f2 <3; ++f2)
+                d_flip[3*vertex2+f2]=0;
+            };
+        d_flip[3*vertex1+1] = 0;
+        d_flip[3*vertex1+2] = 0;
+        }; 
+
+    //if the second vertex-neighbor is to be flipped, prevent any other flips of the two vertices
+    if (d_flip[3*vertex1+1] == 1)
+        {
+        for (int ff = 0; ff < 3; ++ff)
+            {
+            int vertex2 = d_vn[3*vertex1+ff];
+            for(int f2=0;f2 <3; ++f2)
+                d_flip[3*vertex2+f2]=0;
+            };
+        d_flip[3*vertex1+2] = 0;
+        };
+
+    //if the third vertex-neighbor is to be flipped, prevent any other flips of the two vertices
+    if (d_flip[3*vertex1+2] == 1)
+        {
+        for (int ff = 0; ff < 3; ++ff)
+            {
+            int vertex2 = d_vn[3*vertex1+ff];
+            for(int f2=0;f2 <3; ++f2)
+                d_flip[3*vertex2+f2]=0;
+            };
+        };
+    };
+
+
 //!Run through every pair of vertices (once), see if any T1 transitions should be done, and see if the cell-vertex list needs to grow
 __global__ void avm_simple_T1_test_kernel(Dscalar2* d_v,
                                         int      *d_vn,
@@ -207,33 +263,22 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_v,
         Box.minDist(d_v[vertex1],d_v[vertex2],edge);
         if(norm(edge) < T1THRESHOLD)
             {
-            //Test if either vertex is already involved in a flip
-            if(d_vflip[3*vertex1]!= 1 &&
-                    d_vflip[3*vertex1+1] != 1&&
-                    d_vflip[3*vertex1+2] != 1&&
-                    d_vflip[3*vertex2] != 1&&
-                    d_vflip[3*vertex2+1] != 1&&
-                    d_vflip[3*vertex2+2] != 1)
-                {
-                d_vflip[idx]=1;
-                //test the number of neighbors of the cells connected to v1 and v2 to see if the cell list should grow
-                //this is kind of slow, and I wish I could optimize it away, or at least not test for it during
-                //every time step. The latter seems pretty doable.
-                if(d_cvn[d_vcn[3*vertex1]] == vertexMax)
-                    d_grow[0] = 1;
-                if(d_cvn[d_vcn[3*vertex1+1]] == vertexMax)
-                    d_grow[0] = 1;
-                if(d_cvn[d_vcn[3*vertex1+2]] == vertexMax)
-                    d_grow[0] = 1;
-                if(d_cvn[d_vcn[3*vertex2]] == vertexMax)
-                    d_grow[0] = 1;
-                if(d_cvn[d_vcn[3*vertex2+1]] == vertexMax)
-                    d_grow[0] = 1;
-                if(d_cvn[d_vcn[3*vertex2+2]] == vertexMax)
-                    d_grow[0] = 1;
-                }
-            else
-                d_vflip[idx]=0;
+            d_vflip[idx]=1;
+            //test the number of neighbors of the cells connected to v1 and v2 to see if the cell list should grow
+            //this is kind of slow, and I wish I could optimize it away, or at least not test for it during
+            //every time step. The latter seems pretty doable.
+            if(d_cvn[d_vcn[3*vertex1]] == vertexMax)
+                d_grow[0] = 1;
+            if(d_cvn[d_vcn[3*vertex1+1]] == vertexMax)
+                d_grow[0] = 1;
+            if(d_cvn[d_vcn[3*vertex1+2]] == vertexMax)
+                d_grow[0] = 1;
+            if(d_cvn[d_vcn[3*vertex2]] == vertexMax)
+                d_grow[0] = 1;
+            if(d_cvn[d_vcn[3*vertex2+1]] == vertexMax)
+                d_grow[0] = 1;
+            if(d_cvn[d_vcn[3*vertex2+2]] == vertexMax)
+                d_grow[0] = 1;
             }
         else
             d_vflip[idx]=0;
@@ -258,10 +303,12 @@ __global__ void avm_flip_edges_kernel(int* d_vflip,
     //return if the index is out of bounds or if the edge isn't marked for flipping
     if (idx >= NvTimes3 || d_vflip[idx] == 0)
         return;
+    //identify the vertices and reset the flag
     int vertex1 = idx/3;
     int vertex2 = d_vn[idx];
+    d_vflip[idx] = 0;
 
-//    printf("%i %i vertices...\n",vertex1,vertex2);
+    printf("T1 for vertices %i %i ...\n",vertex1,vertex2);
 
     //Rotate the vertices in the edge and set them at twice their original distance
     Dscalar2 edge;
@@ -699,6 +746,18 @@ bool gpu_avm_test_edges_for_T1(
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("test for T1 GPUassert: %s \n", cudaGetErrorString(code));
+
+    //only allow a vertex to be in one T1 transition in a given time step
+    if(Nvertices<128) block_size = 32;
+    nblocks = Nvertices/block_size + 1;
+    avm_defend_against_multiple_T1_kernel<<<nblocks,block_size>>>(
+                                        d_vflip,
+                                        d_vn,
+                                        Nvertices);
+    code = cudaGetLastError();
+    if(code!=cudaSuccess)
+        printf("One T1 per vertex per timestep GPUassert: %s \n", cudaGetErrorString(code));
+
     return cudaSuccess;
     };
 
