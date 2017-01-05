@@ -796,7 +796,6 @@ Move every vertex according to the net force on it and its motility...GPU routin
 */
 void AVM2D::displaceAndRotateGPU()
     {
-{
     ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device, access_mode::readwrite);
     ArrayHandle<Dscalar2> d_f(vertexForces,access_location::device, access_mode::read);
     ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device, access_mode::readwrite);
@@ -810,9 +809,6 @@ void AVM2D::displaceAndRotateGPU()
                                 d_cs.data,
                                 v0,Dr,deltaT,
                                 Box, Nvertices,Ncells);
-}
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
-//    printf("%f\t%f\n",h_v.data[0].x,h_v.data[0].y);
     };
 
 void AVM2D::testAndPerformT1TransitionsGPU()
