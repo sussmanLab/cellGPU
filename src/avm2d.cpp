@@ -837,11 +837,13 @@ void AVM2D::testEdgesForT1GPU()
                               d_vflip.data,
                               d_vcn.data,
                               d_cvn.data,
+                              d_cv.data,
                               Box,
                               T1THRESHOLD,
                               Nvertices,
                               vertexMax,
-                              d_grow.data);
+                              d_grow.data,
+                              n_idx);
         }
     ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::readwrite);
     if(h_grow.data[0] ==1)

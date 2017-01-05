@@ -78,7 +78,6 @@ int main(int argc, char*argv[])
 
     for (int timestep = 0; timestep < initSteps; ++timestep)
         {
-            cout << timestep << endl;
         avm.performTimestep();
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {

@@ -46,8 +46,8 @@ __global__ void avm_geometry_kernel(const Dscalar2* __restrict__ d_p,
     Box.minDist(d_v[vidx],cellPos,vlast);
     vidx = d_cv[n_idx(neighs-1,idx)];
     Box.minDist(d_v[vidx],cellPos,vcur);
-if (d_cvn[n_idx(d_cvn[idx]-1, idx)] ==d_cvn[n_idx(d_cvn[idx]-2,idx)])
-printf("cell double%i\n",idx);
+//if (d_cvn[n_idx(d_cvn[idx]-1, idx)] ==d_cvn[n_idx(d_cvn[idx]-2,idx)])
+//printf("cell double%i\n",idx);
     for (int nn = 0; nn < neighs; ++nn)
         {
         //for easy force calculation, save the current, last, and next voronoi vertex position in the approprate spot.
@@ -57,7 +57,7 @@ printf("cell double%i\n",idx);
            if(d_vcn[3*vidx+ff]==idx)
                 forceSetIdx = 3*vidx+ff;
             };
-
+/*
 if (forceSetIdx <0 || forceSetIdx >= 6*N || idx == 171)
 {
 printf("forceSetIdx = %i\t vidx = %i\t nn=%i\n",forceSetIdx,vidx,nn);
@@ -67,9 +67,10 @@ for (int ff = 0; ff < 3; ++ff)
 printf("\ncell is connected to:");
 int cneigh = d_cvn[idx];
 for (int ff = 0; ff < cneigh; ++ff)
-    printf("%i, ",d_cvn[n_idx(ff,idx)]);
+    printf("%i, ",d_cv[n_idx(ff,idx)]);
 printf("\n");
 };
+*/
         vidx = d_cv[n_idx(nn,idx)];
         Box.minDist(d_v[vidx],cellPos,vnext);
 
@@ -239,7 +240,48 @@ __global__ void avm_defend_against_multiple_T1_kernel(
         };
     };
 
+/*!
+Because operations are performed in parallel, the GPU routine will break if the same cell
+is involved in multiple T1 transitions in the same time step. Defend against that by limiting
+the number of flips per cell to one.
+*/
+__global__ void avm_defend_against_multiple_T1_cell_kernel(
+                                        int *d_vflip,
+                                        int *d_vn,
+                                        int *d_cvn,
+                                        int *d_cv,
+                                        Index2D n_idx,
+                                        int Ncells)
+    {
+    unsigned int cell = blockDim.x * blockIdx.x + threadIdx.x;
+    if (cell >= Ncells)
+        return;
 
+    //look through every vertex of the cell
+    int cneigh = d_cvn[cell];
+    bool flip = false;
+    for (int cc = 0; cc < cneigh; ++cc)
+        {
+        int vertex = d_cv[n_idx(cc,cell)];
+        if(flip)
+            {
+            d_vflip[3*vertex] = 0;
+            d_vflip[3*vertex+1] = 0;
+            d_vflip[3*vertex+2] = 0;
+            };
+        for (int ff = 0; ff < 3; ++ff)
+            {
+            int vertexNeigh =  d_vn[3*vertex+ff];
+            if (d_vflip[3*vertexNeigh+ff] == 1)
+                {
+                if (flip)
+                    d_vflip[3*vertex+ff] = 0;
+                else
+                    flip = true;
+                };
+            };
+        };
+    };
 //!Run through every pair of vertices (once), see if any T1 transitions should be done, and see if the cell-vertex list needs to grow
 __global__ void avm_simple_T1_test_kernel(Dscalar2* d_v,
                                         int      *d_vn,
@@ -304,11 +346,12 @@ __global__ void avm_flip_edges_kernel(int* d_vflip,
     if (idx >= NvTimes3 || d_vflip[idx] == 0)
         return;
     //identify the vertices and reset the flag
+
     int vertex1 = idx/3;
     int vertex2 = d_vn[idx];
     d_vflip[idx] = 0;
 
-    printf("T1 for vertices %i %i ...\n",vertex1,vertex2);
+//    printf("T1 for vertices %i %i ...\n",vertex1,vertex2);
 
     //Rotate the vertices in the edge and set them at twice their original distance
     Dscalar2 edge;
@@ -724,11 +767,13 @@ bool gpu_avm_test_edges_for_T1(
                     int      *d_vflip,
                     int      *d_vcn,
                     int      *d_cvn,
+                    int      *d_cv,
                     gpubox   &Box,
                     Dscalar  T1THRESHOLD,
                     int      Nvertices,
                     int      vertexMax,
-                    int      *d_grow)
+                    int      *d_grow,
+                    Index2D  &n_idx)
     {
     unsigned int block_size = 128;
     int NvTimes3 = Nvertices*3;
@@ -757,6 +802,21 @@ bool gpu_avm_test_edges_for_T1(
     code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("One T1 per vertex per timestep GPUassert: %s \n", cudaGetErrorString(code));
+
+    //only allow a CELL to be in one T1 transition in a given time step, too!
+    int Ncells = Nvertices = Nvertices / 2;
+    if(Ncells <128) block_size = 32;
+    nblocks = Ncells/block_size + 1;
+    avm_defend_against_multiple_T1_cell_kernel<<<nblocks,block_size>>>(
+                                        d_vflip,
+                                        d_vn,
+                                        d_cvn,
+                                        d_cv,
+                                        n_idx,
+                                        Ncells);
+    code = cudaGetLastError();
+    if(code!=cudaSuccess)
+        printf("One T1 per cell per timestep GPUassert: %s \n", cudaGetErrorString(code));
 
     return cudaSuccess;
     };
@@ -799,8 +859,8 @@ bool gpu_avm_get_cell_positions(
                     Dscalar2 *d_v,
                     int      *d_nn,
                     int      *d_n,
-                    int      N, 
-                    Index2D  &n_idx, 
+                    int      N,
+                    Index2D  &n_idx,
                     gpubox   &Box)
     {
     unsigned int block_size = 128;
