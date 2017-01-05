@@ -202,7 +202,7 @@ __global__ void avm_defend_against_multiple_T1_kernel(
     unsigned int vertex1 = blockDim.x * blockIdx.x + threadIdx.x;
     if (vertex1 >= Nvertices)
         return;
-    //if the first vertex-neighbor is to be flipped, prevent any other flips of the two vertices
+    //if the first vertex-neighbor is to be flipped, prevent any other nearby flips
     if (d_flip[3*vertex1] == 1)
         {
         for (int ff = 0; ff < 3; ++ff)
@@ -213,7 +213,7 @@ __global__ void avm_defend_against_multiple_T1_kernel(
             };
         d_flip[3*vertex1+1] = 0;
         d_flip[3*vertex1+2] = 0;
-        }; 
+        };
 
     //if the second vertex-neighbor is to be flipped, prevent any other flips of the two vertices
     if (d_flip[3*vertex1+1] == 1)
