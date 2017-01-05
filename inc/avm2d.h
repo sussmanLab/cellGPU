@@ -107,8 +107,12 @@ class AVM2D
 
         //!Simple test for T1 transitions (edge length less than threshold) on the CPU
         void testAndPerformT1TransitionsCPU();
-        //!Simple test for T1 transitions (edge length less than threshold) on the GPU
+        //!Simple test for T1 transitions (edge length less than threshold) on the GPU...calls the following functions
         void testAndPerformT1TransitionsGPU();
+        //!test the edges for a T1 event, and grow the cell-vertex list if necessary
+        void testEdgesForT1GPU();
+        //!perform the edge flips found in the previous step
+        void flipEdgesGPU();
 
 
         //!Get the cell position from the vertices on the CPU
@@ -157,6 +161,8 @@ class AVM2D
         //!An upper bound for the maximum number of neighbors that any cell has
         int vertexMax;
 
+        //! data structure to help with cell-vertex list
+        GPUArray<int> growCellVertexListAssist;
 
         //utility functions
         void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);

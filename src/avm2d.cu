@@ -58,7 +58,7 @@ __global__ void avm_geometry_kernel(const Dscalar2* __restrict__ d_p,
 
         vidx = d_n[n_idx(nn,idx)];
         Box.minDist(d_v[vidx],cellPos,vnext);
-        
+
         //compute area contribution
         Varea += TriangleArea(vcur,vnext);
         Dscalar dx = vcur.x-vnext.x;
@@ -149,7 +149,7 @@ __global__ void avm_displace_vertices_kernel(
 
 //    printf("cell %f\t %f\n",deltaT*(v0*directorx), deltaT*d_f[idx].x);
 
-    
+
     d_v[idx].x += deltaT*(v0*directorx + d_f[idx].x);
     d_v[idx].y += deltaT*(v0*directory + d_f[idx].y);
     //make sure the vertices stay in the box
@@ -185,7 +185,7 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_v,
                                         Dscalar  T1THRESHOLD,
                                         int      NvTimes3,
                                         int      vertexMax,
-                                        int      *growList)
+                                        int      *d_grow)
     {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= NvTimes3)
@@ -203,17 +203,17 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_v,
             //this is kind of slow, and I wish I could optimize it away, or at least not test for it during
             //every time step. The latter seems pretty doable.
             if(d_cvn[d_vcn[3*vertex1]] == vertexMax)
-                *growList = 1;
+                d_grow[0] = 1;
             if(d_cvn[d_vcn[3*vertex1+1]] == vertexMax)
-                *growList = 1;
+                d_grow[0] = 1;
             if(d_cvn[d_vcn[3*vertex1+2]] == vertexMax)
-                *growList = 1;
+                d_grow[0] = 1;
             if(d_cvn[d_vcn[3*vertex2]] == vertexMax)
-                *growList = 1;
+                d_grow[0] = 1;
             if(d_cvn[d_vcn[3*vertex2+1]] == vertexMax)
-                *growList = 1;
+                d_grow[0] = 1;
             if(d_cvn[d_vcn[3*vertex2+2]] == vertexMax)
-                *growList = 1;
+                d_grow[0] = 1;
             }
         else
             d_vflip[idx]=0;
@@ -242,13 +242,13 @@ __global__ void avm_flip_edges_kernel(int* d_vflip,
     int vertex2 = d_vn[idx];
 
 //    printf("%i %i vertices...\n",vertex1,vertex2);
-    
+
     //Rotate the vertices in the edge and set them at twice their original distance
     Dscalar2 edge;
     Dscalar2 v1 = d_v[vertex1];
     Dscalar2 v2 = d_v[vertex2];
     Box.minDist(v1,v2,edge);
-    
+
     Dscalar2 midpoint;
     midpoint.x = v2.x + 0.5*edge.x;
     midpoint.y = v2.y + 0.5*edge.y;
@@ -259,7 +259,7 @@ __global__ void avm_flip_edges_kernel(int* d_vflip,
     Box.putInBoxReal(v2);
     d_v[vertex1] = v1;
     d_v[vertex2] = v2;
-    
+
     //now, do the gross work of cell and vertex rewiring
     int4 cellSet;cellSet.x=-1;cellSet.y=-1;cellSet.z=-1;cellSet.w=-1;
     int4 vertexSet;
@@ -571,8 +571,8 @@ bool gpu_avm_geometry(
                     Dscalar2 *d_vc,
                     Dscalar4 *d_vln,
                     Dscalar2 *d_AP,
-                    int      N, 
-                    Index2D  &n_idx, 
+                    int      N,
+                    Index2D  &n_idx,
                     gpubox   &Box)
     {
     unsigned int block_size = 128;
@@ -676,27 +676,20 @@ bool gpu_avm_test_edges_for_T1(
                     Dscalar  T1THRESHOLD,
                     int      Nvertices,
                     int      vertexMax,
-                    int      &growCellVertexList)
+                    int      *d_grow)
     {
     unsigned int block_size = 128;
     int NvTimes3 = Nvertices*3;
     if (NvTimes3 < 128) block_size = 32;
     unsigned int nblocks  = NvTimes3/block_size + 1;
 
-    growCellVertexList = 0;
-    int *growList;
-    cudaMalloc((void**)&growList,sizeof(int));
-    cudaMemcpy(growList,&growCellVertexList,sizeof(int),cudaMemcpyHostToDevice);
-
     //test edges
     avm_simple_T1_test_kernel<<<nblocks,block_size>>>(
             d_v,d_vn,d_vflip,d_vcn,d_cvn,
             Box,
             T1THRESHOLD,
-            NvTimes3,vertexMax,growList);
-    //copy back whether to grow the cell-vertex list (1) or not (0)
-    cudaMemcpy(&growCellVertexList,growList,sizeof(int),cudaMemcpyDeviceToHost);
-    cudaFree(growList);
+            NvTimes3,vertexMax,d_grow);
+
     cudaThreadSynchronize();
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)

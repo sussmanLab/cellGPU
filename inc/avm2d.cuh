@@ -67,7 +67,7 @@ bool gpu_avm_test_edges_for_T1(
                     Dscalar  T1THRESHOLD,
                     int      Nvertices,
                     int      vertexMax,
-                    int      &growCellVertexList);
+                    int      *d_grow);
 
 bool gpu_avm_flip_edges(
                     int      *d_vflip,

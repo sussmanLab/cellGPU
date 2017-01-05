@@ -163,6 +163,11 @@ void AVM2D::Initialize(int n,bool initGPU)
     voroLastNext.resize(3*Nvertices);
     if(initGPU)
         initializeCurandStates(1337,Timestep);
+
+    growCellVertexListAssist.resize(1);
+    ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);
+    h_grow.data[0]=0;
+
     };
 
 //set all cell area and perimeter preferences to uniform values
@@ -810,20 +815,24 @@ void AVM2D::displaceAndRotateGPU()
                                 v0,Dr,deltaT,
                                 Box, Nvertices,Ncells);
     };
-
-void AVM2D::testAndPerformT1TransitionsGPU()
+/*!
+perform whatever check is desired for T1 transtions (here just a "is the edge too short")
+and detect whether the edge needs to grow. If so, grow it!
+*/
+void AVM2D::testEdgesForT1GPU()
     {
-    Dscalar T1THRESHOLD = 0.04;
-    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::overwrite);
-    ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
+        {//provide scope for array handles
+        Dscalar T1THRESHOLD = 0.04;
+        ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
+        ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::read);
+        ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::overwrite);
+        ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::read);
+        ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::read);
+        ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::read);
+        ArrayHandle<int> d_grow(growCellVertexListAssist,access_location::device,access_mode::readwrite);
 
-    //first, test every edge, and check if the cellVertices list needs to be grown
-    int growCellVertexList=0;
-    gpu_avm_test_edges_for_T1(d_v.data,
+        //first, test every edge, and check if the cellVertices list needs to be grown
+        gpu_avm_test_edges_for_T1(d_v.data,
                               d_vn.data,
                               d_vflip.data,
                               d_vcn.data,
@@ -832,11 +841,25 @@ void AVM2D::testAndPerformT1TransitionsGPU()
                               T1THRESHOLD,
                               Nvertices,
                               vertexMax,
-                              growCellVertexList);
-    if(growCellVertexList == 1)
+                              d_grow.data);
+        }
+    ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::readwrite);
+    if(h_grow.data[0] ==1)
+        {
+        h_grow.data[0]=0;
         growCellVerticesList(vertexMax+1);
+        };
+    };
 
-    //now perform the requested edge flips
+void AVM2D::flipEdgesGPU()
+    {
+    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::read);
+    ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
+
     gpu_avm_flip_edges(d_vflip.data,
                        d_v.data,
                        d_vn.data,
@@ -846,7 +869,15 @@ void AVM2D::testAndPerformT1TransitionsGPU()
                        Box,
                        n_idx,
                        Nvertices);
+    };
 
+/*!
+Because the cellVertexList might need to grow, it's convenient to break this into two parts
+*/
+void AVM2D::testAndPerformT1TransitionsGPU()
+    {
+    testEdgesForT1GPU();
+    flipEdgesGPU();
     };
 
 void AVM2D::getCellPositionsGPU()
