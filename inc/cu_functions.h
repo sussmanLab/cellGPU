@@ -163,6 +163,8 @@ HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, 
 
     //compute the area of the triangle to know if it is positive (convex cell) or not
     Dscalar TriAreaTimes2 = -vnext.x*vlast.y+vcur.y*(vnext.x-vlast.x)+vcur.x*(vlast.y-vnext.x)+vlast.x+vnext.y;
+    //note that my conventions for dAdv and dPdv take care of the minus sign, so
+    //that dEdv below is reall -dEdv, so it's the force
     dAdv.x = 0.5*(vlast.y-vnext.y);
     dAdv.y = 0.5*(vlast.x-vnext.x);
     dlast.x = vlast.x-vcur.x;
@@ -174,8 +176,10 @@ HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, 
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-    dEdv.x = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
-    dEdv.y = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
+    //dEdv.x = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
+    //dEdv.y = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
+    dEdv.x = 2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
+    dEdv.y = 2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
     }
 
 

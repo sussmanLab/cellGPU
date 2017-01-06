@@ -604,8 +604,10 @@ void AVM2D::testAndPerformT1TransitionsCPU()
                     midpoint.x = v2.x + 0.5*edge.x;
                     midpoint.y = v2.y + 0.5*edge.y;
 
-                    v1.x = midpoint.x-edge.y;v1.y = midpoint.y+edge.x;
-                    v2.x = midpoint.x+edge.y;v2.y = midpoint.y-edge.x;
+                    v1.x = midpoint.x-edge.y;
+                    v1.y = midpoint.y+edge.x;
+                    v2.x = midpoint.x+edge.y;
+                    v2.y = midpoint.y-edge.x;
                     Box.putInBoxReal(v1);
                     Box.putInBoxReal(v2);
                     h_v.data[vertex1] = v1;

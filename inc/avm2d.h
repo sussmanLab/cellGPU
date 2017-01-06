@@ -188,7 +188,7 @@ class AVM2D
                 Dscalar vtot= 0.0;
                 for (int i = 0; i < Ncells; ++i)
                     {
-                    printf("%i: (%f,%f)\n",i,ap.data[i].x,ap.data[i].y);
+//                    printf("%i: (%f,%f)\n",i,ap.data[i].x,ap.data[i].y);
                     vtot+=ap.data[i].x;
                     };
                 printf("total area = %f\n",vtot);
