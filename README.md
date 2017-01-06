@@ -26,7 +26,7 @@ The following describes the basic operation of the DelaunayMD class
 * DelaunayLoc -- Calculates candidate 1-rings of particles by finding an enclosing polygon of nearby points and finding all points in the circumcircle of the point and any two consecutive vertices of that polygon.
 * DelaunayMD -- A core engine that operates as described above in ''Basic idea''
 * SPV2D -- A child class of DelaunayMD that implements the 2D SPV model forces.
-
+* AVM2D -- A separate class, independent of DelaunayMD, that reuses some of the ideas on the rest of the program to implement a simple 2D active vertex model
 ##CURRENT LIMITATION
 
 At the moment everything is optimized assuming the box is square. For this assumption to change, many edits would need to be made to the DelaunayCGAL and especially gpucell class. Also the grid class, and some changes in how higher-level classes interact with this objects.
