@@ -905,13 +905,13 @@ void AVM2D::getCellPositionsGPU()
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
-    ArrayHandle<int> d_nn(cellVertexNum,access_location::device,access_mode::read);
-    ArrayHandle<int> d_n(cellVertices,access_location::device,access_mode::read);
+    ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::read);
 
     gpu_avm_get_cell_positions(d_p.data,
                                d_v.data,
-                               d_nn.data,
-                               d_n.data,
+                               d_cvn.data,
+                               d_cv.data,
                                Ncells,
                                n_idx,
                                Box);

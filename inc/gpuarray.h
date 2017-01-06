@@ -35,7 +35,6 @@ for (int c = 0; c < numberOfCells;++c)
 // for vector types
 #include "std_include.h"
 #include <cuda_runtime.h>
-#include <cuda.h>
 
 
 //!A structure for declaring where we want to access data

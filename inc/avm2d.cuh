@@ -17,31 +17,31 @@ bool gpu_initialize_curand(curandState *states,
                     );
 
 bool gpu_avm_geometry(
-                    Dscalar2 *d_p,
-                    Dscalar2 *d_v,
-                    int      *d_cvn,
-                    int      *d_cv,
-                    int      *d_vcn,
-                    Dscalar2 *d_vc,
-                    Dscalar4  *d_vln,
-                    Dscalar2 *d_AP,
+                    Dscalar2 *d_cellPositions,
+                    Dscalar2 *d_vertexPositions,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
+                    int      *d_vertexCellNeighbors,
+                    Dscalar2 *d_voroCur,
+                    Dscalar4  *d_voroLastNext,
+                    Dscalar2 *d_AreaPeri,
                     int      N,
                     Index2D  &n_idx,
                     gpubox   &Box);
 
 bool gpu_avm_force_sets(
-                    int      *d_vcn,
-                    Dscalar2 *d_vc,
-                    Dscalar4 *d_vln,
-                    Dscalar2 *d_AP,
-                    Dscalar2 *d_APpref,
-                    Dscalar2 *d_fs,
+                    int      *d_vertexCellNeighbors,
+                    Dscalar2 *d_voroCur,
+                    Dscalar4 *d_voroLastNext,
+                    Dscalar2 *d_AreaPerimeter,
+                    Dscalar2 *d_AreaPerimeterPreferences,
+                    Dscalar2 *d_vertexForceSets,
                     int nForceSets,
                     Dscalar KA, Dscalar KP);
 
 bool gpu_avm_sum_force_sets(
-                    Dscalar2 *d_fs,
-                    Dscalar2 *d_f,
+                    Dscalar2 *d_vertexForceSets,
+                    Dscalar2 *d_vertexForces,
                     int      Nvertices);
 
 bool gpu_avm_displace_and_rotate(
@@ -58,12 +58,12 @@ bool gpu_avm_displace_and_rotate(
                     int Ncells);
 
 bool gpu_avm_test_edges_for_T1(
-                    Dscalar2 *d_v,
-                    int      *d_vn,
-                    int      *d_vflip,
-                    int      *d_vcn,
-                    int      *d_cvn,
-                    int      *d_cv,
+                    Dscalar2 *d_vertexPositions,
+                    int      *d_vertexNeighbors,
+                    int      *d_vertexEdgeFlips,
+                    int      *d_vertexCellNeighbors,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
                     gpubox   &Box,
                     Dscalar  T1THRESHOLD,
                     int      Nvertices,
@@ -72,24 +72,23 @@ bool gpu_avm_test_edges_for_T1(
                     Index2D  &n_idx);
 
 bool gpu_avm_flip_edges(
-                    int      *d_vflip,
-                    Dscalar2 *d_v,
-                    int      *d_vn,
-                    int      *d_vcn,
-                    int      *d_cvn,
-                    int      *d_cv,
+                    int      *d_vertexEdgeFlips,
+                    Dscalar2 *d_vertexPositions,
+                    int      *d_vertexNeighbors,
+                    int      *d_vertexCellNeighbors,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
                     gpubox   &Box,
-                    Index2D  &n_idx, 
+                    Index2D  &n_idx,
                     int      Nvertices);
 
-
 bool gpu_avm_get_cell_positions(
-                    Dscalar2 *d_p,
-                    Dscalar2 *d_v,
-                    int      *d_nn,
-                    int      *d_n,
-                    int      N, 
-                    Index2D  &n_idx, 
+                    Dscalar2 *d_cellPositions,
+                    Dscalar2 *d_vertexPositions,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
+                    int      N,
+                    Index2D  &n_idx,
                     gpubox   &Box);
 
 
