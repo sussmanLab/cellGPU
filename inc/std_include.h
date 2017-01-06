@@ -1,6 +1,14 @@
 #ifndef STDINCLUDE
 #define STDINCLUDE
 
+/*!
+\file std_include.h
+
+a file to be included all the time... carries with it things DMS often uses
+Crucially, it also defines Dscalars as either floats or doubles, depending on
+how the program is compiled
+*/
+
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
@@ -38,12 +46,15 @@ using namespace std;
 
 //decide whether to compute everything in floating point or double precision
 #ifndef SCALARFLOAT
-//doubles
+//double variables types
 #define Dscalar double
 #define Dscalar2 double2
 #define Dscalar4 double4
+//the netcdf variable type
 #define ncDscalar ncDouble
+//the cuda RNG
 #define cur_norm curand_normal_double
+//trig and special funtions
 #define Cos cos
 #define Sin sin
 #define Floor floor
