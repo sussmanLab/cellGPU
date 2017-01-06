@@ -25,8 +25,8 @@ bool gpu_avm_geometry(
                     Dscalar2 *d_vc,
                     Dscalar4  *d_vln,
                     Dscalar2 *d_AP,
-                    int      N, 
-                    Index2D  &n_idx, 
+                    int      N,
+                    Index2D  &n_idx,
                     gpubox   &Box);
 
 bool gpu_avm_force_sets(

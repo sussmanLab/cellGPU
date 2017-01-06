@@ -157,8 +157,11 @@ __global__ void avm_displace_vertices_kernel(
         return;
 
     //the vertex motility is the average of th motility of the connected cells
-    Dscalar directorx = (Cos(d_cd[d_vcn[3*idx]])+Cos(d_cd[d_vcn[3*idx+1]])+Cos(d_cd[d_vcn[3*idx+2]]))/3.0;
-    Dscalar directory = (Sin(d_cd[d_vcn[3*idx]])+Sin(d_cd[d_vcn[3*idx+1]])+Sin(d_cd[d_vcn[3*idx+2]]))/3.0;
+    int vn1 = d_vcn[3*idx];
+    int vn2 = d_vcn[3*idx+1];
+    int vn3 = d_vcn[3*idx+2];
+    Dscalar directorx = (Cos(d_cd[vn1])+Cos(d_cd[vn2])+Cos(d_cd[vn3]))/3.0;
+    Dscalar directory = (Sin(d_cd[vn1])+Sin(d_cd[vn2])+Sin(d_cd[vn3]))/3.0;
     //update positions from forces and motility
 
 
@@ -799,6 +802,7 @@ bool gpu_avm_test_edges_for_T1(
                                         d_vflip,
                                         d_vn,
                                         Nvertices);
+    cudaThreadSynchronize();
     code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("One T1 per vertex per timestep GPUassert: %s \n", cudaGetErrorString(code));
@@ -814,6 +818,7 @@ bool gpu_avm_test_edges_for_T1(
                                         d_cv,
                                         n_idx,
                                         Ncells);
+    cudaThreadSynchronize();
     code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("One T1 per cell per timestep GPUassert: %s \n", cudaGetErrorString(code));
