@@ -2,7 +2,6 @@
 #ifndef AVM_H
 #define AVM_H
 
-
 #include "std_include.h"
 #include "curand.h"
 #include "curand_kernel.h"
@@ -247,5 +246,7 @@ class AVM2D
                 }
             cout <<endl;
             };
+    //be friends with the associated Database class so it can access data to store or read
+    friend class AVMDatabase;
     };
 #endif

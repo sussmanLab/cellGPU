@@ -7,7 +7,7 @@
 
 #include "spv2d.h"
 #include "cu_functions.h"
-#include "Database.h"
+#include "DatabaseSPV.h"
 
 
 using namespace std;

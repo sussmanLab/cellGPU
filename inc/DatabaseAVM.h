@@ -1,5 +1,5 @@
-#ifndef DATABASEAVM_H
-#define DATABASEAVM_H
+#ifndef DATABASE_AVM_H
+#define DATABASE_AVM_H
 
 #include "std_include.h"
 #include "avm2d.h"
@@ -174,6 +174,4 @@ void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
     File.sync();
 }
 
-
 #endif
-
