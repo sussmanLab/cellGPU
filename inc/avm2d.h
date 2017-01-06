@@ -17,48 +17,18 @@
 A class that implements an active vertex model in 2D. This involves calculating forces on
 vertices, moving them around, and updating the topology of the cells according to some criteria.
 
-From the point of view of reusing code this could have been a child of SPV2D, but logically since
-the AVM does not refer to an underlying triangulation I have decided to implement it separately.
+From the point of view of reusing code this could have been (should have been?)a child of SPV2D,
+but logically since the AVM does not refer to an underlying triangulation I have decided to
+implement it as a separate class.
 */
 //!Implement a 2D active vertex model
 class AVM2D
     {
+    //public functions first... many of these should eventually be protected, but for debugging
+    //it's convenient to be able to call them from anywher
     public:
         //! the constructor: initialize as a Delaunay configuration with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true);
-
-        //! Position of the vertices
-        GPUArray<Dscalar2> vertexPositions;
-        //! Cell positions... useful for computing the geometry of cells. At the moment cellPositions just ensures that the origin is enclosed by the vertices of a cell. This is irrelevant in almost all of the code, so an optimization would be to remove this.
-        GPUArray<Dscalar2> cellPositions;
-        //!An array of angles (relative to \hat{x}) that the cell directors point
-        GPUArray<Dscalar> cellDirectors;
-
-        //! VERTEX neighbors of every vertex
-        GPUArray<int> vertexNeighbors;
-        //! Cell neighbors of every vertex
-        GPUArray<int> vertexCellNeighbors;
-        //! flags that indicate whether an edge should be GPU-flipped (1) or not (0)
-        GPUArray<int> vertexEdgeFlips;
-
-        //!an array containing net force on each vertex
-        GPUArray<Dscalar2> vertexForces;
-        //!an array containing the three contributions to the force on each vertex
-        GPUArray<Dscalar2> vertexForceSets;
-        //!3*Nvertices length array of the position of voro vertex
-        GPUArray<Dscalar2> voroCur;
-        //!3*Nvertices length array of the position of the last and next voro vertices along the cell
-        GPUArray<Dscalar4> voroLastNext;
-
-        //! Count the number of times "performTimeStep" has been called
-        int Timestep;
-
-        //!The time stepsize of the simulation
-        Dscalar deltaT;
-
-        //!the box defining the periodic domain
-        gpubox Box;
-
+        AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true,bool runSPVToInitialize=false);
         //!Enforce CPU-only operation.
         void setCPU(){GPUcompute = false;};
 
@@ -75,10 +45,10 @@ class AVM2D
         void initializeCurandStates(int gs, int i);
 
         //!Initialize AVM2D, set random orientations for vertex directors, prepare data structures
-        void Initialize(int n,bool initGPU = true);
+        void Initialize(int n,bool initGPU = true,bool spvInitialize = false);
 
         //!Initialize cells to be a voronoi tesselation of a random point set
-        void setCellsVoronoiTesselation(int n);
+        void setCellsVoronoiTesselation(int n, bool spvInitialize = false);
 
         //!if the maximum number of vertices per cell increases, grow the cellVertices list
         void growCellVerticesList(int newVertexMax);
@@ -120,7 +90,66 @@ class AVM2D
         //!Get the cell position from the vertices on the GPU
         void getCellPositionsGPU();
 
+    //protected functions
+    protected:
+        //utility functions
+        void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
 
+    //public member variables...most of these should eventually be protected
+    public:
+        //! Position of the vertices
+        GPUArray<Dscalar2> vertexPositions;
+        //! Cell positions... useful for computing the geometry of cells. At the moment cellPositions just ensures that the origin is enclosed by the vertices of a cell. This is irrelevant in almost all of the code, so an optimization would be to remove this.
+        GPUArray<Dscalar2> cellPositions;
+        //!An array of angles (relative to \hat{x}) that the cell directors point
+        GPUArray<Dscalar> cellDirectors;
+
+        /*!
+        vertexNeighbors[3*i], vertexNeighbors[3*i+1], and vertexNeighbors[3*i+2] contain the indices
+        of the three vertices that are connected to vertex i
+        */
+        //! VERTEX neighbors of every vertex
+        GPUArray<int> vertexNeighbors;
+        /*!
+        vertexCellNeighbors[3*i], vertexCellNeighbors[3*i+1], and vertexCellNeighbors[3*i+2] contain
+        the indices of the three cells are niehgbors of vertex i
+        */
+        //! Cell neighbors of every vertex
+        GPUArray<int> vertexCellNeighbors;
+        /*!
+        if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting verte i and vertex
+        vertexNeighbors[3*i+j] has been marked for a T1 transition
+        */
+        //! flags that indicate whether an edge should be GPU-flipped (1) or not (0)
+        GPUArray<int> vertexEdgeFlips;
+
+        //!an array containing net force on each vertex
+        GPUArray<Dscalar2> vertexForces;
+        /*!
+        vertexForceSets[3*i], vertexForceSets[3*i+1], and vertexForceSets[3*i+2] contain the contribution
+        to the net force on vertex i due to the three cell neighbors of vertex i
+        */
+        //!an array containing the three contributions to the force on each vertex
+        GPUArray<Dscalar2> vertexForceSets;
+        /*!
+        when computing the geometry of the cells, save the relative position of the vertices for easier force calculation later
+        The "voro" part is an unfortunate naming holdover from the SPV code, where they are actually Voronoi vertices
+        */
+        //!3*Nvertices length array of the position of voro vertex
+        GPUArray<Dscalar2> voroCur;
+        //!3*Nvertices length array of the position of the last and next voro vertices along the cell
+        GPUArray<Dscalar4> voroLastNext;
+
+        //! Count the number of times "performTimeStep" has been called
+        int Timestep;
+
+        //!The time stepsize of the simulation
+        Dscalar deltaT;
+
+        //!the box defining the periodic domain
+        gpubox Box;
+
+    //protected variables
     protected:
         //!Number of cells in the simulation
         int Ncells;
@@ -152,8 +181,18 @@ class AVM2D
         //! A flag that determines whether the GPU RNG is the same every time.
         bool Reproducible;
 
+        /*!
+        cellVertexNum[c] is an integer storing the number of vertices that make up the boundary of cell c.
+        */
         //!The number of vertices defining each cell
         GPUArray<int> cellVertexNum;
+        /*!
+        cellVertices is a large, 1D array containing the vertices associated with each cell.
+        It must be accessed with the help of the Index2D structure n_idx.
+        the index of the kth vertex of cell c (where the ordering is counter-clockwise starting
+        with a random vertex) is given by
+        cellVertices[n_idx(k,c)];
+        */
         //!A structure that indexes the vertices defining each cell
         GPUArray<int> cellVertices;
         //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices
@@ -164,11 +203,10 @@ class AVM2D
         //! data structure to help with cell-vertex list
         GPUArray<int> growCellVertexListAssist;
 
-        //utility functions
-        void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
 
     //reporting functions
     public:
+        //!Report the current average force per vertex...should be close to zero
         void reportMeanForce()
                 {
                 ArrayHandle<Dscalar2> f(vertexForces,access_location::host,access_mode::read);
@@ -179,20 +217,24 @@ class AVM2D
                     fx += f.data[i].x;
                     fy += f.data[i].y;
                     };
-                printf("mean force area = (%g,%g)\n",fx/Nvertices, fy/Nvertices);
+                printf("mean force = (%g,%g)\n",fx/Nvertices, fy/Nvertices);
                 };
 
-        void reportAP()
+        //!report the current total area, and optionally the area and perimeter for each cell
+        void reportAP(bool verbose = false)
                 {
                 ArrayHandle<Dscalar2> ap(AreaPeri,access_location::host,access_mode::read);
                 Dscalar vtot= 0.0;
                 for (int i = 0; i < Ncells; ++i)
                     {
-//                    printf("%i: (%f,%f)\n",i,ap.data[i].x,ap.data[i].y);
+                    if(verbose)
+                        printf("%i: (%f,%f)\n",i,ap.data[i].x,ap.data[i].y);
                     vtot+=ap.data[i].x;
                     };
                 printf("total area = %f\n",vtot);
                 };
+
+        //!Handy for debugging T1 transitions...report the vertices owned by cell i
         void reportNeighborsCell(int i)
             {
             ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::read);
@@ -206,5 +248,4 @@ class AVM2D
             cout <<endl;
             };
     };
-
 #endif

@@ -4,18 +4,28 @@
 #include "avm2d.cuh"
 #include "spv2d.h"
 
-AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
+/*!
+The constructor calls the Initialize function to take care of business, and
+setCellPreferencesUniform to give all cells the same A_0 and p_0 values
+*/
+AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG,bool runSPVToInitialize)
     {
     printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
     Reproducible = reprod;
     GPUcompute=true;
-    Initialize(n,initGPURNG);
+    Initialize(n,initGPURNG,runSPVToInitialize);
     setCellPreferencesUniform(A0,P0);
     KA = 1.0;
     KP = 1.0;
     };
 
-void AVM2D::setCellsVoronoiTesselation(int n)
+/*!
+A function of convenience.... initialize cell positions and vertices by starting with the Delaunay
+triangulations of a random point set. If you want something more regular, run the SPV mode for a few
+timesteps to smooth out the random point set first.
+\post After this is called, all topology data structures are initialized
+*/
+void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
     {
     //set number of cells, and a square box
     Ncells=n;
@@ -36,18 +46,18 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         };
 
     //use the SPV class to relax the initial configuration just a bit?
-    
-    SPV2D spv(Ncells,1.0,3.8,false);
-    spv.setCPU(false);
-    spv.setv0Dr(0.1,1.0);
-    spv.setDeltaT(0.1);
-    for (int ii = 0; ii < 10;++ii)
-        spv.performTimestep();
-
-    ArrayHandle<Dscalar2> h_pp(spv.points,access_location::host,access_mode::read);
-    for (int ii = 0; ii < Ncells; ++ii)
-        h_p.data[ii] = h_pp.data[ii];
-    
+    if(spvInitialize)
+        {
+        SPV2D spv(Ncells,1.0,3.8,false);
+        spv.setCPU(false);
+        spv.setv0Dr(0.1,1.0);
+        spv.setDeltaT(0.1);
+        for (int ii = 0; ii < 10;++ii)
+            spv.performTimestep();
+        ArrayHandle<Dscalar2> h_pp(spv.points,access_location::host,access_mode::read);
+        for (int ii = 0; ii < Ncells; ++ii)
+            h_p.data[ii] = h_pp.data[ii];
+        };
 
     //call CGAL to get Delaunay triangulation
     vector<pair<Point,int> > Psnew(Ncells);
@@ -64,9 +74,9 @@ void AVM2D::setCellsVoronoiTesselation(int n)
     vertexPositions.resize(Nvertices);
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::overwrite);
 
+    //first, ask CGAL for the circumcenter of the face, and add it to the list of vertices, and make a map between the iterator and the vertex idx
     map<PDT::Face_handle,int> faceToVoroIdx;
     int idx = 0;
-    //first, ask CGAL for the circumcenter of the face, and add it to the list of vertices, and make a map between the iterator and the vertex idx
     for(PDT::Face_iterator fit = T.faces_begin(); fit != T.faces_end(); ++fit)
         {
         PDT::Point p(T.dual(fit));
@@ -146,10 +156,12 @@ void AVM2D::setCellsVoronoiTesselation(int n)
         h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
    };
 
-//take care of all class initialization functions
-void AVM2D::Initialize(int n,bool initGPU)
+/*!/
+Take care of all class initialization functions, this involves setting arrays to the right size, etc.
+*/
+void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     {
-    setCellsVoronoiTesselation(n);
+    setCellsVoronoiTesselation(n,spvInitialize);
 
     Timestep = 0;
     setDeltaT(0.01);
@@ -231,7 +243,8 @@ void AVM2D::initializeCurandStates(int gs, int i)
     };
 
 /*!
-increment the time step, call the right routine
+increment the time step, call either the CPU or GPU branch, depending on the state of
+the GPUcompute flag
 */
 void AVM2D::performTimestep()
     {
@@ -243,15 +256,19 @@ void AVM2D::performTimestep()
     };
 
 /*!
-go through the parts of a timestep on the CPU
+Go through the parts of a timestep on the CPU
 */
 void AVM2D::performTimestepCPU()
     {
+    //compute the current area and perimeter of every cell
     computeGeometryCPU();
+    //use this information to compute the net force on the vertices
     computeForcesCPU();
+    //move the cells accordingly, and update the director of each cell
     displaceAndRotateCPU();
+    //see if vertex motion leads to T1 transitions
     testAndPerformT1TransitionsCPU();
-
+    //as a utility, compute the current "position" of the cells
     getCellPositionsCPU();
     };
 
@@ -260,15 +277,21 @@ go through the parts of a timestep on the GPU
 */
 void AVM2D::performTimestepGPU()
     {
+    //compute the current area and perimeter of every cell
     computeGeometryGPU();
+    //use this information to compute the net force on the vertices
     computeForcesGPU();
+    //move the cells accordingly, and update the director of each cell
     displaceAndRotateGPU();
+    //see if vertex motion leads to T1 transitions...ONLY allow one transition per vertex and per cell per timestep
     testAndPerformT1TransitionsGPU();
+    //as a utility, compute the current "position" of the cells
     getCellPositionsGPU();
     };
 
 /*!
-Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the vertices)
+Very similar to the function in spv2d.cpp, but optimized since we already have some data structures
+(the vertices)...compute the area and perimeter of the cells
 */
 void AVM2D::computeGeometryCPU()
     {
@@ -306,6 +329,7 @@ void AVM2D::computeGeometryCPU()
             Box.minDist(h_v.data[vidx],cellPos,vnext);
 
             //compute area contribution
+            //"TriangleArea" = 0.5* |u x v|
             Varea += TriangleArea(vcur,vnext);
             Dscalar dx = vcur.x-vnext.x;
             Dscalar dy = vcur.y-vnext.y;
@@ -319,7 +343,6 @@ void AVM2D::computeGeometryCPU()
             };
         h_AP.data[i].x = Varea;
         h_AP.data[i].y = Vperi;
-//printf("cell %i: A = %.2f\t P=%.2f\n",i,Varea,Vperi);
         };
     };
 
@@ -350,6 +373,7 @@ void AVM2D::computeForcesCPU()
         vlast.x = h_vln.data[fsidx].x;  vlast.y = h_vln.data[fsidx].y;
         vnext.x = h_vln.data[fsidx].z;  vnext.y = h_vln.data[fsidx].w;
 
+        //computeForceSetAVM is defined in inc/cu_functions.h
         computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
 
         h_fs.data[fsidx].x = dEdv.x;
@@ -357,7 +381,6 @@ void AVM2D::computeForcesCPU()
         };
 
     //now sum these up to get the force on each vertex
-    //Dscalar2 ftot = make_Dscalar2(0.0,0.0);
     for (int v = 0; v < Nvertices; ++v)
         {
         Dscalar2 ftemp = make_Dscalar2(0.0,0.0);
@@ -367,12 +390,16 @@ void AVM2D::computeForcesCPU()
             ftemp.y += h_fs.data[3*v+ff].y;
             };
         h_f.data[v] = ftemp;
-        //ftot.x +=ftemp.x;ftot.y+=ftemp.y;
         };
     };
 
 /*!
 Move every vertex according to the net force on it and its motility...CPU routine
+For debugging, the random number generator gives the same sequence of "random" numbers every time.
+For more random behavior, uncomment the "random_device rd;" line, and replace
+mt19937 gen(rand());
+with
+mt19937 gen(rd());
 */
 void AVM2D::displaceAndRotateCPU()
     {
@@ -382,7 +409,6 @@ void AVM2D::displaceAndRotateCPU()
     ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
 
     //random_device rd;
-    //uncomment last line and change the below from rand() to rd() to get more random random numbers
     mt19937 gen(rand());
     normal_distribution<> normal(0.0,1.0);
 
@@ -391,7 +417,6 @@ void AVM2D::displaceAndRotateCPU()
     for (int i = 0; i < Nvertices; ++i)
         {
         //for uniform v0, the vertex director is the straight average of the directors of the cell neighbors
-
         directorx  = cos(h_cd.data[ h_vcn.data[3*i] ]);
         directorx += cos(h_cd.data[ h_vcn.data[3*i+1] ]);
         directorx += cos(h_cd.data[ h_vcn.data[3*i+2] ]);
@@ -413,7 +438,8 @@ void AVM2D::displaceAndRotateCPU()
 
 /*!
 A utility function for the CPU routine. Given two vertex indices representing an edge that will undergo
-a T1 transition, return in the pass-by-reference variables a helpful representation of the cells in the T1 and the vertices to be re-wired
+a T1 transition, return in the pass-by-reference variables a helpful representation of the cells in the T1
+and the vertices to be re-wired...see the comments in "testAndPerformT1TransitionsCPU" for what that representation is
 */
 void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 &vertexSet, bool &growList)
     {
@@ -541,7 +567,9 @@ This function also performs the transition and maintains the auxiliary data stru
  */
 void AVM2D::testAndPerformT1TransitionsCPU()
     {
+    //This is not production code, so I've just hacked this in here
     Dscalar T1THRESHOLD = 0.04;
+
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::readwrite);
@@ -585,13 +613,6 @@ void AVM2D::testAndPerformT1TransitionsCPU()
                     {
                     bool growCellVertexList = false;
                     getCellVertexSetForT1(vertex1,vertex2,cellSet,vertexSet,growCellVertexList);
-
-//printf("Vertices (%i,%i)\t CellSet = (%i,%i,%i,%i)\t vertexSet = (%i,%i,%i,%i)\n",vertex1,vertex2,cellSet.x,cellSet.y,cellSet.z,cellSet.w,vertexSet.x,vertexSet.y,vertexSet.z,vertexSet.w);
-
-//reportNeighborsCell(cellSet.x);
-//reportNeighborsCell(cellSet.y);
-//reportNeighborsCell(cellSet.z);
-//reportNeighborsCell(cellSet.w);
                     //Does the cell-vertex-neighbor data structure need to be bigger?
                     if(growCellVertexList)
                         {
@@ -694,10 +715,6 @@ void AVM2D::testAndPerformT1TransitionsCPU()
                     for (int cc = 0; cc < cneigh+1; ++cc)
                         h_cv.data[n_idx(cc,cellSet.w)] = cvcopy2[cc];
                     h_cvn.data[cellSet.w] = cneigh + 1;
-//reportNeighborsCell(cellSet.x);
-//reportNeighborsCell(cellSet.y);
-//reportNeighborsCell(cellSet.z);
-//reportNeighborsCell(cellSet.w);
 
                     };//end condition that a T1 transition should occur
                 };

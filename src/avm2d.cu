@@ -5,6 +5,9 @@
 #include "curand_kernel.h"
 #include "avm2d.cuh"
 
+/** \file avm.cu
+    * Defines kernel callers and kernels for GPU calculations of AVM parts
+*/
 
 //!initialize each thread with a different sequence of the same seed of a cudaRNG
 __global__ void initialize_curand_kernel(curandState *state, int N,int Timestep,int GlobalSeed)
