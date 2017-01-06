@@ -176,10 +176,10 @@ HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, 
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-    //dEdv.x = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
-    //dEdv.y = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
-    dEdv.x = 2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
-    dEdv.y = 2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
+    dEdv.x = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
+    dEdv.y = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
+    //dEdv.x = 2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
+    //dEdv.y = 2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
     }
 
 
