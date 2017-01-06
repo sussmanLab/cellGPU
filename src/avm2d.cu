@@ -266,9 +266,12 @@ __global__ void avm_defend_against_multiple_T1_cell_kernel(
     //look through every vertex of the cell
     int cneigh = d_cvn[cell];
     bool flip = false;
+    int vlast = d_cv[n_idx(cneigh-2,cell)];
+    int vcur = d_cv[n_idx(cneigh-1,cell)];
+    int vertex;
     for (int cc = 0; cc < cneigh; ++cc)
         {
-        int vertex = d_cv[n_idx(cc,cell)];
+        vertex = d_cv[n_idx(cc,cell)];
         if(flip)
             {
             d_vflip[3*vertex] = 0;
@@ -278,16 +281,21 @@ __global__ void avm_defend_against_multiple_T1_cell_kernel(
         for (int ff = 0; ff < 3; ++ff)
             {
             int vertexNeigh =  d_vn[3*vertex+ff];
-            if (d_vflip[3*vertexNeigh+ff] == 1)
+            if (vertexNeigh = vlast) continue;
+            if (vertexNeigh = vcur) continue;
+            if(d_vflip[3*vertexNeigh+ff] == 1)
                 {
                 if (flip)
-                    d_vflip[3*vertex+ff] = 0;
+                    d_vflip[3*vertexNeigh+ff] = 0;
                 else
                     flip = true;
                 };
             };
+        vlast = vcur;
+        vertex = vcur;
         };
     };
+
 //!Run through every pair of vertices (once), see if any T1 transitions should be done, and see if the cell-vertex list needs to grow
 __global__ void avm_simple_T1_test_kernel(Dscalar2* d_v,
                                         int      *d_vn,
