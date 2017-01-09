@@ -308,7 +308,8 @@ void AVM2D::computeGeometryCPU()
     for (int i = 0; i < Ncells; ++i)
         {
         int neighs = h_nn.data[i];
-        Dscalar2 cellPos = h_p.data[i];
+//        Dscalar2 cellPos = h_p.data[i];
+        Dscalar2 cellPos = h_v.data[h_n.data[n_idx(neighs-2,i)]];
         Dscalar2 vlast, vcur,vnext;
         Dscalar Varea = 0.0;
         Dscalar Vperi = 0.0;
@@ -328,9 +329,9 @@ void AVM2D::computeGeometryCPU()
             vidx = h_n.data[n_idx(nn,i)];
             Box.minDist(h_v.data[vidx],cellPos,vnext);
 
-            //compute area contribution
-            //"TriangleArea" = 0.5* |u x v|
-            Varea += TriangleArea(vcur,vnext);
+            //contribution to cell's area is
+            // 0.5* (vcur.x+vnext.x)*(vnext.y-vcur.y)
+            Varea += SignedPolygonAreaPart(vcur,vnext);
             Dscalar dx = vcur.x-vnext.x;
             Dscalar dy = vcur.y-vnext.y;
             Vperi += sqrt(dx*dx+dy*dy);
@@ -347,7 +348,7 @@ void AVM2D::computeGeometryCPU()
     };
 
 /*!
-Use the data pre-computed in the geometry routine to rapidly compute the net force on each verte
+Use the data pre-computed in the geometry routine to rapidly compute the net force on each vertex
 */
 void AVM2D::computeForcesCPU()
     {

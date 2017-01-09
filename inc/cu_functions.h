@@ -79,6 +79,13 @@ HOSTDEVICE Dscalar norm(const Dscalar2 &p)
     };
 
 //!Calculate the area of a triangle with a vertex at the origin
+HOSTDEVICE Dscalar SignedPolygonAreaPart(const Dscalar2 &p1, const Dscalar2 &p2)
+    {
+    return 0.5*(p1.x+p2.x)*(p2.y-p1.y);
+    };
+
+
+//!Calculate the area of a triangle with a vertex at the origin
 HOSTDEVICE Dscalar TriangleArea(const Dscalar2 &p1, const Dscalar2 &p2)
     {
     return abs(0.5*(p1.x*p2.y-p1.y*p2.x));
@@ -161,8 +168,6 @@ HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, 
     {
     Dscalar2 dlast,dnext,dAdv,dPdv;
 
-    //compute the area of the triangle to know if it is positive (convex cell) or not
-    Dscalar TriAreaTimes2 = -vnext.x*vlast.y+vcur.y*(vnext.x-vlast.x)+vcur.x*(vlast.y-vnext.x)+vlast.x+vnext.y;
     //note that my conventions for dAdv and dPdv take care of the minus sign, so
     //that dEdv below is reall -dEdv, so it's the force
     dAdv.x = 0.5*(vlast.y-vnext.y);
@@ -176,10 +181,11 @@ HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, 
     dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
     dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
+    //compute the area of the triangle to know if it is positive (convex cell) or not
+//    Dscalar TriAreaTimes2 = -vnext.x*vlast.y+vcur.y*(vnext.x-vlast.x)+vcur.x*(vlast.y-vnext.x)+vlast.x+vnext.y;
+    Dscalar TriAreaTimes2 = dlast.x*dnext.y - dlast.x*dnext.y;
     dEdv.x = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
     dEdv.y = computeSignNoCast(TriAreaTimes2)*2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
-    //dEdv.x = 2.0*Adiff*dAdv.x + 2.0*Pdiff*dPdv.x;
-    //dEdv.y = 2.0*Adiff*dAdv.y + 2.0*Pdiff*dPdv.y;
     }
 
 
