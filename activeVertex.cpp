@@ -75,7 +75,6 @@ int main(int argc, char*argv[])
         avm.setCPU();
     avm.setv0Dr(v0,Dr);
     avm.setDeltaT(dt);
-    avm.setT1Threshold(0.04);
 
     for (int timestep = 0; timestep < initSteps; ++timestep)
         {

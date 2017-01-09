@@ -726,7 +726,7 @@ void SPV2D::computeGeometryCPU()
 
 /*!
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
-This function can handle the case of tensions between cells of different type (if useTension flag is true) and
+This function can handle the case of tensions between cells of different type (if useTension flag is true) and 
 particle exclusions (if particleExclusions flag is true)
 */
 void SPV2D::computeSPVForceCPU(int i)
@@ -928,7 +928,7 @@ void SPV2D::computeSPVForceCPU(int i)
                 dTkdv.y -=dnext.y/dnnorm;
                 };
             };
-
+            
         Dscalar2 dAjdv,dPjdv,dTjdv;
         dTjdv.x = 0.0;
         dTjdv.y = 0.0;
@@ -975,7 +975,7 @@ void SPV2D::computeSPVForceCPU(int i)
         Dscalar2 temp = dEdv*dhdri[nn];
         forceSum.x += temp.x;
         forceSum.y += temp.y;
-
+        
         vlast=vcur;
         };
 

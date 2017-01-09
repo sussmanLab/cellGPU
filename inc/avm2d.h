@@ -31,9 +31,6 @@ class AVM2D
         //!Enforce CPU-only operation.
         void setCPU(){GPUcompute = false;};
 
-        //!Initialize AVM2D, set random orientations for vertex directors, prepare data structures
-        void Initialize(int n,bool initGPU = true,bool spvInitialize = false);
-
         //!Set uniform cell area and perimeter preferences
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
 
@@ -43,11 +40,11 @@ class AVM2D
         //!Set the simulation time stepsize
         void setDeltaT(Dscalar dt){deltaT = dt;};
 
-        //!Set the length threshold for T1 transitions
-        void setT1Threshold(Dscalar t1t){T1Threshold = t1t;};
-
         //!initialize the cuda RNG
         void initializeCurandStates(int gs, int i);
+
+        //!Initialize AVM2D, set random orientations for vertex directors, prepare data structures
+        void Initialize(int n,bool initGPU = true,bool spvInitialize = false);
 
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(int n, bool spvInitialize = false);
@@ -150,9 +147,6 @@ class AVM2D
 
         //!the box defining the periodic domain
         gpubox Box;
-
-        //!A threshold defining the edge length below which a T1 transition will occur
-        Dscalar T1Threshold;
 
     //protected variables
     protected:
