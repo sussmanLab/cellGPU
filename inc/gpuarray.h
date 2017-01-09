@@ -91,7 +91,12 @@ template<class T> class ArrayHandle
                            const access_mode::Enum mode = access_mode::readwrite);
         inline ~ArrayHandle();
 
-        T* const data;          //!< a pointer to the GPUArray's data
+        T* data;          //!< a pointer to the GPUArray's data
+
+        ArrayHandle& operator=(const ArrayHandle& rhs)
+                {
+                data=rhs.data;
+                };
 
     private:
         const GPUArray<T>& gpu_array; //!< The GPUarray that the Handle was initialized with
@@ -269,6 +274,7 @@ template<class T> void GPUArray<T>::swap(GPUArray& from)
     std::swap(Num_elements, from.Num_elements);
     std::swap(Acquired, from.Acquired);
     std::swap(Data_location, from.Data_location);
+    std::swap(RegisterArray,from.RegisterArray);
 #ifdef ENABLE_CUDA
     std::swap(d_data, from.d_data);
 #endif

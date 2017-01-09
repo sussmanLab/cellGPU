@@ -201,7 +201,7 @@ call this function first to copy over the cellVertices structure into a larger a
 void AVM2D::growCellVerticesList(int newVertexMax)
     {
     cout << "maximum number of vertices per cell grew from " <<vertexMax << " to " << newVertexMax << endl;
-    vertexMax = newVertexMax;
+    vertexMax = newVertexMax+1;
     Index2D old_idx = n_idx;
     n_idx = Index2D(vertexMax,Ncells);
 
@@ -210,7 +210,7 @@ void AVM2D::growCellVerticesList(int newVertexMax)
     {//scope for array handles
     ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n_old(cellVertices,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(newCellVertices,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(newCellVertices,access_location::host,access_mode::readwrite);
 
     for(int cell = 0; cell < Ncells; ++cell)
         {
@@ -221,7 +221,9 @@ void AVM2D::growCellVerticesList(int newVertexMax)
             };
         };
     };//scope for array handles
-    cellVertices = newCellVertices;
+    cellVertices.resize(vertexMax*Ncells);
+//    cellVertices = newCellVertices;
+    cellVertices.swap(newCellVertices);
     };
 
 /*!
@@ -619,6 +621,7 @@ void AVM2D::testAndPerformT1TransitionsCPU()
                         {
                         vMax +=1;
                         growCellVerticesList(vMax);
+                        h_cv = ArrayHandle<int>(cellVertices,access_location::host,access_mode::readwrite);
                         };
 
                     //Rotate the vertices in the edge and set them at twice their original distance
