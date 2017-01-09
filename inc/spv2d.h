@@ -65,6 +65,9 @@ class SPV2D : public DelaunayMD
         //!Declare which particles are to be excluded (exes[i]!=0)
         void setExclusions(vector<int> &exes);
 
+        //! call getDelSets for all particles
+        void allDelSets();
+
         //cell-dynamics related functions...these call functions in the next section
         //in general, these functions are the common calls, and test flags to know whether to call specific versions of specialty functions
         //!Perform a timestep for the system
@@ -119,8 +122,6 @@ class SPV2D : public DelaunayMD
         //! Maintain the delSets and delOther data structure for particle i
         //! If it returns false there was a problem and a global re-triangulation is triggered.
         bool getDelSets(int i);
-        //! call getDelSets for all particles
-        void allDelSets();
         //!resize all neighMax-related arrays
         void resetLists();
         //!initialize the cuda RNG
