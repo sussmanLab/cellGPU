@@ -311,15 +311,14 @@ void AVM2D::computeGeometryCPU()
     for (int i = 0; i < Ncells; ++i)
         {
         int neighs = h_nn.data[i];
-//        Dscalar2 cellPos = h_p.data[i];
+//      Define the vertices of a cell relative to some (any) of its verties to take care of periodic boundaries
         Dscalar2 cellPos = h_v.data[h_n.data[n_idx(neighs-2,i)]];
         Dscalar2 vlast, vcur,vnext;
         Dscalar Varea = 0.0;
         Dscalar Vperi = 0.0;
         //compute the vertex position relative to the cell position
-        int vidx = h_n.data[n_idx(neighs-2,i)];
-        Box.minDist(h_v.data[vidx],cellPos,vlast);
-        vidx = h_n.data[n_idx(neighs-1,i)];
+        vlast.x=0.;vlast.y=0.0;
+        int vidx = h_n.data[n_idx(neighs-1,i)];
         Box.minDist(h_v.data[vidx],cellPos,vcur);
         for (int nn = 0; nn < neighs; ++nn)
             {
