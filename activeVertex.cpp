@@ -79,12 +79,15 @@ int main(int argc, char*argv[])
     for (int timestep = 0; timestep < initSteps; ++timestep)
         {
         avm.performTimestep();
-        if(program_switch <0 && timestep%((int)(1/dt))==0)
+        if(timestep%((int)(1/dt))==0)
             {
             cout << timestep << endl;
-            ncdat.WriteState(avm);
             avm.reportAP();
             avm.reportMeanForce();
+            };
+        if(program_switch <0 && timestep%((int)(1/dt))==0)
+            {
+            ncdat.WriteState(avm);
             };
         };
 
