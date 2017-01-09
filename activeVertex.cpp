@@ -82,9 +82,9 @@ int main(int argc, char*argv[])
         avm.performTimestep();
         if(timestep%((int)(1/dt))==0)
             {
-            cout << timestep << endl;
-            avm.reportAP();
-            avm.reportMeanForce();
+    //        cout << timestep << endl;
+    //        avm.reportAP();
+    //        avm.reportMeanForce();
             };
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {
