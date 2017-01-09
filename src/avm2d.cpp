@@ -165,6 +165,7 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
 
     Timestep = 0;
     setDeltaT(0.01);
+    setT1Threshold(0.01);
 
     AreaPeri.resize(Ncells);
 
@@ -570,9 +571,6 @@ This function also performs the transition and maintains the auxiliary data stru
  */
 void AVM2D::testAndPerformT1TransitionsCPU()
     {
-    //This is not production code, so I've just hacked this in here
-    Dscalar T1THRESHOLD = 0.04;
-
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::readwrite);
@@ -612,7 +610,7 @@ void AVM2D::testAndPerformT1TransitionsCPU()
                 {
                 v2 = h_v.data[vertex2];
                 Box.minDist(v1,v2,edge);
-                if(norm(edge) < T1THRESHOLD)
+                if(norm(edge) < T1Threshold)
                     {
                     bool growCellVertexList = false;
                     getCellVertexSetForT1(vertex1,vertex2,cellSet,vertexSet,growCellVertexList);
@@ -845,7 +843,6 @@ and detect whether the edge needs to grow. If so, grow it!
 void AVM2D::testEdgesForT1GPU()
     {
         {//provide scope for array handles
-        Dscalar T1THRESHOLD = 0.04;
         ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
         ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::read);
         ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::overwrite);
@@ -862,7 +859,7 @@ void AVM2D::testEdgesForT1GPU()
                               d_cvn.data,
                               d_cv.data,
                               Box,
-                              T1THRESHOLD,
+                              T1Threshold,
                               Nvertices,
                               vertexMax,
                               d_grow.data,
