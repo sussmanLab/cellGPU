@@ -1,11 +1,8 @@
-#ifndef __DMD_CU__
-#define __DMD_CU__
-
 #define NVCC
 #define ENABLE_CUDA
 
 #include <cuda_runtime.h>
-#include "gpucell.cuh"
+#include "cellListGPU.cuh"
 #include "indexer.h"
 #include "gpubox.h"
 #include "cu_functions.h"
@@ -13,6 +10,10 @@
 #include <stdio.h>
 #include "DelaunayMD.cuh"
 
+/*!
+    \addtogroup DelaunayMDKernels
+    @{
+*/
 
 __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                                               const int3* __restrict__ d_circumcircles,
@@ -204,4 +205,4 @@ bool gpu_move_particles(Dscalar2 *d_points,
     return cudaSuccess;
     };
 
-#endif
+/** @} */ //end of group declaration

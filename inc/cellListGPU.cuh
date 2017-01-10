@@ -7,6 +7,11 @@
 #include "indexer.h"
 #include "gpubox.h"
 
+/** @defgroup cellListGPUKernels cellListGPU Kernels
+ * @{
+ * \brief CUDA kernels for the cellListGPU class
+ */
+
 //!Find the set indices of points in every cell bucket in the grid
 bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                   unsigned int *d_cell_sizes,
@@ -30,6 +35,7 @@ bool gpu_zero_array(unsigned int *arr,
                     int      N
                     );
 
+/** @} */ //end of group declaration
 
 #endif
 

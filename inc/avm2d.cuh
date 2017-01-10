@@ -14,6 +14,10 @@
 A file providing an interface to the relevant cuda calls for the AVM2D class
 */
 
+/** @defgroup avmKernels AVM Kernels
+ * @{
+ * \brief CUDA kernels for the AVM2D class
+ */
 
 //!Initialize the GPU's random number generator
 bool gpu_initialize_curand(curandState *states,
@@ -97,5 +101,5 @@ bool gpu_avm_get_cell_positions(
                     Index2D  &n_idx,
                     gpubox   &Box);
 
-
+/** @} */ //end of group declaration
 #endif

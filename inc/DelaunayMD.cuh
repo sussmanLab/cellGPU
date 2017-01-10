@@ -12,6 +12,10 @@
 A file providing an interface to the relevant cuda calls for the DelaunayMD class
 */
 
+/** @defgroup DelaunayMDKernels DelaunayMD Kernels
+ * @{
+ * \brief CUDA kernels for the DelaunayMD class
+ */
 
 //!Test an array of circumcenters for the empty-circumcircle property
 bool gpu_test_circumcenters(
@@ -37,6 +41,7 @@ bool gpu_move_particles(Dscalar2 *d_points,
                     int N,
                     gpubox &Box
                     );
+/** @} */ //end of group declaration
 
 #endif
 

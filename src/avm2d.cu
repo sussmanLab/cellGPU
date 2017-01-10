@@ -9,6 +9,11 @@
     * Defines kernel callers and kernels for GPU calculations of AVM parts
 */
 
+/*!
+    \addtogroup avmKernels
+    @{
+*/
+
 //!initialize each thread with a different sequence of the same seed of a cudaRNG
 __global__ void initialize_curand_kernel(curandState *state, int N,int Timestep,int GlobalSeed)
     {
@@ -909,4 +914,5 @@ bool gpu_avm_get_cell_positions(
         };
     return cudaSuccess;
     };
+/** @} */ //end of group declaration
 

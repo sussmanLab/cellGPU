@@ -5,8 +5,8 @@
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "indexer.h"
-#include "gpucell.cuh"
-#include "gpucell.h"
+#include "cellListGPU.cuh"
+#include "cellListGPU.h"
 using namespace std;
 
 //DEFINE functions here

@@ -1,12 +1,9 @@
-#ifndef __SPV2D_CU__
-#define __SPV2D_CU__
-
 #define NVCC
 #define ENABLE_CUDA
 
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
-#include "gpucell.cuh"
+#include "cellListGPU.cuh"
 #include "spv2d.cuh"
 
 #include "indexer.h"
@@ -18,6 +15,11 @@
 
 /*!
 A file defining some global kernels for use in the spv2d class
+*/
+
+/*!
+    \addtogroup spvKernels
+    @{
 */
 
 //!initialize each thread with a different sequence of the same seed of a cudaRNG
@@ -777,5 +779,4 @@ bool gpu_sum_force_sets_with_exclusions(
     return cudaSuccess;
     };
 
-
-#endif
+/** @} */ //end of group declaration

@@ -1,16 +1,17 @@
-#ifndef __GPUCELL_CU__
-#define __GPUCELL_CU__
-
 #define NVCC
 #define ENABLE_CUDA
 
 #include <cuda_runtime.h>
-#include "gpucell.cuh"
+#include "cellListGPU.cuh"
 #include "indexer.h"
 #include "gpubox.h"
 #include <iostream>
 #include <stdio.h>
 
+/*!
+    \addtogroup cellListGPUKernels
+    @{
+*/
 
 __global__ void gpu_compute_cell_list_kernel(Dscalar2 *d_pt,
                                               unsigned int *d_cell_sizes,
@@ -155,4 +156,4 @@ bool gpu_compute_cell_list(Dscalar2 *d_pt,
     return cudaSuccess;
     }
 
-#endif
+/** @} */ //end of group declaration

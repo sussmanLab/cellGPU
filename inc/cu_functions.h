@@ -6,10 +6,20 @@
 #include "Matrix.h"
 
 #ifdef NVCC
+/*!
+\def HOSTDEVICE
+__host__ __device__ inline
+*/
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
+
+/** @defgroup Functions functions
+ * @{
+ \brief Utility functions that can be called from host or device
+ */
+
 
 //!Calculate the determinant of a 2x2 matrix
 HOSTDEVICE Dscalar Det2x2(const Dscalar &x11,const Dscalar &x12, const Dscalar &x21, const Dscalar &x22)
@@ -225,5 +235,7 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
     return true;
     };
 #endif
+
+/** @} */ //end of group declaration
 
 #endif

@@ -6,8 +6,8 @@
 
 #include "gpubox.h"
 #include "gpuarray.h"
-#include "gpucell.cuh"
-#include "gpucell.h"
+#include "cellListGPU.cuh"
+#include "cellListGPU.h"
 #include "indexer.h"
 #include "HilbertSort.h"
 
@@ -21,7 +21,7 @@
  * those triangulations are valid on either the CPU or GPU, and locally repair
  * invalid triangulations on the CPU.
  */
-//! Perform and test triangulations in an MD setting
+//! Perform and test triangulations in an MD setting, using kernels in \ref DelaunayMDKernels
 class DelaunayMD
     {
     protected:

@@ -13,17 +13,16 @@ using namespace std;
 class BaseDatabase
 {
 public:
-    string filename; //!< The name of the file
-    const int Mode;  //!< The desired netCDF mode (repalce, new, readonly, etc.)
-    NcFile File;    //!< The NcFile itself
+    //! The name of the file
+    string filename;
+    //!The desired netCDF mode (replace, new, readonly, etc.)
+    const int Mode;
+    //!The NcFile itself
+    NcFile File;
 
     //!The default constructor takes starts a bland filename in readonly mode
     BaseDatabase(string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
 };
-
-/////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////   IMPLEMENTATION   ///////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
 
 BaseDatabase::BaseDatabase(string fn, NcFile::FileMode mode)
     : filename(fn),

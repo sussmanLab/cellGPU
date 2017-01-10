@@ -19,7 +19,7 @@ From the point of view of reusing code this could have been (should have been?)a
 but logically since the AVM does not refer to an underlying triangulation I have decided to
 implement it as a separate class.
 */
-//!Implement a 2D active vertex model
+//!Implement a 2D active vertex model, using kernels in \ref avmKernels
 class AVM2D
     {
     //public functions first... many of these should eventually be protected, but for debugging

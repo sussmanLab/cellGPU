@@ -12,6 +12,11 @@
 A file providing an interface to the relevant cuda calls for the SPV2D class
 */
 
+/** @defgroup spvKernels SPV Kernels
+ * @{
+ * \brief CUDA kernels for the SPV2D class
+ */
+
 //!Initialize the GPU's random number generator
 bool gpu_init_curand(curandState *states,
                     int N,
@@ -102,8 +107,7 @@ bool gpu_sum_force_sets_with_exclusions(
                     Index2D &n_idx
                     );
 
-
-
+/** @} */ //end of group declaration
 
 #endif
 

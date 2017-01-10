@@ -1,3 +1,4 @@
+
 #DelGPU
 
 DelGPU (''DELayed froGPUnch:Delaunay on GPUS) implements highly parallelizable algorithms to calculate the Delaunay triangulation of a point set in a two-dimensional domain with periodic boundary conditions. (The program can also be referred to as ''VoroGuppy: Voronoi decompositions on Graphics Processors,'' which is where the logo comes from.).
@@ -27,9 +28,6 @@ The following describes the basic operation of the DelaunayMD class
 * DelaunayMD -- A core engine that operates as described above in ''Basic idea''
 * SPV2D -- A child class of DelaunayMD that implements the 2D SPV model forces.
 * AVM2D -- A separate class, independent of DelaunayMD, that reuses some of the ideas on the rest of the program to implement a simple 2D active vertex model
-##CURRENT LIMITATION
-
-At the moment everything is optimized assuming the box is square. For this assumption to change, many edits would need to be made to the DelaunayCGAL and especially gpucell class. Also the grid class, and some changes in how higher-level classes interact with this objects.
 
 ##CITATIONS
 
@@ -37,6 +35,10 @@ The local ''test-and-repair'' part of the code is parallelized using an idea fro
 
 There are two underlying routines for computing full Delaunay triangulation of non-periodic and periodoc point sets. In default operation of the code, the routines called are all part of the CGAL library, and that should be cited [at least CGAL, Computational Geometry Algorithms Library, http://www.cgal.org]. In less-ideal operations the user can call a naive $(O(N^{1.5}))$ Bowyer-Watson algorithm based off of Paul Bourke's Triangulate code: paulbourke.net/papers/triangulate (Pan-Pacific Computer Conference, Beijing, China)
 
+
+##CURRENT LIMITATION
+
+At the moment everything is optimized assuming the box is square. For this assumption to change, many edits would need to be made to the DelaunayCGAL and especially cellListGPU class. Also the grid class, and some changes in how higher-level classes interact with this objects.
 
 ##Directory structure
 

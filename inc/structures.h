@@ -3,7 +3,8 @@
 
 //
 //This header file defines useful structures for computing triangulations...
-//... points as a pair of coordinates, edges as a pair of vertex numbers, triangles as a triplet
+//... edges as a pair of vertex numbers, triangles as a triplet, etc.
+//this file is maintained for historical compatibility, and for operating without CGAL installed
 
 #include "std_include.h"
 
