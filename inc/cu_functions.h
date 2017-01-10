@@ -237,5 +237,6 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
 #endif
 
 /** @} */ //end of group declaration
+#undef HOSTDEVICE
 
 #endif

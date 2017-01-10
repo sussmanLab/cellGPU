@@ -27,7 +27,6 @@ bool gpu_initialize_curand(curandState *states,
                     );
 
 bool gpu_avm_geometry(
-                    Dscalar2 *d_cellPositions,
                     Dscalar2 *d_vertexPositions,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,

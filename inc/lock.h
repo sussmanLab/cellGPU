@@ -16,6 +16,11 @@
 
 #ifndef __LOCK_H__
 #define __LOCK_H__
+#define ENABLE_CUDA
+#define NVCC
+
+#include "std_include.h"
+#include <cuda_runtime.h>
 
 struct Lock {
     int *mutex;

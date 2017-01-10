@@ -271,8 +271,8 @@ void AVM2D::performTimestepCPU()
     displaceAndRotateCPU();
     //see if vertex motion leads to T1 transitions
     testAndPerformT1TransitionsCPU();
-    //as a utility, compute the current "position" of the cells
-    getCellPositionsCPU();
+    //as a utility, one could compute the current "position" of the cells, but this is unnecessary
+    //getCellPositionsCPU();
     };
 
 /*!
@@ -288,8 +288,8 @@ void AVM2D::performTimestepGPU()
     displaceAndRotateGPU();
     //see if vertex motion leads to T1 transitions...ONLY allow one transition per vertex and per cell per timestep
     testAndPerformT1TransitionsGPU();
-    //as a utility, compute the current "position" of the cells
-    getCellPositionsGPU();
+    //as a utility, one could compute the current "position" of the cells, but this is unnecessary
+    //getCellPositionsGPU();
     };
 
 /*!
@@ -298,7 +298,6 @@ Very similar to the function in spv2d.cpp, but optimized since we already have s
 */
 void AVM2D::computeGeometryCPU()
     {
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
@@ -763,7 +762,6 @@ Very similar to the function in spv2d.cpp, but optimized since we already have s
 */
 void AVM2D::computeGeometryGPU()
     {
-    ArrayHandle<Dscalar2> d_p(cellPositions,        access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_v(vertexPositions,      access_location::device,access_mode::read);
     ArrayHandle<int>      d_cvn(cellVertexNum,       access_location::device,access_mode::read);
     ArrayHandle<int>      d_cv(cellVertices,         access_location::device,access_mode::read);
@@ -773,7 +771,6 @@ void AVM2D::computeGeometryGPU()
     ArrayHandle<Dscalar2> d_AP(AreaPeri,            access_location::device,access_mode::overwrite);
 
     gpu_avm_geometry(
-                    d_p.data,
                     d_v.data,
                     d_cvn.data,
                     d_cv.data,

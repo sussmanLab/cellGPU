@@ -4,6 +4,7 @@
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "avm2d.cuh"
+#include "lock.h"
 
 /** \file avm.cu
     * Defines kernel callers and kernels for GPU calculations of AVM parts
@@ -27,35 +28,33 @@ __global__ void initialize_curand_kernel(curandState *state, int N,int Timestep,
 
 
 //!compute the voronoi vertices for each cell, along with its area and perimeter
-__global__ void avm_geometry_kernel( Dscalar2* d_cellPositions,
-                                     Dscalar2*  d_vertexPositions,
-                                          int*  d_cellVertexNum,
-                                          int*  d_cellVertices,
-                                          int*  d_vertexCellNeighbors,
-                                          Dscalar2*  d_voroCur,
-                                          Dscalar4*  d_voroLastNext,
-                                          Dscalar2*  d_AreaPerimeter,
-                                          int N,
-                                          Index2D n_idx,
-                                          gpubox Box
-                                        )
+__global__ void avm_geometry_kernel(
+                                   Dscalar2*  d_vertexPositions,
+                                   int*  d_cellVertexNum,
+                                   int*  d_cellVertices,
+                                   int*  d_vertexCellNeighbors,
+                                   Dscalar2*  d_voroCur,
+                                   Dscalar4*  d_voroLastNext,
+                                   Dscalar2*  d_AreaPerimeter,
+                                   int N,
+                                   Index2D n_idx,
+                                   gpubox Box
+                                    )
     {
     // read in the cell index that belongs to this thread
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= N)
         return;
     int neighs = d_cellVertexNum[idx];
-    Dscalar2 cellPos = d_cellPositions[idx];
+    //Define the vertices of a cell relative to some (any one ) of its vertices to take care of periodic BCs
+    Dscalar2 cellPos = d_vertexPositions[ d_cellVertices[n_idx(neighs-2,idx)]];
     Dscalar2 vlast, vcur,vnext;
     Dscalar Varea = 0.0;
     Dscalar Vperi = 0.0;
 
-    int vidx = d_cellVertices[n_idx(neighs-2,idx)];
-    Box.minDist(d_vertexPositions[vidx],cellPos,vlast);
-    vidx = d_cellVertices[n_idx(neighs-1,idx)];
+    vlast.x = 0.0; vlast.y=0.0;
+    int vidx = d_cellVertices[n_idx(neighs-1,idx)];
     Box.minDist(d_vertexPositions[vidx],cellPos,vcur);
-//if (d_cellVertexNum[n_idx(d_cellVertexNum[idx]-1, idx)] ==d_cellVertexNum[n_idx(d_cellVertexNum[idx]-2,idx)])
-//printf("cell double%i\n",idx);
     for (int nn = 0; nn < neighs; ++nn)
         {
         //for easy force calculation, save the current, last, and next voronoi vertex position
@@ -66,8 +65,8 @@ __global__ void avm_geometry_kernel( Dscalar2* d_cellPositions,
            if(d_vertexCellNeighbors[3*vidx+ff]==idx)
                 forceSetIdx = 3*vidx+ff;
             };
-/*
-if (forceSetIdx <0 || forceSetIdx >= 6*N || idx == 171)
+
+if (forceSetIdx <0 || forceSetIdx >= 6*N)
 {
 printf("forceSetIdx = %i\t vidx = %i\t nn=%i\n",forceSetIdx,vidx,nn);
 printf("cell = %i;  vidx is connected to:",idx);
@@ -79,12 +78,13 @@ for (int ff = 0; ff < cneigh; ++ff)
     printf("%i, ",d_cellVertices[n_idx(ff,idx)]);
 printf("\n");
 };
-*/
+
         vidx = d_cellVertices[n_idx(nn,idx)];
         Box.minDist(d_vertexPositions[vidx],cellPos,vnext);
 
-        //compute area contribution
-        Varea += TriangleArea(vcur,vnext);
+        //compute area contribution. It is
+        // 0.5 * (vcur.x+vnext.x)*(vnext.y-vcur.y)
+        Varea += SignedPolygonAreaPart(vcur,vnext);
         Dscalar dx = vcur.x-vnext.x;
         Dscalar dy = vcur.y-vnext.y;
         Vperi += sqrt(dx*dx+dy*dy);
@@ -678,7 +678,6 @@ bool gpu_initialize_curand(curandState *states,
 
 //!Call the kernel to calculate the area and perimeter of each cell
 bool gpu_avm_geometry(
-                    Dscalar2 *d_cellPositions,
                     Dscalar2 *d_vertexPositions,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
@@ -695,7 +694,7 @@ bool gpu_avm_geometry(
     unsigned int nblocks  = N/block_size + 1;
 
 
-    avm_geometry_kernel<<<nblocks,block_size>>>(d_cellPositions,d_vertexPositions,
+    avm_geometry_kernel<<<nblocks,block_size>>>(d_vertexPositions,
                                                 d_cellVertexNum,d_cellVertices,
                                                 d_vertexCellNeighbors,d_voroCur,
                                                 d_voroLastNext,d_AreaPerimeter,
@@ -823,6 +822,7 @@ bool gpu_avm_test_edges_for_T1(
     if(code!=cudaSuccess)
         printf("test for T1 GPUassert: %s \n", cudaGetErrorString(code));
 
+    /*
     //only allow a vertex to be in one T1 transition in a given time step
     if(Nvertices<128) block_size = 32;
     nblocks = Nvertices/block_size + 1;
@@ -850,7 +850,7 @@ bool gpu_avm_test_edges_for_T1(
     code = cudaGetLastError();
     if(code!=cudaSuccess)
         printf("One T1 per cell per timestep GPUassert: %s \n", cudaGetErrorString(code));
-
+*/
     return cudaSuccess;
     };
 

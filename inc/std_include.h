@@ -38,6 +38,7 @@ how the program is compiled
 using namespace std;
 
 
+#include <cuda_runtime.h>
 #include "vector_types.h"
 #include "vector_functions.h"
 
@@ -112,6 +113,17 @@ HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
     return ans;
     }
 
+//handle errors in kernel calls
+static void HandleError(cudaError_t err, const char *file, int line)
+    {
+    if (err != cudaSuccess)
+        {
+        printf("Error: %s in file %s at line %d\n",cudaGetErrorString(err),file,line);
+        throw std::exception();
+        }
+    }
+
+#define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
 
 
 #undef HOSTDEVICE

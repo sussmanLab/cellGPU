@@ -69,7 +69,7 @@ int main(int argc, char*argv[])
     int Nvert = 2*numpts;
     AVMDatabase ncdat(Nvert,dataname,NcFile::Replace);
 
-    bool runSPV = false;
+    bool runSPV = true;
     AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU,runSPV);
     if(USE_GPU < 0)
         avm.setCPU();

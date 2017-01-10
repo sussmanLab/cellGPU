@@ -9,7 +9,7 @@
 #include "indexer.h"
 #include "cu_functions.h"
 
-#include "DelaunayCGAL.h"
+#include <cuda.h>
 
 /*!
 A class that implements an active vertex model in 2D. This involves calculating forces on
@@ -206,6 +206,9 @@ class AVM2D
 
         //! data structure to help with cell-vertex list
         GPUArray<int> growCellVertexListAssist;
+
+        //! A locking structure to allow mutex in kernels
+//        Lock myLock;
 
 
     //reporting functions
