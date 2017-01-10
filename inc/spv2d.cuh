@@ -8,7 +8,8 @@
 #include "gpubox.h"
 
 /*!
-A file providing an interface to the relevant cuda calls
+ \file spv.cuh
+A file providing an interface to the relevant cuda calls for the SPV2D class
 */
 
 //!Initialize the GPU's random number generator

@@ -7,6 +7,12 @@
 #include "indexer.h"
 #include "gpubox.h"
 
+/*!
+ \file DelaunayMD.cuh
+A file providing an interface to the relevant cuda calls for the DelaunayMD class
+*/
+
+
 //!Test an array of circumcenters for the empty-circumcircle property
 bool gpu_test_circumcenters(
                             int *d_repair,

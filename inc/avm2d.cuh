@@ -9,6 +9,12 @@
 #include "indexer.h"
 #include "gpubox.h"
 
+/*!
+ \file avm.cuh
+A file providing an interface to the relevant cuda calls for the AVM2D class
+*/
+
+
 //!Initialize the GPU's random number generator
 bool gpu_initialize_curand(curandState *states,
                     int N,
