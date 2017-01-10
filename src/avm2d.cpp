@@ -287,7 +287,7 @@ void AVM2D::performTimestepGPU()
     //move the cells accordingly, and update the director of each cell
     displaceAndRotateGPU();
     //see if vertex motion leads to T1 transitions...ONLY allow one transition per vertex and per cell per timestep
-    testAndPerformT1TransitionsGPU();
+    testAndPerformT1TransitionsCPU();
     //as a utility, one could compute the current "position" of the cells, but this is unnecessary
     //getCellPositionsGPU();
     };
