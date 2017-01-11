@@ -8,6 +8,10 @@ match up well with the existing code base.
 The developers are actively thinking about or interested in adding the following features. If you
 are interested in contributing to any of these development branches please contact the lead developer!
 
+First on the agenda is a refactoring of the code to form a base SimpleCellModel class, which would
+take care of the fact that all of these cellular models have cell positions, preferred cell areas
+and perimeters, cell motility parameters, etc.
+
 ## Self-propelled Voronoi branch
 
 1. The current implementation of the test-and-repair scheme should eventually be ported over to a
