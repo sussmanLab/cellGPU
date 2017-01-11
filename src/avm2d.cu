@@ -390,7 +390,7 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
             {
             d_vertexEdgeFlips[idx]=1;
 
-printf("Tag vertex pair (%i,%i) for flipping\n",vertex1,vertex2);
+//printf("Tag vertex pair (%i,%i) for flipping\n",vertex1,vertex2);
 
             //test the number of neighbors of the cells connected to v1 and v2 to see if the
             //cell list should grow this is kind of slow, and I wish I could optimize it away,
@@ -438,7 +438,7 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     int vertex2 = d_vertexNeighbors[idx];
     d_vertexEdgeFlipsCurrent[idx] = 0;
 
-printf("T1 for vertices %i %i ...\n",vertex1,vertex2);
+//printf("T1 for vertices %i %i ...\n",vertex1,vertex2);
 
     //Rotate the vertices in the edge and set them at twice their original distance
     Dscalar2 edge;
@@ -765,9 +765,7 @@ bool gpu_avm_geometry(
                                                 d_voroLastNext,d_AreaPerimeter,
                                                 N, n_idx, Box);
     cudaThreadSynchronize();
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("compute geometry GPUassert: %s \n", cudaGetErrorString(code));
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 
@@ -790,9 +788,7 @@ bool gpu_avm_force_sets(
                                                   d_AreaPerimeter,d_AreaPerimeterPreferences,
                                                   d_vertexForceSets,
                                                   nForceSets,KA,KP);
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("compute force sets GPUassert: %s \n", cudaGetErrorString(code));
+    HANDLE_ERROR(cudaGetLastError());
     cudaThreadSynchronize();
     return cudaSuccess;
     };
@@ -810,6 +806,7 @@ bool gpu_avm_sum_force_sets(
 
     avm_sum_force_sets_kernel<<<nblocks,block_size>>>(d_vertexForceSets,d_vertexForces,Nvertices);
     cudaError_t code = cudaGetLastError();
+    HANDLE_ERROR(code);
     cudaThreadSynchronize();
     if(code!=cudaSuccess)
         printf("sum force sets GPUassert: %s \n", cudaGetErrorString(code));
@@ -839,16 +836,15 @@ bool gpu_avm_displace_and_rotate(
     avm_displace_vertices_kernel<<<nblocks,block_size>>>(d_vertexPositions,d_vertexForces,
                                                          d_cellDirectors,d_vertexCellNeighbors,
                                                          v0,deltaT,Box,Nvertices);
+    HANDLE_ERROR(cudaGetLastError());
     cudaThreadSynchronize();
     //rotate cell directors
     if (Ncells < 128) block_size = 32;
     nblocks = Ncells/block_size + 1;
     avm_rotate_directors_kernel<<<nblocks,block_size>>>(d_cellDirectors,d_curandRNGs,
                                                         Dr,deltaT,Ncells);
+    HANDLE_ERROR(cudaGetLastError());
     cudaThreadSynchronize();
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("displace and rotate GPUassert: %s \n", cudaGetErrorString(code));
 
     return cudaSuccess;
     };
@@ -883,39 +879,7 @@ bool gpu_avm_test_edges_for_T1(
                                                       NvTimes3,vertexMax,d_grow);
 
     cudaThreadSynchronize();
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("test for T1 GPUassert: %s \n", cudaGetErrorString(code));
-
-    /*
-    //only allow a vertex to be in one T1 transition in a given time step
-    if(Nvertices<128) block_size = 32;
-    nblocks = Nvertices/block_size + 1;
-    avm_defend_against_multiple_T1_kernel<<<nblocks,block_size>>>(
-                                                        d_vertexEdgeFlips,
-                                                        d_vertexNeighbors,
-                                                        Nvertices);
-    cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("One T1 per vertex per timestep GPUassert: %s \n", cudaGetErrorString(code));
-
-    //only allow a CELL to be in one T1 transition in a given time step, too!
-    int Ncells = Nvertices = Nvertices / 2;
-    if(Ncells <128) block_size = 32;
-    nblocks = Ncells/block_size + 1;
-    avm_defend_against_multiple_T1_cell_kernel<<<nblocks,block_size>>>(
-                                                                d_vertexEdgeFlips,
-                                                                d_vertexNeighbors,
-                                                                d_cellVertexNum,
-                                                                d_cellVertices,
-                                                                n_idx,
-                                                                Ncells);
-    cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("One T1 per cell per timestep GPUassert: %s \n", cudaGetErrorString(code));
-*/
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 
@@ -960,8 +924,9 @@ bool gpu_avm_flip_edges(
                                                                 d_finishedFlippingEdges,
                                                                 n_idx,
                                                                 Ncells);
+    HANDLE_ERROR(cudaGetLastError());
 
-    //test edges
+    //Now flip 'em
     int NvTimes3 = Nvertices*3;
     if (NvTimes3 < 128) block_size = 32;
     nblocks  = NvTimes3/block_size + 1;
@@ -973,10 +938,8 @@ bool gpu_avm_flip_edges(
                                                   T1Threshold,Box,
                                                   n_idx,NvTimes3);
 
+    HANDLE_ERROR(cudaGetLastError());
     cudaThreadSynchronize();
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("flip edges GPUassert: %s \n", cudaGetErrorString(code));
     return cudaSuccess;
     };
 
@@ -1000,13 +963,8 @@ bool gpu_avm_get_cell_positions(
                                                           d_cellVertexNum,d_cellVertices,
                                                           N, n_idx, Box);
     cudaThreadSynchronize();
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        {
-        printf("get cell positions GPUassert: %s \n", cudaGetErrorString(code));
-        throw std::exception();
-        };
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
-/** @} */ //end of group declaration
 
+/** @} */ //end of group declaration

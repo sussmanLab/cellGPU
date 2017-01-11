@@ -884,8 +884,7 @@ void AVM2D::flipEdgesGPU()
     {
     
     bool keepFlipping = true;
-
-    //while(keepFlipping)
+    while(keepFlipping)
         {
             {//provide scope for ArrayHandles
             ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
@@ -912,9 +911,10 @@ void AVM2D::flipEdgesGPU()
                                Ncells);
             };
 
-        ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::read);
+        ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
         if(h_ffe.data[0]==0)
             keepFlipping = false;
+        h_ffe.data[0]=0;
         };
     };
 
