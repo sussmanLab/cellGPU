@@ -145,9 +145,14 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
         };
     //initialize edge flips to zero
     vertexEdgeFlips.resize(3*Nvertices);
+    vertexEdgeFlipsCurrent.resize(3*Nvertices);
     ArrayHandle<int> h_vflip(vertexEdgeFlips,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> h_vflipc(vertexEdgeFlipsCurrent,access_location::host,access_mode::overwrite);
     for (int i = 0; i < 3*Nvertices; ++i)
+        {
         h_vflip.data[i]=0;
+        h_vflipc.data[i]=0;
+        }
 
     //randomly set vertex directors
     cellDirectors.resize(Ncells);
@@ -180,6 +185,9 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     growCellVertexListAssist.resize(1);
     ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);
     h_grow.data[0]=0;
+    finishedFlippingEdges.resize(1);
+    ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::overwrite);
+    h_ffe.data[0]=0;
 
     };
 
@@ -873,20 +881,27 @@ void AVM2D::flipEdgesGPU()
     {
     ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
     ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::read);
+    ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_vflipcur(vertexEdgeFlipsCurrent,access_location::device,access_mode::readwrite);
     ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
     ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
     ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
 
+    ArrayHandle<int> d_ffe(finishedFlippingEdges,access_location::device,access_mode::readwrite);
+
     gpu_avm_flip_edges(d_vflip.data,
+                       d_vflipcur.data,
                        d_v.data,
                        d_vn.data,
                        d_vcn.data,
                        d_cvn.data,
                        d_cv.data,
+                       d_ffe.data,
+                       T1Threshold,
                        Box,
                        n_idx,
-                       Nvertices);
+                       Nvertices,
+                       Ncells);
     };
 
 /*!

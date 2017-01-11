@@ -854,23 +854,36 @@ bool gpu_avm_test_edges_for_T1(
     return cudaSuccess;
     };
 
-//!Call the kernel to test every edge for a T1 event, see if vertexMax needs to increase
+//!Call the kernel to flip at most one edge per cell, write to d_finishedFlippingEdges the current state
 bool gpu_avm_flip_edges(
                     int      *d_vertexEdgeFlips,
+                    int      *d_vertexEdgeFlipsCurrent,
                     Dscalar2 *d_vertexPositions,
                     int      *d_vertexNeighbors,
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
+                    int      *d_finishedFlippingEdges,
+                    Dscalar  T1Threshold,
                     gpubox   &Box,
                     Index2D  &n_idx,
-                    int      Nvertices)
+                    int      Nvertices,
+                    int      Ncells)
     {
     unsigned int block_size = 128;
     int NvTimes3 = Nvertices*3;
     if (NvTimes3 < 128) block_size = 32;
     unsigned int nblocks  = NvTimes3/block_size + 1;
 
+    /*The issue is that if a cell is involved in two edge flips done by different threads, the resulting
+    data structure for what vertices belong to cells and what cells border which vertex will be
+    inconsistently updated.
+
+    The strategy will be to take the d_vertexEdgeFlips list, put at most one T1 per cell per vertex into the
+    d_vertexEdgeFlipsCurrent list (erasing it from the d_vertexEdgeFlips list), and swap the edges specified
+    by the "current" list. If d_vertexEdgeFlips is empty, we will set d_finishedFlippingEdges to 1. As long
+    as it is != 1, the cpp code will continue calling this gpu_avm_flip_edges function.
+    */
 
     //test edges
     avm_flip_edges_kernel<<<nblocks,block_size>>>(

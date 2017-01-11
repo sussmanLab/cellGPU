@@ -82,14 +82,18 @@ bool gpu_avm_test_edges_for_T1(
 
 bool gpu_avm_flip_edges(
                     int      *d_vertexEdgeFlips,
+                    int      *d_vertexEdgeFlipsCurrent,
                     Dscalar2 *d_vertexPositions,
                     int      *d_vertexNeighbors,
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
+                    int      *d_finishedFlippingEdges,
+                    Dscalar  T1Threshold,
                     gpubox   &Box,
                     Index2D  &n_idx,
-                    int      Nvertices);
+                    int      Nvertices,
+                    int      Ncells);
 
 bool gpu_avm_get_cell_positions(
                     Dscalar2 *d_cellPositions,
