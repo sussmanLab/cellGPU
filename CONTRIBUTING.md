@@ -55,3 +55,14 @@ broken at some natural point. See any of the code for a feel of the style.
 ## Documentation
 
 Every class, member, function, etc., should be documented with doxygen comments.
+
+### Optimizations
+
+There is always a tension between optimizing performance of the program and easy code readability.
+Since we are going to the trouble of writing the first GPU-accelerated code, this project errs on
+the side of optimizations, in particular with regard to very flat data structures, while still
+trying to maintain an OO-perspective for code growth and maintainability. In costly functions
+unexpected optimizations are allowed, but a straightforward and less optimized function that does
+the same thing should be provided for testing and debugging. Once the optimized functions are
+thoroughly vetted, the unoptimized code paths can be relegated to in-code documentation.
+
