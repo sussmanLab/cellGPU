@@ -546,6 +546,7 @@ bool gpu_init_curand(curandState *states,
 
 
     init_curand_kernel<<<nblocks,block_size>>>(states,N,Timestep,GlobalSeed);
+    HANDLE_ERROR(cudaGetLastError());
     //cudaThreadSynchronize();
     return cudaSuccess;
     };
@@ -562,7 +563,6 @@ bool gpu_compute_geometry(Dscalar2 *d_points,
                         gpubox &Box
                         )
     {
-    cudaError_t code;
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
@@ -579,10 +579,7 @@ bool gpu_compute_geometry(Dscalar2 *d_points,
                                                 Box
                                                 );
     //cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("compute geometry GPUassert: %s \n", cudaGetErrorString(code));
-
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 
@@ -598,7 +595,6 @@ bool gpu_displace_and_rotate(Dscalar2 *d_points,
                         gpubox &Box
                         )
     {
-    cudaError_t code;
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
@@ -615,10 +611,7 @@ bool gpu_displace_and_rotate(Dscalar2 *d_points,
                                                 Box
                                                 );
     //cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("displaceAndRotate GPUassert: %s \n", cudaGetErrorString(code));
-
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 
@@ -639,8 +632,6 @@ bool gpu_force_sets(Dscalar2 *d_points,
                     gpubox &Box
                     )
     {
-    cudaError_t code;
-
     unsigned int block_size = 128;
     if (NeighIdxNum < 128) block_size = 32;
     unsigned int nblocks  = NeighIdxNum/block_size + 1;
@@ -661,11 +652,8 @@ bool gpu_force_sets(Dscalar2 *d_points,
                                                 n_idx,
                                                 Box
                                                 );
+    HANDLE_ERROR(cudaGetLastError());
     //cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("forceSets GPUassert: %s \n", cudaGetErrorString(code));
-
     return cudaSuccess;
     };
 
@@ -690,8 +678,6 @@ bool gpu_force_sets_tensions(Dscalar2 *d_points,
                     gpubox &Box
                     )
     {
-    cudaError_t code;
-
     unsigned int block_size = 128;
     if (NeighIdxNum < 128) block_size = 32;
     unsigned int nblocks  = NeighIdxNum/block_size + 1;
@@ -714,10 +700,7 @@ bool gpu_force_sets_tensions(Dscalar2 *d_points,
                                                 n_idx,
                                                 Box
                                                 );
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("forceSets_Tensions GPUassert: %s \n", cudaGetErrorString(code));
-
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 
@@ -742,9 +725,7 @@ bool gpu_sum_force_sets(
                                             n_idx
             );
     //cudaThreadSynchronize();
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("force_sum GPUassert: %s \n", cudaGetErrorString(code));
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 
@@ -773,9 +754,7 @@ bool gpu_sum_force_sets_with_exclusions(
                                             N,
                                             n_idx
             );
-    cudaError_t code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("force_sum_with_exclusions GPUassert: %s \n", cudaGetErrorString(code));
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 

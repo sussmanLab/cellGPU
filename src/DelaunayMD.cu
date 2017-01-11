@@ -138,7 +138,6 @@ bool gpu_test_circumcenters(int *d_repair,
                             Index2D &cli,
                             int &fail)
     {
-    cudaError_t code;
     unsigned int block_size = 128;
     if (Nccs < 128) block_size = 32;
     unsigned int nblocks  = Nccs/block_size + 1;
@@ -168,11 +167,8 @@ bool gpu_test_circumcenters(int *d_repair,
     cudaMemcpy(&fail,anyFail,sizeof(int),cudaMemcpyDeviceToHost);
     cudaFree(anyFail);
 
-
     //cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("testCircumcenters GPUassert: %s \n", cudaGetErrorString(code));
+    HANDLE_ERROR(cudaGetLastError());
 
     return cudaSuccess;
     };
@@ -186,7 +182,6 @@ bool gpu_move_particles(Dscalar2 *d_points,
                         gpubox &Box
                         )
     {
-    cudaError_t code;
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
@@ -198,9 +193,7 @@ bool gpu_move_particles(Dscalar2 *d_points,
                                                 Box
                                                 );
     //cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("moveParticle GPUassert: %s \n", cudaGetErrorString(code));
+    HANDLE_ERROR(cudaGetLastError());
 
     return cudaSuccess;
     };

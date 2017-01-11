@@ -93,6 +93,7 @@ bool gpu_zero_array(unsigned int *arr,
     gpu_zero_array_kernel<<<nblocks, block_size>>>(arr,
                                                     N
                                                     );
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     }
 
@@ -107,6 +108,7 @@ bool gpu_zero_array(int *arr,
     gpu_zero_array_kernel<<<nblocks, block_size>>>(arr,
                                                     N
                                                     );
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     }
 
@@ -127,7 +129,6 @@ bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                   int *d_assist
                                   )
     {
-    cudaError_t code;
     //optimize block size later
     unsigned int block_size = 128;
     if (Np < 128) block_size = 16;
@@ -149,10 +150,7 @@ bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                                           d_assist
                                                           );
     //cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("compute_cell_list GPUassert: %s \n", cudaGetErrorString(code));
-
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     }
 
