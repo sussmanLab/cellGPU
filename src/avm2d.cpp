@@ -298,7 +298,7 @@ void AVM2D::performTimestepGPU()
     //move the cells accordingly, and update the director of each cell
     displaceAndRotateGPU();
     //see if vertex motion leads to T1 transitions...ONLY allow one transition per vertex and per cell per timestep
-    testAndPerformT1TransitionsCPU();
+    testAndPerformT1TransitionsGPU();
     //as a utility, one could compute the current "position" of the cells, but this is unnecessary
     //getCellPositionsGPU();
     };
@@ -882,29 +882,40 @@ void AVM2D::testEdgesForT1GPU()
 
 void AVM2D::flipEdgesGPU()
     {
-    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_vflipcur(vertexEdgeFlipsCurrent,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
+    
+    bool keepFlipping = true;
 
-    ArrayHandle<int> d_ffe(finishedFlippingEdges,access_location::device,access_mode::readwrite);
+    //while(keepFlipping)
+        {
+            {//provide scope for ArrayHandles
+            ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_vflipcur(vertexEdgeFlipsCurrent,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_ffe(finishedFlippingEdges,access_location::device,access_mode::readwrite);
 
-    gpu_avm_flip_edges(d_vflip.data,
-                       d_vflipcur.data,
-                       d_v.data,
-                       d_vn.data,
-                       d_vcn.data,
-                       d_cvn.data,
-                       d_cv.data,
-                       d_ffe.data,
-                       T1Threshold,
-                       Box,
-                       n_idx,
-                       Nvertices,
-                       Ncells);
+            gpu_avm_flip_edges(d_vflip.data,
+                               d_vflipcur.data,
+                               d_v.data,
+                               d_vn.data,
+                               d_vcn.data,
+                               d_cvn.data,
+                               d_cv.data,
+                               d_ffe.data,
+                               T1Threshold,
+                               Box,
+                               n_idx,
+                               Nvertices,
+                               Ncells);
+            };
+
+        ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::read);
+        if(h_ffe.data[0]==0)
+            keepFlipping = false;
+        };
     };
 
 /*!

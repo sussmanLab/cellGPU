@@ -272,20 +272,44 @@ __global__ void avm_one_T1_per_cell_per_vertex_kernel(
 
     //look through every vertex of the cell
     int cneigh = d_cellVertexNum[cell];
-    bool flip = false;
     int vlast = d_cellVertices[n_idx(cneigh-2,cell)];
     int vcur = d_cellVertices[n_idx(cneigh-1,cell)];
     int vertex;
+    bool skipRestOfCell = false;
     for (int cc = 0; cc < cneigh; ++cc)
         {
+        if (skipRestOfCell) continue;
         vertex = d_cellVertices[n_idx(cc,cell)];
-        //waht are the other cells attached to this vertex? For correctness, only one cell should
+        //what are the other cells attached to this vertex? For correctness, only one cell should
         //own each vertex here. For simplicity, only the lowest-indexed cell gets to do any work.
         if(d_vertexCellNeighbors[3*vertex] < cell ||
                d_vertexCellNeighbors[3*vertex+1] < cell ||
                d_vertexCellNeighbors[3*vertex+2] < cell)
             continue;
+
+        if(d_vertexEdgeFlips[3*vertex] == 1)
+            {
+            d_vertexEdgeFlipsCurrent[3*vertex] = 1;
+            d_vertexEdgeFlips[3*vertex] = 0;
+            skipRestOfCell = true;
+            };
+        if (skipRestOfCell) continue;
+        if(d_vertexEdgeFlips[3*vertex+1] == 1)
+            {
+            d_vertexEdgeFlipsCurrent[3*vertex+1] = 1;
+            d_vertexEdgeFlips[3*vertex+1] = 0;
+            skipRestOfCell = true;
+            };
+        if (skipRestOfCell) continue;
+        if(d_vertexEdgeFlips[3*vertex+2] == 1)
+            {
+            d_vertexEdgeFlipsCurrent[3*vertex+2] = 1;
+            d_vertexEdgeFlips[3*vertex+2] = 0;
+            skipRestOfCell = true;
+            };
         };
+    if (skipRestOfCell)
+        d_finishedFlippingEdges[0] = 1;
 
     };
 
@@ -365,6 +389,9 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
         if(norm(edge) < T1THRESHOLD)
             {
             d_vertexEdgeFlips[idx]=1;
+
+printf("Tag vertex pair (%i,%i) for flipping\n",vertex1,vertex2);
+
             //test the number of neighbors of the cells connected to v1 and v2 to see if the
             //cell list should grow this is kind of slow, and I wish I could optimize it away,
             //or at least not test for it during every time step. The latter seems pretty doable.
@@ -390,33 +417,35 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
     };
 
 //!flip any edge label for re-wiring
-__global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlips,
+__global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
                                       Dscalar2 *d_vertexPositions,
                                       int      *d_vertexNeighbors,
                                       int      *d_vertexCellNeighbors,
                                       int      *d_cellVertexNum,
                                       int      *d_cellVertices,
+                                      int      *d_finishedFlippingEdges,
+                                      Dscalar  T1Threshold,
                                       gpubox   Box,
                                       Index2D  n_idx,
                                       int      NvTimes3)
     {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     //return if the index is out of bounds or if the edge isn't marked for flipping
-    if (idx >= NvTimes3 || d_vertexEdgeFlips[idx] == 0)
+    if (idx >= NvTimes3 || d_vertexEdgeFlipsCurrent[idx] == 0)
         return;
     //identify the vertices and reset the flag
-
     int vertex1 = idx/3;
     int vertex2 = d_vertexNeighbors[idx];
-    d_vertexEdgeFlips[idx] = 0;
+    d_vertexEdgeFlipsCurrent[idx] = 0;
 
-//    printf("T1 for vertices %i %i ...\n",vertex1,vertex2);
+printf("T1 for vertices %i %i ...\n",vertex1,vertex2);
 
     //Rotate the vertices in the edge and set them at twice their original distance
     Dscalar2 edge;
     Dscalar2 v1 = d_vertexPositions[vertex1];
     Dscalar2 v2 = d_vertexPositions[vertex2];
     Box.minDist(v1,v2,edge);
+    if(norm(edge) < T1Threshold) return;
 
     Dscalar2 midpoint;
     midpoint.x = v2.x + 0.5*edge.x;
@@ -907,7 +936,7 @@ bool gpu_avm_flip_edges(
                     int      Ncells)
     {
     unsigned int block_size = 128;
-    
+
     /*The issue is that if a cell is involved in two edge flips done by different threads, the resulting
     data structure for what vertices belong to cells and what cells border which vertex will be
     inconsistently updated.
@@ -938,9 +967,10 @@ bool gpu_avm_flip_edges(
     nblocks  = NvTimes3/block_size + 1;
 
     avm_flip_edges_kernel<<<nblocks,block_size>>>(
-                                                  d_vertexEdgeFlips,d_vertexPositions,d_vertexNeighbors,
+                                                  d_vertexEdgeFlipsCurrent,d_vertexPositions,d_vertexNeighbors,
                                                   d_vertexCellNeighbors,d_cellVertexNum,d_cellVertices,
-                                                  Box,
+                                                  d_finishedFlippingEdges,
+                                                  T1Threshold,Box,
                                                   n_idx,NvTimes3);
 
     cudaThreadSynchronize();

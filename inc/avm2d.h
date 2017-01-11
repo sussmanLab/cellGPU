@@ -123,8 +123,6 @@ class AVM2D
         GPUArray<Dscalar> cellDirectors;
         //! flags that indicate whether an edge should be GPU-flipped (1) or not (0)
         GPUArray<int> vertexEdgeFlips;
-        //! it is important to not flip edges concurrently, so this data structure helps flip edges sequentially
-        GPUArray<int> vertexEdgeFlipsCurrent;
 
         //!an array containing net force on each vertex
         GPUArray<Dscalar2> vertexForces;
@@ -209,6 +207,8 @@ class AVM2D
         //! data structure to help with cell-vertex list
         GPUArray<int> growCellVertexListAssist;
 
+        //! it is important to not flip edges concurrently, so this data structure helps flip edges sequentially
+        GPUArray<int> vertexEdgeFlipsCurrent;
         //! data structure to help with not simultaneously trying to flip nearby edges
         GPUArray<int> finishedFlippingEdges;
 
