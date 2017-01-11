@@ -143,6 +143,12 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
             ++fc;
             };
         };
+    //randomly set vertex directors
+    cellDirectors.resize(Ncells);
+    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
+
     //initialize edge flips to zero
     vertexEdgeFlips.resize(3*Nvertices);
     vertexEdgeFlipsCurrent.resize(3*Nvertices);
@@ -154,11 +160,6 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
         h_vflipc.data[i]=0;
         }
 
-    //randomly set vertex directors
-    cellDirectors.resize(Ncells);
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
    };
 
 /*!/
@@ -172,9 +173,11 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     setDeltaT(0.01);
     setT1Threshold(0.01);
 
-    AreaPeri.resize(Ncells);
-
     devStates.resize(Nvertices);
+
+    AreaPeri.resize(Ncells);
+    AreaPeriPreferences.resize(Ncells);
+
     vertexForces.resize(Nvertices);
     vertexForceSets.resize(3*Nvertices);
     voroCur.resize(3*Nvertices);

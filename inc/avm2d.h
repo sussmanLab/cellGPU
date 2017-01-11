@@ -98,12 +98,10 @@ class AVM2D
 
     //public member variables...most of these should eventually be protected
     public:
+        //! Cell positions... not used for computation, but can track, e.g., MSD of cell centers
+        GPUArray<Dscalar2> cellPositions;
         //! Position of the vertices
         GPUArray<Dscalar2> vertexPositions;
-        //! Cell positions... useful for computing the geometry of cells. At the moment cellPositions just ensures that the origin is enclosed by the vertices of a cell. This is irrelevant in almost all of the code, so an optimization would be to remove this.
-        GPUArray<Dscalar2> cellPositions;
-        //!An array of angles (relative to \hat{x}) that the cell directors point
-        GPUArray<Dscalar> cellDirectors;
 
         /*!
         vertexNeighbors[3*i], vertexNeighbors[3*i+1], and vertexNeighbors[3*i+2] contain the indices
@@ -121,6 +119,8 @@ class AVM2D
         if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting verte i and vertex
         vertexNeighbors[3*i+j] has been marked for a T1 transition
         */
+        //!An array of angles (relative to \hat{x}) that the cell directors point
+        GPUArray<Dscalar> cellDirectors;
         //! flags that indicate whether an edge should be GPU-flipped (1) or not (0)
         GPUArray<int> vertexEdgeFlips;
         //! it is important to not flip edges concurrently, so this data structure helps flip edges sequentially
@@ -179,10 +179,10 @@ class AVM2D
         bool initializeGPURNG;
         //!An array random-number-generators for use on the GPU branch of the code
         GPUArray<curandState> devStates;
-        //!The area and perimeter preferences of each cell
-        GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
         //!The current area and perimeter of each cell
         GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
+        //!The area and perimeter preferences of each cell
+        GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
 
         //! A flag that determines whether the GPU RNG is the same every time.
         bool Reproducible;

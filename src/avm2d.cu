@@ -254,6 +254,42 @@ __global__ void avm_defend_against_multiple_T1_kernel(
         };
     };
 
+
+__global__ void avm_one_T1_per_cell_per_vertex_kernel(
+                                        int *d_vertexEdgeFlips,
+                                        int *d_vertexEdgeFlipsCurrent,
+                                        int *d_vertexNeighbors,
+                                        int *d_vertexCellNeighbors,
+                                        int *d_cellVertexNum,
+                                        int *d_cellVertices,
+                                        int *d_finishedFlippingEdges,
+                                        Index2D n_idx,
+                                        int Ncells)
+    {
+    unsigned int cell = blockDim.x * blockIdx.x + threadIdx.x;
+    if (cell >= Ncells)
+        return;
+
+    //look through every vertex of the cell
+    int cneigh = d_cellVertexNum[cell];
+    bool flip = false;
+    int vlast = d_cellVertices[n_idx(cneigh-2,cell)];
+    int vcur = d_cellVertices[n_idx(cneigh-1,cell)];
+    int vertex;
+    for (int cc = 0; cc < cneigh; ++cc)
+        {
+        vertex = d_cellVertices[n_idx(cc,cell)];
+        //waht are the other cells attached to this vertex? For correctness, only one cell should
+        //own each vertex here. For simplicity, only the lowest-indexed cell gets to do any work.
+        if(d_vertexCellNeighbors[3*vertex] < cell ||
+               d_vertexCellNeighbors[3*vertex+1] < cell ||
+               d_vertexCellNeighbors[3*vertex+2] < cell)
+            continue;
+        };
+
+    };
+
+
 /*!
 Because operations are performed in parallel, the GPU routine will break if the same cell
 is involved in multiple T1 transitions in the same time step. Defend against that by limiting
@@ -871,10 +907,7 @@ bool gpu_avm_flip_edges(
                     int      Ncells)
     {
     unsigned int block_size = 128;
-    int NvTimes3 = Nvertices*3;
-    if (NvTimes3 < 128) block_size = 32;
-    unsigned int nblocks  = NvTimes3/block_size + 1;
-
+    
     /*The issue is that if a cell is involved in two edge flips done by different threads, the resulting
     data structure for what vertices belong to cells and what cells border which vertex will be
     inconsistently updated.
@@ -885,7 +918,25 @@ bool gpu_avm_flip_edges(
     as it is != 1, the cpp code will continue calling this gpu_avm_flip_edges function.
     */
 
+    //first select a few edges to flip...
+    if(Ncells <128) block_size = 32;
+    unsigned int nblocks = Ncells/block_size + 1;
+    avm_one_T1_per_cell_per_vertex_kernel<<<nblocks,block_size>>>(
+                                                                d_vertexEdgeFlips,
+                                                                d_vertexEdgeFlipsCurrent,
+                                                                d_vertexNeighbors,
+                                                                d_vertexCellNeighbors,
+                                                                d_cellVertexNum,
+                                                                d_cellVertices,
+                                                                d_finishedFlippingEdges,
+                                                                n_idx,
+                                                                Ncells);
+
     //test edges
+    int NvTimes3 = Nvertices*3;
+    if (NvTimes3 < 128) block_size = 32;
+    nblocks  = NvTimes3/block_size + 1;
+
     avm_flip_edges_kernel<<<nblocks,block_size>>>(
                                                   d_vertexEdgeFlips,d_vertexPositions,d_vertexNeighbors,
                                                   d_vertexCellNeighbors,d_cellVertexNum,d_cellVertices,
