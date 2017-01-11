@@ -1,4 +1,4 @@
-DelGPU is released under the MIT license
+CellGPU is released under the MIT license
 
 Copyright (c) 2016 - 2017 Daniel M. Sussman
 
@@ -8,6 +8,8 @@ the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
 and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+All publications and presentations based on this softward will acknowledge its use according to the terms posted at the time of submission on the code homepage.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
 TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -38,9 +40,11 @@ THE POSSIBILITY OF SUCH DAMAGE.
     Burkardt. The "HilberSort.h" wrapper is used by the program to call the functions defined in the
     library, and the source code from which the library can be built is in the "hilbert_sort.hpp" and
     "hilbert_sort.cpp" files. Thus, this repository contains everything a user would need to relink the
-    application with a different version of Burkardts LGPL source code. As such DelGPU can be distributed
+    application with a different version of Burkardts LGPL source code. As such CellGPU can be distributed
     under a non-(L)GPL license. Credit for this library, of course, goes to John Burkardt:
     https://people.sc.fsu.edu/~jburkardt/cpp_src/hilbert_curve/hilbert_curve.html
 
-(3) Finally, the logo used, DelFrog.jpg, was generated using the ``Lincoln Experiments'' project, released
-    by Georg Fischer under the MIT license (Copyright 2013 Georg Fischer)
+(3) Finally, the logo used was generated using the ``Lincoln Experiments'' project,
+https://snorpey.github.io/triangulation/ released by Georg Fischer under the MIT license
+(Copyright 2013 Georg Fischer). The image used was taken by Torsten Wittmann and is public domain,
+available from http://www.cellimagelibrary.org/images/240
