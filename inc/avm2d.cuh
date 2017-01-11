@@ -16,7 +16,7 @@ A file providing an interface to the relevant cuda calls for the AVM2D class
 
 /** @defgroup avmKernels AVM Kernels
  * @{
- * \brief CUDA kernels for the AVM2D class
+ * \brief CUDA kernels and callers for the AVM2D class
  */
 
 //!Initialize the GPU's random number generator

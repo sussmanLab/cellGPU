@@ -22,7 +22,10 @@ A file defining some global kernels for use in the spv2d class
     @{
 */
 
-//!initialize each thread with a different sequence of the same seed of a cudaRNG
+/*! 
+  Each thread -- corresponding to each Voronoi cell -- is initialized with a different sequence
+  of the same seed of a cudaRNG
+*/
 __global__ void init_curand_kernel(curandState *state, int N,int Timestep,int GlobalSeed)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -34,7 +37,10 @@ __global__ void init_curand_kernel(curandState *state, int N,int Timestep,int Gl
     };
 
 
-//!add up the force sets to get the force per particle
+/*!
+  Each cell has a force contribution due to the derivative of the energy with respect to each of
+  its voronoi vertices... add them up to get the force per cell.
+  */
 __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
                                       Dscalar2* __restrict__ d_forces,
                                       const int* __restrict__      d_nn,
@@ -61,7 +67,9 @@ __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
 
     };
 
-//! add up force sets, but keep track of exclusions
+/*!
+  add up force sets, as above, but keep track of exclusions
+  */
 __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict__ d_forceSets,
                                       Dscalar2* __restrict__ d_forces,
                                       Dscalar2* __restrict__ d_external_forces,
@@ -98,7 +106,10 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict
 
     };
 
-//!the force on a particle is decomposable into the force contribution from each of its voronoi vertices...calculate those sets of forces
+/*!
+  the force on a particle is decomposable into the force contribution from each of its voronoi
+  vertices...calculate those sets of forces
+  */
 __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
                                       const Dscalar2* __restrict__ d_AP,
                                       const Dscalar2*  __restrict__ d_APpref,
@@ -236,7 +247,10 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     return;
     };
 
-//!the force on a particle is decomposable into the force contribution from each of its voronoi vertices...calculate those sets of forces with an additional tension term between cells of different type
+/*!
+The force on a particle is decomposable into the force contribution from each of its voronoi vertices
+...calculate those sets of forces with an additional tension term between cells of different type
+*/
 __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_points,
                                           const Dscalar2* __restrict__ d_AP,
                                           const Dscalar2* __restrict__ d_APpref,
@@ -405,7 +419,10 @@ __global__ void gpu_force_sets_tensions_kernel(const Dscalar2* __restrict__ d_po
 
 
 
-//!compute the voronoi vertices for each cell, along with its area and perimeter
+/*!
+  Since the cells are guaranteed to be convex, the area of the cell is the sum of the areas of
+  the triangles formed by consecutive Voronoi vertices
+  */
 __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_points,
                                           Dscalar2* __restrict__ d_AP,
                                           const int* __restrict__ d_nn,
@@ -495,7 +512,10 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
     };
 
 
-//!move particles according to their motility and forces
+/*!
+  move particles according to their motility and forces...each thread checks out its RNG, advances
+  it by one increment, and returns it.
+  */
 __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
                                           Dscalar2 *d_force,
                                           Dscalar *d_directors,

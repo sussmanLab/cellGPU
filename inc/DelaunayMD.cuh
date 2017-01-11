@@ -14,7 +14,7 @@ A file providing an interface to the relevant cuda calls for the DelaunayMD clas
 
 /** @defgroup DelaunayMDKernels DelaunayMD Kernels
  * @{
- * \brief CUDA kernels for the DelaunayMD class
+ * \brief CUDA kernels and callers for the DelaunayMD class
  */
 
 //!Test an array of circumcenters for the empty-circumcircle property

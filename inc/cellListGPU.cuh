@@ -9,7 +9,7 @@
 
 /** @defgroup cellListGPUKernels cellListGPU Kernels
  * @{
- * \brief CUDA kernels for the cellListGPU class
+ * \brief CUDA kernels and callers for the cellListGPU class
  */
 
 //!Find the set indices of points in every cell bucket in the grid

@@ -15,7 +15,10 @@
     @{
 */
 
-//!initialize each thread with a different sequence of the same seed of a cudaRNG
+/*!
+  Each thread -- corresponding to each Voronoi cell -- is initialized with a different sequence
+  of the same seed of a cudaRNG
+*/
 __global__ void initialize_curand_kernel(curandState *state, int N,int Timestep,int GlobalSeed)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -27,7 +30,10 @@ __global__ void initialize_curand_kernel(curandState *state, int N,int Timestep,
     };
 
 
-//!compute the voronoi vertices for each cell, along with its area and perimeter
+/*!
+  Since the cells are NOT guaranteed to be convex, the area of the cell must take into account any
+  self-intersections. The strategy is the same as in the CPU branch.
+  */
 __global__ void avm_geometry_kernel(
                                    Dscalar2*  d_vertexPositions,
                                    int*  d_cellVertexNum,
@@ -62,22 +68,9 @@ __global__ void avm_geometry_kernel(
         int forceSetIdx = -1;
         for (int ff = 0; ff < 3; ++ff)
             {
-           if(d_vertexCellNeighbors[3*vidx+ff]==idx)
+            if(d_vertexCellNeighbors[3*vidx+ff]==idx)
                 forceSetIdx = 3*vidx+ff;
             };
-
-if (forceSetIdx <0 || forceSetIdx >= 6*N)
-{
-printf("forceSetIdx = %i\t vidx = %i\t nn=%i\n",forceSetIdx,vidx,nn);
-printf("cell = %i;  vidx is connected to:",idx);
-for (int ff = 0; ff < 3; ++ff)
-    printf("%i, ",d_vertexCellNeighbors[3*vidx+ff]);
-printf("\ncell is connected to:");
-int cneigh = d_cellVertexNum[idx];
-for (int ff = 0; ff < cneigh; ++ff)
-    printf("%i, ",d_cellVertices[n_idx(ff,idx)]);
-printf("\n");
-};
 
         vidx = d_cellVertices[n_idx(nn,idx)];
         Box.minDist(d_vertexPositions[vidx],cellPos,vnext);
@@ -99,7 +92,10 @@ printf("\n");
     d_AreaPerimeter[idx].y=Vperi;
     };
 
-//!compute the force on a vertex due to one of the three cells
+/*!
+  The force on a vertex has a contribution from how moving that vertex affects each of the neighboring
+cells...compute those force sets
+*/
 __global__ void avm_force_sets_kernel(
                         int      *d_vertexCellNeighbors,
                         Dscalar2 *d_voroCur,
@@ -129,9 +125,10 @@ __global__ void avm_force_sets_kernel(
     computeForceSetAVM(d_voroCur[fsidx],vlast,vnext,Adiff,Pdiff,d_vertexForceSets[fsidx]);
     };
 
-
-
-//!sum up the force sets to get the force on each vertex
+/*!
+  the force on a vertex is decomposable into the force contribution from each of its voronoi
+  vertices... add 'em up!
+  */
 __global__ void avm_sum_force_sets_kernel(
                                     Dscalar2*  d_vertexForceSets,
                                     Dscalar2*  d_vertexForces,
@@ -150,7 +147,10 @@ __global__ void avm_sum_force_sets_kernel(
     d_vertexForces[idx] = ftemp;
     };
 
-//!sum up the force sets to get the force on each vertex
+/*!
+  In this version of the active vertex model, the motility of a vertex is a straight average of the
+  motility of the three adjacent cells
+  */
 __global__ void avm_displace_vertices_kernel(
                                         Dscalar2 *d_vertexPositions,
                                         Dscalar2 *d_vertexForces,
@@ -185,7 +185,9 @@ __global__ void avm_displace_vertices_kernel(
     Box.putInBoxReal(d_vertexPositions[idx]);
     };
 
-//!sum up the force sets to get the force on each vertex
+/*!
+  After the vertices have been moved, the directors of the cells have some noise.
+  */
 __global__ void avm_rotate_directors_kernel(
                                         Dscalar  *d_cellDirectors,
                                         curandState *d_curandRNGs,
@@ -205,56 +207,11 @@ __global__ void avm_rotate_directors_kernel(
     };
 
 /*!
-Because operations are performed in parallel, the GPU routine will break if the same vertex
-is involved in multiple T1 transitions in the same time step. Defend against that by limiting
-the number of flips to one.
-*/
-__global__ void avm_defend_against_multiple_T1_kernel(
-                                        int *d_flip,
-                                        int *d_vertexNeighbors,
-                                        int Nvertices)
-    {
-    unsigned int vertex1 = blockDim.x * blockIdx.x + threadIdx.x;
-    if (vertex1 >= Nvertices)
-        return;
-    //if the first vertex-neighbor is to be flipped, prevent any other nearby flips
-    if (d_flip[3*vertex1] == 1)
-        {
-        for (int ff = 0; ff < 3; ++ff)
-            {
-            int vertex2 = d_vertexNeighbors[3*vertex1+ff];
-            for(int f2=0;f2 <3; ++f2)
-                d_flip[3*vertex2+f2]=0;
-            };
-        d_flip[3*vertex1+1] = 0;
-        d_flip[3*vertex1+2] = 0;
-        };
-
-    //if the second vertex-neighbor is to be flipped, prevent any other flips of the two vertices
-    if (d_flip[3*vertex1+1] == 1)
-        {
-        for (int ff = 0; ff < 3; ++ff)
-            {
-            int vertex2 = d_vertexNeighbors[3*vertex1+ff];
-            for(int f2=0;f2 <3; ++f2)
-                d_flip[3*vertex2+f2]=0;
-            };
-        d_flip[3*vertex1+2] = 0;
-        };
-
-    //if the third vertex-neighbor is to be flipped, prevent any other flips of the two vertices
-    if (d_flip[3*vertex1+2] == 1)
-        {
-        for (int ff = 0; ff < 3; ++ff)
-            {
-            int vertex2 = d_vertexNeighbors[3*vertex1+ff];
-            for(int f2=0;f2 <3; ++f2)
-                d_flip[3*vertex2+f2]=0;
-            };
-        };
-    };
-
-
+  There will be severe topology mismatches if a cell is involved in more than one T1 transition
+  simultaneously (due to incoherent updates of the cellVertices structure). So, go through the
+  current list of edges that are marked to take part in a T1 transition and select one edge per
+  cell to be flipped on this trip through the functions.
+  */
 __global__ void avm_one_T1_per_cell_per_vertex_kernel(
                                         int *d_vertexEdgeFlips,
                                         int *d_vertexEdgeFlipsCurrent,
@@ -315,57 +272,9 @@ __global__ void avm_one_T1_per_cell_per_vertex_kernel(
 
 
 /*!
-Because operations are performed in parallel, the GPU routine will break if the same cell
-is involved in multiple T1 transitions in the same time step. Defend against that by limiting
-the number of flips per cell to one.
-*/
-__global__ void avm_defend_against_multiple_T1_cell_kernel(
-                                        int *d_vertexEdgeFlips,
-                                        int *d_vertexNeighbors,
-                                        int *d_cellVertexNum,
-                                        int *d_cellVertices,
-                                        Index2D n_idx,
-                                        int Ncells)
-    {
-    unsigned int cell = blockDim.x * blockIdx.x + threadIdx.x;
-    if (cell >= Ncells)
-        return;
-
-    //look through every vertex of the cell
-    int cneigh = d_cellVertexNum[cell];
-    bool flip = false;
-    int vlast = d_cellVertices[n_idx(cneigh-2,cell)];
-    int vcur = d_cellVertices[n_idx(cneigh-1,cell)];
-    int vertex;
-    for (int cc = 0; cc < cneigh; ++cc)
-        {
-        vertex = d_cellVertices[n_idx(cc,cell)];
-        if(flip)
-            {
-            d_vertexEdgeFlips[3*vertex] = 0;
-            d_vertexEdgeFlips[3*vertex+1] = 0;
-            d_vertexEdgeFlips[3*vertex+2] = 0;
-            };
-        for (int ff = 0; ff < 3; ++ff)
-            {
-            int vertexNeigh =  d_vertexNeighbors[3*vertex+ff];
-            if (vertexNeigh = vlast) continue;
-            if (vertexNeigh = vcur) continue;
-            if(d_vertexEdgeFlips[3*vertexNeigh+ff] == 1)
-                {
-                if (flip)
-                    d_vertexEdgeFlips[3*vertexNeigh+ff] = 0;
-                else
-                    flip = true;
-                };
-            };
-        vlast = vcur;
-        vertex = vcur;
-        };
-    };
-
-//!Run through every pair of vertices (once), see if any T1 transitions should be done,
-//!and see if the cell-vertex list needs to grow
+  Run through every pair of vertices (once), see if any T1 transitions should be done,
+  and see if the cell-vertex list needs to grow
+  */
 __global__ void avm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
                                         int      *d_vertexNeighbors,
                                         int      *d_vertexEdgeFlips,
@@ -390,7 +299,6 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
             {
             d_vertexEdgeFlips[idx]=1;
 
-//printf("Tag vertex pair (%i,%i) for flipping\n",vertex1,vertex2);
 
             //test the number of neighbors of the cells connected to v1 and v2 to see if the
             //cell list should grow this is kind of slow, and I wish I could optimize it away,
@@ -416,7 +324,9 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
 
     };
 
-//!flip any edge label for re-wiring
+/*!
+  Flip any edge labeled for re-wiring in the vertexEdgeFlipsCurrent list
+  */
 __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
                                       Dscalar2 *d_vertexPositions,
                                       int      *d_vertexNeighbors,
@@ -599,28 +509,6 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     //now rewire the cells
     //cell i loses v2 as a neighbor
 
-//    printf("(%i,%i)\t cells: (%i %i %i %i), vertices: (%i,%i,%i,%i)\n",vertex1,vertex2,cellSet.x,cellSet.y,cellSet.z,cellSet.w,vertexSet.x,vertexSet.y,vertexSet.z,vertexSet.w);
-/*
-if(cellSet.x<0)
-    {
-    printf("(%i,%i)\t cells: (%i %i %i %i), vertices: (%i,%i,%i,%i)\n",vertex1,vertex2,cellSet.x,cellSet.y,cellSet.z,cellSet.w,vertexSet.x,vertexSet.y,vertexSet.z,vertexSet.w);
-    cneigh = d_cellVertexNum[d_vertexCellNeighbors[3*vertex1]];
-    printf("Cell 1, Cellidx %i:",d_vertexCellNeighbors[3*vertex1]);
-    for (int c1 = 0; c1 < cneigh; ++c1)
-        printf("%i\t",d_cellVertices[n_idx(c1,d_vertexCellNeighbors[3*vertex1])] );
-    printf("\n");
-    cneigh = d_cellVertexNum[d_vertexCellNeighbors[3*vertex1+1]];
-    printf("Cell 2, Cellidx %i:",d_vertexCellNeighbors[3*vertex1+1]);
-    for (int c1 = 0; c1 < cneigh; ++c1)
-        printf("%i\t",d_cellVertices[n_idx(c1,d_vertexCellNeighbors[3*vertex1+1])] );
-    printf("\n");
-    cneigh = d_cellVertexNum[d_vertexCellNeighbors[3*vertex1+2]];
-    printf("Cell 3, Cellidx %i:",d_vertexCellNeighbors[3*vertex1+2]);
-    for (int c1 = 0; c1 < cneigh; ++c1)
-        printf("%i\t",d_cellVertices[n_idx(c1,d_vertexCellNeighbors[3*vertex1+2])] );
-    printf("\n");
-    };
-*/
     cneigh = d_cellVertexNum[cellSet.x];
     int cidx = 0;
     for (int cc = 0; cc < cneigh-1; ++cc)
@@ -692,7 +580,10 @@ if(cellSet.x<0)
     };
 
 
-//!compute the average position of the vertices of each cell, store as the "cell position"
+/*!
+  This function is being deprecated, but is still useful for calculating, e.g. the mean-squared
+displacement of the cells without transferring data back to the hose
+*/
 __global__ void avm_get_cell_positions_kernel(Dscalar2* d_cellPositions,
                                               Dscalar2* d_vertexPositions,
                                               int    * d_nn,

@@ -13,6 +13,9 @@
     @{
 */
 
+/*!
+  Assign particles to bins, keep track of the number of particles per bin, etc.
+  */
 __global__ void gpu_compute_cell_list_kernel(Dscalar2 *d_pt,
                                               unsigned int *d_cell_sizes,
                                               int *d_idx,
@@ -53,6 +56,9 @@ __global__ void gpu_compute_cell_list_kernel(Dscalar2 *d_pt,
     return;
     };
 
+/*!
+  A function of convenience...zero out an array on the device
+  */
 __global__ void gpu_zero_array_kernel(unsigned int *arr,
                                               int N)
     {
@@ -65,6 +71,9 @@ __global__ void gpu_zero_array_kernel(unsigned int *arr,
     return;
     };
 
+/*!
+  A function of convenience...zero out an array on the device
+  */
 __global__ void gpu_zero_array_kernel(int *arr,
                                       int N)
     {

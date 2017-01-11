@@ -15,6 +15,11 @@
     @{
 */
 
+/*!
+  Independently check every triangle in the Delaunay mesh to see if the cirumcircle defined by the
+  vertices of that triangle is empty. Use the cell list to ensure that only checks of nearby
+  particles are required.
+  */
 __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                                               const int3* __restrict__ d_circumcircles,
                                               const Dscalar2* __restrict__ d_pt,
@@ -30,7 +35,7 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                                               int *anyFail
                                               )
     {
-    // read in the particle that belongs to this thread
+    // read in the index that belongs to this thread
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= Nccs)
         return;
@@ -102,9 +107,10 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     return;
     };
 
-
-
-
+/*!
+  A simple routine that takes in a pointer array of points, an array of displacements,
+  adds the displacements to the points, and puts the points back in the primary unit cell.
+*/
 __global__ void gpu_move_particles_kernel(Dscalar2 *d_points,
                                           Dscalar2 *d_disp,
                                           int N,

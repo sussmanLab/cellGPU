@@ -14,7 +14,7 @@ A file providing an interface to the relevant cuda calls for the SPV2D class
 
 /** @defgroup spvKernels SPV Kernels
  * @{
- * \brief CUDA kernels for the SPV2D class
+ * \brief CUDA kernels and callers for the SPV2D class
  */
 
 //!Initialize the GPU's random number generator

@@ -880,6 +880,10 @@ void AVM2D::testEdgesForT1GPU()
         };
     };
 
+/*!
+  Iterate through the vertexEdgeFlips list, selecting at most one T1 transition per cell to be done
+  on each iteration, until all necessary T1 events have bee performed.
+ */
 void AVM2D::flipEdgesGPU()
     {
     
