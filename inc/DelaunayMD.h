@@ -24,14 +24,14 @@
 class DelaunayMD
     {
     protected:
-        int N;                       //!<The number of vertices
+        int Ncells;                       //!<The number of vertices
         cellListGPU celllist;        //!<The associated cell list structure
         Dscalar cellsize;            //!<The size of the cell list's underlying grid
 
         //!The number of neighbors each cell has
-        GPUArray<int> neigh_num;
+        GPUArray<int> cellNeighborNum;
         //!A structure that indexes what those neighbors are
-        GPUArray<int> neighs;
+        GPUArray<int> cellNeighbors;
         //!A 2dIndexer for computing where in the GPUArray to look for a given particles neighbors
         Index2D n_idx;
         //!An upper bound for the maximum number of neighbors that any cell has

@@ -159,7 +159,7 @@ class SPV2D : public DelaunayMD
         GPUArray<Dscalar2> displacements;
 
         //!An array random-number-generators for use on the GPU branch of the code
-        GPUArray<curandState> devStates;
+        GPUArray<curandState> cellRNGs;
 
         //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
         bool initializeGPURNG;
@@ -171,10 +171,10 @@ class SPV2D : public DelaunayMD
         //!neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
         GPUArray<int> delOther;
 
-        //!Similarly, VoroCur.data[n_idx(nn,i)] gives the nth voronoi vertex, in order, of particle i
-        GPUArray<Dscalar2> VoroCur;
-        //!VoroLastNext.data[n_idx(nn,i)] gives the previous and next voronoi vertex of the same
-        GPUArray<Dscalar4> VoroLastNext;
+        //!Similarly, voroCur.data[n_idx(nn,i)] gives the nth voronoi vertex, in order, of particle i
+        GPUArray<Dscalar2> voroCur;
+        //!voroLastNext.data[n_idx(nn,i)] gives the previous and next voronoi vertex of the same
+        GPUArray<Dscalar4> voroLastNext;
 
         //!In GPU mode, interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
         GPUArray<Dscalar2> forceSets;

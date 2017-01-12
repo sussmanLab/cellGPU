@@ -65,6 +65,8 @@ class Simple2DCell
         vertexNeighbors[3*i], vertexNeighbors[3*i+1], and vertexNeighbors[3*i+2] contain the indices
         of the three vertices that are connected to vertex i
         */
+        //! CELL neighbors of every cell
+        GPUArray<int> cellNeighbors;
         //! VERTEX neighbors of every vertex
         GPUArray<int> vertexNeighbors;
         /*!
@@ -113,6 +115,8 @@ class Simple2DCell
         */
         //!The number of vertices defining each cell
         GPUArray<int> cellVertexNum;
+        //!The number of CELL neighbors of each cell. For simple models this is the same as cellVertexNum, but does not have to be
+        GPUArray<int> cellNeighborNum;
         /*!
         cellVertices is a large, 1D array containing the vertices associated with each cell.
         It must be accessed with the help of the Index2D structure n_idx.
