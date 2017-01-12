@@ -175,11 +175,6 @@ __global__ void avm_displace_vertices_kernel(
     Dscalar directory =
             (Sin(d_cellDirectors[vn1])+Sin(d_cellDirectors[vn2])+Sin(d_cellDirectors[vn3]))/3.0;
     //update positions from forces and motility
-
-
-//    printf("cell %f\t %f\n",deltaT*(v0*directorx), deltaT*d_vertexForces[idx].x);
-
-
     d_vertexPositions[idx].x += deltaT*(v0*directorx + d_vertexForces[idx].x);
     d_vertexPositions[idx].y += deltaT*(v0*directory + d_vertexForces[idx].y);
     //make sure the vertices stay in the box
@@ -206,69 +201,6 @@ __global__ void avm_rotate_directors_kernel(
     d_cellDirectors[idx] += cur_norm(&randState)*sqrt(2.0*deltaT*Dr);
     d_curandRNGs[idx] = randState;
     };
-
-/*!
-  There will be severe topology mismatches if a cell is involved in more than one T1 transition
-  simultaneously (due to incoherent updates of the cellVertices structure). So, go through the
-  current list of edges that are marked to take part in a T1 transition and select one edge per
-  cell to be flipped on this trip through the functions.
-  */
-__global__ void avm_one_T1_per_cell_per_vertex_kernel(
-                                        int* __restrict__ d_vertexEdgeFlips,
-                                        int* __restrict__ d_vertexEdgeFlipsCurrent,
-                                        const int* __restrict__ d_vertexNeighbors,
-                                        const int* __restrict__ d_vertexCellNeighbors,
-                                        const int* __restrict__ d_cellVertexNum,
-                                        const int * __restrict__ d_cellVertices,
-                                        int *d_finishedFlippingEdges,
-                                        Index2D n_idx,
-                                        int Ncells)
-    {
-    unsigned int cell = blockDim.x * blockIdx.x + threadIdx.x;
-    if (cell >= Ncells)
-        return;
-
-    //look through every vertex of the cell
-    int cneigh = d_cellVertexNum[cell];
-    int vertex;
-    bool skipRestOfCell = false;
-    for (int cc = 0; cc < cneigh; ++cc)
-        {
-        if (skipRestOfCell) continue;
-        vertex = d_cellVertices[n_idx(cc,cell)];
-        //what are the other cells attached to this vertex? For correctness, only one cell should
-        //own each vertex here. For simplicity, only the lowest-indexed cell gets to do any work.
-        if(d_vertexCellNeighbors[3*vertex] < cell ||
-               d_vertexCellNeighbors[3*vertex+1] < cell ||
-               d_vertexCellNeighbors[3*vertex+2] < cell)
-            continue;
-
-        if(d_vertexEdgeFlips[3*vertex] == 1)
-            {
-            d_vertexEdgeFlipsCurrent[3*vertex] = 1;
-            d_vertexEdgeFlips[3*vertex] = 0;
-            skipRestOfCell = true;
-            };
-        if (skipRestOfCell) continue;
-        if(d_vertexEdgeFlips[3*vertex+1] == 1)
-            {
-            d_vertexEdgeFlipsCurrent[3*vertex+1] = 1;
-            d_vertexEdgeFlips[3*vertex+1] = 0;
-            skipRestOfCell = true;
-            };
-        if (skipRestOfCell) continue;
-        if(d_vertexEdgeFlips[3*vertex+2] == 1)
-            {
-            d_vertexEdgeFlipsCurrent[3*vertex+2] = 1;
-            d_vertexEdgeFlips[3*vertex+2] = 0;
-            skipRestOfCell = true;
-            };
-        };
-    if (skipRestOfCell)
-        d_finishedFlippingEdges[0] = 1;
-
-    };
-
 
 /*!
   Run through every pair of vertices (once), see if any T1 transitions should be done,
@@ -320,7 +252,67 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
         }
     else
         d_vertexEdgeFlips[idx] = 0;
+    };
 
+/*!
+  There will be severe topology mismatches if a cell is involved in more than one T1 transition
+  simultaneously (due to incoherent updates of the cellVertices structure). So, go through the
+  current list of edges that are marked to take part in a T1 transition and select one edge per
+  cell to be flipped on this trip through the functions.
+  */
+__global__ void avm_one_T1_per_cell_per_vertex_kernel(
+                                        int* __restrict__ d_vertexEdgeFlips,
+                                        int* __restrict__ d_vertexEdgeFlipsCurrent,
+                                        const int* __restrict__ d_vertexNeighbors,
+                                        const int* __restrict__ d_vertexCellNeighbors,
+                                        const int* __restrict__ d_cellVertexNum,
+                                        const int * __restrict__ d_cellVertices,
+                                        int *d_finishedFlippingEdges,
+                                        Index2D n_idx,
+                                        int Ncells)
+    {
+    unsigned int cell = blockDim.x * blockIdx.x + threadIdx.x;
+    if (cell >= Ncells)
+        return;
+
+    //look through every vertex of the cell
+    int cneigh = d_cellVertexNum[cell];
+    int vertex;
+    bool flipFound = false;
+    for (int cc = 0; cc < cneigh; ++cc)
+        {
+        vertex = d_cellVertices[n_idx(cc,cell)];
+        //what are the other cells attached to this vertex? For correctness, only one cell should
+        //own each vertex here. For simplicity, only the lowest-indexed cell gets to do any work.
+        if(d_vertexCellNeighbors[3*vertex] < cell ||
+               d_vertexCellNeighbors[3*vertex+1] < cell ||
+               d_vertexCellNeighbors[3*vertex+2] < cell)
+            continue;
+
+        if(d_vertexEdgeFlips[3*vertex] == 1)
+            {
+            d_vertexEdgeFlipsCurrent[3*vertex] = 1;
+            d_vertexEdgeFlips[3*vertex] = 0;
+            flipFound = true;
+            break;
+            };
+        if(d_vertexEdgeFlips[3*vertex+1] == 1)
+            {
+            d_vertexEdgeFlipsCurrent[3*vertex+1] = 1;
+            d_vertexEdgeFlips[3*vertex+1] = 0;
+            flipFound = true;
+            break;
+            };
+        if(d_vertexEdgeFlips[3*vertex+2] == 1)
+            {
+            d_vertexEdgeFlipsCurrent[3*vertex+2] = 1;
+            d_vertexEdgeFlips[3*vertex+2] = 0;
+            flipFound = true;
+            break;
+            };
+        };
+    if (flipFound)
+        d_finishedFlippingEdges[0] = 1;
     };
 
 /*!
@@ -348,8 +340,6 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     int vertex2 = d_vertexNeighbors[idx];
     d_vertexEdgeFlipsCurrent[idx] = 0;
 
-//printf("T1 for vertices %i %i ...\n",vertex1,vertex2);
-
     //Rotate the vertices in the edge and set them at twice their original distance
     Dscalar2 edge;
     Dscalar2 v1 = d_vertexPositions[vertex1];
@@ -376,9 +366,11 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     int4 cellSet;cellSet.x=-1;cellSet.y=-1;cellSet.z=-1;cellSet.w=-1;
     //int4 vertexSet;
     int2 vertexSet;
-    ///////////////////////////////////////////////////
-    //TERRIBLE GPU CODE = COPY THE CPU BRANCH LOGIC....
-    ///////////////////////////////////////////////////
+    /*
+    The following is fairly terrible GPU code, and should be considered for refactoring
+    On the other hand, revising or improving the multiple-call structure of the edge-flipping
+    routine would be a much large optimization
+    */
     int cell1,cell2,cell3,ctest;
     int vlast, vcur, vnext, cneigh;
     cell1 = d_vertexCellNeighbors[3*vertex1];
@@ -490,9 +482,10 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     //vertexSet.w=vlast;
     //vertexSet.z=vnext;
     vertexSet.y=vnext;
-    ///////////////////////////////////////////////////
-    //END OF FIRST CHUNK OF TERRIBLE CODE...but the nightmare isn't over
-    ///////////////////////////////////////////////////
+
+    /*
+    Great, that was the first chunk of terrible code... but the nightmare isn't over
+    */
 
     //re-wire the cells and vertices
     //start with the vertex-vertex and vertex-cell  neighbors
@@ -513,9 +506,9 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         if(d_vertexNeighbors[3*vertex2+vert] == vertexSet.y)
             d_vertexNeighbors[3*vertex2+vert] = vertexSet.x;
         };
-    //now rewire the cells
-    //cell i loses v2 as a neighbor
 
+    //now rewire the cells...
+    //cell i loses v2 as a neighbor
     cneigh = d_cellVertexNum[cellSet.x];
     int cidx = 0;
     for (int cc = 0; cc < cneigh-1; ++cc)
@@ -580,12 +573,7 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     else
         d_cellVertices[n_idx(vLocation,cellSet.w)] = vertex1;
     d_cellVertexNum[cellSet.w] += 1;
-
-    ///////////////////////////////////////////////////
-    //END OF COPIED CODE
-    ///////////////////////////////////////////////////
     };
-
 
 /*!
   This function is being deprecated, but is still useful for calculating, e.g. the mean-squared
@@ -635,7 +623,7 @@ bool gpu_initialize_curand(curandState *states,
 
 
     initialize_curand_kernel<<<nblocks,block_size>>>(states,N,Timestep,GlobalSeed);
-    //cudaThreadSynchronize();
+    cudaThreadSynchronize();
     return cudaSuccess;
     };
 
