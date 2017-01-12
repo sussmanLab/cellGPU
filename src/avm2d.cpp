@@ -30,21 +30,11 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
     //set number of cells, and a square box
     Ncells=n;
     cellPositions.resize(Ncells);
-    Dscalar boxsize = sqrt((Dscalar)Ncells);
-    Box.setSquare(boxsize,boxsize);
 
     //put cells in box randomly
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Dscalar x =EPSILON+boxsize/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
-        Dscalar y =EPSILON+boxsize/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
-        if(x >=boxsize) x = boxsize-EPSILON;
-        if(y >=boxsize) y = boxsize-EPSILON;
-        h_p.data[ii].x = x;
-        h_p.data[ii].y = y;
-        };
+    setCellPositionsRandomly();
 
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
     //use the SPV class to relax the initial configuration just a bit?
     if(spvInitialize)
         {
@@ -52,7 +42,7 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
         spv.setCPU(false);
         spv.setv0Dr(0.1,1.0);
         spv.setDeltaT(0.1);
-        for (int ii = 0; ii < 10;++ii)
+        for (int ii = 0; ii < 100;++ii)
             spv.performTimestep();
         ArrayHandle<Dscalar2> h_pp(spv.points,access_location::host,access_mode::read);
         for (int ii = 0; ii < Ncells; ++ii)
@@ -65,7 +55,9 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
         {
         Psnew[ii]=make_pair(Point(h_p.data[ii].x,h_p.data[ii].y),ii);
         };
-    Iso_rectangle domain(0.0,0.0,boxsize,boxsize);
+    Dscalar b11,b12,b21,b22;
+    Box.getBoxDims(b11,b12,b21,b22);
+    Iso_rectangle domain(0.0,0.0,b11,b22);
     PDT T(Psnew.begin(),Psnew.end(),domain);
     T.convert_to_1_sheeted_covering();
 
@@ -173,7 +165,7 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     setDeltaT(0.01);
     setT1Threshold(0.01);
 
-    devStates.resize(Nvertices);
+    cellRNGs.resize(Ncells);
 
     AreaPeri.resize(Ncells);
     AreaPeriPreferences.resize(Ncells);
@@ -191,18 +183,6 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     finishedFlippingEdges.resize(1);
     ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::overwrite);
     h_ffe.data[0]=0;
-    };
-
-//set all cell area and perimeter preferences to uniform values
-void AVM2D::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
-    {
-    AreaPeriPreferences.resize(Ncells);
-    ArrayHandle<Dscalar2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        h_p.data[ii].x = A0;
-        h_p.data[ii].y = P0;
-        };
     };
 
 /*!
@@ -235,24 +215,6 @@ void AVM2D::growCellVerticesList(int newVertexMax)
     cellVertices.resize(vertexMax*Ncells);
 //    cellVertices = newCellVertices;
     cellVertices.swap(newCellVertices);
-    };
-
-/*!
-\param i the value of the offset that should be sent to the cuda RNG...
-This is one part of what would be required to support reproducibly being able to load a state
-from a databse and continue the dynamics in the same way every time. This is not currently supported.
-*/
-void AVM2D::initializeCurandStates(int gs, int i)
-    {
-    ArrayHandle<curandState> d_curandRNGs(devStates,access_location::device,access_mode::overwrite);
-    int globalseed = gs;
-    if(!Reproducible)
-        {
-        clock_t t1=clock();
-        globalseed = (int)t1 % 100000;
-        printf("initializing curand RNG with seed %i\n",globalseed);
-        };
-    gpu_initialize_curand(d_curandRNGs.data,Ncells,i,globalseed);
     };
 
 /*!
@@ -831,7 +793,7 @@ void AVM2D::displaceAndRotateGPU()
     ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device, access_mode::readwrite);
     ArrayHandle<Dscalar2> d_f(vertexForces,access_location::device, access_mode::read);
     ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device, access_mode::readwrite);
-    ArrayHandle<curandState> d_cs(devStates,access_location::device,access_mode::read);
+    ArrayHandle<curandState> d_cs(cellRNGs,access_location::device,access_mode::read);
     ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
 
     gpu_avm_displace_and_rotate(d_v.data,

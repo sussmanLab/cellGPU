@@ -2,12 +2,10 @@
 #define AVM_H
 
 #include "std_include.h"
-#include "curand.h"
-#include "curand_kernel.h"
 #include "gpuarray.h"
-#include "gpubox.h"
 #include "indexer.h"
 #include "cu_functions.h"
+#include "Simple2DCell.h"
 
 #include <cuda.h>
 
@@ -20,21 +18,16 @@ but logically since the AVM does not refer to an underlying triangulation I have
 implement it as a separate class.
 */
 //!Implement a 2D active vertex model, using kernels in \ref avmKernels
-class AVM2D
+class AVM2D : public Simple2DCell
     {
     //public functions first... many of these should eventually be protected, but for debugging
-    //it's convenient to be able to call them from anywher
+    //it's convenient to be able to call them from anywhere
     public:
         //! the constructor: initialize as a Delaunay configuration with random positions and set all cells to have uniform target A_0 and P_0 parameters
         AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true,bool runSPVToInitialize=false);
-        //!Enforce CPU-only operation.
-        void setCPU(){GPUcompute = false;};
 
         //!Initialize AVM2D, set random orientations for vertex directors, prepare data structures
         void Initialize(int n,bool initGPU = true,bool spvInitialize = false);
-
-        //!Set uniform cell area and perimeter preferences
-        void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
 
         //!Set uniform motility
         void setv0Dr(Dscalar _v0,Dscalar _Dr){v0=_v0; Dr = _Dr;};
@@ -44,9 +37,6 @@ class AVM2D
 
         //!Set the length threshold for T1 transitions
         void setT1Threshold(Dscalar t1t){T1Threshold = t1t;};
-
-        //!initialize the cuda RNG
-        void initializeCurandStates(int gs, int i);
 
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(int n, bool spvInitialize = false);
@@ -90,7 +80,7 @@ class AVM2D
         void getCellPositionsCPU();
         //!Get the cell position from the vertices on the GPU
         void getCellPositionsGPU();
-
+    
     //protected functions
     protected:
         //utility functions
@@ -98,11 +88,6 @@ class AVM2D
 
     //public member variables...most of these should eventually be protected
     public:
-        //! Cell positions... not used for computation, but can track, e.g., MSD of cell centers
-        GPUArray<Dscalar2> cellPositions;
-        //! Position of the vertices
-        GPUArray<Dscalar2> vertexPositions;
-
         /*!
         vertexNeighbors[3*i], vertexNeighbors[3*i+1], and vertexNeighbors[3*i+2] contain the indices
         of the three vertices that are connected to vertex i
@@ -134,35 +119,17 @@ class AVM2D
         GPUArray<Dscalar2> vertexForceSets;
         /*!
         when computing the geometry of the cells, save the relative position of the vertices for easier force calculation later
-        The "voro" part is an unfortunate naming holdover from the SPV code, where they are actually Voronoi vertices
         */
-        //!3*Nvertices length array of the position of voro vertex
+        //!3*Nvertices length array of the position of vertices around cells
         GPUArray<Dscalar2> voroCur;
-        //!3*Nvertices length array of the position of the last and next voro vertices along the cell
+        //!3*Nvertices length array of the position of the last and next vertices along the cell
         GPUArray<Dscalar4> voroLastNext;
-
-        //! Count the number of times "performTimeStep" has been called
-        int Timestep;
-
-        //!The time stepsize of the simulation
-        Dscalar deltaT;
-
-        //!the box defining the periodic domain
-        gpubox Box;
 
         //!A threshold defining the edge length below which a T1 transition will occur
         Dscalar T1Threshold;
 
     //protected variables
     protected:
-        //!Number of cells in the simulation
-        int Ncells;
-        //!Number of vertices (i.e, degrees of freedom)
-        int Nvertices;
-
-        //!A flag that, when true, has performTimestep call the GPU routines
-        bool GPUcompute;
-
         //!the area modulus
         Dscalar KA;
         //!The perimeter modulus
@@ -172,18 +139,6 @@ class AVM2D
         Dscalar v0;
         //!rotational diffusion of vertex directors
         Dscalar Dr;
-
-        //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
-        bool initializeGPURNG;
-        //!An array random-number-generators for use on the GPU branch of the code
-        GPUArray<curandState> devStates;
-        //!The current area and perimeter of each cell
-        GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
-        //!The area and perimeter preferences of each cell
-        GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
-
-        //! A flag that determines whether the GPU RNG is the same every time.
-        bool Reproducible;
 
         /*!
         cellVertexNum[c] is an integer storing the number of vertices that make up the boundary of cell c.
@@ -230,20 +185,6 @@ class AVM2D
                     fy += f.data[i].y;
                     };
                 printf("mean force = (%g,%g)\n",fx/Nvertices, fy/Nvertices);
-                };
-
-        //!report the current total area, and optionally the area and perimeter for each cell
-        void reportAP(bool verbose = false)
-                {
-                ArrayHandle<Dscalar2> ap(AreaPeri,access_location::host,access_mode::read);
-                Dscalar vtot= 0.0;
-                for (int i = 0; i < Ncells; ++i)
-                    {
-                    if(verbose)
-                        printf("%i: (%f,%f)\n",i,ap.data[i].x,ap.data[i].y);
-                    vtot+=ap.data[i].x;
-                    };
-                printf("total area = %f\n",vtot);
                 };
 
         //!Handy for debugging T1 transitions...report the vertices owned by cell i

@@ -19,13 +19,6 @@ A file providing an interface to the relevant cuda calls for the AVM2D class
  * \brief CUDA kernels and callers for the AVM2D class
  */
 
-//!Initialize the GPU's random number generator
-bool gpu_initialize_curand(curandState *states,
-                    int N,
-                    int Timestep,
-                    int GlobalSeed
-                    );
-
 bool gpu_avm_geometry(
                     Dscalar2 *d_vertexPositions,
                     int      *d_cellVertexNum,

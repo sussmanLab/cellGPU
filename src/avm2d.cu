@@ -14,20 +14,6 @@
     @{
 */
 
-/*!
-  Each thread -- corresponding to each Voronoi cell -- is initialized with a different sequence
-  of the same seed of a cudaRNG
-*/
-__global__ void initialize_curand_kernel(curandState *state, int N,int Timestep,int GlobalSeed)
-    {
-    unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
-    if (idx >=N)
-        return;
-
-    curand_init(GlobalSeed,idx,Timestep,&state[idx]);
-    return;
-    };
-
 
 /*!
   Since the cells are NOT guaranteed to be convex, the area of the cell must take into account any
@@ -609,22 +595,6 @@ __global__ void avm_get_cell_positions_kernel(Dscalar2* d_cellPositions,
     d_cellPositions[idx] = pos;
     };
 
-
-//!Call the kernel to initialize a different RNG for each particle
-bool gpu_initialize_curand(curandState *states,
-                    int N,
-                    int Timestep,
-                    int GlobalSeed)
-    {
-    unsigned int block_size = 128;
-    if (N < 128) block_size = 32;
-    unsigned int nblocks  = N/block_size + 1;
-
-
-    initialize_curand_kernel<<<nblocks,block_size>>>(states,N,Timestep,GlobalSeed);
-    cudaThreadSynchronize();
-    return cudaSuccess;
-    };
 
 //!Call the kernel to calculate the area and perimeter of each cell
 bool gpu_avm_geometry(

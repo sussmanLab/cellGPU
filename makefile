@@ -44,9 +44,9 @@ build: $(PROGS)
 PROG_OBJS= obj/runellipse.o obj/voroguppy.o obj/runplates.o obj/runMakeDatabase.o
 PROG_OBJS+=obj/activeVertex.o
 
-CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/spv2d.o obj/hilbert_curve.o obj/avm2d.o
+CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/spv2d.o obj/hilbert_curve.o obj/avm2d.o obj/Simple2DCell.o
 
-CUOBJS= obj/cuobj/cellListGPU.cu.o obj/cuobj/DelaunayMD.cu.o obj/cuobj/spv2d.cu.o obj/cuobj/avm2d.cu.o
+CUOBJS= obj/cuobj/cellListGPU.cu.o obj/cuobj/DelaunayMD.cu.o obj/cuobj/spv2d.cu.o obj/cuobj/avm2d.cu.o obj/cuobj/Simple2DCell.cu.o
 
 #cuda objects
 $(CUOBJ_DIR)/%.cu.o: $(SRC_DIR)/%.cu
