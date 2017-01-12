@@ -2,7 +2,6 @@
 #define GPUBOX
 
 #include "std_include.h"
-using namespace std;
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline

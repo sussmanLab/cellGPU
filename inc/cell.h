@@ -1,11 +1,6 @@
 #ifndef CELLLIST
 #define CELLLIST
 
-//cell_list class...based on (inefficient) vector implementation. Will switch to linked lists later.
-//only works for square boxes
-
-
-using namespace std;
 #include "std_include.h"
 #include "structures.h"
 #include "gpubox.h"

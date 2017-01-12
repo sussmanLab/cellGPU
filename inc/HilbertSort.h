@@ -1,11 +1,11 @@
+#ifndef HILBERTSORT
+#define HILBERTSORT
+
 /*
 Some code in the HilbertRotate and getIdx functions calls John Burkardt's HILBERT_CURVE code:
 https://people.sc.fsu.edu/~jburkardt/cpp_src/hilbert_curve/hilbert_curve.html
 which is released under the GNU LGPL license
 */
-
-#ifndef HILBERTSORT
-#define HILBERTSORT
 
 #include "std_include.h"
 #include "hilbert_curve.hpp"

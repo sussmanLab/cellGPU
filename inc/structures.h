@@ -1,10 +1,11 @@
 #ifndef STRUCTURES_H
 #define STRUCTURES_H
 
-//
-//This header file defines useful structures for computing triangulations...
-//... edges as a pair of vertex numbers, triangles as a triplet, etc.
-//this file is maintained for historical compatibility, and for operating without CGAL installed
+/*
+This header file defines useful structures for computing triangulations...
+... edges as a pair of vertex numbers, triangles as a triplet, etc.
+this file is maintained for historical compatibility, and for operating without CGAL installed
+*/
 
 #include "std_include.h"
 
@@ -20,7 +21,7 @@ bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dscalar x3, Ds
 inline Dscalar TriangleArea(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2);
 
 /*!
- * Really the Voronoi cell of a Delaunay vertex. Given the relative positions of the vertices 
+ * Really the Voronoi cell of a Delaunay vertex. Given the relative positions of the vertices
  * Delaunay neighbors, this puts the neighbors in clockwise order and calculates the Voronoi vertices
  * of the Voronoi cell. Also calculates the area and perimeter of the Voronoi cell.
  */

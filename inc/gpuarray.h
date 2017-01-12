@@ -1,3 +1,6 @@
+#ifndef GPUARRAY_H
+#define GPUARRAY_H
+
 /*
 This file is based on part of the HOOMD-blue project, released under the BSD 3-Clause License:
 
@@ -18,7 +21,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS IS'' AND
 /*!
 This file defines two helpful classes for working with data on both th CPU and GPU.
 GPUArray<T> is a templated array that carries around with it some data, as well as
-information about where that data was last modified and/or accessed. It can be 
+information about where that data was last modified and/or accessed. It can be
 dynamically resized, but does not have vector methods like push_back.
 
 GPUArray<T> objects are manipulated by ArrayHandle<T> objects. So, if you have declared a
@@ -29,9 +32,6 @@ The data can then be accessed like
 for (int c = 0; c < numberOfCells;++c)
     h_ci.data[c] = .....
 */
-#ifndef GPUARRAY_H
-#define GPUARRAY_H
-
 // for vector types
 #include "std_include.h"
 #include <cuda_runtime.h>

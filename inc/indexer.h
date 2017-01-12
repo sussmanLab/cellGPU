@@ -1,3 +1,5 @@
+#ifndef INDEXER
+#define INDEXER
 /*
 This file is based on part of the HOOMD-blue project, released under the BSD 3-Clause License:
 
@@ -15,8 +17,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS IS'' AND
 //As you might suspect from the above, the classes and structures in this file are modifications of the Index1D.h file from the HOOMD-Blue package.
 //Credit to Joshua A. Anderson
 
-#ifndef INDEXER
-#define INDEXER
 
 
 #ifdef NVCC

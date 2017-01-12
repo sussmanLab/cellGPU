@@ -1,7 +1,6 @@
 #ifndef __GPUCELL_CUH__
 #define __GPUCELL_CUH__
 
-
 #include "std_include.h"
 #include <cuda_runtime.h>
 #include "indexer.h"

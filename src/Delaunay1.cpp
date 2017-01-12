@@ -1,6 +1,4 @@
-
 #include "Delaunay1.h"
-
 
 void DelaunayNP::setPoints(vector<Dscalar> points)
     {

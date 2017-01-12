@@ -1,4 +1,3 @@
-//DelaunayLoc.h
 #ifndef DELAUNAYLOC_H
 #define DELAUNAYLOC_H
 

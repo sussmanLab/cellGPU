@@ -1,7 +1,6 @@
 #ifndef __SPV2D_CUH__
 #define __SPV2D_CUH__
 
-
 #include "std_include.h"
 #include <cuda_runtime.h>
 #include "indexer.h"

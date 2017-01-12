@@ -1,4 +1,3 @@
-//definitions needed for DelaunayLoc, and all GPU functions, respectively
 #define ENABLE_CUDA
 
 #include "spv2d.h"

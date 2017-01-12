@@ -1,7 +1,6 @@
 #ifndef __DELAUNAYMD_CUH__
 #define __DELAUNAYMD_CUH__
 
-
 #include <cuda_runtime.h>
 #include "std_include.h"
 #include "indexer.h"

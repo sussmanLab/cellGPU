@@ -1,8 +1,6 @@
 #ifndef GPUCELLLIST
 #define GPUCELLLIST
 
-using namespace std;
-
 #include "std_include.h"
 #include "gpubox.h"
 #include "gpuarray.h"

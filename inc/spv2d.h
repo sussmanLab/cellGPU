@@ -1,7 +1,5 @@
-//spv.h
 #ifndef SPV_H
 #define SPV_H
-
 
 #include "std_include.h"
 

@@ -1,7 +1,6 @@
 #ifndef CUFUNCTIONS_H
 #define CUFUNCTIONS_H
 
-
 #include "std_include.h"
 #include "Matrix.h"
 

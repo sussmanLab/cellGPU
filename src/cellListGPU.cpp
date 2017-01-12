@@ -1,15 +1,13 @@
 #define ENABLE_CUDA
 
-#include "cuda_runtime.h"
-
+#include "std_include.h"
 #include "gpubox.h"
 #include "gpuarray.h"
 #include "indexer.h"
+#include "cuda_runtime.h"
 #include "cellListGPU.cuh"
 #include "cellListGPU.h"
-using namespace std;
 
-//DEFINE functions here
 
 cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
     {
