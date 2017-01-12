@@ -35,13 +35,13 @@ __global__ void initialize_curand_kernel(curandState *state, int N,int Timestep,
   self-intersections. The strategy is the same as in the CPU branch.
   */
 __global__ void avm_geometry_kernel(
-                                   Dscalar2*  d_vertexPositions,
-                                   int*  d_cellVertexNum,
-                                   int*  d_cellVertices,
-                                   int*  d_vertexCellNeighbors,
-                                   Dscalar2*  d_voroCur,
-                                   Dscalar4*  d_voroLastNext,
-                                   Dscalar2*  d_AreaPerimeter,
+                                   const Dscalar2* __restrict__ d_vertexPositions,
+                                   const int*  __restrict__ d_cellVertexNum,
+                                   const int*  __restrict__ d_cellVertices,
+                                   const int*  __restrict__ d_vertexCellNeighbors,
+                                   Dscalar2*  __restrict__ d_voroCur,
+                                   Dscalar4*  __restrict__ d_voroLastNext,
+                                   Dscalar2*  __restrict__ d_AreaPerimeter,
                                    int N,
                                    Index2D n_idx,
                                    gpubox Box
@@ -214,12 +214,12 @@ __global__ void avm_rotate_directors_kernel(
   cell to be flipped on this trip through the functions.
   */
 __global__ void avm_one_T1_per_cell_per_vertex_kernel(
-                                        int *d_vertexEdgeFlips,
-                                        int *d_vertexEdgeFlipsCurrent,
-                                        int *d_vertexNeighbors,
-                                        int *d_vertexCellNeighbors,
-                                        int *d_cellVertexNum,
-                                        int *d_cellVertices,
+                                        int* __restrict__ d_vertexEdgeFlips,
+                                        int* __restrict__ d_vertexEdgeFlipsCurrent,
+                                        const int* __restrict__ d_vertexNeighbors,
+                                        const int* __restrict__ d_vertexCellNeighbors,
+                                        const int* __restrict__ d_cellVertexNum,
+                                        const int * __restrict__ d_cellVertices,
                                         int *d_finishedFlippingEdges,
                                         Index2D n_idx,
                                         int Ncells)
