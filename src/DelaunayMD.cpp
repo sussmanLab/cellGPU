@@ -4,20 +4,22 @@
 #include "DelaunayMD.h"
 #include "DelaunayMD.cuh"
 
+/*!
+A simple constructor that sets many of the class member variables to zero
+*/
+DelaunayMD::DelaunayMD() :
+    cellsize(1.25), timestep(0),repPerFrame(0.0),skippedFrames(0),
+    neighMax(0),neighMaxChange(false),GlobalFixes(0)
+    {
+    //set cellsize to about unity...magic number should be of order 1
+    //when the box area is of order N (i.e. on average one particle per bin)
+
+    };
+
 //a function that takes care of the initialization of the class.
 void DelaunayMD::initializeDelMD(int n)
     {
-    timestep = 0;
     GPUcompute = true;
-    //assorted
-    neighMax = 0;
-    neighMaxChange = false;
-    repPerFrame = 0.0;
-    skippedFrames = 0;
-    GlobalFixes = 0;
-    //set cellsize to about unity...magic number should be of order 1
-    //when the box area is of order N (i.e. on average one particle per bin)
-    cellsize = 1.25;
 
     //set particle number and box
     N = n;
@@ -29,7 +31,6 @@ void DelaunayMD::initializeDelMD(int n)
     NeighIdxs.resize(6*(N+10));
 
     points.resize(N);
-    pts.resize(N);
     repair.resize(N);
     randomizePositions(boxsize,boxsize);
 
@@ -151,12 +152,7 @@ void DelaunayMD::spatiallySortPoints()
 void DelaunayMD::resetDelLocPoints()
     {
     ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        pts[ii].x=h_points.data[ii].x;
-        pts[ii].y=h_points.data[ii].y;
-        };
-    delLoc.setPoints(pts);
+    delLoc.setPoints(h_points,N);
     delLoc.initialize(cellsize);
     };
 

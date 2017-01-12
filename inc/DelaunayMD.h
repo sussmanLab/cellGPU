@@ -67,11 +67,8 @@ class DelaunayMD
         //!When true, the CPU branch will execute global retriangulations through CGAL on every time step
         bool globalOnly;
 
-        //!Count the number of times that testAndRepair has been called
+        //!Count the number of times that testAndRepair has been called, separately from the derived class' time
         int timestep;
-        //!A vector of points to triangulate, for passing to DelaunayLoc...this can be deprecated.
-        std::vector<Dscalar2> pts;
-
 
     public:
         GPUArray<Dscalar2> points;      //!<The GPUArray of particle positions
@@ -103,7 +100,7 @@ class DelaunayMD
 
 
         //!The constructor!
-        DelaunayMD(){cellsize=1.5;};
+        DelaunayMD();
 
         //!A default initialization scheme
         void initializeDelMD(int n);

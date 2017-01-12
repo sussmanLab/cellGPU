@@ -2,6 +2,7 @@
 #define SIMPLE2DCELL_H
 
 #include "std_include.h"
+#include "indexer.h"
 #include "gpuarray.h"
 #include "gpubox.h"
 #include "curand.h"
@@ -9,11 +10,10 @@
 
 /*!
 A class defining some of the fundamental attributes and operations common to 2D off-lattice models
-of cells.
-This class will help refactor the AVM and SPV branches into a more coherent set, rather than
-kludging a solution with AVM based off of DelaunayMD but not using most of its concepts
+of cells. This class will help refactor the AVM and SPV branches into a more coherent set. At the
+moment the AVM2D class is based off of this, but DelaunayMD and SPV need to be refactored.
 */
-
+//! Implement data structures and functions common to many off-lattice models of cells in 2D
 class Simple2DCell
     {
     //public functions first
@@ -60,6 +60,40 @@ class Simple2DCell
         GPUArray<Dscalar2> cellPositions;
         //! Position of the vertices
         GPUArray<Dscalar2> vertexPositions;
+        /*!
+        in general, we have:
+        vertexNeighbors[3*i], vertexNeighbors[3*i+1], and vertexNeighbors[3*i+2] contain the indices
+        of the three vertices that are connected to vertex i
+        */
+        //! VERTEX neighbors of every vertex
+        GPUArray<int> vertexNeighbors;
+        /*!
+        in general, we have:
+        vertexCellNeighbors[3*i], vertexCellNeighbors[3*i+1], and vertexCellNeighbors[3*i+2] contain
+        the indices of the three cells are niehgbors of vertex i
+        */
+        //! Cell neighbors of every vertex
+        GPUArray<int> vertexCellNeighbors;
+        /*!
+        if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting verte i and vertex
+        vertexNeighbors[3*i+j] has been marked for a T1 transition
+        */
+        //!An array of angles (relative to \hat{x}) that the cell directors point
+        GPUArray<Dscalar> cellDirectors;
+
+        //!an array containing net force on each vertex
+        GPUArray<Dscalar2> vertexForces;
+        //!an array containing net force on each cell
+        GPUArray<Dscalar2> cellForces;
+
+        /*!
+        For both AVM and SPV, it may help to save the relative position of the vertices around a
+        cell, either for easy force computation or in the geometry routine, etc.
+        */
+        //!3*Nvertices length array of the position of vertices around cells
+        GPUArray<Dscalar2> voroCur;
+        //!3*Nvertices length array of the position of the last and next vertices along the cell
+        GPUArray<Dscalar4> voroLastNext;
 
     //protected member variables
     protected:
@@ -74,9 +108,41 @@ class Simple2DCell
         GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
         //!The area and perimeter preferences of each cell
         GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
+        /*!
+        cellVertexNum[c] is an integer storing the number of vertices that make up the boundary of cell c.
+        */
+        //!The number of vertices defining each cell
+        GPUArray<int> cellVertexNum;
+        /*!
+        cellVertices is a large, 1D array containing the vertices associated with each cell.
+        It must be accessed with the help of the Index2D structure n_idx.
+        the index of the kth vertex of cell c (where the ordering is counter-clockwise starting
+        with a random vertex) is given by
+        cellVertices[n_idx(k,c)];
+        */
+        //!A structure that indexes the vertices defining each cell
+        GPUArray<int> cellVertices;
+        //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices
+        Index2D n_idx;
+        //!An upper bound for the maximum number of neighbors that any cell has
+        int vertexMax;
 
     //reporting functions
     public:
+        //!Report the current average force per vertex...should be close to zero
+        void reportMeanForce()
+                {
+                ArrayHandle<Dscalar2> f(vertexForces,access_location::host,access_mode::read);
+                Dscalar fx= 0.0;
+                Dscalar fy = 0.0;
+                for (int i = 0; i < Nvertices; ++i)
+                    {
+                    fx += f.data[i].x;
+                    fy += f.data[i].y;
+                    };
+                printf("mean force = (%g,%g)\n",fx/Nvertices, fy/Nvertices);
+                };
+
         //!report the current total area, and optionally the area and perimeter for each cell
         void reportAP(bool verbose = false)
                 {

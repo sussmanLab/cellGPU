@@ -8,15 +8,14 @@
 The constructor calls the Initialize function to take care of business, and
 setCellPreferencesUniform to give all cells the same A_0 and p_0 values
 */
-AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG,bool runSPVToInitialize)
+AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG,bool runSPVToInitialize) :
+    KA(1.0), KP(1.0)
     {
     printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
     Reproducible = reprod;
     GPUcompute=true;
     Initialize(n,initGPURNG,runSPVToInitialize);
     setCellPreferencesUniform(A0,P0);
-    KA = 1.0;
-    KP = 1.0;
     };
 
 /*!

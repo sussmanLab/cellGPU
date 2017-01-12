@@ -4,13 +4,11 @@
 #include "Simple2DCell.cuh"
 
 /*!
-
+An extremely simple constructor that does nothing, but enforces default GPU operation
 */
-Simple2DCell::Simple2DCell()
+Simple2DCell::Simple2DCell() :
+    Ncells(0), Nvertices(0),GPUcompute(true)
     {
-    Ncells = 0;
-    Nvertices = 0;
-    GPUcompute = true;
     };
 /*!
 Generically believe that cells in 2D have a notion of a preferred area and perimeter
