@@ -8,9 +8,10 @@ match up well with the existing code base.
 The developers are actively thinking about or interested in adding the following features. If you
 are interested in contributing to any of these development branches please contact the lead developer!
 
-First on the agenda is a refactoring of the code to form a base SimpleCellModel class, which would
+First on the agenda is a refactoring of the code to form a base Simple2DCell class, which would
 take care of the fact that all of these cellular models have cell positions, preferred cell areas
-and perimeters, cell motility parameters, etc.
+and perimeters, etc. The AVM branch is based on this, but the DelaunayMD and SPV2D classes need to
+be reworked.
 
 ## Self-propelled Voronoi branch
 

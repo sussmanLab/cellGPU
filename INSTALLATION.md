@@ -1,6 +1,9 @@
-# Installation
+# INSTALLATION
 
-A general makefile is included with the repository. To install on your system, update the CUDA_LIB, CUDA_INC, LIB_CUDA, LIB_CGAL, LIB_NETCDF paths, and make sure the PATH and LD_LIBRARY_PATH environment variables are appropriately set. From there, a simple "make" will do the trick.
+A general makefile is included with the repository. To install on your system, update the CUDA_LIB,
+CUDA_INC, LIB_CUDA, LIB_CGAL, LIB_NETCDF paths, and make sure the PATH and LD_LIBRARY_PATH
+environment variables are appropriately set.
+Create the /obj and /obj/cuobj directories, and from there, a simple "make" will do the trick.
 
 # Requirements
 
