@@ -68,6 +68,7 @@ __global__ void avm_geometry_kernel(
         int forceSetIdx = -1;
         for (int ff = 0; ff < 3; ++ff)
             {
+            if(forceSetIdx != -1) continue;
             if(d_vertexCellNeighbors[3*vidx+ff]==idx)
                 forceSetIdx = 3*vidx+ff;
             };
@@ -229,8 +230,6 @@ __global__ void avm_one_T1_per_cell_per_vertex_kernel(
 
     //look through every vertex of the cell
     int cneigh = d_cellVertexNum[cell];
-    int vlast = d_cellVertices[n_idx(cneigh-2,cell)];
-    int vcur = d_cellVertices[n_idx(cneigh-1,cell)];
     int vertex;
     bool skipRestOfCell = false;
     for (int cc = 0; cc < cneigh; ++cc)
@@ -339,6 +338,7 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
                                       Index2D  n_idx,
                                       int      NvTimes3)
     {
+    if (d_finishedFlippingEdges[0]==0) return;
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     //return if the index is out of bounds or if the edge isn't marked for flipping
     if (idx >= NvTimes3 || d_vertexEdgeFlipsCurrent[idx] == 0)
@@ -357,12 +357,16 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     Box.minDist(v1,v2,edge);
     if(norm(edge) < T1Threshold) return;
 
-    Dscalar2 midpoint;
-    midpoint.x = v2.x + 0.5*edge.x;
-    midpoint.y = v2.y + 0.5*edge.y;
+    //Dscalar2 midpoint;
+    //midpoint.x = v2.x + 0.5*edge.x;
+    //midpoint.y = v2.y + 0.5*edge.y;
 
-    v1.x = midpoint.x-edge.y;v1.y = midpoint.y+edge.x;
-    v2.x = midpoint.x+edge.y;v2.y = midpoint.y-edge.x;
+    //v1.x = midpoint.x-edge.y;v1.y = midpoint.y+edge.x;
+    //v2.x = midpoint.x+edge.y;v2.y = midpoint.y-edge.x;
+    v1.x = v2.x + 0.5*edge.x-edge.y;
+    v1.y = v2.y + 0.5*edge.y+edge.x;
+    v2.x = v2.x + 0.5*edge.x+edge.y;
+    v2.y = v2.y + 0.5*edge.y-edge.x;
     Box.putInBoxReal(v1);
     Box.putInBoxReal(v2);
     d_vertexPositions[vertex1] = v1;
@@ -370,7 +374,8 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
 
     //now, do the gross work of cell and vertex rewiring
     int4 cellSet;cellSet.x=-1;cellSet.y=-1;cellSet.z=-1;cellSet.w=-1;
-    int4 vertexSet;
+    //int4 vertexSet;
+    int2 vertexSet;
     ///////////////////////////////////////////////////
     //TERRIBLE GPU CODE = COPY THE CPU BRANCH LOGIC....
     ///////////////////////////////////////////////////
@@ -469,8 +474,9 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         vlast = vcur;
         vcur = vnext;
         };
-    vertexSet.x=vlast;
-    vertexSet.y=vnext;
+    //vertexSet.x=vlast;
+    //vertexSet.y=vnext;
+    vertexSet.x=vnext;
     cneigh = d_cellVertexNum[cellSet.w];
     vlast = d_cellVertices[ n_idx(cneigh-2,cellSet.w) ];
     vcur = d_cellVertices[ n_idx(cneigh-1,cellSet.w) ];
@@ -481,8 +487,9 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         vlast = vcur;
         vcur = vnext;
         };
-    vertexSet.w=vlast;
-    vertexSet.z=vnext;
+    //vertexSet.w=vlast;
+    //vertexSet.z=vnext;
+    vertexSet.y=vnext;
     ///////////////////////////////////////////////////
     //END OF FIRST CHUNK OF TERRIBLE CODE...but the nightmare isn't over
     ///////////////////////////////////////////////////
@@ -497,14 +504,14 @@ __global__ void avm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         if(d_vertexCellNeighbors[3*vertex2+vert] == cellSet.x)
             d_vertexCellNeighbors[3*vertex2+vert] = cellSet.y;
         //vertex-vertex neighbors
-        if(d_vertexNeighbors[3*vertexSet.y+vert] == vertex1)
-            d_vertexNeighbors[3*vertexSet.y+vert] = vertex2;
-        if(d_vertexNeighbors[3*vertexSet.z+vert] == vertex2)
-            d_vertexNeighbors[3*vertexSet.z+vert] = vertex1;
-        if(d_vertexNeighbors[3*vertex1+vert] == vertexSet.y)
-            d_vertexNeighbors[3*vertex1+vert] = vertexSet.z;
-        if(d_vertexNeighbors[3*vertex2+vert] == vertexSet.z)
-            d_vertexNeighbors[3*vertex2+vert] = vertexSet.y;
+        if(d_vertexNeighbors[3*vertexSet.x+vert] == vertex1)
+            d_vertexNeighbors[3*vertexSet.x+vert] = vertex2;
+        if(d_vertexNeighbors[3*vertexSet.y+vert] == vertex2)
+            d_vertexNeighbors[3*vertexSet.y+vert] = vertex1;
+        if(d_vertexNeighbors[3*vertex1+vert] == vertexSet.x)
+            d_vertexNeighbors[3*vertex1+vert] = vertexSet.y;
+        if(d_vertexNeighbors[3*vertex2+vert] == vertexSet.y)
+            d_vertexNeighbors[3*vertex2+vert] = vertexSet.x;
         };
     //now rewire the cells
     //cell i loses v2 as a neighbor
@@ -679,8 +686,8 @@ bool gpu_avm_force_sets(
                                                   d_AreaPerimeter,d_AreaPerimeterPreferences,
                                                   d_vertexForceSets,
                                                   nForceSets,KA,KP);
-    HANDLE_ERROR(cudaGetLastError());
     cudaThreadSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 
@@ -696,11 +703,8 @@ bool gpu_avm_sum_force_sets(
 
 
     avm_sum_force_sets_kernel<<<nblocks,block_size>>>(d_vertexForceSets,d_vertexForces,Nvertices);
-    cudaError_t code = cudaGetLastError();
-    HANDLE_ERROR(code);
     cudaThreadSynchronize();
-    if(code!=cudaSuccess)
-        printf("sum force sets GPUassert: %s \n", cudaGetErrorString(code));
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 
@@ -727,15 +731,15 @@ bool gpu_avm_displace_and_rotate(
     avm_displace_vertices_kernel<<<nblocks,block_size>>>(d_vertexPositions,d_vertexForces,
                                                          d_cellDirectors,d_vertexCellNeighbors,
                                                          v0,deltaT,Box,Nvertices);
-    HANDLE_ERROR(cudaGetLastError());
     cudaThreadSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
     //rotate cell directors
     if (Ncells < 128) block_size = 32;
     nblocks = Ncells/block_size + 1;
     avm_rotate_directors_kernel<<<nblocks,block_size>>>(d_cellDirectors,d_curandRNGs,
                                                         Dr,deltaT,Ncells);
-    HANDLE_ERROR(cudaGetLastError());
     cudaThreadSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
 
     return cudaSuccess;
     };
@@ -815,6 +819,7 @@ bool gpu_avm_flip_edges(
                                                                 d_finishedFlippingEdges,
                                                                 n_idx,
                                                                 Ncells);
+    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
 
     //Now flip 'em
@@ -829,8 +834,8 @@ bool gpu_avm_flip_edges(
                                                   T1Threshold,Box,
                                                   n_idx,NvTimes3);
 
-    HANDLE_ERROR(cudaGetLastError());
     cudaThreadSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
 

@@ -34,7 +34,7 @@ float: NVCCFLAGS += -DSCALARFLOAT
 float: build
 
 debug: CXXFLAGS += -g
-debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info -G
+debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
 debug: build
 
 PROGS= delGPU.out avmGPU.out

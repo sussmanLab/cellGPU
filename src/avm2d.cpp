@@ -191,7 +191,6 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     finishedFlippingEdges.resize(1);
     ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::overwrite);
     h_ffe.data[0]=0;
-
     };
 
 //set all cell area and perimeter preferences to uniform values
@@ -888,6 +887,8 @@ void AVM2D::flipEdgesGPU()
     {
     
     bool keepFlipping = true;
+    //By construction, this loop must always run at least twice...save one of the memory transfers
+    int iterations = 0;
     while(keepFlipping)
         {
             {//provide scope for ArrayHandles
@@ -914,11 +915,15 @@ void AVM2D::flipEdgesGPU()
                                Nvertices,
                                Ncells);
             };
+        iterations += 1;
 
-        ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
-        if(h_ffe.data[0]==0)
-            keepFlipping = false;
-        h_ffe.data[0]=0;
+        if (iterations > 1)
+            {
+            ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
+            if(h_ffe.data[0]==0)
+                keepFlipping = false;
+            h_ffe.data[0]=0;
+            };
         };
     };
 
