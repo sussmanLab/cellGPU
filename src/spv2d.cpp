@@ -50,13 +50,7 @@ void SPV2D::Initialize(int n,bool initGPU)
     setExclusions(baseEx);
     particleExclusions=false;
 
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
-    int randmax = 100000000;
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Dscalar theta = 2.0*PI/(Dscalar)(randmax)* (Dscalar)(rand()%randmax);
-        h_cd.data[ii] = theta;
-        };
+    setCellDirectorsRandomly();
     cellRNGs.resize(Ncells);
     if(initGPU)
         setCurandStates(1337,Timestep);
@@ -176,17 +170,6 @@ void SPV2D::setModuliUniform(Dscalar KA, Dscalar KP)
         };
     };
 
-//set all cell area and perimeter preferences to uniform values
-void SPV2D::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
-    {
-    AreaPeriPreferences.resize(Ncells);
-    ArrayHandle<Dscalar2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        h_p.data[ii].x = A0;
-        h_p.data[ii].y = P0;
-        };
-    };
 //set all cell types to i
 void SPV2D::setCellTypeUniform(int i)
     {
@@ -1044,22 +1027,6 @@ void SPV2D::meanForce()
         fy += h_f.data[i].y;
         };
     printf("Mean force = (%e,%e)\n" ,fx/Ncells,fy/Ncells);
-    };
-
-//a utility/testing function, report the current average value of the shape parameter P/sqrt(A)
-Dscalar SPV2D::reportq()
-    {
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    Dscalar A = 0.0;
-    Dscalar P = 0.0;
-    Dscalar q = 0.0;
-    for (int i = 0; i < Ncells; ++i)
-        {
-        A = h_AP.data[i].x;
-        P = h_AP.data[i].y;
-        q += P / sqrt(A);
-        };
-    return q/(Dscalar)Ncells;
     };
 
 //a utility function...output some information assuming the system is uniform

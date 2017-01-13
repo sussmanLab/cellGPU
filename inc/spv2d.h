@@ -33,15 +33,10 @@ class SPV2D : public DelaunayMD
         void Initialize(int n,bool initGPU = true);
 
 
-        //!Set the simulation time stepsize
-        void setDeltaT(Dscalar dt){deltaT = dt;};
         //!Set uniform cell motilities
         void setv0Dr(Dscalar v0new,Dscalar drnew);
         //!Set non-uniform cell motilites
         void setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs);
-        //!Set uniform cell area and perimeter preferences
-        //!NONUNIFORM METHOD NOT WRITTEN YET, BUT TRIVIAL TO DO SO
-        void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
         //!A NON-IMPLEMENTED FUNCTION TO SET UNIFORM MODULI
         void setModuliUniform(Dscalar KA, Dscalar KP);
         //!Set the value of tension to apply between cells of different type (if desired)
@@ -112,8 +107,6 @@ class SPV2D : public DelaunayMD
         void meanForce();
         //!Report the mean area per cell in the system
         void meanArea();
-        //! Report the average value of p/sqrt(A) for the cells in the system
-        Dscalar reportq();
 
     //protected functions
     protected: 
@@ -146,10 +139,6 @@ class SPV2D : public DelaunayMD
         //!The value of inter-cell surface tension to apply to cells of different type
         Dscalar gamma;
 
-        //!The area and perimeter preferences of each cell
-        GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
-        //!The current area and perimeter of each cell
-        GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
         //!The motility parameters (v0 and Dr) for each cell
         GPUArray<Dscalar2> Motility;
         //!The area and perimeter moduli of each cell. CURRENTLY NOT SUPPORTED, BUT EASY TO IMPLEMENT
@@ -158,23 +147,12 @@ class SPV2D : public DelaunayMD
         //!An array of displacements used only for the CPU-only branch of operating
         GPUArray<Dscalar2> displacements;
 
-        //!An array random-number-generators for use on the GPU branch of the code
-        GPUArray<curandState> cellRNGs;
-
-        //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
-        bool initializeGPURNG;
-
         //!delSet.data[n_idx(nn,i)] are the previous and next consecutive delaunay neighbors,
         //!orientationally ordered, of point i (for use in computing forces on GPU)
         GPUArray<int2> delSets;
         //delOther.data[n_idx(nn,i)] contains the index of the "other" delaunay neighbor. i.e., the mutual
         //!neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
         GPUArray<int> delOther;
-
-        //!Similarly, voroCur.data[n_idx(nn,i)] gives the nth voronoi vertex, in order, of particle i
-        GPUArray<Dscalar2> voroCur;
-        //!voroLastNext.data[n_idx(nn,i)] gives the previous and next voronoi vertex of the same
-        GPUArray<Dscalar4> voroLastNext;
 
         //!In GPU mode, interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
         GPUArray<Dscalar2> forceSets;
@@ -190,12 +168,6 @@ class SPV2D : public DelaunayMD
         //!A flag that determins if a spatial sorting is due to occur this Timestep
         bool spatialSortThisStep;
 
-        //!The time stepsize of the simulation
-        Dscalar deltaT;
-        //!An array of integers labeling cell type...an easy way of determining if cells are different
-        GPUArray<int> CellType;
-        //!An array of angles (relative to \hat{x}) that the cell directors point
-        GPUArray<Dscalar> cellDirectors;
         //!an array of net forces on cels
         GPUArray<Dscalar2> forces;
 

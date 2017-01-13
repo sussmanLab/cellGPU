@@ -30,6 +30,8 @@ class Simple2DCell
         //!Set uniform cell area and perimeter preferences
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
 
+        //!Set random cell directors (for active cell models)
+        void setCellDirectorsRandomly();
         //!Set random cell positions, and set the periodic box to a square with average cell area=1
         void setCellPositionsRandomly();
 
@@ -94,14 +96,18 @@ class Simple2DCell
         GPUArray<Dscalar2> vertexForces;
         //!an array containing net force on each cell
         GPUArray<Dscalar2> cellForces;
+        //!An array of integers labeling cell type...an easy way of determining if cells are different
+        GPUArray<int> CellType;
 
         /*!
         For both AVM and SPV, it may help to save the relative position of the vertices around a
         cell, either for easy force computation or in the geometry routine, etc.
+        voroCur.data[n_idx(nn,i)] gives the nth vertex, in CCW order, of cell i
         */
         //!3*Nvertices length array of the position of vertices around cells
         GPUArray<Dscalar2> voroCur;
         //!3*Nvertices length array of the position of the last and next vertices along the cell
+        //!Similarly, voroLastNext.data[n_idx(nn,i)] gives the previous and next vertex of the same
         GPUArray<Dscalar4> voroLastNext;
 
         /*!sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
@@ -183,6 +189,21 @@ class Simple2DCell
                     };
                 printf("total area = %f\n",vtot);
                 };
+        //! Report the average value of p/sqrt(A) for the cells in the system
+        Dscalar reportq()
+            {
+            ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+            Dscalar A = 0.0;
+            Dscalar P = 0.0;
+            Dscalar q = 0.0;
+            for (int i = 0; i < Ncells; ++i)
+                {
+                A = h_AP.data[i].x;
+                P = h_AP.data[i].y;
+                q += P / sqrt(A);
+                };
+            return q/(Dscalar)Ncells;
+            };
     };
 
 #endif

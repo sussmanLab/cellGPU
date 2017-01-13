@@ -24,6 +24,10 @@ void Simple2DCell::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
         };
     };
 
+/*!
+Resize the box so that every cell has, on average, area = 1, and place cells via a simple,
+reproducible RNG
+*/
 void Simple2DCell::setCellPositionsRandomly()
     {
     Dscalar boxsize = sqrt((Dscalar)Ncells);
@@ -40,6 +44,18 @@ void Simple2DCell::setCellPositionsRandomly()
         };
     };
 
+/*!
+Assign cell directors via a simple, reproducible RNG
+*/
+void Simple2DCell::setCellDirectorsRandomly()
+    {
+    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        Dscalar theta = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
+        h_cd.data[ii] = theta;
+        };
+    };
     
 /*!
 \param i the value of the offset that should be sent to the cuda RNG...

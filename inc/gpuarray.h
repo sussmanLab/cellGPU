@@ -93,7 +93,7 @@ template<class T> class ArrayHandle
 
         T* data;          //!< a pointer to the GPUArray's data
 
-        ArrayHandle& operator=(const ArrayHandle& rhs)
+        void operator=(const ArrayHandle& rhs)
                 {
                 data=rhs.data;
                 };
