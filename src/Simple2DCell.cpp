@@ -60,3 +60,38 @@ void Simple2DCell::initializeCurandStates(int gs, int i)
     gpu_initialize_curand(d_curandRNGs.data,Ncells,i,globalseed);
     };
 
+//Always called after spatial sorting is performed, reIndexArrays shuffles the order of an array
+// based on the spatial sort order
+void Simple2DCell::reIndexArray(GPUArray<Dscalar2> &array)
+    {
+    GPUArray<Dscalar2> TEMP = array;
+    ArrayHandle<Dscalar2> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        ar.data[ii] = temp.data[itt[ii]];
+        };
+    };
+
+void Simple2DCell::reIndexArray(GPUArray<Dscalar> &array)
+    {
+    GPUArray<Dscalar> TEMP = array;
+    ArrayHandle<Dscalar> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        ar.data[ii] = temp.data[itt[ii]];
+        };
+    };
+
+void Simple2DCell::reIndexArray(GPUArray<int> &array)
+    {
+    GPUArray<int> TEMP = array;
+    ArrayHandle<int> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<int> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        ar.data[ii] = temp.data[itt[ii]];
+        };
+    };
+

@@ -24,8 +24,8 @@ class Simple2DCell
         //!Set the simulation time stepsize
         void setDeltaT(Dscalar dt){deltaT = dt;};
 
-        //!Enforce CPU-only operation.
-        void setCPU(){GPUcompute = false;};
+        //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
+        virtual void setCPU(){GPUcompute = false;};
 
         //!Set uniform cell area and perimeter preferences
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
@@ -38,6 +38,13 @@ class Simple2DCell
 
     //protected functions
     protected:
+        //!Re-index arrays after a spatial sorting has occured.
+        void reIndexArray(GPUArray<int> &array);
+        //!why use templates when you can type more?
+        void reIndexArray(GPUArray<Dscalar> &array);
+        //!why use templates when you can type more?
+        void reIndexArray(GPUArray<Dscalar2> &array);
+
 
     //public member variables
     public:
@@ -97,6 +104,19 @@ class Simple2DCell
         //!3*Nvertices length array of the position of the last and next vertices along the cell
         GPUArray<Dscalar4> voroLastNext;
 
+        /*!sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
+        */
+        //!A map between particle index and the spatially sorted version.
+        vector<int> itt;
+        //!A temporary structure that inverts itt
+        vector<int> tti;
+        //!To write consistent files...the particle that started the simulation as index i has current index tagToIdx[i]
+        vector<int> tagToIdx;
+        //!A temporary structure that inverse tagToIdx
+        vector<int> idxToTag;
+
+
+
     //protected member variables
     protected:
         //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
@@ -133,6 +153,9 @@ class Simple2DCell
 
     //reporting functions
     public:
+        //!Get a copy of the particle positions
+        void getPoints(GPUArray<Dscalar2> &ps){ps = cellPositions;};
+
         //!Report the current average force per vertex...should be close to zero
         void reportMeanForce()
                 {

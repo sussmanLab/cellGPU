@@ -32,8 +32,8 @@ void DelaunayMD::initializeDelMD(int n)
 
     cellPositions.resize(Ncells);
     repair.resize(Ncells);
-    randomizePositions(boxsize,boxsize);
-
+    
+    setCellPositionsRandomly();
     //initialize spatial sorting, but do not sort by default
     itt.resize(Ncells);
     tti.resize(Ncells);
@@ -61,54 +61,6 @@ void DelaunayMD::initializeDelMD(int n)
     completeRetriangulationPerformed = 1;
     cellNeighborNum.resize(Ncells);
     globalTriangulationCGAL();
-    };
-
-//just randomly initialize points by uniformly sampling between (0,0) and (boxx,boxy)
-void DelaunayMD::randomizePositions(Dscalar boxx, Dscalar boxy)
-    {
-    int randmax = 100000000;
-    ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Dscalar x =EPSILON+boxx/(Dscalar)(randmax+1)* (Dscalar)(rand()%randmax);
-        Dscalar y =EPSILON+boxy/(Dscalar)(randmax+1)* (Dscalar)(rand()%randmax);
-        h_points.data[ii].x=x;
-        h_points.data[ii].y=y;
-        };
-    };
-
-//Always called after spatial sorting is performed, reIndexArrays shuffles the order of an array based on the spatial sort order
-void DelaunayMD::reIndexArray(GPUArray<Dscalar2> &array)
-    {
-    GPUArray<Dscalar2> TEMP = array;
-    ArrayHandle<Dscalar2> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> ar(array,access_location::host,access_mode::readwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        ar.data[ii] = temp.data[itt[ii]];
-        };
-    };
-
-void DelaunayMD::reIndexArray(GPUArray<Dscalar> &array)
-    {
-    GPUArray<Dscalar> TEMP = array;
-    ArrayHandle<Dscalar> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> ar(array,access_location::host,access_mode::readwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        ar.data[ii] = temp.data[itt[ii]];
-        };
-    };
-
-void DelaunayMD::reIndexArray(GPUArray<int> &array)
-    {
-    GPUArray<int> TEMP = array;
-    ArrayHandle<int> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<int> ar(array,access_location::host,access_mode::readwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        ar.data[ii] = temp.data[itt[ii]];
-        };
     };
 
 //take the current location of the points and sort them according the their order along a 2D Hilbert curve
