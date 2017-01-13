@@ -30,7 +30,7 @@ void DelaunayMD::initializeDelMD(int n)
     circumcenters.resize(2*(Ncells+10));
     NeighIdxs.resize(6*(Ncells+10));
 
-    points.resize(Ncells);
+    cellPositions.resize(Ncells);
     repair.resize(Ncells);
     randomizePositions(boxsize,boxsize);
 
@@ -67,7 +67,7 @@ void DelaunayMD::initializeDelMD(int n)
 void DelaunayMD::randomizePositions(Dscalar boxx, Dscalar boxy)
     {
     int randmax = 100000000;
-    ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         Dscalar x =EPSILON+boxx/(Dscalar)(randmax+1)* (Dscalar)(rand()%randmax);
@@ -121,7 +121,7 @@ void DelaunayMD::spatiallySortPoints()
     vector<pair<int,int> > idxSorter(Ncells);
 
     //sort points by Hilbert Curve location
-    ArrayHandle<Dscalar2> h_p(points,access_location::host, access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host, access_mode::readwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         idxSorter[ii].first=hs.getIdx(h_p.data[ii]);
@@ -144,14 +144,14 @@ void DelaunayMD::spatiallySortPoints()
         idxToTag[ii] = tempi[itt[ii]];
         tagToIdx[tempi[itt[ii]]] = ii;
         };
-    reIndexArray(points);
+    reIndexArray(cellPositions);
 
     };
 
 //The GPU moves the location of points in the GPU memory... this gets a local copy that can be used by the DelaunayLoc class
 void DelaunayMD::resetDelLocPoints()
     {
-    ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
+    ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
     delLoc.setPoints(h_points,Ncells);
     delLoc.initialize(cellsize);
     };
@@ -162,7 +162,7 @@ void DelaunayMD::updateCellList()
 
     if(GPUcompute)
         {
-        celllist.computeGPU(points);
+        celllist.computeGPU(cellPositions);
         cudaError_t code = cudaGetLastError();
         if(code!=cudaSuccess)
             {
@@ -173,7 +173,7 @@ void DelaunayMD::updateCellList()
     else
         {
         vector<Dscalar> psnew(2*Ncells);
-        ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
+        ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
         for (int ii = 0; ii < Ncells; ++ii)
             {
             psnew[2*ii] =  h_points.data[ii].x;
@@ -189,7 +189,7 @@ void DelaunayMD::updateCellList()
 //take a vector of displacements, modify the position of the particles, and put them back in the box...all on the CPU
 void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
     {
-    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_d(displacements,access_location::host,access_mode::read);
     for (int idx = 0; idx < Ncells; ++idx)
         {
@@ -202,7 +202,7 @@ void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
 //take a vector of displacements, modify the position of the particles, and put them back in the box...GPU
 void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
     {
-    ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::readwrite);
     gpu_move_particles(d_p.data,d_d.data,Ncells,Box);
     cudaError_t code = cudaGetLastError();
@@ -278,7 +278,7 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     GlobalFixes +=1;
     completeRetriangulationPerformed = 1;
     DelaunayCGAL dcgal;
-    ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
+    ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
     vector<pair<Point,int> > Psnew(Ncells);
     for (int ii = 0; ii < Ncells; ++ii)
         {
@@ -509,7 +509,7 @@ void DelaunayMD::testTriangulation()
     updateCellList();
 
     //access data handles
-    ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_pt(cellPositions,access_location::device,access_mode::read);
 
     ArrayHandle<unsigned int> d_cell_sizes(celllist.cell_sizes,access_location::device,access_mode::read);
     ArrayHandle<int> d_c_idx(celllist.idxs,access_location::device,access_mode::read);
@@ -655,7 +655,7 @@ void DelaunayMD::readTriangulation(ifstream &infile)
     cout << "Reading in " << nn << "points" << endl;
     int idx = 0;
     int ii = 0;
-    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::overwrite);
     while(getline(infile,line))
         {
         Dscalar val = stof(line);
@@ -677,7 +677,7 @@ void DelaunayMD::readTriangulation(ifstream &infile)
 //similarly, write a text file with particle positions. This is often called when an exception is thrown
 void DelaunayMD::writeTriangulation(ofstream &outfile)
     {
-    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
     outfile << Ncells <<endl;
     for (int ii = 0; ii < Ncells ; ++ii)
         outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
@@ -686,7 +686,7 @@ void DelaunayMD::writeTriangulation(ofstream &outfile)
 //"repel" calculates the displacement due to a harmonic soft repulsion between neighbors. Mostly for testing purposes, but it could be expanded to full functionality later
 void DelaunayMD::repel(GPUArray<Dscalar2> &disp,Dscalar eps)
     {
-    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> dd(disp,access_location::host,access_mode::overwrite);
     ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::read);

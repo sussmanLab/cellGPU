@@ -225,7 +225,7 @@ void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
 
     CellType.resize(Ncells);
     ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Ncells; ++ii)
         {
@@ -251,7 +251,7 @@ void SPV2D::setCellTypeStrip(Dscalar frac)
 
     CellType.resize(Ncells);
     ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Ncells; ++ii)
         {
@@ -375,7 +375,7 @@ and rotate the cell directors via a cuda call
 void SPV2D::DisplacePointsAndRotate()
     {
 
-    ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_f(forces,access_location::device,access_mode::read);
     ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_motility(Motility,access_location::device,access_mode::read);
@@ -536,7 +536,7 @@ If the topology is up-to-date on the GPU, calculate all cell areas, perimenters,
 */
 void SPV2D::computeGeometryGPU()
     {
-    ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
     ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
     ArrayHandle<int> d_n(cellNeighbors,access_location::device,access_mode::read);
@@ -600,7 +600,7 @@ vertices
 */
 void SPV2D::computeSPVForceSetsGPU()
     {
-    ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
     ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
@@ -633,7 +633,7 @@ vertices, assuming that there are additional tension terms added between cells o
 */
 void SPV2D::computeSPVForceSetsWithTensionsGPU()
     {
-    ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
     ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
@@ -667,7 +667,7 @@ void SPV2D::computeSPVForceSetsWithTensionsGPU()
 void SPV2D::computeGeometryCPU()
     {
     //read in all the data we'll need
-    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
@@ -733,7 +733,7 @@ void SPV2D::computeSPVForceCPU(int i)
     Dscalar Pthreshold = THRESHOLD;
 
     //read in all the data we'll need
-    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
@@ -1008,7 +1008,7 @@ void SPV2D::meanArea()
 void SPV2D::reportForces()
     {
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
     Dscalar fx = 0.0;
     Dscalar fy = 0.0;
     Dscalar min = 10000;

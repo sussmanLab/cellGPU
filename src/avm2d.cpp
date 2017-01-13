@@ -43,7 +43,7 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
         spv.setDeltaT(0.1);
         for (int ii = 0; ii < 100;++ii)
             spv.performTimestep();
-        ArrayHandle<Dscalar2> h_pp(spv.points,access_location::host,access_mode::read);
+        ArrayHandle<Dscalar2> h_pp(spv.cellPositions,access_location::host,access_mode::read);
         for (int ii = 0; ii < Ncells; ++ii)
             h_p.data[ii] = h_pp.data[ii];
         };

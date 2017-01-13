@@ -24,10 +24,6 @@ class DelaunayMD : public Simple2DCell
         cellListGPU celllist;        //!<The associated cell list structure
         Dscalar cellsize;            //!<The size of the cell list's underlying grid
 
-        //!The number of neighbors each cell has
-        GPUArray<int> cellNeighborNum;
-        //!A structure that indexes what those neighbors are
-        GPUArray<int> cellNeighbors;
         //!A 2dIndexer for computing where in the GPUArray to look for a given particles neighbors
         Index2D n_idx;
         //!An upper bound for the maximum number of neighbors that any cell has
@@ -67,11 +63,9 @@ class DelaunayMD : public Simple2DCell
         int timestep;
 
     public:
-        GPUArray<Dscalar2> points;      //!<The GPUArray of particle positions
+        GPUArray<Dscalar2> cellPositions;      //!<The GPUArray of particle positions
         //!the box defining the periodic domain
         gpubox Box;
-        //!A flag that, when true, does the circumcenter test on the GPU
-        bool GPUcompute;
 
         //!The class' local Delaunay tester/updater
         DelaunayLoc delLoc;
@@ -126,7 +120,7 @@ class DelaunayMD : public Simple2DCell
         void updateNeighIdxs();
 
         //!Get a copy of the particle positions
-        void getPoints(GPUArray<Dscalar2> &ps){ps = points;};
+        void getPoints(GPUArray<Dscalar2> &ps){ps = cellPositions;};
 
         /*!
         \param global defaults to true.
