@@ -7,7 +7,7 @@
 //simple constructor
 SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
     {
-    printf("Initializing %i cells with random positions in a square box... ",n);
+    printf("Initializing %i cells with random positions in a square box...\n",n);
     Reproducible = reprod;
     Initialize(n,initGPURNG);
     setCellPreferencesUniform(1.0,4.0);

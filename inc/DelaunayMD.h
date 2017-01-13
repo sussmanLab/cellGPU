@@ -2,17 +2,14 @@
 #define DELAUNAYMD_H
 
 #include "std_include.h"
-
-#include "gpubox.h"
-#include "gpuarray.h"
+#include "Simple2DCell.h"
 #include "cellListGPU.cuh"
 #include "cellListGPU.h"
-#include "indexer.h"
-#include "HilbertSort.h"
-
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
 #include "DelaunayMD.cuh"
+#include "HilbertSort.h"
+
 
 /*!
  * DelaunayMD is a core engine class, capable of taking a set of points
@@ -21,10 +18,9 @@
  * invalid triangulations on the CPU.
  */
 //! Perform and test triangulations in an MD setting, using kernels in \ref DelaunayMDKernels
-class DelaunayMD
+class DelaunayMD : public Simple2DCell
     {
     protected:
-        int Ncells;                       //!<The number of vertices
         cellListGPU celllist;        //!<The associated cell list structure
         Dscalar cellsize;            //!<The size of the cell list's underlying grid
 

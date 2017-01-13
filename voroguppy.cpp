@@ -88,7 +88,7 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
 
-    //printf("Finished with initialization\n");
+    printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
     spv.meanForce();
     spv.repPerFrame = 0.0;
