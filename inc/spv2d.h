@@ -114,10 +114,9 @@ class SPV2D : public DelaunayMD
 
     //protected member variables
     protected:
-        //! A flag that determines whether the GPU RNG is the same every time.
-        //!The default is for randomness, but maintain the option for testing.
-        //!Must be known upon initialization!
-        bool Reproducible;
+        /*!The default is for randomness, but maintain the option for testing.
+        Must be known upon initialization!
+        */
 
         //!A flag to notify whether cells of different type have added tension terms at their interface
         bool useTension;
@@ -144,8 +143,6 @@ class SPV2D : public DelaunayMD
     public:
         //! Read from a database what the time of the simulation when saved was
         Dscalar SimTime;
-        //! Count the number of times "performTimeStep" has been called
-        int Timestep;
         //! Determines how frequently he spatial sorter be called...once per sortPeriod Timesteps. When sortPeriod < 0 no sorting occurs
         int sortPeriod;
         //!A flag that determins if a spatial sorting is due to occur this Timestep
