@@ -58,7 +58,6 @@ class Index2D
             return height;
             }
 
-    private:
         unsigned int width;   //!< array width
         unsigned int height;   //!< array height
     };

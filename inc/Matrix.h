@@ -12,8 +12,6 @@
 //!contains a {{x11,x12},{x21,x22}} set, and matrix manipulations
 struct Matrix2x2
     {
-    private:
-
     public:
         //!The entries of the matrix
         Dscalar x11, x12, x21, x22;
