@@ -42,6 +42,8 @@ class cellListGPU
         Dscalar getBoxsize() {return boxsize;};
 
         //!Initialization and helper
+        void resetCellSizesCPU();
+        //!Initialization and helper
         void resetCellSizes();
         //!Return the array of particles per cell
         const GPUArray<unsigned int>& getCellSizeArray() const

@@ -6,7 +6,7 @@
 
 #include "avm2d.h"
 #include "cu_functions.h"
-#include "DatabaseAVM.h"
+//#include "DatabaseAVM.h"
 
 int main(int argc, char*argv[])
 {
@@ -67,7 +67,7 @@ int main(int argc, char*argv[])
     char dataname[256];
     sprintf(dataname,"../test.nc");
     int Nvert = 2*numpts;
-    AVMDatabase ncdat(Nvert,dataname,NcFile::Replace);
+    //AVMDatabase ncdat(Nvert,dataname,NcFile::Replace);
 
     bool runSPV = false;
     AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU,runSPV);
@@ -88,7 +88,7 @@ int main(int argc, char*argv[])
             };
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {
-            ncdat.WriteState(avm);
+            //ncdat.WriteState(avm);
             };
         };
 

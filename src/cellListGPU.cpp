@@ -65,8 +65,36 @@ void cellListGPU::setGridSize(Dscalar a)
 
     //estimate Nmax
     Nmax = ceil(Np/totalCells)+1;
-    resetCellSizes();
+    resetCellSizesCPU();
     };
+
+void cellListGPU::resetCellSizesCPU()
+    {
+    //set all cell sizes to zero
+    totalCells=xsize*ysize;
+    if(cell_sizes.getNumElements() != totalCells)
+        cell_sizes.resize(totalCells);
+
+    ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::overwrite);
+    for (int i = 0; i <totalCells; ++i)
+        h_cell_sizes.data[i]=0;
+
+    //set all cell indexes to zero
+    cell_list_indexer = Index2D(Nmax,totalCells);
+    if(idxs.getNumElements() != cell_list_indexer.getNumElements())
+        idxs.resize(cell_list_indexer.getNumElements());
+
+    ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::overwrite);
+    for (int i = 0; i < cell_list_indexer.getNumElements(); ++i)
+        h_idx.data[i]=0;
+
+    if(assist.getNumElements()!= 2)
+        assist.resize(2);
+    ArrayHandle<int> h_assist(assist,access_location::host,access_mode::overwrite);
+    h_assist.data[0]=Nmax;
+    h_assist.data[1] = 0;
+    };
+
 
 void cellListGPU::resetCellSizes()
     {
@@ -106,7 +134,7 @@ void cellListGPU::compute()
     while (recompute)
         {
         //reset particles per cell, reset cell_list_indexer, resize idxs
-        resetCellSizes();
+        resetCellSizesCPU();
         ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::readwrite);
         ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::readwrite);
         recompute=false;

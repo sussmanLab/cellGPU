@@ -118,7 +118,7 @@ static void HandleError(cudaError_t err, const char *file, int line)
     {
     if (err != cudaSuccess)
         {
-        printf("Error: %s in file %s at line %d\n",cudaGetErrorString(err),file,line);
+        printf("\nError: %s in file %s at line %d\n",cudaGetErrorString(err),file,line);
         throw std::exception();
         }
     }
