@@ -23,8 +23,8 @@ it there.
 
 ## Classes of note
 
-* Simple2DCell -- a core class with data structures and functions common to many off-lattice cell models
-* AVM2D -- A child of Simple2DCell implements a simple 2D dynamic ("active") vertex model
+* Simple2DActiveCell -- a class (which inherits from Simple2DCell) with data structures and functions common to many off-lattice cell models with active dynamics
+* AVM2D -- A child of Simple2DActiveCell implements a simple 2D dynamic ("active") vertex model
 * DelaunayMD -- A core engine that operates as described above in ''Basic idea''
 * SPV2D -- A child class of DelaunayMD that implements the 2D SPV model forces.
 * cellListGPU -- makes cell lists using the GPU
