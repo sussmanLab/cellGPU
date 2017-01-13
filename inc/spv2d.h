@@ -32,13 +32,6 @@ class SPV2D : public DelaunayMD
         //!Initialize DelaunayMD, set random orientations for cell directors, prepare data structures
         void Initialize(int n,bool initGPU = true);
 
-
-        //!Set uniform cell motilities
-        void setv0Dr(Dscalar v0new,Dscalar drnew);
-        //!Set non-uniform cell motilites
-        void setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs);
-        //!A NON-IMPLEMENTED FUNCTION TO SET UNIFORM MODULI
-        void setModuliUniform(Dscalar KA, Dscalar KP);
         //!Set the value of tension to apply between cells of different type (if desired)
         void setTension(Dscalar g){gamma = g;};
         //!Declare that tensions of magnitude gamma should be applied between cells of different type
@@ -115,8 +108,6 @@ class SPV2D : public DelaunayMD
         bool getDelSets(int i);
         //!resize all neighMax-related arrays
         void resetLists();
-        //!initialize the cuda RNG
-        void setCurandStates(int gs, int i);
         //!sort points along a Hilbert curve for data locality
         void spatialSorting();
 
@@ -133,16 +124,8 @@ class SPV2D : public DelaunayMD
         //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
         bool particleExclusions;
 
-        //!For mono-motile systems, these are the values of the motility parameters...only used for reporting and debugging.
-        Dscalar Dr,v0;
-
         //!The value of inter-cell surface tension to apply to cells of different type
         Dscalar gamma;
-
-        //!The motility parameters (v0 and Dr) for each cell
-        GPUArray<Dscalar2> Motility;
-        //!The area and perimeter moduli of each cell. CURRENTLY NOT SUPPORTED, BUT EASY TO IMPLEMENT
-        GPUArray<Dscalar2> Moduli;//(KA,KP)
 
         //!An array of displacements used only for the CPU-only branch of operating
         GPUArray<Dscalar2> displacements;

@@ -21,22 +21,17 @@ class Simple2DCell
         //!Currently a vacant constructor
         Simple2DCell();
 
-        //!Set the simulation time stepsize
-        void setDeltaT(Dscalar dt){deltaT = dt;};
-
         //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
         virtual void setCPU(){GPUcompute = false;};
 
         //!Set uniform cell area and perimeter preferences
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
 
-        //!Set random cell directors (for active cell models)
-        void setCellDirectorsRandomly();
         //!Set random cell positions, and set the periodic box to a square with average cell area=1
         void setCellPositionsRandomly();
 
-        //!initialize the cuda RNG
-        void initializeCurandStates(int gs, int i);
+        //! set uniform moduli for all cells
+        void setModuliUniform(Dscalar newKA, Dscalar newKP);
 
     //protected functions
     protected:
@@ -61,10 +56,6 @@ class Simple2DCell
         //!A flag that, when true, has performTimestep call the GPU routines
         bool GPUcompute;
 
-        //! Count the number of times "performTimeStep" has been called
-        int Timestep;
-        //!The time stepsize of the simulation
-        Dscalar deltaT;
         //! Cell positions... not used for computation, but can track, e.g., MSD of cell centers
         GPUArray<Dscalar2> cellPositions;
         //! Position of the vertices
@@ -74,8 +65,6 @@ class Simple2DCell
         vertexNeighbors[3*i], vertexNeighbors[3*i+1], and vertexNeighbors[3*i+2] contain the indices
         of the three vertices that are connected to vertex i
         */
-        //! CELL neighbors of every cell
-        GPUArray<int> cellNeighbors;
         //! VERTEX neighbors of every vertex
         GPUArray<int> vertexNeighbors;
         /*!
@@ -85,12 +74,8 @@ class Simple2DCell
         */
         //! Cell neighbors of every vertex
         GPUArray<int> vertexCellNeighbors;
-        /*!
-        if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting verte i and vertex
-        vertexNeighbors[3*i+j] has been marked for a T1 transition
-        */
-        //!An array of angles (relative to \hat{x}) that the cell directors point
-        GPUArray<Dscalar> cellDirectors;
+        //! CELL neighbors of every cell
+        GPUArray<int> cellNeighbors;
 
         //!an array containing net force on each vertex
         GPUArray<Dscalar2> vertexForces;
@@ -121,16 +106,17 @@ class Simple2DCell
         //!A temporary structure that inverse tagToIdx
         vector<int> idxToTag;
 
-
-
     //protected member variables
     protected:
-        //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
-        bool initializeGPURNG;
-        //!An array random-number-generators for use on the GPU branch of the code
-        GPUArray<curandState> cellRNGs;
         //! A flag that determines whether the GPU RNG is the same every time.
         bool Reproducible;
+        //!the area modulus
+        Dscalar KA;
+        //!The perimeter modulus
+        Dscalar KP;
+        //!The area and perimeter moduli of each cell. CURRENTLY NOT SUPPORTED, BUT EASY TO IMPLEMENT
+        GPUArray<Dscalar2> Moduli;//(KA,KP)
+
 
         //!The current area and perimeter of each cell
         GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell

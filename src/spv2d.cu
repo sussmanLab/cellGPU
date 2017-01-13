@@ -22,21 +22,6 @@ A file defining some global kernels for use in the spv2d class
     @{
 */
 
-/*! 
-  Each thread -- corresponding to each Voronoi cell -- is initialized with a different sequence
-  of the same seed of a cudaRNG
-*/
-__global__ void init_curand_kernel(curandState *state, int N,int Timestep,int GlobalSeed)
-    {
-    unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
-    if (idx >=N)
-        return;
-
-    curand_init(GlobalSeed,idx,Timestep,&state[idx]);
-    return;
-    };
-
-
 /*!
   Each cell has a force contribution due to the derivative of the energy with respect to each of
   its voronoi vertices... add them up to get the force per cell.
@@ -554,22 +539,6 @@ __global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
 //kernel callers
 ////////////////
 
-//!Call the kernel to initialize a different RNG for each particle
-bool gpu_init_curand(curandState *states,
-                    int N,
-                    int Timestep,
-                    int GlobalSeed)
-    {
-    unsigned int block_size = 128;
-    if (N < 128) block_size = 32;
-    unsigned int nblocks  = N/block_size + 1;
-
-
-    init_curand_kernel<<<nblocks,block_size>>>(states,N,Timestep,GlobalSeed);
-    HANDLE_ERROR(cudaGetLastError());
-    //cudaThreadSynchronize();
-    return cudaSuccess;
-    };
 
 //!Call the kernel to compute the geometry
 bool gpu_compute_geometry(Dscalar2 *d_points,

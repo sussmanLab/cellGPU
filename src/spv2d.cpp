@@ -53,7 +53,7 @@ void SPV2D::Initialize(int n,bool initGPU)
     setCellDirectorsRandomly();
     cellRNGs.resize(Ncells);
     if(initGPU)
-        setCurandStates(1337,Timestep);
+        initializeCurandStates(Ncells,1337,Timestep);
     resetLists();
     allDelSets();
     };
@@ -154,21 +154,6 @@ bool SPV2D::getDelSets(int i)
     return true;
     };
 
-/*!
-set all cell K_A, K_P preferences to uniform values.
-PLEASE NOTE that as an optimization this data is not actually used at the moment,
-but the code could be trivially altered to use this
-*/
-void SPV2D::setModuliUniform(Dscalar KA, Dscalar KP)
-    {
-    Moduli.resize(Ncells);
-    ArrayHandle<Dscalar2> h_m(Moduli,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        h_m.data[ii].x = KA;
-        h_m.data[ii].y = KP;
-        };
-    };
 
 //set all cell types to i
 void SPV2D::setCellTypeUniform(int i)
@@ -247,41 +232,6 @@ void SPV2D::setCellTypeStrip(Dscalar frac)
     };
 
 /*!
-\param v0new the new value of velocity for all cells
-\param drnew the new value of the rotational diffusion of cell directors for all cells
-*/
-void SPV2D::setv0Dr(Dscalar v0new,Dscalar drnew)
-    {
-    Motility.resize(Ncells);
-    v0=v0new;
-    Dr=drnew;
-    if (true)
-        {
-        ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
-        for (int ii = 0; ii < Ncells; ++ii)
-            {
-            h_mot.data[ii].x = v0new;
-            h_mot.data[ii].y = drnew;
-            };
-        };
-    };
-
-/*!
-\param v0s the per-particle vector of what all velocities will be
-\param drs the per-particle vector of what all rotational diffusions will be
-*/
-void SPV2D::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs)
-    {
-    Motility.resize(Ncells);
-    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        h_mot.data[ii].x = v0s[ii];
-        h_mot.data[ii].y = drs[ii];
-        };
-    };
-
-/*!
 \param exes a list of per-particle indications of whether a particle should be excluded (exes[i] !=0) or not/
 */
 void SPV2D::setExclusions(vector<int> &exes)
@@ -303,26 +253,6 @@ void SPV2D::setExclusions(vector<int> &exes)
             h_ex.data[ii] = 1;
             };
         };
-    };
-
-/*!
-\param i the value of the offset that should be sent to the cuda RNG...
-This is one part of what would be required to support reproducibly being able to load a state
-from a databse and continue the dynamics in the same way every time. This is not currently supported.
-*/
-void SPV2D::setCurandStates(int gs, int i)
-    {
-    ArrayHandle<curandState> d_cs(cellRNGs,access_location::device,access_mode::overwrite);
-
-    int globalseed = gs;
-    if(!Reproducible)
-        {
-        clock_t t1=clock();
-        globalseed = (int)t1 % 100000;
-        printf("initializing curand RNG with seed %i\n",globalseed);
-        };
-    gpu_init_curand(d_cs.data,Ncells,i,globalseed);
-
     };
 
 /*!

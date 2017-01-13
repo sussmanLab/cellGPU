@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 
 /*!
- \file Simple3DCell.cuh
+ \file Simple2DCell.cuh
 A file providing an interface to the relevant cuda calls for the Simple2DCell class
 */
 
@@ -13,13 +13,6 @@ A file providing an interface to the relevant cuda calls for the Simple2DCell cl
  * @{
  * \brief CUDA kernels and callers for the Simple2DCell class
  */
-
-//!Initialize the GPU's random number generator
-bool gpu_initialize_curand(curandState *states,
-                    int N,
-                    int Timestep,
-                    int GlobalSeed
-                    );
 
 /** @} */ //end of group declaration
 

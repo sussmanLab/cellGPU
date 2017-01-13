@@ -2,7 +2,7 @@
 #define DELAUNAYMD_H
 
 #include "std_include.h"
-#include "Simple2DCell.h"
+#include "Simple2DActiveCell.h"
 #include "cellListGPU.cuh"
 #include "cellListGPU.h"
 #include "DelaunayLoc.h"
@@ -18,7 +18,7 @@
  * invalid triangulations on the CPU.
  */
 //! Perform and test triangulations in an MD setting, using kernels in \ref DelaunayMDKernels
-class DelaunayMD : public Simple2DCell
+class DelaunayMD : public Simple2DActiveCell
     {
     //public functions first
     public:

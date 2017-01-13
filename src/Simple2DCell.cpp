@@ -44,37 +44,25 @@ void Simple2DCell::setCellPositionsRandomly()
         };
     };
 
+
 /*!
-Assign cell directors via a simple, reproducible RNG
+set all cell K_A, K_P preferences to uniform values.
+PLEASE NOTE that as an optimization this data is not actually used at the moment,
+but the code could be trivially altered to use this
 */
-void Simple2DCell::setCellDirectorsRandomly()
+void Simple2DCell::setModuliUniform(Dscalar newKA, Dscalar newKP)
     {
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::overwrite);
+    KA=newKA;
+    KP=newKP;
+    Moduli.resize(Ncells);
+    ArrayHandle<Dscalar2> h_m(Moduli,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
-        Dscalar theta = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
-        h_cd.data[ii] = theta;
+        h_m.data[ii].x = KA;
+        h_m.data[ii].y = KP;
         };
     };
-    
-/*!
-\param i the value of the offset that should be sent to the cuda RNG...
-\param gs the global seed to use
-This is one part of what would be required to support reproducibly being able to load a state
-from a databse and continue the dynamics in the same way every time. This is not currently supported.
-*/
-void Simple2DCell::initializeCurandStates(int gs, int i)
-    {
-    ArrayHandle<curandState> d_curandRNGs(cellRNGs,access_location::device,access_mode::overwrite);
-    int globalseed = gs;
-    if(!Reproducible)
-        {
-        clock_t t1=clock();
-        globalseed = (int)t1 % 100000;
-        printf("initializing curand RNG with seed %i\n",globalseed);
-        };
-    gpu_initialize_curand(d_curandRNGs.data,Ncells,i,globalseed);
-    };
+
 
 //Always called after spatial sorting is performed, reIndexArrays shuffles the order of an array
 // based on the spatial sort order

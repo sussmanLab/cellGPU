@@ -9,13 +9,14 @@ The constructor calls the Initialize function to take care of business, and
 setCellPreferencesUniform to give all cells the same A_0 and p_0 values
 */
 AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG,bool runSPVToInitialize) :
-    KA(1.0), KP(1.0)
+    T1Threshold(0.01)
     {
     printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
     Reproducible = reprod;
     GPUcompute=true;
     Initialize(n,initGPURNG,runSPVToInitialize);
     setCellPreferencesUniform(A0,P0);
+    setModuliUniform(1.0,1.0);
     };
 
 /*!
@@ -174,7 +175,7 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     voroCur.resize(3*Nvertices);
     voroLastNext.resize(3*Nvertices);
     if(initGPU)
-        initializeCurandStates(1337,Timestep);
+        initializeCurandStates(Ncells,1337,Timestep);
 
     growCellVertexListAssist.resize(1);
     ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);

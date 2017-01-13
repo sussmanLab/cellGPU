@@ -2,7 +2,7 @@
 #define AVM_H
 
 #include "std_include.h"
-#include "Simple2DCell.h"
+#include "Simple2DActiveCell.h"
 #include "cu_functions.h"
 
 /*!
@@ -13,7 +13,7 @@ This class is a child of the Simple2DCell class, which provides data structures 
 cells, vertex positions, indices of vertices around each cell, cells around each vertex, etc.
 */
 //!Implement a 2D active vertex model, using kernels in \ref avmKernels
-class AVM2D : public Simple2DCell
+class AVM2D : public Simple2DActiveCell
     {
     //public functions first... many of these should eventually be protected, but for debugging
     //it's convenient to be able to call them from anywhere
@@ -23,9 +23,6 @@ class AVM2D : public Simple2DCell
 
         //!Initialize AVM2D, set random orientations for vertex directors, prepare data structures
         void Initialize(int n,bool initGPU = true,bool spvInitialize = false);
-
-        //!Set uniform motility
-        void setv0Dr(Dscalar _v0,Dscalar _Dr){v0=_v0; Dr = _Dr;};
 
         //!Set the length threshold for T1 transitions
         void setT1Threshold(Dscalar t1t){T1Threshold = t1t;};
@@ -80,6 +77,10 @@ class AVM2D : public Simple2DCell
 
     //public member variables...most of these should eventually be protected
     public:
+        /*!
+        if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting verte i and vertex
+        vertexNeighbors[3*i+j] has been marked for a T1 transition
+        */
         //! flags that indicate whether an edge should be GPU-flipped (1) or not (0)
         GPUArray<int> vertexEdgeFlips;
 
@@ -95,17 +96,6 @@ class AVM2D : public Simple2DCell
 
     //protected variables
     protected:
-        //!the area modulus
-        Dscalar KA;
-        //!The perimeter modulus
-        Dscalar KP;
-
-        //!velocity of vertices
-        Dscalar v0;
-        //!rotational diffusion of vertex directors
-        Dscalar Dr;
-
-
         //! data structure to help with cell-vertex list
         GPUArray<int> growCellVertexListAssist;
 

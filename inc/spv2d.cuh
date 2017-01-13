@@ -16,13 +16,6 @@ A file providing an interface to the relevant cuda calls for the SPV2D class
  * \brief CUDA kernels and callers for the SPV2D class
  */
 
-//!Initialize the GPU's random number generator
-bool gpu_init_curand(curandState *states,
-                    int N,
-                    int Timestep,
-                    int GlobalSeed
-                    );
-
 //!Given the positions, forces, and cell directors, move the particles and add noise to the director direction
 bool gpu_displace_and_rotate(
                     Dscalar2 *d_points,
