@@ -735,20 +735,8 @@ void SPV2D::computeSPVForceCPU(int i)
         }
     };
 
-//a utility testing function...calculate the average area of the cells
-void SPV2D::meanArea()
-    {
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    Dscalar fx = 0.0;
-    for (int i = 0; i < Ncells; ++i)
-        {
-        fx += h_AP.data[i].x/Ncells;
-        };
-    printf("Mean area = %f\n" ,fx);
-    };
-
 //a utility/testing function...output the currently computed forces to the screen
-void SPV2D::reportForces()
+void SPV2D::reportForces(bool verbose)
     {
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
@@ -769,23 +757,11 @@ void SPV2D::reportForces()
         fx += h_f.data[i].x;
         fy += h_f.data[i].y;
 
-        printf("cell %i: \t position (%f,%f)\t force (%e, %e)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
+        if(verbose)
+            printf("cell %i: \t position (%f,%f)\t force (%e, %e)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
         };
-    printf("min/max force : (%f,%f)\n",min,max);
-
-    };
-
-//a utility/testing function...report the sum (not the mean!) of all net forces on all particles. It had better be close to zero.
-void SPV2D::meanForce()
-    {
-    ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
-    Dscalar fx = 0.0;
-    Dscalar fy = 0.0;
-    for (int i = 0; i < Ncells; ++i)
-        {
-        fx += h_f.data[i].x;
-        fy += h_f.data[i].y;
-        };
+    if(verbose)
+        printf("min/max force : (%f,%f)\n",min,max);
     printf("Mean force = (%e,%e)\n" ,fx/Ncells,fy/Ncells);
     };
 

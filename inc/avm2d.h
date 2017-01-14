@@ -30,9 +30,6 @@ class AVM2D : public Simple2DActiveCell
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(int n, bool spvInitialize = false);
 
-        //!if the maximum number of vertices per cell increases, grow the cellVertices list
-        void growCellVerticesList(int newVertexMax);
-
         //!progress through the parts of a time step...simply an interface to the correct other procedure
         void performTimestep();
         //!progress through the parts of a time step on the CPU
@@ -59,11 +56,6 @@ class AVM2D : public Simple2DActiveCell
         void testAndPerformT1TransitionsCPU();
         //!Simple test for T1 transitions (edge length less than threshold) on the GPU...calls the following functions
         void testAndPerformT1TransitionsGPU();
-        //!test the edges for a T1 event, and grow the cell-vertex list if necessary
-        void testEdgesForT1GPU();
-        //!perform the edge flips found in the previous step
-        void flipEdgesGPU();
-
 
         //!Get the cell position from the vertices on the CPU
         void getCellPositionsCPU();
@@ -72,6 +64,14 @@ class AVM2D : public Simple2DActiveCell
     
     //protected functions
     protected:
+        //!test the edges for a T1 event, and grow the cell-vertex list if necessary
+        void testEdgesForT1GPU();
+        //!perform the edge flips found in the previous step
+        void flipEdgesGPU();
+
+        //!if the maximum number of vertices per cell increases, grow the cellVertices list
+        void growCellVerticesList(int newVertexMax);
+
         //utility functions
         void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
 

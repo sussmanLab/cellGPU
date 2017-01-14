@@ -90,7 +90,7 @@ int main(int argc, char*argv[])
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
-    spv.meanForce();
+    spv.reportForces(false);
     spv.repPerFrame = 0.0;
 
     if(initializeGPU)

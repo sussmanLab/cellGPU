@@ -40,9 +40,6 @@ class SPV2D : public DelaunayMD
         //!Declare which particles are to be excluded (exes[i]!=0)
         void setExclusions(vector<int> &exes);
 
-        //! call getDelSets for all particles
-        void allDelSets();
-
         //cell-dynamics related functions...these call functions in the next section
         //in general, these functions are the common calls, and test flags to know whether to call specific versions of specialty functions
         //!Perform a timestep for the system
@@ -53,7 +50,7 @@ class SPV2D : public DelaunayMD
         void performTimestepGPU();
 
         //!Compute force sets on the GPU
-        void ComputeForceSetsGPU();
+        virtual void ComputeForceSetsGPU();
         //!Add up the force sets to get the net force per particle on the GPU
         void SumForcesGPU();
 
@@ -72,7 +69,7 @@ class SPV2D : public DelaunayMD
         //!call gpu_compute_geometry kernel caller
         void computeGeometryGPU();
         //!call gpu_force_sets kernel caller
-        virtual void computeSPVForceSetsGPU();
+        void computeSPVForceSetsGPU();
         //! call gpu_sum_force_sets kernel caller
         void sumForceSets();
         //!call gpu_sum_force_sets_with_exclusions kernel caller
@@ -81,15 +78,14 @@ class SPV2D : public DelaunayMD
 
         //!Report various cell infor for testing and debugging
         void reportCellInfo();
-        //!Report information about net forces...for debugging
-        void reportForces();
-        //!Report the mean net force per particle...better be close to zero!
-        void meanForce();
-        //!Report the mean area per cell in the system
-        void meanArea();
+        //!Report information about net forces...
+        void reportForces(bool verbose);
 
     //protected functions
     protected: 
+        //! call getDelSets for all particles
+        void allDelSets();
+
         //! Maintain the delSets and delOther data structure for particle i
         //! If it returns false there was a problem and a global re-triangulation is triggered.
         bool getDelSets(int i);

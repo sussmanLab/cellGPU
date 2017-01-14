@@ -29,13 +29,14 @@ class Simple2DActiveCell : public Simple2DCell
         //!Set non-uniform cell motilites
         void setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs);
 
+        //!Set random cell directors (for active cell models)
+        void setCellDirectorsRandomly();
+
+    //protected functions
+    protected:
         //!initialize the cuda RNG
         void initializeCurandStates(int N, int gs, int i);
         
-        //!Set random cell directors (for active cell models)
-        void setCellDirectorsRandomly();
-    //protected functions
-    protected:
 
     //public member variables
     public:

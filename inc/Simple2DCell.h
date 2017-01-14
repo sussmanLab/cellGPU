@@ -21,6 +21,9 @@ class Simple2DCell
         //!Currently a vacant constructor
         Simple2DCell();
 
+        //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
+        virtual void setGPU(){GPUcompute = true;};
+
         //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
         virtual void setCPU(){GPUcompute = false;};
 
@@ -50,12 +53,6 @@ class Simple2DCell
         //!Number of vertices (i.e, degrees of freedom)
         int Nvertices;
 
-        //!the box defining the periodic domain
-        gpubox Box;
-
-        //!A flag that, when true, has performTimestep call the GPU routines
-        bool GPUcompute;
-
         //! Cell positions... not used for computation, but can track, e.g., MSD of cell centers
         GPUArray<Dscalar2> cellPositions;
         //! Position of the vertices
@@ -84,30 +81,14 @@ class Simple2DCell
         //!An array of integers labeling cell type...an easy way of determining if cells are different
         GPUArray<int> CellType;
 
-        /*!
-        For both AVM and SPV, it may help to save the relative position of the vertices around a
-        cell, either for easy force computation or in the geometry routine, etc.
-        voroCur.data[n_idx(nn,i)] gives the nth vertex, in CCW order, of cell i
-        */
-        //!3*Nvertices length array of the position of vertices around cells
-        GPUArray<Dscalar2> voroCur;
-        //!3*Nvertices length array of the position of the last and next vertices along the cell
-        //!Similarly, voroLastNext.data[n_idx(nn,i)] gives the previous and next vertex of the same
-        GPUArray<Dscalar4> voroLastNext;
-
-        /*!sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
-        */
-        //!A map between particle index and the spatially sorted version.
-        vector<int> itt;
-        //!A temporary structure that inverts itt
-        vector<int> tti;
-        //!To write consistent files...the particle that started the simulation as index i has current index tagToIdx[i]
-        vector<int> tagToIdx;
-        //!A temporary structure that inverse tagToIdx
-        vector<int> idxToTag;
-
     //protected member variables
     protected:
+        //!the box defining the periodic domain
+        gpubox Box;
+
+        //!A flag that, when true, has performTimestep call the GPU routines
+        bool GPUcompute;
+
         //! A flag that determines whether the GPU RNG is the same every time.
         bool Reproducible;
         //!the area modulus
@@ -142,6 +123,28 @@ class Simple2DCell
         Index2D n_idx;
         //!An upper bound for the maximum number of neighbors that any cell has
         int vertexMax;
+        /*!
+        For both AVM and SPV, it may help to save the relative position of the vertices around a
+        cell, either for easy force computation or in the geometry routine, etc.
+        voroCur.data[n_idx(nn,i)] gives the nth vertex, in CCW order, of cell i
+        */
+        //!3*Nvertices length array of the position of vertices around cells
+        GPUArray<Dscalar2> voroCur;
+        //!3*Nvertices length array of the position of the last and next vertices along the cell
+        //!Similarly, voroLastNext.data[n_idx(nn,i)] gives the previous and next vertex of the same
+        GPUArray<Dscalar4> voroLastNext;
+
+        /*!sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
+        */
+        //!A map between particle index and the spatially sorted version.
+        vector<int> itt;
+        //!A temporary structure that inverts itt
+        vector<int> tti;
+        //!To write consistent files...the particle that started the simulation as index i has current index tagToIdx[i]
+        vector<int> tagToIdx;
+        //!A temporary structure that inverse tagToIdx
+        vector<int> idxToTag;
+
 
     //reporting functions
     public:
