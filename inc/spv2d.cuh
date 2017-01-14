@@ -59,26 +59,6 @@ bool gpu_force_sets(
                     Index2D &n_idx,
                     gpubox &Box
                     );
-//!compute the contributions to the net force if, additionally, there are added tensions between cells of different types
-bool gpu_force_sets_tensions(
-                    Dscalar2 *d_points,
-                    Dscalar2 *d_AP,
-                    Dscalar2 *d_APpref,
-                    int2   *d_delSets,
-                    int    *d_detOther,
-                    Dscalar2 *d_vc,
-                    Dscalar4 *d_vln,
-                    Dscalar2 *d_forceSets,
-                    int2   *d_nidx,
-                    int    *d_cellTypes,
-                    Dscalar  KA,
-                    Dscalar  KP,
-                    Dscalar  gamma,
-                    int    NeighIdxNum,
-                    Index2D &n_idx,
-                    gpubox &Box
-                    );
-
 //!Add up the force contributions to get the net force on each particle
 bool gpu_sum_force_sets(
                     Dscalar2 *d_forceSets,

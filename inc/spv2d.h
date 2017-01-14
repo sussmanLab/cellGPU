@@ -28,22 +28,11 @@ class SPV2D : public DelaunayMD
         SPV2D(int n,bool reprod = false,bool initGPURNG=true);
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
         SPV2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true);
+        //!Blank constructor
+        SPV2D(){};
 
         //!Initialize DelaunayMD, set random orientations for cell directors, prepare data structures
         void Initialize(int n,bool initGPU = true);
-
-        //!Set the value of tension to apply between cells of different type (if desired)
-        void setTension(Dscalar g){gamma = g;};
-        //!Declare that tensions of magnitude gamma should be applied between cells of different type
-        void setUseTension(bool u){useTension = u;};
-        //!Set all cells to the same "type"
-        void setCellTypeUniform(int i);
-        //!Set cells to different "type"
-        void setCellType(vector<int> &types);
-        //!A specialty function for setting cell types within a central ellipse to type 0, and those outside to type 1
-        void setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio);
-        //!A specialty function for setting cells within a central strip (surface normal to x) to type 0, and others to type 1
-        void setCellTypeStrip(Dscalar frac);
 
         //!Set the time between spatial sorting operations.
         void setSortPeriod(int sp){sortPeriod = sp;};
@@ -72,7 +61,7 @@ class SPV2D : public DelaunayMD
         //!Compute cell geometry on the CPU
         void computeGeometryCPU();
         //!Compute the net force on particle i on the CPU
-        void computeSPVForceCPU(int i);
+        virtual void computeSPVForceCPU(int i);
         //!Calculates the displacements and cell director changes on the CPU. Uses a non-reproducible RNG
         void calculateDispCPU();
 
@@ -83,9 +72,7 @@ class SPV2D : public DelaunayMD
         //!call gpu_compute_geometry kernel caller
         void computeGeometryGPU();
         //!call gpu_force_sets kernel caller
-        void computeSPVForceSetsGPU();
-        //!call gpu_force_sets_tension kernel caller
-        void computeSPVForceSetsWithTensionsGPU();
+        virtual void computeSPVForceSetsGPU();
         //! call gpu_sum_force_sets kernel caller
         void sumForceSets();
         //!call gpu_sum_force_sets_with_exclusions kernel caller
@@ -114,17 +101,8 @@ class SPV2D : public DelaunayMD
 
     //protected member variables
     protected:
-        /*!The default is for randomness, but maintain the option for testing.
-        Must be known upon initialization!
-        */
-
-        //!A flag to notify whether cells of different type have added tension terms at their interface
-        bool useTension;
         //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
         bool particleExclusions;
-
-        //!The value of inter-cell surface tension to apply to cells of different type
-        Dscalar gamma;
 
         //!An array of displacements used only for the CPU-only branch of operating
         GPUArray<Dscalar2> displacements;

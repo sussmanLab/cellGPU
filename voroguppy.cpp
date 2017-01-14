@@ -5,7 +5,8 @@
 
 #define ENABLE_CUDA
 
-#include "spv2d.h"
+//#include "spv2d.h"
+#include "spv2dTension.h"
 #include "cu_functions.h"
 //#include "DatabaseSPV.h"
 
@@ -73,14 +74,16 @@ int main(int argc, char*argv[])
 
 
 
-    SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
+    SPV2DTension spv(numpts,1.0,p0,reproducible,initializeGPU);
     if (!initializeGPU)
         spv.setCPU(false);
 
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
-
+    spv.setTension(0.2);
+    spv.setUseTension(true);
+    spv.setCellTypeStrip(0.2);
     //printf("starting initialization\n");
     spv.setSortPeriod(initSteps/10);
     for(int ii = 0; ii < initSteps; ++ii)

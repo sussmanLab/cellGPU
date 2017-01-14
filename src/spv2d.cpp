@@ -11,7 +11,6 @@ SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
     Reproducible = reprod;
     Initialize(n,initGPURNG);
     setCellPreferencesUniform(1.0,4.0);
-    setCellTypeUniform(0);
     };
 
 //most common constructor...sets uniform cell preferences and types
@@ -21,15 +20,12 @@ SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     Reproducible = reprod;
     Initialize(n,initGPURNG);
     setCellPreferencesUniform(A0,P0);
-    setCellTypeUniform(0);
     };
 
 //take care of all class initialization functions
 void SPV2D::Initialize(int n,bool initGPU)
     {
     Ncells=n;
-    gamma = 0.;
-    useTension = false;
     particleExclusions=false;
     Timestep = 0;
     triangletiming = 0.0; forcetiming = 0.0;
@@ -154,82 +150,6 @@ bool SPV2D::getDelSets(int i)
     return true;
     };
 
-
-//set all cell types to i
-void SPV2D::setCellTypeUniform(int i)
-    {
-    CellType.resize(Ncells);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        h_ct.data[ii] = i;
-        };
-    };
-
-//pass a vector of integers and set the cell types to it
-void SPV2D::setCellType(vector<int> &types)
-    {
-    CellType.resize(Ncells);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        h_ct.data[ii] = types[ii];
-        };
-    };
-
-/*!
- * \param frac is fraction of area for the ellipse to take up
- * \param aspectRatio is (r_x/r_y)
- */
-void SPV2D::setCellTypeEllipse(Dscalar frac, Dscalar aspectRatio)
-    {
-    Dscalar x11,x12,x21,x22;
-    Box.getBoxDims(x11,x12,x21,x22);
-    Dscalar xc = x11*0.5;
-    Dscalar yc = x22*0.5;
-
-    Dscalar ry = sqrt(x11*x22*frac/(3.14159*aspectRatio));
-    Dscalar rx = aspectRatio*ry;
-
-    CellType.resize(Ncells);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
-
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Dscalar px = h_p.data[ii].x;
-        Dscalar py = h_p.data[ii].y;
-        Dscalar test = (px-xc)*(px-xc)/(rx*rx) + (py-yc)*(py-yc)/(ry*ry);
-        if (test <=1.0)
-            h_ct.data[ii] = 0;
-        else
-            h_ct.data[ii] = 1;
-        };
-    };
-
-/*!
- * \param frac is fraction of area for the strip to occupy
- */
-void SPV2D::setCellTypeStrip(Dscalar frac)
-    {
-    Dscalar x11,x12,x21,x22;
-    Box.getBoxDims(x11,x12,x21,x22);
-    Dscalar xmin = x11*(0.5-frac*0.5);
-    Dscalar xmax = x11*(0.5+frac*0.5);
-
-    CellType.resize(Ncells);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
-
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Dscalar px = h_p.data[ii].x;
-        if (px > xmin && px < xmax)
-            h_ct.data[ii] = 0;
-        else
-            h_ct.data[ii] = 1;
-        };
-    };
 
 /*!
 \param exes a list of per-particle indications of whether a particle should be excluded (exes[i] !=0) or not/
@@ -370,10 +290,7 @@ a cuda call
 */
 void SPV2D::ComputeForceSetsGPU()
     {
-    if(!useTension)
         computeSPVForceSetsGPU();
-    else
-        computeSPVForceSetsWithTensionsGPU();
     };
 
 /*!
@@ -540,42 +457,6 @@ void SPV2D::computeSPVForceSetsGPU()
                     NeighIdxNum,n_idx,Box);
     };
 
-/*!
-Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
-vertices, assuming that there are additional tension terms added between cells of different indices
-*/
-void SPV2D::computeSPVForceSetsWithTensionsGPU()
-    {
-    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
-    ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
-    ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
-    ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
-    ArrayHandle<int> d_ct(CellType,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::read);
-
-    Dscalar KA = 1.0;
-    Dscalar KP = 1.0;
-    gpu_force_sets_tensions(
-                    d_p.data,
-                    d_AP.data,
-                    d_APpref.data,
-                    d_delSets.data,
-                    d_delOther.data,
-                    d_vc.data,
-                    d_vln.data,
-                    d_forceSets.data,
-                    d_nidx.data,
-                    d_ct.data,
-                    KA,
-                    KP,
-                    gamma,
-                    NeighIdxNum,n_idx,Box);
-    };
-
 //compute cell area and perimeter on the CPU
 void SPV2D::computeGeometryCPU()
     {
@@ -638,8 +519,6 @@ void SPV2D::computeGeometryCPU()
 
 /*!
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
-This function can handle the case of tensions between cells of different type (if useTension flag is true) and
-particle exclusions (if particleExclusions flag is true)
 */
 void SPV2D::computeSPVForceCPU(int i)
     {
@@ -738,9 +617,7 @@ void SPV2D::computeSPVForceCPU(int i)
         int otherNeigh = ns[other_idx];
 
 
-        Dscalar2 dAidv,dPidv,dTidv;
-        dTidv.x = 0.0;
-        dTidv.y = 0.0;
+        Dscalar2 dAidv,dPidv;
         dAidv.x = 0.5*(vlast.y-vnext.y);
         dAidv.y = 0.5*(vnext.x-vlast.x);
 
@@ -759,21 +636,6 @@ void SPV2D::computeSPVForceCPU(int i)
             dlnorm = Pthreshold;
         dPidv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
-
-        //individual line tensions
-        if(useTension)
-            {
-            if(h_ct.data[i] != h_ct.data[baseNeigh])
-                {
-                dTidv.x -= dnext.x/dnnorm;
-                dTidv.y -= dnext.y/dnnorm;
-                };
-            if(h_ct.data[i] != h_ct.data[otherNeigh])
-                {
-                dTidv.x += dlast.x/dlnorm;
-                dTidv.y += dlast.y/dlnorm;
-                };
-            };
 
         //
         //now let's compute the other terms...first we need to find the third voronoi
@@ -807,9 +669,7 @@ void SPV2D::computeSPVForceCPU(int i)
         Dscalar Ajdiff = KA*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].x);
         Dscalar Pjdiff = KP*(h_AP.data[otherNeigh].y - h_APpref.data[otherNeigh].y);
 
-        Dscalar2 dAkdv,dPkdv,dTkdv;
-        dTkdv.x = 0.0;
-        dTkdv.y = 0.0;
+        Dscalar2 dAkdv,dPkdv;
         dAkdv.x = 0.5*(vnext.y-vother.y);
         dAkdv.y = 0.5*(vother.x-vnext.x);
 
@@ -827,23 +687,7 @@ void SPV2D::computeSPVForceCPU(int i)
         dPkdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPkdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-        if(useTension)
-            {
-            if(h_ct.data[i]!=h_ct.data[baseNeigh])
-                {
-                dTkdv.x +=dlast.x/dlnorm;
-                dTkdv.y +=dlast.y/dlnorm;
-                };
-            if(h_ct.data[otherNeigh]!=h_ct.data[baseNeigh])
-                {
-                dTkdv.x -=dnext.x/dnnorm;
-                dTkdv.y -=dnext.y/dnnorm;
-                };
-            };
-
-        Dscalar2 dAjdv,dPjdv,dTjdv;
-        dTjdv.x = 0.0;
-        dTjdv.y = 0.0;
+        Dscalar2 dAjdv,dPjdv;
         dAjdv.x = 0.5*(vother.y-vlast.y);
         dAjdv.y = 0.5*(vlast.x-vother.x);
 
@@ -861,28 +705,14 @@ void SPV2D::computeSPVForceCPU(int i)
         dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-        if(useTension)
-            {
-            if(h_ct.data[i]!=h_ct.data[otherNeigh])
-                {
-                dTjdv.x -=dnext.x/dnnorm;
-                dTjdv.y -=dnext.y/dnnorm;
-                };
-            if(h_ct.data[otherNeigh]!=h_ct.data[baseNeigh])
-                {
-                dTjdv.x +=dlast.x/dlnorm;
-                dTjdv.y +=dlast.y/dlnorm;
-                };
-            };
-
         Dscalar2 dEdv;
 
-        dEdv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x + gamma*dTidv.x;
-        dEdv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y + gamma*dTidv.y;
-        dEdv.x += 2.0*Akdiff*dAkdv.x + 2.0*Pkdiff*dPkdv.x + gamma*dTkdv.x;
-        dEdv.y += 2.0*Akdiff*dAkdv.y + 2.0*Pkdiff*dPkdv.y + gamma*dTkdv.y;
-        dEdv.x += 2.0*Ajdiff*dAjdv.x + 2.0*Pjdiff*dPjdv.x + gamma*dTjdv.x;
-        dEdv.y += 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y + gamma*dTjdv.y;
+        dEdv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x;
+        dEdv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y;
+        dEdv.x += 2.0*Akdiff*dAkdv.x + 2.0*Pkdiff*dPkdv.x;
+        dEdv.y += 2.0*Akdiff*dAkdv.y + 2.0*Pkdiff*dPkdv.y;
+        dEdv.x += 2.0*Ajdiff*dAjdv.x + 2.0*Pjdiff*dPjdv.x;
+        dEdv.y += 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y;
 
         Dscalar2 temp = dEdv*dhdri[nn];
         forceSum.x += temp.x;
@@ -962,6 +792,6 @@ void SPV2D::meanForce()
 //a utility function...output some information assuming the system is uniform
 void SPV2D::reportCellInfo()
     {
-    printf("Ncells=%i\tv0=%f\tDr=%f\tgamma=%f\n",Ncells,v0,Dr,gamma);
+    printf("Ncells=%i\tv0=%f\tDr=%f\n",Ncells,v0,Dr);
     };
 
