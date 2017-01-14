@@ -89,7 +89,7 @@ code: paulbourke.net/papers/triangulate (Pan-Pacific Computer Conference, Beijin
 
 ## Directory structure
 
-In this repository follows a simple structure. The main executables, activeVertex.cpp avoroguppy.cpp
+This repository follows a simple structure. The main executables, activeVertex.cpp and voronoi.cpp
 are in the base directory and can be used to reproduce timing information. Header files are in inc/,
 source files are in src/, and object files get put in obj/ and obj/cuobj (which are .gitignored).
 A super-explicit makefile is used.
