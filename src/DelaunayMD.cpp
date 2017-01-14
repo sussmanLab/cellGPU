@@ -4,41 +4,42 @@
 #include "DelaunayMD.h"
 #include "DelaunayMD.cuh"
 
+/*!
+A simple constructor that sets many of the class member variables to zero
+*/
+DelaunayMD::DelaunayMD() :
+    cellsize(1.25), timestep(0),repPerFrame(0.0),skippedFrames(0),
+    neighMax(0),neighMaxChange(false),GlobalFixes(0)
+    {
+    //set cellsize to about unity...magic number should be of order 1
+    //when the box area is of order N (i.e. on average one particle per bin)
+
+    };
+
 //a function that takes care of the initialization of the class.
 void DelaunayMD::initializeDelMD(int n)
     {
-    timestep = 0;
     GPUcompute = true;
-    //assorted
-    neighMax = 0;
-    neighMaxChange = false;
-    repPerFrame = 0.0;
-    skippedFrames = 0;
-    GlobalFixes = 0;
-    //set cellsize to about unity...magic number should be of order 1
-    //when the box area is of order N (i.e. on average one particle per bin)
-    cellsize = 1.25;
 
     //set particle number and box
-    N = n;
-    Dscalar boxsize = sqrt((Dscalar)N);
+    Ncells = n;
+    Dscalar boxsize = sqrt((Dscalar)Ncells);
     Box.setSquare(boxsize,boxsize);
 
     //set circumcenter array size
-    circumcenters.resize(2*(N+10));
-    NeighIdxs.resize(6*(N+10));
+    circumcenters.resize(2*(Ncells+10));
+    NeighIdxs.resize(6*(Ncells+10));
 
-    points.resize(N);
-    pts.resize(N);
-    repair.resize(N);
-    randomizePositions(boxsize,boxsize);
-
+    cellPositions.resize(Ncells);
+    repair.resize(Ncells);
+    
+    setCellPositionsRandomly();
     //initialize spatial sorting, but do not sort by default
-    itt.resize(N);
-    tti.resize(N);
-    idxToTag.resize(N);
-    tagToIdx.resize(N);
-    for (int ii = 0; ii < N; ++ii)
+    itt.resize(Ncells);
+    tti.resize(Ncells);
+    idxToTag.resize(Ncells);
+    tagToIdx.resize(Ncells);
+    for (int ii = 0; ii < Ncells; ++ii)
         {
         itt[ii]=ii;
         tti[ii]=ii;
@@ -47,7 +48,7 @@ void DelaunayMD::initializeDelMD(int n)
         };
 
     //cell list initialization
-    celllist.setNp(N);
+    celllist.setNp(Ncells);
     celllist.setBox(Box);
     celllist.setGridSize(cellsize);
 
@@ -58,56 +59,8 @@ void DelaunayMD::initializeDelMD(int n)
 
     //make a full triangulation
     completeRetriangulationPerformed = 1;
-    neigh_num.resize(N);
+    cellNeighborNum.resize(Ncells);
     globalTriangulationCGAL();
-    };
-
-//just randomly initialize points by uniformly sampling between (0,0) and (boxx,boxy)
-void DelaunayMD::randomizePositions(Dscalar boxx, Dscalar boxy)
-    {
-    int randmax = 100000000;
-    ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::overwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        Dscalar x =EPSILON+boxx/(Dscalar)(randmax+1)* (Dscalar)(rand()%randmax);
-        Dscalar y =EPSILON+boxy/(Dscalar)(randmax+1)* (Dscalar)(rand()%randmax);
-        h_points.data[ii].x=x;
-        h_points.data[ii].y=y;
-        };
-    };
-
-//Always called after spatial sorting is performed, reIndexArrays shuffles the order of an array based on the spatial sort order
-void DelaunayMD::reIndexArray(GPUArray<Dscalar2> &array)
-    {
-    GPUArray<Dscalar2> TEMP = array;
-    ArrayHandle<Dscalar2> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> ar(array,access_location::host,access_mode::readwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        ar.data[ii] = temp.data[itt[ii]];
-        };
-    };
-
-void DelaunayMD::reIndexArray(GPUArray<Dscalar> &array)
-    {
-    GPUArray<Dscalar> TEMP = array;
-    ArrayHandle<Dscalar> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> ar(array,access_location::host,access_mode::readwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        ar.data[ii] = temp.data[itt[ii]];
-        };
-    };
-
-void DelaunayMD::reIndexArray(GPUArray<int> &array)
-    {
-    GPUArray<int> TEMP = array;
-    ArrayHandle<int> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<int> ar(array,access_location::host,access_mode::readwrite);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        ar.data[ii] = temp.data[itt[ii]];
-        };
     };
 
 //take the current location of the points and sort them according the their order along a 2D Hilbert curve
@@ -117,11 +70,11 @@ void DelaunayMD::spatiallySortPoints()
     //idxToTag and tagToIdx relate the current indexes to the original ones
     HilbertSorter hs(Box);
 
-    vector<pair<int,int> > idxSorter(N);
+    vector<pair<int,int> > idxSorter(Ncells);
 
     //sort points by Hilbert Curve location
-    ArrayHandle<Dscalar2> h_p(points,access_location::host, access_mode::readwrite);
-    for (int ii = 0; ii < N; ++ii)
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host, access_mode::readwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
         {
         idxSorter[ii].first=hs.getIdx(h_p.data[ii]);
         idxSorter[ii].second = ii;
@@ -129,7 +82,7 @@ void DelaunayMD::spatiallySortPoints()
     sort(idxSorter.begin(),idxSorter.end());
 
     //update tti and itt
-    for (int ii = 0; ii < N; ++ii)
+    for (int ii = 0; ii < Ncells; ++ii)
         {
         int newidx = idxSorter[ii].second;
         itt[ii] = newidx;
@@ -138,25 +91,20 @@ void DelaunayMD::spatiallySortPoints()
 
     //update points, idxToTag, and tagToIdx
     vector<int> tempi = idxToTag;
-    for (int ii = 0; ii < N; ++ii)
+    for (int ii = 0; ii < Ncells; ++ii)
         {
         idxToTag[ii] = tempi[itt[ii]];
         tagToIdx[tempi[itt[ii]]] = ii;
         };
-    reIndexArray(points);
+    reIndexArray(cellPositions);
 
     };
 
 //The GPU moves the location of points in the GPU memory... this gets a local copy that can be used by the DelaunayLoc class
 void DelaunayMD::resetDelLocPoints()
     {
-    ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
-    for (int ii = 0; ii < N; ++ii)
-        {
-        pts[ii].x=h_points.data[ii].x;
-        pts[ii].y=h_points.data[ii].y;
-        };
-    delLoc.setPoints(pts);
+    ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
+    delLoc.setPoints(h_points,Ncells);
     delLoc.initialize(cellsize);
     };
 
@@ -166,7 +114,7 @@ void DelaunayMD::updateCellList()
 
     if(GPUcompute)
         {
-        celllist.computeGPU(points);
+        celllist.computeGPU(cellPositions);
         cudaError_t code = cudaGetLastError();
         if(code!=cudaSuccess)
             {
@@ -176,9 +124,9 @@ void DelaunayMD::updateCellList()
         }
     else
         {
-        vector<Dscalar> psnew(2*N);
-        ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
-        for (int ii = 0; ii < N; ++ii)
+        vector<Dscalar> psnew(2*Ncells);
+        ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
+        for (int ii = 0; ii < Ncells; ++ii)
             {
             psnew[2*ii] =  h_points.data[ii].x;
             psnew[2*ii+1]= h_points.data[ii].y;
@@ -193,9 +141,9 @@ void DelaunayMD::updateCellList()
 //take a vector of displacements, modify the position of the particles, and put them back in the box...all on the CPU
 void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
     {
-    ArrayHandle<Dscalar2> h_p(points,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_d(displacements,access_location::host,access_mode::read);
-    for (int idx = 0; idx < N; ++idx)
+    for (int idx = 0; idx < Ncells; ++idx)
         {
         h_p.data[idx].x += h_d.data[idx].x;
         h_p.data[idx].y += h_d.data[idx].y;
@@ -206,9 +154,9 @@ void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
 //take a vector of displacements, modify the position of the particles, and put them back in the box...GPU
 void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
     {
-    ArrayHandle<Dscalar2> d_p(points,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::readwrite);
-    gpu_move_particles(d_p.data,d_d.data,N,Box);
+    gpu_move_particles(d_p.data,d_d.data,Ncells,Box);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         {
@@ -224,12 +172,12 @@ void DelaunayMD::fullTriangulation()
     cout << "Resetting complete triangulation" << endl;
     //get neighbors of each cell in CW order
 
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
-    vector< vector<int> > allneighs(N);
+    vector< vector<int> > allneighs(Ncells);
     int totaln = 0;
     int nmax = 0;
-    for(int nn = 0; nn < N; ++nn)
+    for(int nn = 0; nn < Ncells; ++nn)
         {
         vector<int> neighTemp;
         delLoc.getNeighbors(nn,neighTemp);
@@ -243,12 +191,12 @@ void DelaunayMD::fullTriangulation()
         neighMax = nmax + 2;
     else
         neighMax = nmax + 1;
-    neighs.resize(neighMax*N);
+    cellNeighbors.resize(neighMax*Ncells);
 
     //store data in gpuarray
-    n_idx = Index2D(neighMax,N);
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
-    for (int nn = 0; nn < N; ++nn)
+    n_idx = Index2D(neighMax,Ncells);
+    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::overwrite);
+    for (int nn = 0; nn < Ncells; ++nn)
         {
         int imax = neighnum.data[nn];
         for (int ii = 0; ii < imax; ++ii)
@@ -258,7 +206,7 @@ void DelaunayMD::fullTriangulation()
             };
         };
 
-    if(totaln != 6*N)
+    if(totaln != 6*Ncells)
         {
         printf("CPU neighbor creation failed to match topology! NN = %i \n",totaln);
         char fn[256];
@@ -282,9 +230,9 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     GlobalFixes +=1;
     completeRetriangulationPerformed = 1;
     DelaunayCGAL dcgal;
-    ArrayHandle<Dscalar2> h_points(points,access_location::host, access_mode::read);
-    vector<pair<Point,int> > Psnew(N);
-    for (int ii = 0; ii < N; ++ii)
+    ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
+    vector<pair<Point,int> > Psnew(Ncells);
+    for (int ii = 0; ii < Ncells; ++ii)
         {
         Psnew[ii]=make_pair(Point(h_points.data[ii].x,h_points.data[ii].y),ii);
         };
@@ -292,13 +240,13 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     Box.getBoxDims(b1,b2,b3,b4);
     dcgal.PeriodicTriangulation(Psnew,b1);
 
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
 
     int oldNmax = neighMax;
     int totaln = 0;
     int nmax = 0;
-    for(int nn = 0; nn < N; ++nn)
+    for(int nn = 0; nn < Ncells; ++nn)
         {
         neighnum.data[nn] = dcgal.allneighs[nn].size();
         totaln += dcgal.allneighs[nn].size();
@@ -310,19 +258,19 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
     else
         neighMax = nmax+1;
 
-    n_idx = Index2D(neighMax,N);
+    n_idx = Index2D(neighMax,Ncells);
     if(neighMax != oldNmax)
         {
-        neighs.resize(neighMax*N);
+        cellNeighbors.resize(neighMax*Ncells);
         neighMaxChange = true;
         };
     updateNeighIdxs();
 
     //store data in gpuarrays
     {
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::overwrite);
 
-    for (int nn = 0; nn < N; ++nn)
+    for (int nn = 0; nn < Ncells; ++nn)
         {
         int imax = neighnum.data[nn];
         for (int ii = 0; ii < imax; ++ii)
@@ -338,7 +286,7 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
 
     getCircumcenterIndices(true);
 
-    if(totaln != 6*N)
+    if(totaln != 6*Ncells)
         {
         printf("global CPU neighbor failed! NN = %i\n",totaln);
         char fn[256];
@@ -352,10 +300,10 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
 //this function updates the NeighIdx data structure, which helps cut down on the number of inactive threads in the force set computation function.
 void DelaunayMD::updateNeighIdxs()
     {
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
+    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int2> h_nidx(NeighIdxs,access_location::host,access_mode::overwrite);
     int idx = 0;
-    for (int ii = 0; ii < N; ++ii)
+    for (int ii = 0; ii < Ncells; ++ii)
         {
         int nmax = neighnum.data[ii];
         for (int nn = 0; nn < nmax; ++nn)
@@ -375,14 +323,14 @@ allows for fast testing of what points need to be retriangulated.
 */
 void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
     {
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
+    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::read);
     ArrayHandle<int3> h_ccs(circumcenters,access_location::host,access_mode::overwrite);
 
     int totaln = 0;
     int cidx = 0;
     bool fail = false;
-    for (int nn = 0; nn < N; ++nn)
+    for (int nn = 0; nn < Ncells; ++nn)
         {
         int nmax = neighnum.data[nn];
         totaln+=nmax;
@@ -404,15 +352,15 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
             };
         };
     NumCircumCenters = cidx;
-    if((totaln != 6*N || cidx != 2*N) && !secondtime)
+    if((totaln != 6*Ncells || cidx != 2*Ncells) && !secondtime)
         globalTriangulationCGAL();
-    if((totaln != 6*N || cidx != 2*N) && secondtime)
+    if((totaln != 6*Ncells || cidx != 2*Ncells) && secondtime)
         {
         char fn[256];
         sprintf(fn,"failed.txt");
         ofstream output(fn);
         writeTriangulation(output);
-        printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*N,totaln,6*N);
+        printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*Ncells,totaln,6*Ncells);
         globalTriangulationCGAL();
         throw std::exception();
         };
@@ -425,10 +373,10 @@ and then update the relevant data structures.
 void DelaunayMD::repairTriangulation(vector<int> &fixlist)
     {
     int fixes = fixlist.size();
-    repPerFrame += ((Dscalar) fixes/(Dscalar)N);
+    repPerFrame += ((Dscalar) fixes/(Dscalar)Ncells);
     resetDelLocPoints();
 
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::readwrite);
 
     //First, retriangulate the target points, and check if the neighbor list needs to be reset
     //the structure you want is vector<vector<int> > allneighs(fixes), but below a flattened version is implemented
@@ -480,7 +428,7 @@ void DelaunayMD::repairTriangulation(vector<int> &fixlist)
         };
 
     //now, edit the right entries of the neighborlist and neighbor size list
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::readwrite);
     for (int nn = 0; nn < fixes; ++nn)
         {
         int pidx = fixlist[nn];
@@ -513,7 +461,7 @@ void DelaunayMD::testTriangulation()
     updateCellList();
 
     //access data handles
-    ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_pt(cellPositions,access_location::device,access_mode::read);
 
     ArrayHandle<unsigned int> d_cell_sizes(celllist.cell_sizes,access_location::device,access_mode::read);
     ArrayHandle<int> d_c_idx(celllist.idxs,access_location::device,access_mode::read);
@@ -521,14 +469,14 @@ void DelaunayMD::testTriangulation()
     ArrayHandle<int> d_repair(repair,access_location::device,access_mode::readwrite);
     ArrayHandle<int3> d_ccs(circumcenters,access_location::device,access_mode::read);
 
-    int NumCircumCenters = N*2;
+    int NumCircumCenters = Ncells*2;
     gpu_test_circumcenters(d_repair.data,
                            d_ccs.data,
                            NumCircumCenters,
                            d_pt.data,
                            d_cell_sizes.data,
                            d_c_idx.data,
-                           N,
+                           Ncells,
                            celllist.getXsize(),
                            celllist.getYsize(),
                            celllist.getBoxsize(),
@@ -558,10 +506,10 @@ void DelaunayMD::testTriangulationCPU()
         resetDelLocPoints();
 
         ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
-        ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
-        ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::readwrite);
         anyCircumcenterTestFailed = 0;
-        for (int nn = 0; nn < N; ++nn)
+        for (int nn = 0; nn < Ncells; ++nn)
             {
             h_repair.data[nn] = 0;
             vector<int> neighbors;
@@ -613,9 +561,9 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
             };
 
         //add the index and all of its' neighbors
-        ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::readwrite);
-        ArrayHandle<int> ns(neighs,access_location::host,access_mode::readwrite);
-        for (int nn = 0; nn < N; ++nn)
+        ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::readwrite);
+        for (int nn = 0; nn < Ncells; ++nn)
             {
             if (h_repair.data[nn] == 1)
                 {
@@ -633,7 +581,7 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
 
         if (verb) printf("repairing triangulation via %lu\n",NeedsFixing.size());
 
-        if (NeedsFixing.size() > (N/6))
+        if (NeedsFixing.size() > (Ncells/6))
             {
             completeRetriangulationPerformed = 1;
             globalTriangulationCGAL();
@@ -659,7 +607,7 @@ void DelaunayMD::readTriangulation(ifstream &infile)
     cout << "Reading in " << nn << "points" << endl;
     int idx = 0;
     int ii = 0;
-    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::overwrite);
     while(getline(infile,line))
         {
         Dscalar val = stof(line);
@@ -681,21 +629,21 @@ void DelaunayMD::readTriangulation(ifstream &infile)
 //similarly, write a text file with particle positions. This is often called when an exception is thrown
 void DelaunayMD::writeTriangulation(ofstream &outfile)
     {
-    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
-    outfile << N <<endl;
-    for (int ii = 0; ii < N ; ++ii)
+    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
+    outfile << Ncells <<endl;
+    for (int ii = 0; ii < Ncells ; ++ii)
         outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
     };
 
 //"repel" calculates the displacement due to a harmonic soft repulsion between neighbors. Mostly for testing purposes, but it could be expanded to full functionality later
 void DelaunayMD::repel(GPUArray<Dscalar2> &disp,Dscalar eps)
     {
-    ArrayHandle<Dscalar2> p(points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> dd(disp,access_location::host,access_mode::overwrite);
-    ArrayHandle<int> neighnum(neigh_num,access_location::host,access_mode::read);
-    ArrayHandle<int> ns(neighs,access_location::host,access_mode::read);
+    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::read);
     Dscalar2 ftot;ftot.x=0.0;ftot.y=0.0;
-    for (int ii = 0; ii < N; ++ii)
+    for (int ii = 0; ii < Ncells; ++ii)
         {
         Dscalar2 dtot;dtot.x=0.0;dtot.y=0.0;
         Dscalar2 posi = p.data[ii];

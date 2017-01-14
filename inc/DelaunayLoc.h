@@ -1,4 +1,3 @@
-//DelaunayLoc.h
 #ifndef DELAUNAYLOC_H
 #define DELAUNAYLOC_H
 
@@ -47,6 +46,7 @@ class DelaunayLoc
         //!constructor via a vector of scalars, {x1,y1,x2,y2,...}
         DelaunayLoc(std::vector<Dscalar> &points,gpubox &bx){setPoints(points);setBox(bx);};
 
+        void setPoints(ArrayHandle<Dscalar2> &points, int N); //!<Set points by passing an ArrayHandle
         void setPoints(GPUArray<Dscalar2> &points); //!<Set points via a GPUarray of Dscalar2's
         void setPoints(std::vector<Dscalar2> &points); //!<Set points via a vector of Dscalar2's
         void setPoints(std::vector<Dscalar> &points);   //!<Set the points via a vector of Dscalar's

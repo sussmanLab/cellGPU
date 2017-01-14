@@ -1,11 +1,8 @@
-#ifndef __DMD_CU__
-#define __DMD_CU__
-
 #define NVCC
 #define ENABLE_CUDA
 
 #include <cuda_runtime.h>
-#include "gpucell.cuh"
+#include "cellListGPU.cuh"
 #include "indexer.h"
 #include "gpubox.h"
 #include "cu_functions.h"
@@ -13,7 +10,16 @@
 #include <stdio.h>
 #include "DelaunayMD.cuh"
 
+/*!
+    \addtogroup DelaunayMDKernels
+    @{
+*/
 
+/*!
+  Independently check every triangle in the Delaunay mesh to see if the cirumcircle defined by the
+  vertices of that triangle is empty. Use the cell list to ensure that only checks of nearby
+  particles are required.
+  */
 __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                                               const int3* __restrict__ d_circumcircles,
                                               const Dscalar2* __restrict__ d_pt,
@@ -29,7 +35,7 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                                               int *anyFail
                                               )
     {
-    // read in the particle that belongs to this thread
+    // read in the index that belongs to this thread
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= Nccs)
         return;
@@ -101,9 +107,10 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     return;
     };
 
-
-
-
+/*!
+  A simple routine that takes in a pointer array of points, an array of displacements,
+  adds the displacements to the points, and puts the points back in the primary unit cell.
+*/
 __global__ void gpu_move_particles_kernel(Dscalar2 *d_points,
                                           Dscalar2 *d_disp,
                                           int N,
@@ -137,7 +144,6 @@ bool gpu_test_circumcenters(int *d_repair,
                             Index2D &cli,
                             int &fail)
     {
-    cudaError_t code;
     unsigned int block_size = 128;
     if (Nccs < 128) block_size = 32;
     unsigned int nblocks  = Nccs/block_size + 1;
@@ -167,11 +173,8 @@ bool gpu_test_circumcenters(int *d_repair,
     cudaMemcpy(&fail,anyFail,sizeof(int),cudaMemcpyDeviceToHost);
     cudaFree(anyFail);
 
-
     //cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("testCircumcenters GPUassert: %s \n", cudaGetErrorString(code));
+    HANDLE_ERROR(cudaGetLastError());
 
     return cudaSuccess;
     };
@@ -185,7 +188,6 @@ bool gpu_move_particles(Dscalar2 *d_points,
                         gpubox &Box
                         )
     {
-    cudaError_t code;
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
@@ -197,11 +199,9 @@ bool gpu_move_particles(Dscalar2 *d_points,
                                                 Box
                                                 );
     //cudaThreadSynchronize();
-    code = cudaGetLastError();
-    if(code!=cudaSuccess)
-        printf("moveParticle GPUassert: %s \n", cudaGetErrorString(code));
+    HANDLE_ERROR(cudaGetLastError());
 
     return cudaSuccess;
     };
 
-#endif
+/** @} */ //end of group declaration

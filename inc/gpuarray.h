@@ -1,3 +1,6 @@
+#ifndef GPUARRAY_H
+#define GPUARRAY_H
+
 /*
 This file is based on part of the HOOMD-blue project, released under the BSD 3-Clause License:
 
@@ -12,15 +15,26 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND/OR ANY WARRANTIES THAT THIS SOFTWARE IS FREE OF INFRINGEMENT ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-//As you might suspect from the above, the classes and structures in this file are modifications of the GPUArray.h file from the HOOMD-Blue package. Credit to Joshua A. Anderson
+//As you might suspect from the above, the classes and structures in this file are modifications of the GPUArray.h file from the HOOMD-Blue package.
+//Credit to Joshua A. Anderson
 
-#ifndef GPUARRAY_H
-#define GPUARRAY_H
+/*!
+This file defines two helpful classes for working with data on both th CPU and GPU.
+GPUArray<T> is a templated array that carries around with it some data, as well as
+information about where that data was last modified and/or accessed. It can be
+dynamically resized, but does not have vector methods like push_back.
 
+GPUArray<T> objects are manipulated by ArrayHandle<T> objects. So, if you have declared a
+GPUArray<int> cellIndex(numberOfCells)
+somewhere, you can access that data by on the spot creating an ArrayHandle:
+ArrayHandle<int> h_ci(cellPositions,access_location::host, access_mode::overwrite);
+The data can then be accessed like
+for (int c = 0; c < numberOfCells;++c)
+    h_ci.data[c] = .....
+*/
 // for vector types
 #include "std_include.h"
 #include <cuda_runtime.h>
-#include <cuda.h>
 
 
 //!A structure for declaring where we want to access data
@@ -77,7 +91,12 @@ template<class T> class ArrayHandle
                            const access_mode::Enum mode = access_mode::readwrite);
         inline ~ArrayHandle();
 
-        T* const data;          //!< a pointer to the GPUArray's data
+        T* data;          //!< a pointer to the GPUArray's data
+
+        void operator=(const ArrayHandle& rhs)
+                {
+                data=rhs.data;
+                };
 
     private:
         const GPUArray<T>& gpu_array; //!< The GPUarray that the Handle was initialized with
@@ -255,6 +274,7 @@ template<class T> void GPUArray<T>::swap(GPUArray& from)
     std::swap(Num_elements, from.Num_elements);
     std::swap(Acquired, from.Acquired);
     std::swap(Data_location, from.Data_location);
+    std::swap(RegisterArray,from.RegisterArray);
 #ifdef ENABLE_CUDA
     std::swap(d_data, from.d_data);
 #endif

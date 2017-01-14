@@ -1,4 +1,3 @@
-//Delaunay1.h
 #ifndef DELAUNAY1_H
 #define DELAUNAY1_H
 

@@ -1,14 +1,13 @@
 #ifndef DELAUNAYCGAL_H
 #define DELAUNAYCGAL_H
-//uses CGAL to compute periodic or non-periodic delaunay triangulations
-
 
 #include "std_include.h"
+#include "vector_types.h"
+
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Periodic_2_triangulation_filtered_traits_2.h>
 #include <CGAL/Periodic_2_Delaunay_triangulation_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
-
 #include <CGAL/Triangulation_2.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
@@ -39,14 +38,16 @@ typedef PDT::Vertex_handle     Vertex_handle;
 typedef PDT::Locate_type       Locate_type;
 typedef PDT::Face_handle       Face_handle;
 typedef PDT::Vertex_circulator Vertex_circulator;
-/*!
-A class for interfacing with the CGAL library. In particular, this lets the user access the
-functionality of the 2D periodic and non-periodic schemes for performing a Delaunay Triangulation.
+/*! \file DelaunayCGAL.h
+A class for interfacing with the CGAL library.
+In particular, this lets the user access the functionality of the 2D periodic and non-periodic
+schemes for performing a Delaunay Triangulation.
+A public member variable maintains a convenient data structure for keeping track of the most recently
+performed complete triangulation of a periodic point set.
  */
 class DelaunayCGAL
     {
-    private:
-        int N;
+    protected:
 
     public:
         vector< vector<int> > allneighs; //!<The list of neighbors of every point in the periodic triangulation

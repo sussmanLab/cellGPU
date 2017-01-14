@@ -1,6 +1,14 @@
 #ifndef STDINCLUDE
 #define STDINCLUDE
 
+/*!
+\file std_include.h
+
+a file to be included all the time... carries with it things DMS often uses
+Crucially, it also defines Dscalars as either floats or doubles, depending on
+how the program is compiled
+*/
+
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
@@ -15,7 +23,7 @@
 #include <ctype.h>
 #include <random>
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
 #include <iostream>
 #include <iomanip>
@@ -30,6 +38,7 @@
 using namespace std;
 
 
+#include <cuda_runtime.h>
 #include "vector_types.h"
 #include "vector_functions.h"
 
@@ -38,12 +47,15 @@ using namespace std;
 
 //decide whether to compute everything in floating point or double precision
 #ifndef SCALARFLOAT
-//doubles
+//double variables types
 #define Dscalar double
 #define Dscalar2 double2
 #define Dscalar4 double4
+//the netcdf variable type
 #define ncDscalar ncDouble
+//the cuda RNG
 #define cur_norm curand_normal_double
+//trig and special funtions
 #define Cos cos
 #define Sin sin
 #define Floor floor
@@ -101,6 +113,17 @@ HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
     return ans;
     }
 
+//handle errors in kernel calls
+static void HandleError(cudaError_t err, const char *file, int line)
+    {
+    if (err != cudaSuccess)
+        {
+        printf("\nError: %s in file %s at line %d\n",cudaGetErrorString(err),file,line);
+        throw std::exception();
+        }
+    }
+
+#define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
 
 
 #undef HOSTDEVICE

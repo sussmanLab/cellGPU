@@ -2,17 +2,23 @@
 #define GPUBOX
 
 #include "std_include.h"
-using namespace std;
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
+
 /*!
 gpubox  periodic boundary conditions in 2D, computing minimum distances between
-periodic images, displacing particles and putting them back in the central unit cell,
-etc.
+periodic images, displacing particles and putting them back in the central unit cell, etc.
+The workhorse of this class is calling
+Box.minDist(vecA,vecB,&disp),
+which computes the displacement between vecA and the closest periodic image of vecB and
+stores the result in disp. Also
+Box.putInBoxReal(&point), which will take the point and put it back in the primary unit cell.
+Please note that while the gpubox class can handle generic 2D periodic domains, many of the other classes
+that interface with it do not yet have this functionality implemented.
 */
 //!A simple box defining a 2D periodic domain
 struct gpubox

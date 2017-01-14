@@ -1,18 +1,13 @@
 #ifndef CELLLIST
 #define CELLLIST
 
-//cell_list class...based on (inefficient) vector implementation. Will switch to linked lists later.
-//only works for square boxes
-
-
-using namespace std;
 #include "std_include.h"
 #include "structures.h"
 #include "gpubox.h"
 
 /*!
-The grid class implements a simple cell/bucket structure. It is currently used by the DelaunayLoc and DelaunayNP classes, but should be deprecated in favor of a general gpucell class that functions both for CPU and GPU calculations. Since the lifetime should be short, I will not document this class. Every time I read these sentences I will feel guilty and get a nudge to actually refactor the code.
-As an important note, this and gpucell are currently restricted to square boxes.
+The grid class implements a simple cell/bucket structure. It is currently used by the DelaunayLoc and DelaunayNP classes, but should be deprecated in favor of a general cellListGPU class that functions both for CPU and GPU calculations. Since the lifetime should be short, I will not document this class. Every time I read these sentences I will feel guilty and get a nudge to actually refactor the code.
+As an important note, this and cellListGPU are currently restricted to square boxes.
 */
 //!A simple cell/bucket structure
 class grid

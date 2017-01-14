@@ -1,15 +1,24 @@
 #ifndef CUFUNCTIONS_H
 #define CUFUNCTIONS_H
 
-
 #include "std_include.h"
 #include "Matrix.h"
 
 #ifdef NVCC
+/*!
+\def HOSTDEVICE
+__host__ __device__ inline
+*/
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
+
+/** @defgroup Functions functions
+ * @{
+ \brief Utility functions that can be called from host or device
+ */
+
 
 //!Calculate the determinant of a 2x2 matrix
 HOSTDEVICE Dscalar Det2x2(const Dscalar &x11,const Dscalar &x12, const Dscalar &x21, const Dscalar &x22)
@@ -72,6 +81,18 @@ HOSTDEVICE Dscalar dot(const Dscalar2 &p1, const Dscalar2 &p2)
     return p1.x*p2.x+p1.y*p2.y;
     };
 
+//!The norm of a 2-component vector
+HOSTDEVICE Dscalar norm(const Dscalar2 &p)
+    {
+    return sqrt(p.x*p.x+p.y*p.y);
+    };
+
+//!Calculate the area of a triangle with a vertex at the origin
+HOSTDEVICE Dscalar SignedPolygonAreaPart(const Dscalar2 &p1, const Dscalar2 &p2)
+    {
+    return 0.5*(p1.x+p2.x)*(p2.y-p1.y);
+    };
+
 
 //!Calculate the area of a triangle with a vertex at the origin
 HOSTDEVICE Dscalar TriangleArea(const Dscalar2 &p1, const Dscalar2 &p2)
@@ -128,6 +149,55 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     return;
     };
 
+/*!
+compute the sign of a Dscalar, and return zero if x = 0
+*/
+HOSTDEVICE int computeSign(Dscalar x)
+    {
+    return ((x>0)-(x<0));
+    };
+/*!
+compute the sign of a Dscalar, and return zero if x = 0...but return a Dscalar to avoid expensive casts on the GPU
+*/
+HOSTDEVICE Dscalar computeSignNoCast(Dscalar x)
+    {
+    if (x > 0.) return 1.0;
+    if (x < 0.) return -1.0;
+    if (x == 0.) return 0.;
+    return 0.0;
+    };
+
+/*! Given three consecutive voronoi vertices and some cell information, compute -dE/dv
+ Adiff = KA*(A_i-A_0)
+ Pdiff = KP*(P_i-P_0)
+ */
+HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, const Dscalar2 &vnext,
+                                   const Dscalar &Adiff, const Dscalar &Pdiff,
+                                   Dscalar2 &dEdv)
+    {
+    Dscalar2 dlast,dnext,dAdv,dPdv;
+
+    //note that my conventions for dAdv and dPdv take care of the minus sign, so
+    //that dEdv below is reall -dEdv, so it's the force
+    dAdv.x = 0.5*(vlast.y-vnext.y);
+    dAdv.y = 0.5*(vlast.x-vnext.x);
+    dlast.x = vlast.x-vcur.x;
+    dlast.y = vlast.y-vcur.y;
+    Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+    dnext.x = vcur.x-vnext.x;
+    dnext.y = vcur.y-vnext.y;
+    Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+    dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+    dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+
+    //compute the area of the triangle to know if it is positive (convex cell) or not
+//    Dscalar TriAreaTimes2 = -vnext.x*vlast.y+vcur.y*(vnext.x-vlast.x)+vcur.x*(vlast.y-vnext.x)+vlast.x+vnext.y;
+    Dscalar TriAreaTimes2 = dlast.x*dnext.y - dlast.x*dnext.y;
+    dEdv.x = 2.0*(computeSignNoCast(TriAreaTimes2)*Adiff*dAdv.x + Pdiff*dPdv.x);
+    dEdv.y = 2.0*(computeSignNoCast(TriAreaTimes2)*Adiff*dAdv.y + Pdiff*dPdv.y);
+    }
+
+
 #ifdef ENABLE_CUDA
 #include "cuda_runtime.h"
 //!Get basic stats about the chosen GPU (if it exists)
@@ -164,5 +234,8 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
     return true;
     };
 #endif
+
+/** @} */ //end of group declaration
+#undef HOSTDEVICE
 
 #endif

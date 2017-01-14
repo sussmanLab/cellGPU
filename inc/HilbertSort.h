@@ -1,11 +1,11 @@
+#ifndef HILBERTSORT
+#define HILBERTSORT
+
 /*
 Some code in the HilbertRotate and getIdx functions calls John Burkardt's HILBERT_CURVE code:
 https://people.sc.fsu.edu/~jburkardt/cpp_src/hilbert_curve/hilbert_curve.html
 which is released under the GNU LGPL license
 */
-
-#ifndef HILBERTSORT
-#define HILBERTSORT
 
 #include "std_include.h"
 #include "hilbert_curve.hpp"
@@ -26,9 +26,6 @@ for the efficiency of GPU-based execution.
 //!Spatially sort points in 2D according to a 1D Hilbert curve
 struct HilbertSorter
     {
-    private:
-        gpubox box; //!<A box to put the particles in the unit square for easy sorting
-        int M;      //!<The integer order of the Hilbert curve to use
     public:
         //!The only constructor requires a box
         HOSTDEVICE HilbertSorter(gpubox Box)
@@ -47,6 +44,8 @@ struct HilbertSorter
             setOrder((int)min(30,mm+4));
             }
 
+        gpubox box; //!<A box to put the particles in the unit square for easy sorting
+        int M;      //!<The integer order of the Hilbert curve to use
         //some functions to help out...
 
         //!Set the order of the desired HC

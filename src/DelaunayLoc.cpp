@@ -16,19 +16,32 @@ void DelaunayLoc::setPoints(vector<Dscalar> &points)
         };
     };
 
+void DelaunayLoc::setPoints(ArrayHandle<Dscalar2> &points, int N)
+    {
+    nV=N;
+    pts.clear();
+    pts.reserve(nV);
+    triangulated = false;
+    cellsize = 2.0;
+    for (int ii = 0; ii < nV; ++ii)
+        {
+        pts.push_back(points.data[ii]);
+        };
+    };
+
 void DelaunayLoc::setPoints(GPUArray<Dscalar2> &points)
     {
     nV=points.getNumElements();
-    pts.clear();
+    //pts.clear();
     pts.resize(nV);
+    triangulated = false;
+    cellsize = 2.0;
     ArrayHandle<Dscalar2> hp(points,access_location::host,access_mode::read);
     for (int ii = 0; ii < nV; ++ii)
         {
         pts[ii].x=hp.data[ii].x;
         pts[ii].y=hp.data[ii].y;
         };
-    triangulated = false;
-    cellsize = 2.0;
     };
 
 void DelaunayLoc::setPoints(vector<Dscalar2> &points)

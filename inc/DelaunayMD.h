@@ -1,19 +1,15 @@
-//DelaunayMD.h
 #ifndef DELAUNAYMD_H
 #define DELAUNAYMD_H
 
 #include "std_include.h"
-
-#include "gpubox.h"
-#include "gpuarray.h"
-#include "gpucell.cuh"
-#include "gpucell.h"
-#include "indexer.h"
-#include "HilbertSort.h"
-
+#include "Simple2DActiveCell.h"
+#include "cellListGPU.cuh"
+#include "cellListGPU.h"
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
 #include "DelaunayMD.cuh"
+#include "HilbertSort.h"
+
 
 /*!
  * DelaunayMD is a core engine class, capable of taking a set of points
@@ -21,24 +17,88 @@
  * those triangulations are valid on either the CPU or GPU, and locally repair
  * invalid triangulations on the CPU.
  */
-//! Perform and test triangulations in an MD setting
-class DelaunayMD
+//! Perform and test triangulations in an MD setting, using kernels in \ref DelaunayMDKernels
+class DelaunayMD : public Simple2DActiveCell
     {
+    //public functions first
+    public:
+        //!The constructor!
+        DelaunayMD();
+        //!A default initialization scheme
+        void initializeDelMD(int n);
+        /*!
+        \param global defaults to true.
+        When global is set to true, the CPU branch will try the local repair scheme.
+        This is generally slower, but if working in a regime where things change
+        very infrequently, it may be faster.
+        */
+        //!Enforce CPU-only operation.
+        void setCPU(bool global = true){GPUcompute = false;globalOnly=global;};
+        //!write triangulation to text file
+        void writeTriangulation(ofstream &outfile);
+        //!read positions from text file...for debugging
+        void readTriangulation(ifstream &infile);
+
+        //!A very hacky and wrong soft-sphere repulsion between neighbors... strictly for testing purposes
+        void repel(GPUArray<Dscalar2> &disp,Dscalar eps);
+
+        //!move particles on the GPU
+        void movePoints(GPUArray<Dscalar2> &displacements);
+        //!move particles on the CPU
+        void movePointsCPU(GPUArray<Dscalar2> &displacements);
+        //!Transfer particle data from the GPU to the CPU for use by delLoc
+        void resetDelLocPoints();
+        //!Perform a spatial sorting of the particles to try to maintain data locality
+        void spatiallySortPoints();
+
+        //!Update the cell list structure after particles have moves
+        void updateCellList();
+        //!update the NieghIdxs data structure
+        void updateNeighIdxs();
+
+    //protected functions
     protected:
-        int N;                       //!<The number of vertices
+        //!construct the global periodic triangulation point-by-point using non-CGAL methods
+        void fullTriangulation();
+        //!Globally construct the triangulation via CGAL
+        void globalTriangulationCGAL(bool verbose = false);
+
+        //!build the auxiliary data structure containing the indices of the particle circumcenters from the neighbor list
+        void getCircumcenterIndices(bool secondtime=false,bool verbose = false);
+
+        //!Test the current neighbor list to see if it is still a valid triangulation. GPU function
+        void testTriangulation();
+        //!Test the validity of the triangulation on the CPU
+        void testTriangulationCPU();
+        //!repair any problems with the triangulation on the CPU
+        void repairTriangulation(vector<int> &fixlist);
+        //!A workhorse function that calls the appropriate topology testing and repairing routines
+        void testAndRepairTriangulation(bool verb = false);
+
+    //public member variables
+    public:
+        //!The class' local Delaunay tester/updater
+        DelaunayLoc delLoc;
+
+        //!Collect statistics of how many triangulation repairs are done per frame, etc.
+        Dscalar repPerFrame;
+        //!How often were all circumcenters empty (so that no data transfers and no repairs were necessary)?
+        int skippedFrames;
+        //!How often were global re-triangulations performed?
+        int GlobalFixes;
+
+        
+    protected:
         cellListGPU celllist;        //!<The associated cell list structure
         Dscalar cellsize;            //!<The size of the cell list's underlying grid
 
-        //!The number of neighbors each cell has
-        GPUArray<int> neigh_num;
-        //!A structure that indexes what those neighbors are
-        GPUArray<int> neighs;
         //!A 2dIndexer for computing where in the GPUArray to look for a given particles neighbors
         Index2D n_idx;
         //!An upper bound for the maximum number of neighbors that any cell has
         int neighMax;
 
-        //!An array that holds (particle, neighbor_number) info to avoid intra-warp divergence in GPU-based force calculations that might be used by child classes
+        //!An array that holds (particle, neighbor_number) info to avoid intra-warp divergence in GPU
+        //!-based force calculations that might be used by child classes
         GPUArray<int2> NeighIdxs;
         //!A utility integer to help with NeighIdxs
         int NeighIdxNum;
@@ -68,109 +128,8 @@ class DelaunayMD
         //!When true, the CPU branch will execute global retriangulations through CGAL on every time step
         bool globalOnly;
 
-        //!Count the number of times that testAndRepair has been called
+        //!Count the number of times that testAndRepair has been called, separately from the derived class' time
         int timestep;
-        //!A vector of points to triangulate, for passing to DelaunayLoc...this can be deprecated.
-        std::vector<Dscalar2> pts;
-
-
-    public:
-        GPUArray<Dscalar2> points;      //!<The GPUArray of particle positions
-        //!the box defining the periodic domain
-        gpubox Box;
-        //!A flag that, when true, does the circumcenter test on the GPU
-        bool GPUcompute;
-
-        //!The class' local Delaunay tester/updater
-        DelaunayLoc delLoc;
-
-        //!Collect statistics of how many triangulation repairs are done per frame, etc.
-        Dscalar repPerFrame;
-        //!How often were all circumcenters empty (so that no data transfers and no repairs were necessary)?
-        int skippedFrames;
-        //!How often were global re-triangulations performed?
-        int GlobalFixes;
-
-        /*!sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
-        */
-        //!A map between particle index and the spatially sorted version.
-        vector<int> itt;
-        //!A temporary structure that inverts itt
-        vector<int> tti;
-        //!To write consistent files...the particle that started the simulation as index i has current index tagToIdx[i]
-        vector<int> tagToIdx;
-        //!A temporary structure that inverse tagToIdx
-        vector<int> idxToTag;
-
-
-        //!The constructor!
-        DelaunayMD(){cellsize=1.5;};
-
-        //!A default initialization scheme
-        void initializeDelMD(int n);
-        //!Put down particles at random in a rectangular box whose dimensions are specified
-        void randomizePositions(Dscalar boxx, Dscalar boxy);
-
-        //!move particles on the GPU
-        void movePoints(GPUArray<Dscalar2> &displacements);
-        //!move particles on the CPU
-        void movePointsCPU(GPUArray<Dscalar2> &displacements);
-
-        //!Transfer particle data from the GPU to the CPU for use by delLoc
-        void resetDelLocPoints();
-        //!Perform a spatial sorting of the particles to try to maintain data locality
-        void spatiallySortPoints();
-
-        //!Re-index arrays after a spatial sorting has occured.
-        void reIndexArray(GPUArray<int> &array);
-        //!why use templates when you can type more?
-        void reIndexArray(GPUArray<Dscalar> &array);
-        //!why use templates when you can type more?
-        void reIndexArray(GPUArray<Dscalar2> &array);
-
-        //!Update the cell list structure after particles have moves
-        void updateCellList();
-        //!update the NieghIdxs data structure
-        void updateNeighIdxs();
-
-        //!Get a copy of the particle positions
-        void getPoints(GPUArray<Dscalar2> &ps){ps = points;};
-
-        /*!
-        \param global defaults to true.
-        When global is set to true, the CPU branch will try the local repair scheme.
-        This is generally slower, but if working in a regime where things change
-        very infrequently, it may be faster.
-        */
-        //!Enforce CPU-only operation.
-        void setCPU(bool global = true){GPUcompute = false;globalOnly=global;};
-
-        //!construct the global periodic triangulation point-by-point using non-CGAL methods
-        void fullTriangulation();
-        //!Globally construct the triangulation via CGAL
-        void globalTriangulationCGAL(bool verbose = false);
-
-        //!build the auxiliary data structure containing the indices of the particle circumcenters from the neighbor list
-        void getCircumcenterIndices(bool secondtime=false,bool verbose = false);
-
-        //!Test the current neighbor list to see if it is still a valid triangulation. GPU function
-        void testTriangulation();
-        //!Test the validity of the triangulation on the CPU
-        void testTriangulationCPU();
-        //!repair any problems with the triangulation on the CPU
-        void repairTriangulation(vector<int> &fixlist);
-        //!A workhorse function that calls the appropriate topology testing and repairing routines
-        void testAndRepairTriangulation(bool verb = false);
-
-        //!write triangulation to text file
-        void writeTriangulation(ofstream &outfile);
-        //!read positions from text file...for debugging
-        void readTriangulation(ifstream &infile);
-
-
-        //!A very hacky and wrong soft-sphere repulsion between neighbors... strictly for testing purposes
-        void repel(GPUArray<Dscalar2> &disp,Dscalar eps);
-
 
     };
 
