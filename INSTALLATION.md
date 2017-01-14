@@ -17,7 +17,9 @@ spots. This is highly discouraged, and the code may be much less stable as a res
 CGAL-4.9 was used, which in turn requires up to date versions of the gmp and mpfr libraries.
 The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.
 
-The database class uses the netCDF library, version 4.1.3.
+The database class uses the netCDF library (tested on version 4.1.3).
 
-Documentation is maintained via doxygen, and the makefile system will soon change to require cmake.
+Documentation is maintained via doxygen, but is not required for compilation of the executables.
+
+The makefile system is scheduled to be replaced, and will soon change to require cmake.
 

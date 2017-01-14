@@ -26,7 +26,6 @@ SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
 \param initGPURNG does the GPU RNG array need to be initialized?
 \post Initialize(n,initGPURNG) is called
 */
-//most common constructor...sets uniform cell preferences and types
 SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     {
     printf("Initializing %i cells with random positions in a square box... ",n);

@@ -1,6 +1,6 @@
 Contributions are welcomed via pull requests on the repository homepage! Before beginning work and
 submitting a pull request, please contact the lead developer (currently Daniel M. Sussman) to see
-if your intended feature is currently under development by anyone else and to make sure your plans
+if your intended feature is under development by anyone else at the moment and to make sure your plans
 match up well with the existing code base.
 
 # Currently planned features

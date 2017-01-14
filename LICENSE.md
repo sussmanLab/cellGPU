@@ -42,12 +42,12 @@ TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF TH
 THE POSSIBILITY OF SUCH DAMAGE.
 
 (2) The file HilbertSort.h calls, but does not modify, code released under the GNU LGPL licence by John
-    Burkardt. The "HilberSort.h" wrapper is used by the program to call the functions defined in the
-    library, and the source code from which the library can be built is in the "hilbert_sort.hpp" and
-    "hilbert_sort.cpp" files. Thus, this repository contains everything a user would need to relink the
-    application with a different version of Burkardt's LGPL source code. As such CellGPU can be distributed
-    under a non-(L)GPL license. Credit for this library, of course, goes to John Burkardt:
-    https://people.sc.fsu.edu/~jburkardt/cpp_src/hilbert_curve/hilbert_curve.html
+Burkardt. The "HilberSort.h" wrapper is used by the program to call the functions defined in the
+library, and the source code from which the library can be built is in the "hilbert_sort.hpp" and
+"hilbert_sort.cpp" files. Thus, this repository contains everything a user would need to relink the
+application with a different version of Burkardt's LGPL source code. As such CellGPU can be distributed
+under a non-(L)GPL license. Credit for this library, of course, goes to John Burkardt:
+https://people.sc.fsu.edu/~jburkardt/cpp_src/hilbert_curve/hilbert_curve.html
 
 (3) Finally, the logo used was generated using the ``Lincoln Experiments'' project,
 https://snorpey.github.io/triangulation/ released by Georg Fischer under the MIT license

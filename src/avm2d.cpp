@@ -5,8 +5,15 @@
 #include "spv2d.h"
 
 /*!
-The constructor calls the Initialize function to take care of business, and
-setCellPreferencesUniform to give all cells the same A_0 and p_0 values
+\param n number of CELLS to initialize
+\param A0 set uniform preferred area for all cells
+\param P0 set uniform preferred perimeter for all cells
+\param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
+\param initGPURNG does the GPU RNG array need to be initialized?
+\param runSPVToInitialize the default constructor has the cells start as a Voronoi tesselation of
+a random point set. Set this flag to true to relax this initial configuration via the SPV2D class
+\post Initialize(n,initGPURNG,runSPVToInitialize) is called, setCellPreferencesUniform(A0,P0), and
+setModuliUniform(1.0,1.0)
 */
 AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG,bool runSPVToInitialize) :
     T1Threshold(0.01)
@@ -154,7 +161,7 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
 
    };
 
-/*!/
+/*!
 Take care of all class initialization functions, this involves setting arrays to the right size, etc.
 */
 void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
