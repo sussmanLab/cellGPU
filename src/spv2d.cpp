@@ -416,8 +416,8 @@ void SPV2D::calculateDispCPU()
         Dscalar directorx = cos(h_cd.data[ii]);
         Dscalar directory = sin(h_cd.data[ii]);
 
-        dx= deltaT*(v0*directorx+h_f.data[ii].x);
-        dy= deltaT*(v0*directory+h_f.data[ii].y);
+        dx= deltaT*(v0i*directorx+h_f.data[ii].x);
+        dy= deltaT*(v0i*directory+h_f.data[ii].y);
         h_disp.data[ii].x = dx;
         h_disp.data[ii].y = dy;
 
