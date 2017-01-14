@@ -4,7 +4,12 @@
 #include "spv2d.cuh"
 #include "cuda_profiler_api.h"
 
-//simple constructor
+/*!
+\param n number of cells to initialize
+\param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
+\param initGPURNG does the GPU RNG array need to be initialized?
+\post Initialize(n,initGPURNcellsG) is called, as is setCellPreferenceUniform(1.0,4.0)
+*/
 SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
     {
     printf("Initializing %i cells with random positions in a square box...\n",n);
@@ -13,6 +18,14 @@ SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
     setCellPreferencesUniform(1.0,4.0);
     };
 
+/*!
+\param n number of cells to initialize
+\param A0 set uniform preferred area for all cells
+\param P0 set uniform preferred perimeter for all cells
+\param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
+\param initGPURNG does the GPU RNG array need to be initialized?
+\post Initialize(n,initGPURNG) is called
+*/
 //most common constructor...sets uniform cell preferences and types
 SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     {
@@ -22,6 +35,14 @@ SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
     setCellPreferencesUniform(A0,P0);
     };
 
+/*!
+\param  n Number of cells to initialized
+\param initGPU Should the GPU be initialized?
+\post all GPUArrays are set to the correct size, v0 is set to 0.05, Dr is set to 1.0, the
+Hilbert sorting period is set to -1 (i.e. off), the moduli are set to KA=KP=1.0, DelaunayMD is
+initialized (initializeDelMD(n) gets called), particle exclusions are turned off, and auxiliary
+data structures for the topology are set
+*/
 //take care of all class initialization functions
 void SPV2D::Initialize(int n,bool initGPU)
     {
@@ -56,8 +77,8 @@ void SPV2D::Initialize(int n,bool initGPU)
     };
 
 /*
- When sortPeriod < 0, this routine does not get called
-call DelaunayMD's underlying Hilbert sort scheme, and re-index spv2d's arrays
+When sortPeriod < 0, this routine does not get called
+\post call DelaunayMD's underlying Hilbert sort scheme, and re-index spv2d's arrays
 */
 void SPV2D::spatialSorting()
     {
@@ -90,6 +111,7 @@ void SPV2D::spatialSorting()
 
 /*!
 As the code is modified, all GPUArrays whose size depend on neighMax should be added to this function
+\post voroCur,voroLastNext, delSets, delOther, and forceSets grow to size neighMax*Ncells
 */
 void SPV2D::resetLists()
     {
@@ -100,7 +122,9 @@ void SPV2D::resetLists()
     forceSets.resize(neighMax*Ncells);
     };
 
-//DelSets is a helper data structure keeping track of some ordering of the Delaunay vertices around a given vertex. This updates it
+/*!
+Calls updateNeighIdxs and then getDelSets(i) for all cells i
+*/
 void SPV2D::allDelSets()
     {
     updateNeighIdxs();
@@ -108,7 +132,13 @@ void SPV2D::allDelSets()
         getDelSets(ii);
     };
 
-//update the delSet and delOther structure just for a particular particle
+/*!
+\param i the cell in question
+\post the delSet and delOther data structure for cell i is updated. Recall that
+delSet.data[n_idx(nn,i)] is an int2; the x and y parts store the index of the previous and next
+Delaunay neighbor, ordered CCW. delOther contains the mutual neighbor of delSet.data[n_idx(nn,i)].y
+and delSet.data[n_idx(nn,i)].z that isn't cell i
+*/
 bool SPV2D::getDelSets(int i)
     {
     ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
@@ -178,6 +208,7 @@ void SPV2D::setExclusions(vector<int> &exes)
 /*!
 Call all relevant functions to advance the system one time step; every sortPeriod also call the
 spatial sorting routine.
+\post The simulation is advanced one time step
 */
 void SPV2D::performTimestep()
     {
@@ -227,8 +258,8 @@ void SPV2D::DisplacePointsAndRotate()
     };
 
 /*!
-if forces have already been computed, displace particles according to net force and motility,
-and rotate the cell directors via the CPU
+\pre The force per cell has already been computed
+\post displace particles according to net force and motility,and rotate the cell directors via the CPU
 */
 void SPV2D::calculateDispCPU()
     {
@@ -259,7 +290,12 @@ void SPV2D::calculateDispCPU()
     //vector of displacements is forces*timestep + v0's*timestep
     };
 
-//perform a timestep on the CPU
+/*!
+The sequence of a time step on the CPU is (1) compute geometry (area and perimeter) for each cell
+(2) calculate the forces, (3) calculate the displacement from the forces and the activity, (4) move
+cells, (5) test the validity of the old triangulation on the new cell positions, updating topology
+if needed
+*/
 void SPV2D::performTimestepCPU()
     {
     computeGeometryCPU();
@@ -284,9 +320,9 @@ void SPV2D::performTimestepCPU()
     };
 
 /*!
-If the geoemtry has already been calculated, call the right function to calculate the
-contribution to the net force on every particle from each of its voronoi vertices via
-a cuda call
+\pre The geoemtry (area and perimeter) has already been calculated
+\post calculate the contribution to the net force on every particle from each of its voronoi vertices
+via a cuda call
 */
 void SPV2D::ComputeForceSetsGPU()
     {
@@ -294,8 +330,8 @@ void SPV2D::ComputeForceSetsGPU()
     };
 
 /*!
-If the force_sets are already computed, call the right function to add them up to get the
-net force per particle via a cuda call
+\pre forceSets are already computed
+\post call the right routine to add up forceSets to get the net force per cell
 */
 void SPV2D::SumForcesGPU()
     {
@@ -305,7 +341,12 @@ void SPV2D::SumForcesGPU()
         sumForceSetsWithExclusions();
     };
 
-//perform a timestep on the GPU
+/*!
+The sequence of a time step on the GPU is (1) compute geometry (area and perimeter) for each cell
+(2) calculate the forces sets, (3) sum the force sets up, (4) move cells and rotate directors,
+(5) Test if any circumcenters are non-empty on the GPU. (6) if yes, send data back to host to
+repair the topology, updating the size of the data arrays as necessary.
+*/
 void SPV2D::performTimestepGPU()
     {
     computeGeometryGPU();
@@ -362,7 +403,8 @@ void SPV2D::performTimestepGPU()
     };
 
 /*!
-If the topology is up-to-date on the GPU, calculate all cell areas, perimenters, and voronoi neighbors
+\pre The topology of the Delaunay triangulation is up-to-date on the GPU
+\post calculate all cell areas, perimenters, and voronoi neighbors
 */
 void SPV2D::computeGeometryGPU()
     {
@@ -384,8 +426,8 @@ void SPV2D::computeGeometryGPU()
     };
 
 /*!
-If the force_sets are already computed, add them up to get the net force per particle
-via a cuda call
+\pre forceSets are already computed,
+\post The forceSets are summed to get the net force per particle via a cuda call
 */
 void SPV2D::sumForceSets()
     {
@@ -402,8 +444,8 @@ void SPV2D::sumForceSets()
     };
 
 /*!
-If the force_sets are already computed, add them up to get the net force per particle
-via a cuda call, assuming some particle exclusions have been defined
+\pre forceSets are already computed, some particle exclusions have been defined.
+\post The forceSets are summed to get the net force per particle via a cuda call, respecting exclusions
 */
 void SPV2D::sumForceSetsWithExclusions()
     {
@@ -440,8 +482,6 @@ void SPV2D::computeSPVForceSetsGPU()
     ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::read);
     ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::read);
 
-    Dscalar KA = 1.0;
-    Dscalar KP = 1.0;
     gpu_force_sets(
                     d_p.data,
                     d_AP.data,
@@ -457,7 +497,10 @@ void SPV2D::computeSPVForceSetsGPU()
                     NeighIdxNum,n_idx,Box);
     };
 
-//compute cell area and perimeter on the CPU
+/*!
+\pre Topology is up-to-date on the CPU
+\post geometry and voronoi neighbor locations are computed for the current configuration
+*/
 void SPV2D::computeGeometryCPU()
     {
     //read in all the data we'll need
@@ -519,6 +562,7 @@ void SPV2D::computeGeometryCPU()
 
 /*!
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
+\post the net force on cell i is computed
 */
 void SPV2D::computeSPVForceCPU(int i)
     {
@@ -598,8 +642,6 @@ void SPV2D::computeSPVForceCPU(int i)
     //start calculating forces
     Dscalar2 forceSum;
     forceSum.x=0.0;forceSum.y=0.0;
-    Dscalar KA = 1.0;
-    Dscalar KP = 1.0;
 
     Dscalar Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
     Dscalar Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
@@ -735,7 +777,10 @@ void SPV2D::computeSPVForceCPU(int i)
         }
     };
 
-//a utility/testing function...output the currently computed forces to the screen
+/*!
+a utility/testing function...output the currently computed mean net force to screen.
+\param verbose if true also print out the force on each cell
+*/
 void SPV2D::reportForces(bool verbose)
     {
     ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
@@ -765,7 +810,9 @@ void SPV2D::reportForces(bool verbose)
     printf("Mean force = (%e,%e)\n" ,fx/Ncells,fy/Ncells);
     };
 
-//a utility function...output some information assuming the system is uniform
+/*!
+a utility function...output some information assuming the system is uniform
+*/
 void SPV2D::reportCellInfo()
     {
     printf("Ncells=%i\tv0=%f\tDr=%f\n",Ncells,v0,Dr);
