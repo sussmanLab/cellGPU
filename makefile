@@ -70,16 +70,6 @@ $(OBJ_DIR)/%.o: %.cpp
 #Programs
 ##
 
-#obj/runellipse.o:runellipse.cpp
-#	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
-
-#obj/runplates.o:runplates.cpp
-#	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
-
-#obj/runMakeDatabase.o:runMakeDatabase.cpp
-#	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) -o $@ -c $<
-
-
 avmGPU.out: obj/activeVertex.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 spvGPU.out: obj/voronoi.o $(CLASS_OBJS) $(CUOBJS)
