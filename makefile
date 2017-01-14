@@ -16,7 +16,7 @@ INCLUDES += -I/usr/local/Cellar/cgal/4.9/include -I/usr/local/Cellar/boost/1.62.
 LIB_CUDA = -L. -L$(CUDA_LIB) -L$(CUDA_LIB2) -lcuda -lcudart
 LIB_CGAL += -L/usr/local/Cellar/cgal/4.9/lib -L/usr/local/Cellar/gmp/6.1.2/lib -L/usr/local/Cellar/mpfr/3.1.5/lib
 LIB_CGAL += -L/home/user/CGAL/CGAL-4.9/lib -lCGAL -lCGAL_Core -lgmp -lmpfr
-LIB_NETCDF = #-lnetcdf -lnetcdf_c++ -L/opt/local/lib
+LIB_NETCDF = -lnetcdf -lnetcdf_c++ -L/opt/local/lib
 
 #common flags
 COMMONFLAGS += $(INCLUDES) -std=c++11 -DCGAL_DISABLE_ROUNDING_MATH_CHECK -O3
@@ -39,19 +39,20 @@ debug: CXXFLAGS += -g
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
 debug: build
 
-PROGS= delGPU.out avmGPU.out
+PROGS= spvGPU.out avmGPU.out
 
 build: $(PROGS)
 
-PROG_OBJS= obj/runellipse.o obj/voroguppy.o obj/runplates.o obj/runMakeDatabase.o
-PROG_OBJS+=obj/activeVertex.o
+PROG_OBJS=obj/activeVertex.o obj/voronoi.o
 
 CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/hilbert_curve.o
 CLASS_OBJS+=obj/Simple2DCell.o obj/Simple2DActiveCell.o
 CLASS_OBJS+=obj/avm2d.o obj/spv2d.o obj/spv2dTension.o
 
-CUOBJS= obj/cuobj/cellListGPU.cu.o obj/cuobj/DelaunayMD.cu.o obj/cuobj/spv2d.cu.o obj/cuobj/avm2d.cu.o obj/cuobj/Simple2DCell.cu.o obj/cuobj/Simple2DActiveCell.cu.o obj/cuobj/spv2dTension.cu.o
-
+CUOBJS= obj/cuobj/cellListGPU.cu.o obj/cuobj/DelaunayMD.cu.o
+CUOBJS+=obj/cuobj/Simple2DCell.cu.o obj/cuobj/Simple2DActiveCell.cu.o
+CUOBJS+=obj/cuobj/spv2d.cu.o obj/cuobj/avm2d.cu.o
+CUOBJS+= obj/cuobj/spv2dTension.cu.o
 #cuda objects
 $(CUOBJ_DIR)/%.cu.o: $(SRC_DIR)/%.cu
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA)  -o $@ -c $<
@@ -81,14 +82,14 @@ $(OBJ_DIR)/%.o: %.cpp
 
 avmGPU.out: obj/activeVertex.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
-delGPU.out: obj/voroguppy.o $(CLASS_OBJS) $(CUOBJS)
+spvGPU.out: obj/voronoi.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 
 run: build
-	./delGPU.out
+	./spvGPU.out
 	./avmGPU.out
 
 clean:
-	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) delGPU.out
+	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) spvGPU.out avmGPU.out
 

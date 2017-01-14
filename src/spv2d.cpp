@@ -38,6 +38,7 @@ void SPV2D::Initialize(int n,bool initGPU)
     forces.resize(n);
     external_forces.resize(n);
     AreaPeri.resize(n);
+    CellType.resize(n);
 
     cellDirectors.resize(n);
     displacements.resize(n);
@@ -61,7 +62,6 @@ call DelaunayMD's underlying Hilbert sort scheme, and re-index spv2d's arrays
 void SPV2D::spatialSorting()
     {
     spatiallySortPoints();
-
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
     //get new DelSets and DelOthers
