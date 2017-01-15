@@ -5,13 +5,19 @@
 #include "structures.h"
 #include "cu_functions.h"
 
-using namespace std;
-
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
+
+/** @defgroup oldFunctions old functions
+ * @{
+ \brief Utility functions that can be called from host or device
+\todo remove any references to functions in this file in favor of a unified set of functions in
+cu_functions.h
+ */
+
 
 //!Calculate the circumcenter of (x1,y1),(x2,y2), and the origin...
 HOSTDEVICE void CircumCenter(Dscalar x1,Dscalar y1,Dscalar x2,Dscalar y2, Dscalar &xc, Dscalar &yc)
@@ -137,7 +143,7 @@ HOSTDEVICE int Quadrant(Dscalar x, Dscalar y)
     return -1;
     };
 
-// undefine HOSTDEVICE so we don't interfere with other headers
+/** @} */ //end of group declaration
 #undef HOSTDEVICE
 
 #endif

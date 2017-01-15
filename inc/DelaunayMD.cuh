@@ -33,13 +33,6 @@ bool gpu_test_circumcenters(
                             Index2D &cli,
                             int &fail
                             );
-
-//!Move particles according to a set of displacements, and put them back in the unit cell
-bool gpu_move_particles(Dscalar2 *d_points,
-                    Dscalar2 *d_disp,
-                    int N,
-                    gpubox &Box
-                    );
 /** @} */ //end of group declaration
 
 #endif

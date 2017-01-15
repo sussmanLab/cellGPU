@@ -2,12 +2,12 @@
 #define DATABASE_SPV_H
 
 #include "std_include.h"
-#include "avm2d.h"
 #include "spv2d.h"
 #include "Database.h"
 #include <netcdfcpp.h>
 #include <string>
 #include "vector_types.h"
+
 /*!
 Class for a state database for a 2d delaunay triangulation
 the box dimensions are stored, the 2d unwrapped coordinate of the delaunay vertices,
@@ -47,11 +47,6 @@ public:
     void ReadState(STATE &c, int rec,bool geometry=true);
 
 };
-
-
-/////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////   IMPLEMENTATION   ///////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
 
 SPVDatabase::SPVDatabase(int np, string fn, NcFile::FileMode mode, bool exclude)
     : BaseDatabase(fn,mode),

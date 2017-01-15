@@ -84,7 +84,7 @@ int main(int argc, char*argv[])
             {
     //        cout << timestep << endl;
     //        avm.reportAP();
-    //        avm.reportMeanForce();
+    //        avm.reportMeanVertexForce();
             };
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {
@@ -104,7 +104,7 @@ int main(int argc, char*argv[])
     t2=clock();
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
 
-    avm.reportMeanForce();
+    avm.reportMeanVertexForce();
 
     if(initializeGPU)
         cudaDeviceReset();

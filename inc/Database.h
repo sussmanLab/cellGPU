@@ -6,9 +6,10 @@
 #include <string>
 #include "vector_types.h"
 
-
-using namespace std;
-//!A base class that controls a netCDF-based data implementation
+/*!
+BaseDatabase just provides an interface to a file and a mode of operation.
+*/
+//! A base class that implements a details-free  netCDF4-based data storage system
 class BaseDatabase
 {
 public:

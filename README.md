@@ -9,9 +9,7 @@ features!)
 
 Information on installing the project and contributing to it is contained in the relevant
 markdown files in the base directory. Documentation of the code is maintained via Doxygen... go
-to the "/doc" directory, type "doxygen Doxyfile", and go from there. From the index of the doxygen
--generated html, see the Modules page for information on the CUDA kernels used in the GPU-based
-routines.
+to the "/doc" directory, type "doxygen Doxyfile", and go from there.
 
 As with many performance-seeking codes, there is a tension between optimized computational speed
 and elegant code structure and organization. As a first pass this repository seeks to err slightly
@@ -20,20 +18,6 @@ underlying degrees of freedom -- the vertices and centers of cells -- rather tha
 representation of vertices and cells as classes that carry around pointers or other references to
 their properties. We reap the benefits of this when transferring data to the GPU and operating on
 it there.
-
-## Classes of note
-
-* Simple2DActiveCell -- a class (which inherits from Simple2DCell) with data structures and functions common to many off-lattice cell models with active dynamics
-* AVM2D -- A child of Simple2DActiveCell implements a simple 2D dynamic ("active") vertex model
-* DelaunayMD -- A core engine that operates as described above in ''Basic idea''
-* SPV2D -- A child class of DelaunayMD that implements the 2D SPV model forces.
-* cellListGPU -- makes cell lists using the GPU
-
-* DelaunayNP -- Calculates the Delaunay triangulation in a non-periodic 2D domain (via naive Bowyer-Watson)
-
-* DelaunayCGAL --Calculates the Delaunay triangulation in either a periodic or non-periodic 2D domain (via CGAL)
-
-* DelaunayLoc -- Calculates candidate 1-rings of particles by finding an enclosing polygon of nearby points and finding all points in the circumcircle of the point and any two consecutive vertices of that polygon.
 
 ## Basic idea of SPV hybrid operation
 
@@ -66,6 +50,20 @@ The points are moved around in the periodic box, possibly based on forces comput
 * (4) GPU STEP: Move particles around based on forces and some activity
 * (5) GPU: Check for any topological transitions. Update all data structures on the GPU, and then
 the cycle of (2)-(5) can repeat.
+
+## Classes of note
+
+* Simple2DActiveCell -- a class (which inherits from Simple2DCell) with data structures and functions common to many off-lattice cell models with active dynamics
+* AVM2D -- A child of Simple2DActiveCell implements a simple 2D dynamic ("active") vertex model
+* DelaunayMD -- A core engine that operates as described above in ''Basic idea''
+* SPV2D -- A child class of DelaunayMD that implements the 2D SPV model forces.
+* cellListGPU -- makes cell lists using the GPU
+
+* DelaunayNP -- Calculates the Delaunay triangulation in a non-periodic 2D domain (via naive Bowyer-Watson)
+
+* DelaunayCGAL --Calculates the Delaunay triangulation in either a periodic or non-periodic 2D domain (via CGAL)
+
+* DelaunayLoc -- Calculates candidate 1-rings of particles by finding an enclosing polygon of nearby points and finding all points in the circumcircle of the point and any two consecutive vertices of that polygon.
 
 ## CITATIONS
 

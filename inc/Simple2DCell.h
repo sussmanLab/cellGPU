@@ -151,8 +151,10 @@ class Simple2DCell
         //!Get a copy of the particle positions
         void getPoints(GPUArray<Dscalar2> &ps){ps = cellPositions;};
 
+        //!Report the current average force on each cell
+        void reportMeanCellForce(bool verbose);
         //!Report the current average force per vertex...should be close to zero
-        void reportMeanForce()
+        void reportMeanVertexForce()
                 {
                 ArrayHandle<Dscalar2> f(vertexForces,access_location::host,access_mode::read);
                 Dscalar fx= 0.0;

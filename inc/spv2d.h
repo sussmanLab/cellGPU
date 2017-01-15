@@ -122,9 +122,6 @@ class SPV2D : public DelaunayMD
         //!A flag that determins if a spatial sorting is due to occur this Timestep
         bool spatialSortThisStep;
 
-        //!an array of net forces on cels
-        GPUArray<Dscalar2> forces;
-
         //!"exclusions" zero out the force on a cell...the external force needed to do this is stored in external_forces
         GPUArray<Dscalar2> external_forces;
         //!An array containing the indices of excluded particles

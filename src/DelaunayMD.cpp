@@ -156,7 +156,7 @@ void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::readwrite);
-    gpu_move_particles(d_p.data,d_d.data,Ncells,Box);
+    gpu_move_degrees_of_freedom(d_p.data,d_d.data,Ncells,Box);
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         {

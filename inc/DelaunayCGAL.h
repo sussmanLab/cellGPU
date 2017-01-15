@@ -45,6 +45,7 @@ schemes for performing a Delaunay Triangulation.
 A public member variable maintains a convenient data structure for keeping track of the most recently
 performed complete triangulation of a periodic point set.
  */
+ //! Access the 2D periodic and non-periodic functionality of CGAL Delaunay triangulations
 class DelaunayCGAL
     {
     protected:

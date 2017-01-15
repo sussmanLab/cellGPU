@@ -55,7 +55,7 @@ void SPV2D::Initialize(int n,bool initGPU)
     sortPeriod = -1;
 
     setv0Dr(0.05,1.0);
-    forces.resize(n);
+    cellForces.resize(n);
     external_forces.resize(n);
     AreaPeri.resize(n);
     CellType.resize(n);
@@ -239,7 +239,7 @@ void SPV2D::DisplacePointsAndRotate()
     {
 
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_f(forces,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_f(cellForces,access_location::device,access_mode::read);
     ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_motility(Motility,access_location::device,access_mode::read);
     ArrayHandle<curandState> d_cs(cellRNGs,access_location::device,access_mode::read);
@@ -262,7 +262,7 @@ void SPV2D::DisplacePointsAndRotate()
 */
 void SPV2D::calculateDispCPU()
     {
-    ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::read);
     ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
     ArrayHandle<Dscalar2> h_motility(Motility,access_location::host,access_mode::read);
@@ -433,7 +433,7 @@ void SPV2D::sumForceSets()
 
     ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_forces(forces,access_location::device,access_mode::overwrite);
+    ArrayHandle<Dscalar2> d_forces(cellForces,access_location::device,access_mode::overwrite);
 
     gpu_sum_force_sets(
                     d_forceSets.data,
@@ -451,7 +451,7 @@ void SPV2D::sumForceSetsWithExclusions()
 
     ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_forces(forces,access_location::device,access_mode::overwrite);
+    ArrayHandle<Dscalar2> d_forces(cellForces,access_location::device,access_mode::overwrite);
     ArrayHandle<Dscalar2> d_external_forces(external_forces,access_location::device,access_mode::overwrite);
     ArrayHandle<int> d_exes(exclusions,access_location::device,access_mode::read);
 
@@ -569,7 +569,7 @@ void SPV2D::computeSPVForceCPU(int i)
 
     //read in all the data we'll need
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
@@ -776,38 +776,6 @@ void SPV2D::computeSPVForceCPU(int i)
         }
     };
 
-/*!
-a utility/testing function...output the currently computed mean net force to screen.
-\param verbose if true also print out the force on each cell
-*/
-void SPV2D::reportForces(bool verbose)
-    {
-    ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
-    Dscalar fx = 0.0;
-    Dscalar fy = 0.0;
-    Dscalar min = 10000;
-    Dscalar max = -10000;
-    for (int i = 0; i < Ncells; ++i)
-        {
-        if (h_f.data[i].y >max)
-            max = h_f.data[i].y;
-        if (h_f.data[i].x >max)
-            max = h_f.data[i].x;
-        if (h_f.data[i].y < min)
-            min = h_f.data[i].y;
-        if (h_f.data[i].x < min)
-            min = h_f.data[i].x;
-        fx += h_f.data[i].x;
-        fy += h_f.data[i].y;
-
-        if(verbose)
-            printf("cell %i: \t position (%f,%f)\t force (%e, %e)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
-        };
-    if(verbose)
-        printf("min/max force : (%f,%f)\n",min,max);
-    printf("Mean force = (%e,%e)\n" ,fx/Ncells,fy/Ncells);
-    };
 
 /*!
 a utility function...output some information assuming the system is uniform

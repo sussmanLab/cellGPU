@@ -81,8 +81,12 @@ It is also only for 1D arrays of data. Importantly, the user accesses and handle
 //!A class for handling data simultaneously on the CPU and GPU
 template<class T> class GPUArray;
 
-///The ArrayHandle, well, handles the data in the GPUArray. Given, e.g., an ArrayHandle<int> h(gpuarray,access_location::host, access_mode::readwrite); The user would access one of the integers via h.data[i];
-///As in HOOMD version, this is intended to be used within a limiting scope
+/*!
+The ArrayHandle, well, handles the data in the GPUArray. Given, e.g., an
+ArrayHandle<int> h(gpuarray,access_location::host, access_mode::readwrite);
+The user would access one of the integers via h.data[i] on the host or a direct acces on the device
+*/
+//!A mechanism for accessing data in GPUArray objects's
 template<class T> class ArrayHandle
     {
     public:

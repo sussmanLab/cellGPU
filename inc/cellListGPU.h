@@ -11,6 +11,7 @@
  * A class that can sort points into a grid of buckets. This enables local searches for particle neighbors, etc.
  * Note that at the moment this class (and some of the classes above it) can only handle square boxes. This is
  * not a fundamental limitation, though.
+ \todo expand to work correctly with non-square boxes
  */
 //! Construct simple cell/bucket structures on the GPU, using kernels in \ref cellListGPUKernels
 class cellListGPU

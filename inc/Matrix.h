@@ -9,6 +9,12 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
+/*!
+Matrix2x2 provides a simple interface for operations using 2x2 matrices. In particular, it implement
+matrix-maxtrix multiplication, and has specialized matrix-vector and vector-matrix multiplication in
+which Dscalar2 variables take the place of vectors. A dyadic product is implemented which takes two
+Dscalar2s and returns a Matrix2x2
+*/
 //!contains a {{x11,x12},{x21,x22}} set, and matrix manipulations
 struct Matrix2x2
     {

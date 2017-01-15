@@ -99,3 +99,37 @@ void Simple2DCell::reIndexArray(GPUArray<int> &array)
         };
     };
 
+/*!
+a utility/testing function...output the currently computed mean net force to screen.
+\param verbose if true also print out the force on each cell
+*/
+void Simple2DCell::reportMeanCellForce(bool verbose)
+    {
+    ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
+    Dscalar fx = 0.0;
+    Dscalar fy = 0.0;
+    Dscalar min = 10000;
+    Dscalar max = -10000;
+    for (int i = 0; i < Ncells; ++i)
+        {
+        if (h_f.data[i].y >max)
+            max = h_f.data[i].y;
+        if (h_f.data[i].x >max)
+            max = h_f.data[i].x;
+        if (h_f.data[i].y < min)
+            min = h_f.data[i].y;
+        if (h_f.data[i].x < min)
+            min = h_f.data[i].x;
+        fx += h_f.data[i].x;
+        fy += h_f.data[i].y;
+
+        if(verbose)
+            printf("cell %i: \t position (%f,%f)\t force (%e, %e)\n",i,p.data[i].x,p.data[i].y ,h_f.data[i].x,h_f.data[i].y);
+        };
+    if(verbose)
+        printf("min/max force : (%f,%f)\n",min,max);
+    printf("Mean force = (%e,%e)\n" ,fx/Ncells,fy/Ncells);
+    };
+
+

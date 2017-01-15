@@ -25,6 +25,7 @@ inline Dscalar TriangleArea(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2);
  * Delaunay neighbors, this puts the neighbors in clockwise order and calculates the Voronoi vertices
  * of the Voronoi cell. Also calculates the area and perimeter of the Voronoi cell.
  */
+ //! A legacy structure (for use with non-CGAL implementations of the SPV branch)
 struct DelaunayCell
     {
     public:
@@ -95,7 +96,7 @@ struct DelaunayCell
 
     };
 
-/// contains a pair of integers of vertex labels
+//! contains a pair of integers of vertex labels
 struct edge
     {
     public:
@@ -106,7 +107,7 @@ struct edge
         edge(int ii, int jj){i=ii;j=jj;};
     };
 
-//contains a triplet of integers {i,j,k} of vertex labels
+//!contains a triplet of integers {i,j,k} of vertex labels
 struct triangle
     {
     public:
@@ -123,6 +124,7 @@ struct triangle
  * It has vectors of edges and triangles, and getNeighbors will sift through the
  * triangles to look for neighbors of vertex i
  */
+ //! a deprecated data structure for specifying a triangulation.
 struct triangulation
     {
     public:

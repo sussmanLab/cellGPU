@@ -14,6 +14,7 @@ A file providing an interface to the relevant cuda calls for the SPV2D class
 /** @defgroup spvKernels SPV Kernels
  * @{
  * \brief CUDA kernels and callers for the SPV2D class
+   \todo improve memory reads; perhaps via shared memory refactoring
  */
 
 //!Given the positions, forces, and cell directors, move the particles and add noise to the director direction
