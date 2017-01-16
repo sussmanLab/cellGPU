@@ -18,7 +18,6 @@ using namespace std;
  * to go from the candidate 1-ring to the actual list of neighbors), or to locally repair a part of a
  * triangulation that has become non-Delaunay.
  * This function operates strictly on the CPU
- \todo document DelaunayLoc.cpp file
  */
  //!A CPU-based class for locally constructing the Delaunay triangulation of part of a point set
 class DelaunayLoc

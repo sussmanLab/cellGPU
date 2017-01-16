@@ -111,7 +111,7 @@ class DelaunayMD : public Simple2DActiveCell
 
         /*! 
         \todo the current implementation of anyCircumcenterTestFailed and
-        completeRetriangulationPerformed has a malloc cost on every time step! Revise this.
+        completeRetriangulationPerformed has a malloc cost on every time step. Revise this.
         */
         //!A flag that can be accessed by child classes... serves as notification that any change in the network topology has occured
         int anyCircumcenterTestFailed;

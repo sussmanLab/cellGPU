@@ -1,7 +1,9 @@
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
 
-
+/*!
+\param points references to a vector of new location for points, formatted as {x1,y1,x2,y2,...}
+*/
 void DelaunayLoc::setPoints(vector<Dscalar> &points)
     {
     nV=points.size()/2;
@@ -15,7 +17,11 @@ void DelaunayLoc::setPoints(vector<Dscalar> &points)
         pts[ii]=point;
         };
     };
-
+/*!
+\param points ArrayHandle of Dscalar2's that has already accessed a GPUArray containing the
+new desired points
+\param N the number of cells that the ArrayHandle knows about
+*/
 void DelaunayLoc::setPoints(ArrayHandle<Dscalar2> &points, int N)
     {
     nV=N;
@@ -29,6 +35,9 @@ void DelaunayLoc::setPoints(ArrayHandle<Dscalar2> &points, int N)
         };
     };
 
+/*!
+\param points a GPUArray of Dscalar2's with the new desired points
+*/
 void DelaunayLoc::setPoints(GPUArray<Dscalar2> &points)
     {
     nV=points.getNumElements();
@@ -44,6 +53,9 @@ void DelaunayLoc::setPoints(GPUArray<Dscalar2> &points)
         };
     };
 
+/*!
+\param points a vector of Dscalar2's with the new desired points
+*/
 void DelaunayLoc::setPoints(vector<Dscalar2> &points)
     {
     nV=points.size();
@@ -56,6 +68,9 @@ void DelaunayLoc::setPoints(vector<Dscalar2> &points)
     cellsize = 2.0;
     };
 
+/*!
+\param bx a gpubox that the DelaunayLoc object should use in internal computations
+*/
 void DelaunayLoc::setBox(gpubox &bx)
     {
     Dscalar b11,b12,b21,b22;
@@ -65,7 +80,11 @@ void DelaunayLoc::setBox(gpubox &bx)
     else
         Box.setGeneral(b11,b12,b21,b22);
     };
-
+/*!
+\param csize the size of the grid boxes to use for the internal cell list
+\pre the internal box is already set, and the points are already set
+\post points are sorted into cells
+*/
 void DelaunayLoc::initialize(Dscalar csize)
     {
     cellsize = csize;
@@ -80,6 +99,14 @@ void DelaunayLoc::initialize(Dscalar csize)
     clist.construct();
     };
 
+/*!
+This routine uses the cell list to look for particles that form a quadrilateral surrounding cell i.
+The search proceeds by looking in concentric shells of nearby cells until a particle from every
+quadrant around cell i is found.
+\param i the index of the cell in question
+\param P0 a reference to the indices of cells that form the enclosing polygon
+\param P1 a reference to the positions of the cells forming the enclosing polygon relative to cell i
+*/
 void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
     {
     vector<int> Pt(4,-1);
@@ -88,12 +115,6 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
     vector<Dscalar2> Pt2(4,np);
     P0.resize(4);
     P1.resize(4);
-
-    //also make a list of all points found, and keep track of what their angle around the central point is
-    //allNeighs will store (angle, idx, location)
-//    vector< tuple<Dscalar,int,Dscalar2> > allNeighs;
-    //typically not more than 25 candidates...
-//    allNeighs.reserve(25);
 
     vector<Dscalar> dists(4,1e6);
     Dscalar2 v = pts[i];
@@ -126,27 +147,32 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
                     P1[q]=disp;
                     P0[q]=idx;
                     };
-//                Dscalar angle = atan2(disp.y,disp.x);
-//                allNeighs.push_back(make_tuple(angle,idx,disp));
                 };
             };
 
         width +=1;
         if (width >= wmax) return;
         };//end loop over cells
-
-//        sort(allNeighs.begin(),allNeighs.end());
     };
 
+/*!
+The main workhorse of the class. First find a set of cells that forms a polygon around cell i, then
+find all particles in the circumcircles formed by cell i and any two consecutive members of the
+polygon
+\param i the cell to get the candidate 1-ring of
+\param DZTringIdx a reference to a vector of cell indices that will make up the candidate 1-ring
+\param DZTring a reference to a vector of relative cell positions that will make up the candidate 1-ring
+\post DTringIdx and DTring contain cells, of which the Delaunay neighbors of cell i are a strict
+subset
+*/
 void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
     {
-    //cellschecked = 0;candidates = 0;
     //first, find a polygon enclosing vertex i
     vector<int> P0;//index of vertices forming surrounding sqaure
     vector<Dscalar2> P1;//relative position of vertices forming surrounding square
-
     getPolygon(i,P0,P1);
 
+    //now, get the cells in the circumcircles
     Dscalar2 v;
     v.x=pts[i].x;v.y=pts[i].y;
     DTring.clear();
@@ -189,7 +215,6 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
         {
         int cix = clist.posToCellIdx(v.x+Q0[ii].x,v.y+Q0[ii].y);
 
-        //implementation improvement: can sometimes substract 1 from wcheck by considering the distance to cell boundary
         int wcheck = ceil(rads[ii]/clist.getCellSize())+1;
         clist.cellNeighborsShort(cix,wcheck,cns);
         //cellschecked += cns.size();
@@ -233,7 +258,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
                 };
             };
         };
-
+    //if the candidate 1-ring is very large, see if a simple algorithm can reduce it
     if (DTring.size() > reduceSize)
         {
         reduceOneRing(i,DTringIdx,DTring);
@@ -241,6 +266,18 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
     //candidates = DTring.size();
     };
 
+/*!
+A simple algorithm to try to reduce the size of the candidate 1-ring. This exploits the fact that
+getPolygon doesn't try very hard to find a "good" enclosing polygon for cell i, choosing a
+different set of cells to form the polygon might lead to a smaller candidate 1-ring. This then
+reduces the computational cost of going from the candidate 1-ring to the true set of Delaunay
+neighbors. This matters a lot for analyzing random point sets, but if the cells are pretty regular
+this routine will almost never be called.
+\param i the cell to get the candidate 1-ring of
+\param DZTringIdx a reference to a vector of cell indices that will make up the candidate 1-ring
+\param DZTring a reference to a vector of relative cell positions that will make up the candidate 1-ring
+subset
+*/
 void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
     {
     //basically, see if an enclosing polygon with a smaller sum of circumcircle radii can be found
@@ -328,7 +365,13 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
     DTringIdx.swap(newRingIdx);
     //candidates = DTring.size();
     };
-
+/*!
+call the CGAL library (for non-periodic 2D Delaunay triangulations) through the DelaunayCGAL class
+to go from the candidate 1-ring of cell i to its true set of delaunay neighbors.
+\param i the cell in question
+\param neighbors a reference to a vector of cell indices that are the Delaunay neighbors of i
+\post neighbors is sorted so that the indices refer to the Delaunay neighbors in CCW order
+*/
 bool DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
     {
     //first, get candidate 1-ring
@@ -354,6 +397,13 @@ bool DelaunayLoc::getNeighborsCGAL(int i, vector<int> &neighbors)
     };
 
 
+/*!
+If CGAL is unavailable, call the DelaunayNP class to go from the candidate 1-ring of cell i to
+its true set of delaunay neighbors.
+\param i the cell in question
+\param neighbors a reference to a vector of cell indices that are the Delaunay neighbors of i
+\post neighbors is sorted so that the indices refer to the Delaunay neighbors in CCW order
+*/
 void DelaunayLoc::getNeighbors(int i, vector<int> &neighbors)
     {
     DelaunayCell DCell;
@@ -398,7 +448,17 @@ void DelaunayLoc::getNeighbors(int i, vector<int> &neighbors)
         };
     };
 
-
+/*!
+Similar to getNeighbors above, this uses the DelaunayNP class to ge the Delaunay neighbors of cell i,
+and also calculates geometric properties of the Voronoi cell that results. Useful for debugging and
+testing.
+its true set of delaunay neighbors.
+\param i the cell in question
+\param neighbors a reference to a vector of cell indices that are the Delaunay neighbors of i
+\param DCell a reference to the Voronoi cell of point i, with some geometric propertie of it calculated.
+\param timing keep track of some timing info if true
+\post neighbors is sorted so that the indices refer to the Delaunay neighbors in CCW order
+*/
 
 void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &DCell,bool timing)
     {
@@ -442,7 +502,12 @@ void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &
         };
     };
 
-
+/*!
+Given a cell index and a propsed set of neighbors in CCW order, see if all circumcenters are empty.
+\param i the target cell
+\param neighbors the set of proposed neighbors
+\param timing keep track of some timing info
+*/
 bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool timing)
     {
 
@@ -499,7 +564,12 @@ bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool tim
     return (!repeat);
     };
 
-//!Circumcircles should be a vector of length 3*(number of ccs in the system), where each set of three consequtive entries are the indicies of the points on that circumcircle
+/*!
+Test all circumcircles to see if they are empty, and flag particles for retriangulation if needed.
+\param ccs a vector of length (3*numberOfCircumcircles)
+\param points a vector of bools, where if true that point needs its neighbors re-triangulated
+\param timing keep track of timing info if true
+*/
 void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool timing)
     {
     Dscalar vx = 0.0; Dscalar vy = 0.0;
@@ -529,14 +599,12 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
         int wcheck = ceil(radius/clist.getCellSize())+1;
         clist.cellNeighbors(cix,wcheck,cns);
 
-
         for (int cc = 0; cc < cns.size(); ++cc)
             {
             if (repeat) continue;
             for (int pp = 0; pp < clist.cells[cns[cc]].size();++pp)
                 {
                 if (repeat) continue;
-
                 int idx  = clist.cells[cns[cc]][pp];
                 Box.minDist(pts[idx],v,disp);
                 //how far is the point from the circumcircle's center?
@@ -561,10 +629,11 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
             };
 
         }; // end loop over circumcircles
-
     };
-
-
+/*!
+A utility function for testing and debugging
+\param maxprint the maximum number of points to print info for
+*/
 void DelaunayLoc::printTriangulation(int maxprint)
     {
     if (!triangulated)
@@ -581,6 +650,10 @@ void DelaunayLoc::printTriangulation(int maxprint)
 
     };
 
+/*!
+A utility function for testing and debugging
+\param outfile the ofstream to write triangulation data to
+*/
 void DelaunayLoc::writeTriangulation(ofstream &outfile)
     {
     outfile << nV <<"\t"<<DT.nTriangles<<"\t"<<DT.nEdges<<endl;
@@ -593,7 +666,12 @@ void DelaunayLoc::writeTriangulation(ofstream &outfile)
     };
 
 
-
+/*!
+A utility function to test and time several routines in this class
+\param numpts The number of points for which to perform tests
+\param tmax the number of times each function will be called, for averaging timing info
+\param verbose if true output even more timing info
+*/
 void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
     {
     cout << "Timing DelaunayLoc routine..." << endl;
