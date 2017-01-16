@@ -15,8 +15,10 @@ cells, vertex positions, indices of vertices around each cell, cells around each
 //!Implement a 2D active vertex model, using kernels in \ref avmKernels
 class AVM2D : public Simple2DActiveCell
     {
-    //public functions first... many of these should eventually be protected, but for debugging
-    //it's convenient to be able to call them from anywhere
+    //public functions first...
+    /*!
+    \todo implement a spatial sorting scheme...needs to handle sorting both the vertices and the cell indices...
+    */
     public:
         //! the constructor: initialize as a Delaunay configuration with random positions and set all cells to have uniform target A_0 and P_0 parameters
         AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true,bool runSPVToInitialize=false);

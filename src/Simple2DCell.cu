@@ -36,6 +36,22 @@ __global__ void gpu_move_degrees_of_freedom_kernel(Dscalar2 *d_points,
 
 
 /*!
+every thread just writes in a value
+*/
+__global__ void gpu_set_integer_array_kernel(int *d_array,
+                                          int value,
+                                          int N)
+    {
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+    d_array[idx] = value;
+    return;
+    };
+
+
+
+/*!
 \param d_points Dscalar2 array of locations
 \param d_disp   Dscalar2 array of displacements
 \param N        The number of degrees of freedom to move
@@ -58,6 +74,30 @@ bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
                                                 Box
                                                 );
     //cudaThreadSynchronize();
+    HANDLE_ERROR(cudaGetLastError());
+
+    return cudaSuccess;
+    };
+
+/*!
+\param d_array int array of values
+\param value   the integer to set the entire array to
+\param N        The number of values in the array to set (d_array[0] tp d_array[N-1])
+*/
+bool gpu_set_integer_array(int *d_array,
+                           int value,
+                           int N
+                          )
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
+
+    gpu_set_integer_array_kernel<<<nblocks,block_size>>>(
+                                                d_array,
+                                                value,
+                                                N);
+    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
 
     return cudaSuccess;

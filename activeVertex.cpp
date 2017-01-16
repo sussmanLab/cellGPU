@@ -109,6 +109,10 @@ int main(int argc, char*argv[])
     if(initializeGPU)
         cudaDeviceReset();
 
+ofstream outfile;
+outfile.open("../timingAVM.txt",std::ios_base::app);
+outfile << numpts <<"\t" << (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << "\n";
+
     return 0;
     };
 

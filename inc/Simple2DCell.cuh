@@ -25,6 +25,11 @@ bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
                     gpubox &Box
                     );
 
+//!A utility function; set all copmonents of an integer array to value
+bool gpu_set_integer_array(int *d_array,
+                           int value,
+                           int N
+                           );
 
 /** @} */ //end of group declaration
 
