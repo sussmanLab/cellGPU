@@ -116,6 +116,10 @@ HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
 //handle errors in kernel calls
 static void HandleError(cudaError_t err, const char *file, int line)
     {
+    //as an additional debugging check, if always synchronize cuda threads after every kernel call
+    #ifdef CUDATHREADSYNC
+    cudaThreadSynchronize();
+    #endif
     if (err != cudaSuccess)
         {
         printf("\nError: %s in file %s at line %d\n",cudaGetErrorString(err),file,line);

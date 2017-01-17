@@ -35,7 +35,7 @@ float: CXXFLAGS += -DSCALARFLOAT
 float: NVCCFLAGS += -DSCALARFLOAT
 float: build
 
-debug: CXXFLAGS += -g -DCUDATHREADERRORCHECK
+debug: CXXFLAGS += -g -DCUDATHREADSYNC
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
 debug: build
 

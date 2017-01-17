@@ -398,10 +398,7 @@ bool gpu_compute_geometry(Dscalar2 *d_points,
                                                 n_idx,
                                                 Box
                                                 );
-#ifdef CUDATHREADERRORCHECK
-    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
-#endif
     return cudaSuccess;
     };
 
@@ -432,10 +429,7 @@ bool gpu_displace_and_rotate(Dscalar2 *d_points,
                                                 states,
                                                 Box
                                                 );
-#ifdef CUDATHREADERRORCHECK
-    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
-#endif
     return cudaSuccess;
     };
 
@@ -476,10 +470,7 @@ bool gpu_force_sets(Dscalar2 *d_points,
                                                 n_idx,
                                                 Box
                                                 );
-#ifdef CUDATHREADERRORCHECK
-    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
-#endif
     return cudaSuccess;
     };
 
@@ -506,10 +497,7 @@ bool gpu_sum_force_sets(
                                             N,
                                             n_idx
             );
-#ifdef CUDATHREADERRORCHECK
-    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
-#endif
     return cudaSuccess;
     };
 
@@ -538,10 +526,7 @@ bool gpu_sum_force_sets_with_exclusions(
                                             N,
                                             n_idx
             );
-#ifdef CUDATHREADERRORCHECK
-    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
-#endif
     return cudaSuccess;
     };
 

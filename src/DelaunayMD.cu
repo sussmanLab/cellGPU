@@ -152,7 +152,6 @@ bool gpu_test_circumcenters(int *d_repair,
     cudaMemcpy(&fail,anyFail,sizeof(int),cudaMemcpyDeviceToHost);
     cudaFree(anyFail);
 
-    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };

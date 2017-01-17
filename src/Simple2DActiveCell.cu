@@ -41,7 +41,6 @@ bool gpu_initialize_curand(curandState *states,
 
 
     initialize_curand_kernel<<<nblocks,block_size>>>(states,N,Timestep,GlobalSeed);
-    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
