@@ -883,15 +883,12 @@ void AVM2D::flipEdgesGPU()
                                n_idx,
                                Nvertices,
                                Ncells);
-            };
+            }; //scope for arrayhandles
 
-        if (iterations > 0)
-            {
-            ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
-            if(h_ffe.data[0]==0)
-                keepFlipping = false;
-            h_ffe.data[0]=0;
-            };
+        ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
+        if(h_ffe.data[0]==0)
+            keepFlipping = false;
+        h_ffe.data[0]=0;
         iterations += 1;
         };
     };
