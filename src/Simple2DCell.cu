@@ -73,8 +73,10 @@ bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
                                                 N,
                                                 Box
                                                 );
-    //cudaThreadSynchronize();
+#ifdef CUDATHREADERRORCHECK
+    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
 
     return cudaSuccess;
     };
@@ -97,8 +99,10 @@ bool gpu_set_integer_array(int *d_array,
                                                 d_array,
                                                 value,
                                                 N);
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
 
     return cudaSuccess;
     };

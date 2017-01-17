@@ -152,11 +152,9 @@ bool gpu_test_circumcenters(int *d_repair,
     cudaMemcpy(&fail,anyFail,sizeof(int),cudaMemcpyDeviceToHost);
     cudaFree(anyFail);
 
-    //cudaThreadSynchronize();
+    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
-
     return cudaSuccess;
     };
-
 
 /** @} */ //end of group declaration

@@ -619,8 +619,10 @@ bool gpu_avm_geometry(
                                                 d_vertexCellNeighbors,d_voroCur,
                                                 d_voroLastNext,d_AreaPerimeter,
                                                 N, n_idx, Box);
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     return cudaSuccess;
     };
 
@@ -643,8 +645,10 @@ bool gpu_avm_force_sets(
                                                   d_AreaPerimeter,d_AreaPerimeterPreferences,
                                                   d_vertexForceSets,
                                                   nForceSets,KA,KP);
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     return cudaSuccess;
     };
 
@@ -660,8 +664,10 @@ bool gpu_avm_sum_force_sets(
 
 
     avm_sum_force_sets_kernel<<<nblocks,block_size>>>(d_vertexForceSets,d_vertexForces,Nvertices);
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     return cudaSuccess;
     };
 
@@ -688,15 +694,19 @@ bool gpu_avm_displace_and_rotate(
     avm_displace_vertices_kernel<<<nblocks,block_size>>>(d_vertexPositions,d_vertexForces,
                                                          d_cellDirectors,d_vertexCellNeighbors,
                                                          v0,deltaT,Box,Nvertices);
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     //rotate cell directors
     if (Ncells < 128) block_size = 32;
     nblocks = Ncells/block_size + 1;
     avm_rotate_directors_kernel<<<nblocks,block_size>>>(d_cellDirectors,d_curandRNGs,
                                                         Dr,deltaT,Ncells);
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
 
     return cudaSuccess;
     };
@@ -730,8 +740,10 @@ bool gpu_avm_test_edges_for_T1(
                                                       Box,T1THRESHOLD,
                                                       NvTimes3,vertexMax,d_grow);
 
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     return cudaSuccess;
     };
 
@@ -776,8 +788,10 @@ bool gpu_avm_flip_edges(
                                                                 d_finishedFlippingEdges,
                                                                 n_idx,
                                                                 Ncells);
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
 
     //Now flip 'em
     int NvTimes3 = Nvertices*3;
@@ -791,8 +805,10 @@ bool gpu_avm_flip_edges(
                                                   T1Threshold,Box,
                                                   n_idx,NvTimes3);
 
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     return cudaSuccess;
     };
 
@@ -815,8 +831,10 @@ bool gpu_avm_get_cell_positions(
     avm_get_cell_positions_kernel<<<nblocks,block_size>>>(d_cellPositions,d_vertexPositions,
                                                           d_cellVertexNum,d_cellVertices,
                                                           N, n_idx, Box);
+#ifdef CUDATHREADERRORCHECK
     cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     return cudaSuccess;
     };
 

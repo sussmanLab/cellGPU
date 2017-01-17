@@ -102,7 +102,10 @@ bool gpu_zero_array(unsigned int *arr,
     gpu_zero_array_kernel<<<nblocks, block_size>>>(arr,
                                                     N
                                                     );
+#ifdef CUDATHREADERRORCHECK
+    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     return cudaSuccess;
     }
 
@@ -117,7 +120,10 @@ bool gpu_zero_array(int *arr,
     gpu_zero_array_kernel<<<nblocks, block_size>>>(arr,
                                                     N
                                                     );
+#ifdef CUDATHREADERRORCHECK
+    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     return cudaSuccess;
     }
 
@@ -158,8 +164,10 @@ bool gpu_compute_cell_list(Dscalar2 *d_pt,
                                                           cli,
                                                           d_assist
                                                           );
-    //cudaThreadSynchronize();
+#ifdef CUDATHREADERRORCHECK
+    cudaThreadSynchronize();
     HANDLE_ERROR(cudaGetLastError());
+#endif
     return cudaSuccess;
     }
 
