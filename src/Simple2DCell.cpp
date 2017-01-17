@@ -64,8 +64,10 @@ void Simple2DCell::setModuliUniform(Dscalar newKA, Dscalar newKP)
     };
 
 
-//Always called after spatial sorting is performed, reIndexArrays shuffles the order of an array
-// based on the spatial sort order
+/*!
+ * Always called after spatial sorting is performed, reIndexArrays shuffles the order of an array
+    based on the spatial sort order of the cells
+*/
 void Simple2DCell::reIndexArray(GPUArray<Dscalar2> &array)
     {
     GPUArray<Dscalar2> TEMP = array;
@@ -98,6 +100,45 @@ void Simple2DCell::reIndexArray(GPUArray<int> &array)
         ar.data[ii] = temp.data[itt[ii]];
         };
     };
+
+/*!
+ * take the current location of the points and sort them according the their order along a 2D Hilbert curve
+ */
+void Simple2DCell::spatiallySortPoints()
+    {
+    //itt and tti are the changes that happen in the current sort
+    //idxToTag and tagToIdx relate the current indexes to the original ones
+    HilbertSorter hs(Box);
+
+    vector<pair<int,int> > idxSorter(Ncells);
+
+    //sort points by Hilbert Curve location
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host, access_mode::readwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        idxSorter[ii].first=hs.getIdx(h_p.data[ii]);
+        idxSorter[ii].second = ii;
+        };
+    sort(idxSorter.begin(),idxSorter.end());
+
+    //update tti and itt
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        int newidx = idxSorter[ii].second;
+        itt[ii] = newidx;
+        tti[newidx] = ii;
+        };
+
+    //update points, idxToTag, and tagToIdx
+    vector<int> tempi = idxToTag;
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        idxToTag[ii] = tempi[itt[ii]];
+        tagToIdx[tempi[itt[ii]]] = ii;
+        };
+    reIndexArray(cellPositions);
+    };
+
 
 /*!
 a utility/testing function...output the currently computed mean net force to screen.

@@ -9,7 +9,6 @@
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
 #include "DelaunayMD.cuh"
-#include "HilbertSort.h"
 
 
 /*!
@@ -49,8 +48,6 @@ class DelaunayMD : public Simple2DActiveCell
         void movePointsCPU(GPUArray<Dscalar2> &displacements);
         //!Transfer particle data from the GPU to the CPU for use by delLoc
         void resetDelLocPoints();
-        //!Perform a spatial sorting of the particles to try to maintain data locality
-        void spatiallySortPoints();
 
         //!Update the cell list structure after particles have moves
         void updateCellList();

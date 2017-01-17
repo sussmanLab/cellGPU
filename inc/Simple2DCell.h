@@ -5,8 +5,7 @@
 #include "indexer.h"
 #include "gpuarray.h"
 #include "gpubox.h"
-#include "curand.h"
-#include "curand_kernel.h"
+#include "HilbertSort.h"
 
 /*!
 A class defining some of the fundamental attributes and operations common to 2D off-lattice models
@@ -44,7 +43,9 @@ class Simple2DCell
         void reIndexArray(GPUArray<Dscalar> &array);
         //!why use templates when you can type more?
         void reIndexArray(GPUArray<Dscalar2> &array);
-
+        //!Perform a spatial sorting of the cells to try to maintain data locality
+        void spatiallySortPoints();
+    
 
     //public member variables
     public:
