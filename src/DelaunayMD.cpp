@@ -38,17 +38,7 @@ void DelaunayMD::initializeDelMD(int n)
     
     setCellPositionsRandomly();
     //initialize spatial sorting, but do not sort by default
-    itt.resize(Ncells);
-    tti.resize(Ncells);
-    idxToTag.resize(Ncells);
-    tagToIdx.resize(Ncells);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        itt[ii]=ii;
-        tti[ii]=ii;
-        idxToTag[ii]=ii;
-        tagToIdx[ii]=ii;
-        };
+    initializeCellSorting();
 
     //cell list initialization
     celllist.setNp(Ncells);

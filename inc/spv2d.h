@@ -34,9 +34,6 @@ class SPV2D : public DelaunayMD
         //!Initialize DelaunayMD, set random orientations for cell directors, prepare data structures
         void Initialize(int n,bool initGPU = true);
 
-        //!Set the time between spatial sorting operations.
-        void setSortPeriod(int sp){sortPeriod = sp;};
-
         //!Declare which particles are to be excluded (exes[i]!=0)
         void setExclusions(vector<int> &exes);
 
@@ -117,11 +114,6 @@ class SPV2D : public DelaunayMD
     public:
         //! Read from a database what the time of the simulation when saved was
         Dscalar SimTime;
-        //! Determines how frequently he spatial sorter be called...once per sortPeriod Timesteps. When sortPeriod < 0 no sorting occurs
-        int sortPeriod;
-        //!A flag that determins if a spatial sorting is due to occur this Timestep
-        bool spatialSortThisStep;
-
         //!"exclusions" zero out the force on a cell...the external force needed to do this is stored in external_forces
         GPUArray<Dscalar2> external_forces;
         //!An array containing the indices of excluded particles

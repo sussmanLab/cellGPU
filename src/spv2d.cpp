@@ -81,7 +81,7 @@ When sortPeriod < 0, this routine does not get called
 */
 void SPV2D::spatialSorting()
     {
-    spatiallySortPoints();
+    spatiallySortCells();
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
     //get new DelSets and DelOthers
@@ -90,22 +90,22 @@ void SPV2D::spatialSorting()
 
     //re-index all cell information arrays
     //motility
-    reIndexArray(Motility);
+    reIndexCellArray(Motility);
 
     //moduli
-    reIndexArray(Moduli);
+    reIndexCellArray(Moduli);
 
     //preference
-    reIndexArray(AreaPeriPreferences);
+    reIndexCellArray(AreaPeriPreferences);
 
     //director
-    reIndexArray(cellDirectors);
+    reIndexCellArray(cellDirectors);
 
     //exclusions
-    reIndexArray(exclusions);
+    reIndexCellArray(exclusions);
 
     //cellType
-    reIndexArray(CellType);
+    reIndexCellArray(CellType);
     };
 
 /*!

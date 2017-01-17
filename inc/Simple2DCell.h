@@ -35,17 +35,31 @@ class Simple2DCell
         //! set uniform moduli for all cells
         void setModuliUniform(Dscalar newKA, Dscalar newKP);
 
+        //!Set the time between spatial sorting operations.
+        void setSortPeriod(int sp){sortPeriod = sp;};
+
     //protected functions
     protected:
+        //!set the size of the cell-sorting structures, initialize lists simply
+        void initializeCellSorting();
+        //!set the size of the vertex-sorting structures, initialize lists simply
+        void initializeVertexSorting();
         //!Re-index arrays after a spatial sorting has occured.
-        void reIndexArray(GPUArray<int> &array);
+        void reIndexCellArray(GPUArray<int> &array);
         //!why use templates when you can type more?
-        void reIndexArray(GPUArray<Dscalar> &array);
+        void reIndexCellArray(GPUArray<Dscalar> &array);
         //!why use templates when you can type more?
-        void reIndexArray(GPUArray<Dscalar2> &array);
+        void reIndexCellArray(GPUArray<Dscalar2> &array);
+        void reIndexVertexArray(GPUArray<int> &array);
+        //!why use templates when you can type more?
+        void reIndexVertexArray(GPUArray<Dscalar> &array);
+        //!why use templates when you can type more?
+        void reIndexVertexArray(GPUArray<Dscalar2> &array);
         //!Perform a spatial sorting of the cells to try to maintain data locality
-        void spatiallySortPoints();
-    
+        void spatiallySortCells();
+        //!Perform a spatial sorting of the vertices to try to maintain data locality
+        void spatiallySortVertices();
+
 
     //public member variables
     public:
@@ -137,14 +151,27 @@ class Simple2DCell
 
         /*!sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
         */
-        //!A map between particle index and the spatially sorted version.
+        //!A map between cell index and the spatially sorted version.
         vector<int> itt;
         //!A temporary structure that inverts itt
         vector<int> tti;
-        //!To write consistent files...the particle that started the simulation as index i has current index tagToIdx[i]
+        //!To write consistent files...the cell that started the simulation as index i has current index tagToIdx[i]
         vector<int> tagToIdx;
         //!A temporary structure that inverse tagToIdx
         vector<int> idxToTag;
+        //!A map between vertex index and the spatially sorted version.
+        vector<int> ittVertex;
+        //!A temporary structure that inverts itt
+        vector<int> ttiVertex;
+        //!To write consistent files...the vertex that started the simulation as index i has current index tagToIdx[i]
+        vector<int> tagToIdxVertex;
+        //!A temporary structure that inverse tagToIdx
+        vector<int> idxToTagVertex;
+        //! Determines how frequently he spatial sorter be called...once per sortPeriod Timesteps. When sortPeriod < 0 no sorting occurs
+        int sortPeriod;
+        //!A flag that determins if a spatial sorting is due to occur this Timestep
+        bool spatialSortThisStep;
+
 
 
     //reporting functions

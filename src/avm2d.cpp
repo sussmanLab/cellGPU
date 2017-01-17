@@ -172,12 +172,16 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     setDeltaT(0.01);
     setT1Threshold(0.01);
 
+    //initializes per-cell lists
     cellRNGs.resize(Ncells);
-
     AreaPeri.resize(Ncells);
     AreaPeriPreferences.resize(Ncells);
+    initializeCellSorting();
 
+    //initializes per-vertex lists
     vertexForces.resize(Nvertices);
+    initializeVertexSorting();
+    //initialize per-triple-vertex lists
     vertexForceSets.resize(3*Nvertices);
     voroCur.resize(3*Nvertices);
     voroLastNext.resize(3*Nvertices);
@@ -220,9 +224,19 @@ void AVM2D::growCellVerticesList(int newVertexMax)
         };
     };//scope for array handles
     cellVertices.resize(vertexMax*Ncells);
-//    cellVertices = newCellVertices;
     cellVertices.swap(newCellVertices);
     };
+
+/*!
+ *When sortPeriod < 0 this routine does not get called
+ \post vertices are re-ordered according to a Hilbert sorting scheme, cells are reordered according
+ to what vertices they are near
+ */
+void AVM2D::spatialVertexSorting()
+    {
+
+    };
+
 
 /*!
 increment the time step, call either the CPU or GPU branch, depending on the state of
@@ -231,6 +245,9 @@ the GPUcompute flag
 void AVM2D::performTimestep()
     {
     Timestep += 1;
+    if(sortPeriod > 0)
+        if(Timestep % sortPeriod == 0)
+            spatialVertexSorting();
     if(GPUcompute)
         performTimestepGPU();
     else

@@ -7,7 +7,7 @@
 An extremely simple constructor that does nothing, but enforces default GPU operation
 */
 Simple2DCell::Simple2DCell() :
-    Ncells(0), Nvertices(0),GPUcompute(true)
+    Ncells(0), Nvertices(0),GPUcompute(true),sortPeriod(-1),spatialSortThisStep(false)
     {
     };
 /*!
@@ -63,12 +63,54 @@ void Simple2DCell::setModuliUniform(Dscalar newKA, Dscalar newKP)
         };
     };
 
+/*!
+ *Sets the size of itt, tti, idxToTag, and tagToIdx, and sets all of them so that
+ array[i] = i,
+ i.e., unsorted
+ \pre Ncells is determined
+ */
+void Simple2DCell::initializeCellSorting()
+    {
+    itt.resize(Ncells);
+    tti.resize(Ncells);
+    idxToTag.resize(Ncells);
+    tagToIdx.resize(Ncells);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        itt[ii]=ii;
+        tti[ii]=ii;
+        idxToTag[ii]=ii;
+        tagToIdx[ii]=ii;
+        };
+    };
 
 /*!
- * Always called after spatial sorting is performed, reIndexArrays shuffles the order of an array
+ *Sets the size of ittVertex, ttiVertex, idxToTagVertex, and tagToIdxVertex,and sets all of them so that
+ array[i] = i,
+ i.e., things are unsorted
+ \pre Nvertices is determined
+ */
+void Simple2DCell::initializeVertexSorting()
+    {
+    ittVertex.resize(Nvertices);
+    ttiVertex.resize(Nvertices);
+    idxToTagVertex.resize(Nvertices);
+    tagToIdxVertex.resize(Nvertices);
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        ittVertex[ii]=ii;
+        ttiVertex[ii]=ii;
+        idxToTagVertex[ii]=ii;
+        tagToIdxVertex[ii]=ii;
+        };
+
+    };
+
+/*!
+ * Always called after spatial sorting is performed, reIndexCellArray shuffles the order of an array
     based on the spatial sort order of the cells
 */
-void Simple2DCell::reIndexArray(GPUArray<Dscalar2> &array)
+void Simple2DCell::reIndexCellArray(GPUArray<Dscalar2> &array)
     {
     GPUArray<Dscalar2> TEMP = array;
     ArrayHandle<Dscalar2> temp(TEMP,access_location::host,access_mode::read);
@@ -79,7 +121,7 @@ void Simple2DCell::reIndexArray(GPUArray<Dscalar2> &array)
         };
     };
 
-void Simple2DCell::reIndexArray(GPUArray<Dscalar> &array)
+void Simple2DCell::reIndexCellArray(GPUArray<Dscalar> &array)
     {
     GPUArray<Dscalar> TEMP = array;
     ArrayHandle<Dscalar> temp(TEMP,access_location::host,access_mode::read);
@@ -90,7 +132,7 @@ void Simple2DCell::reIndexArray(GPUArray<Dscalar> &array)
         };
     };
 
-void Simple2DCell::reIndexArray(GPUArray<int> &array)
+void Simple2DCell::reIndexCellArray(GPUArray<int> &array)
     {
     GPUArray<int> TEMP = array;
     ArrayHandle<int> temp(TEMP,access_location::host,access_mode::read);
@@ -102,9 +144,46 @@ void Simple2DCell::reIndexArray(GPUArray<int> &array)
     };
 
 /*!
- * take the current location of the points and sort them according the their order along a 2D Hilbert curve
+ * Called if the vertices need to be spatially sorted, reIndexVertexArray shuffles the order of an
+ * array based on the spatial sort order of the vertices
+*/
+void Simple2DCell::reIndexVertexArray(GPUArray<Dscalar2> &array)
+    {
+    GPUArray<Dscalar2> TEMP = array;
+    ArrayHandle<Dscalar2> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        ar.data[ii] = temp.data[ittVertex[ii]];
+        };
+    };
+
+void Simple2DCell::reIndexVertexArray(GPUArray<Dscalar> &array)
+    {
+    GPUArray<Dscalar> TEMP = array;
+    ArrayHandle<Dscalar> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        ar.data[ii] = temp.data[ittVertex[ii]];
+        };
+    };
+
+void Simple2DCell::reIndexVertexArray(GPUArray<int> &array)
+    {
+    GPUArray<int> TEMP = array;
+    ArrayHandle<int> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<int> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        ar.data[ii] = temp.data[ittVertex[ii]];
+        };
+    };
+
+/*!
+ * take the current location of the cells and sort them according the their order along a 2D Hilbert curve
  */
-void Simple2DCell::spatiallySortPoints()
+void Simple2DCell::spatiallySortCells()
     {
     //itt and tti are the changes that happen in the current sort
     //idxToTag and tagToIdx relate the current indexes to the original ones
@@ -136,9 +215,46 @@ void Simple2DCell::spatiallySortPoints()
         idxToTag[ii] = tempi[itt[ii]];
         tagToIdx[tempi[itt[ii]]] = ii;
         };
-    reIndexArray(cellPositions);
+    reIndexCellArray(cellPositions);
     };
 
+/*!
+ * take the current location of the vertices and sort them according the their order along a 2D Hilbert curve
+ */
+void Simple2DCell::spatiallySortVertices()
+    {
+    //itt and tti are the changes that happen in the current sort
+    //idxToTag and tagToIdx relate the current indexes to the original ones
+    HilbertSorter hs(Box);
+
+    vector<pair<int,int> > idxSorter(Ncells);
+
+    //sort points by Hilbert Curve location
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host, access_mode::readwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        idxSorter[ii].first=hs.getIdx(h_p.data[ii]);
+        idxSorter[ii].second = ii;
+        };
+    sort(idxSorter.begin(),idxSorter.end());
+
+    //update tti and itt
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        int newidx = idxSorter[ii].second;
+        itt[ii] = newidx;
+        tti[newidx] = ii;
+        };
+
+    //update points, idxToTag, and tagToIdx
+    vector<int> tempi = idxToTag;
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        idxToTag[ii] = tempi[itt[ii]];
+        tagToIdx[tempi[itt[ii]]] = ii;
+        };
+    reIndexCellArray(cellPositions);
+    };
 
 /*!
 a utility/testing function...output the currently computed mean net force to screen.
