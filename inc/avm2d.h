@@ -60,6 +60,11 @@ class AVM2D : public Simple2DActiveCell
         void getCellPositionsCPU();
         //!Get the cell position from the vertices on the GPU
         void getCellPositionsGPU();
+        
+        //!spatially sort the *vertices* along a Hilbert curve for data locality
+        void spatialVertexSorting();
+
+
 
     //protected functions
     protected:
@@ -70,9 +75,6 @@ class AVM2D : public Simple2DActiveCell
 
         //!if the maximum number of vertices per cell increases, grow the cellVertices list
         void growCellVerticesList(int newVertexMax);
-
-        //!spatially sort the *vertices* along a Hilbert curve for data locality
-        void spatialVertexSorting();
 
         //utility functions
         //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition

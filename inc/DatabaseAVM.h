@@ -160,8 +160,14 @@ void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
         forcedat[(2*idx)+1] = fy;
         idx +=1;
         };
-    for (int ii = 0; ii < 3*Nv; ++ii)
-        vndat[ii] = s.tagToIdxVertex[h_vn.data[ii]];
+    for (int vv = 0; vv < Nv; ++vv)
+        {
+        int vertexIndex = s.tagToIdxVertex[vv];
+        for (int ii = 0 ;ii < 3; ++ii)
+            {
+            vndat[3*vv+ii] = s.idxToTagVertex[h_vn.data[3*vertexIndex+ii]];
+            };
+        };
     /*!
      * \todo once hilbert sorting is working for vertex models, make sure database saving is correct
      */

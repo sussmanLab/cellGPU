@@ -76,8 +76,7 @@ int main(int argc, char*argv[])
     avm.setv0Dr(v0,Dr);
     avm.setDeltaT(dt);
     avm.setT1Threshold(0.04);
-
-    avm.setSortPeriod(initSteps/20);
+    avm.setSortPeriod(initSteps/10);
     for (int timestep = 0; timestep < initSteps+1; ++timestep)
         {
         avm.performTimestep();

@@ -312,7 +312,6 @@ void Simple2DCell::spatiallySortVertices()
         for (int ii = 0; ii < 3; ++ii)
             {
             int cellIndex = vcn.data[3*vertexIndex +ii];
-//printf("cellOrdering:%i   cellindex:%i    vertexIndex:%i \n",cellOrdering,cellIndex,vertexIndex);
             if(!cellOrdered[cellIndex])
                 {
                 cellOrdered[cellIndex] = true;
@@ -339,7 +338,7 @@ void Simple2DCell::spatiallySortVertices()
         idxToTag[ii] = tempiCell[itt[ii]];
         tagToIdx[tempiCell[itt[ii]]] = ii;
         };
-
+        
     reIndexCellArray(cellPositions);
 
 
@@ -352,12 +351,11 @@ void Simple2DCell::spatiallySortVertices()
     //Now the rest
     for (int vv = 0; vv < Nvertices; ++vv)
         {
-        int vertexIndex = ittVertex[vv];
+        int vertexIndex = ttiVertex[vv];
         for (int ii = 0; ii < 3; ++ii)
             {
-            vn.data[3*vv+ii] = ttiVertex[temp_vn.data[3*vertexIndex+ii]];
-            vcn.data[3*vv+ii] = tti[temp_vcn.data[3*vertexIndex+ii]];
-//printf("nv %i c %i \t\t ov %i c %i\n",vv,vcn.data[3*vv+ii],ittVertex[vv], temp_vcn.data[3*vv+ii]);
+            vn.data[3*vertexIndex+ii] = ttiVertex[temp_vn.data[3*vv+ii]];
+            vcn.data[3*vertexIndex+ii] = tti[temp_vcn.data[3*vv+ii]];
             };
         };
 
@@ -369,8 +367,6 @@ void Simple2DCell::spatiallySortVertices()
         for (int nn = 0; nn < neighs; ++nn)
             cv.data[n_idx(nn,cellIndex)] = ttiVertex[temp_cv.data[n_idx(nn,cc)]];
         };
-
-
     };
 
 /*!
