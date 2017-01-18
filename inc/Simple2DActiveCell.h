@@ -38,6 +38,8 @@ class Simple2DActiveCell : public Simple2DCell
     protected:
         //!initialize the cuda RNG
         void initializeCurandStates(int N, int gs, int i);
+        //!re-index the RNGs
+        void reIndexCellRNG(GPUArray<curandState> &array);
         
 
     //public member variables

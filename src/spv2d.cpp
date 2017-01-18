@@ -89,22 +89,11 @@ void SPV2D::spatialSorting()
     allDelSets();
 
     //re-index all cell information arrays
-    //motility
     reIndexCellArray(Motility);
-
-    //moduli
     reIndexCellArray(Moduli);
-
-    //preference
     reIndexCellArray(AreaPeriPreferences);
-
-    //director
     reIndexCellArray(cellDirectors);
-
-    //exclusions
     reIndexCellArray(exclusions);
-
-    //cellType
     reIndexCellArray(CellType);
     };
 

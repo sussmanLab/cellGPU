@@ -144,12 +144,12 @@ void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
 
     for (int ii = 0; ii < Nc; ++ii)
         {
-        int pidx = ii;
+        int pidx = s.tagToIdx[ii];
         directordat[ii] = h_cd.data[pidx];
         };
     for (int ii = 0; ii < Nv; ++ii)
         {
-        int pidx = ii;
+        int pidx = s.tagToIdxVertex[ii];
         Dscalar px = h_p.data[pidx].x;
         Dscalar py = h_p.data[pidx].y;
         posdat[(2*idx)] = px;
@@ -161,7 +161,10 @@ void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
         idx +=1;
         };
     for (int ii = 0; ii < 3*Nv; ++ii)
-        vndat[ii] = h_vn.data[ii];
+        vndat[ii] = s.tagToIdxVertex[h_vn.data[ii]];
+    /*!
+     * \todo once hilbert sorting is working for vertex models, make sure database saving is correct
+     */
 
     //Write all the data
     timeVar      ->put_rec(&time,      rec);

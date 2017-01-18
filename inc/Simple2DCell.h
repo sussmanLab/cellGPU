@@ -35,6 +35,11 @@ class Simple2DCell
         //! set uniform moduli for all cells
         void setModuliUniform(Dscalar newKA, Dscalar newKP);
 
+        //!Set all cells to the same "type"
+        void setCellTypeUniform(int i);
+        //!Set cells to different "type"
+        void setCellType(vector<int> &types);
+
         //!Set the time between spatial sorting operations.
         void setSortPeriod(int sp){sortPeriod = sp;};
 
@@ -44,12 +49,13 @@ class Simple2DCell
         void initializeCellSorting();
         //!set the size of the vertex-sorting structures, initialize lists simply
         void initializeVertexSorting();
-        //!Re-index arrays after a spatial sorting has occured.
+        //!Re-index cell arrays after a spatial sorting has occured.
         void reIndexCellArray(GPUArray<int> &array);
         //!why use templates when you can type more?
         void reIndexCellArray(GPUArray<Dscalar> &array);
         //!why use templates when you can type more?
         void reIndexCellArray(GPUArray<Dscalar2> &array);
+        //!Re-index vertex after a spatial sorting has occured.
         void reIndexVertexArray(GPUArray<int> &array);
         //!why use templates when you can type more?
         void reIndexVertexArray(GPUArray<Dscalar> &array);
@@ -82,7 +88,7 @@ class Simple2DCell
         /*!
         in general, we have:
         vertexCellNeighbors[3*i], vertexCellNeighbors[3*i+1], and vertexCellNeighbors[3*i+2] contain
-        the indices of the three cells are niehgbors of vertex i
+        the indices of the three cells are neighbors of vertex i
         */
         //! Cell neighbors of every vertex
         GPUArray<int> vertexCellNeighbors;
@@ -149,7 +155,8 @@ class Simple2DCell
         //!Similarly, voroLastNext.data[n_idx(nn,i)] gives the previous and next vertex of the same
         GPUArray<Dscalar4> voroLastNext;
 
-        /*!sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
+        /*!
+        sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
         */
         //!A map between cell index and the spatially sorted version.
         vector<int> itt;

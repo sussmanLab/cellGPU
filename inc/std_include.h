@@ -129,7 +129,7 @@ static void HandleError(cudaError_t err, const char *file, int line)
 
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
 
-
+#define DEBUGCODEHELPER printf("\nReached: file %s at line %d\n",__FILE__,__LINE__);
 #undef HOSTDEVICE
 
 #endif

@@ -34,6 +34,18 @@ void Simple2DActiveCell::initializeCurandStates(int N, int gs, int i)
     gpu_initialize_curand(d_curandRNGs.data,N,i,globalseed);
     };
 
+void Simple2DActiveCell::reIndexCellRNG(GPUArray<curandState> &array)
+    {
+    GPUArray<curandState> TEMP = array;
+    ArrayHandle<curandState> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<curandState> ar(array,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        ar.data[ii] = temp.data[itt[ii]];
+        };
+    };
+
+
 /*!
 Assign cell directors via a simple, reproducible RNG
 */

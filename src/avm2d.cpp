@@ -24,6 +24,7 @@ AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG,bool runSP
     Initialize(n,initGPURNG,runSPVToInitialize);
     setCellPreferencesUniform(A0,P0);
     setModuliUniform(1.0,1.0);
+    setCellTypeUniform(0);
     };
 
 /*!
@@ -230,11 +231,18 @@ void AVM2D::growCellVerticesList(int newVertexMax)
 /*!
  *When sortPeriod < 0 this routine does not get called
  \post vertices are re-ordered according to a Hilbert sorting scheme, cells are reordered according
- to what vertices they are near
+ to what vertices they are near, and all data structures are updated
  */
 void AVM2D::spatialVertexSorting()
     {
-
+    /*!
+    \todo implement a spatial sorting scheme...needs to handle sorting both the vertices and the
+    cell indices... this is partly done in the Simple2DCell class but needs to be tested
+    */
+    spatiallySortVertices();
+    reIndexCellRNG(cellRNGs);
+    reIndexCellArray(Motility);
+    reIndexCellArray(cellDirectors);
     };
 
 
@@ -871,7 +879,6 @@ void AVM2D::testEdgesForT1GPU()
  */
 void AVM2D::flipEdgesGPU()
     {
-    
     bool keepFlipping = true;
     //By construction, this loop must always run at least twice...save one of the memory transfers
     int iterations = 0;

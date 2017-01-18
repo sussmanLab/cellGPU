@@ -64,6 +64,36 @@ void Simple2DCell::setModuliUniform(Dscalar newKA, Dscalar newKP)
     };
 
 /*!
+ * set all cell types to i
+ */
+void Simple2DCell::setCellTypeUniform(int i)
+    {
+    CellType.resize(Ncells);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        h_ct.data[ii] = i;
+        };
+    };
+
+
+/*!
+ \param types a vector of integers that the cell types will be set to
+ */
+void Simple2DCell::setCellType(vector<int> &types)
+    {
+    CellType.resize(Ncells);
+    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        h_ct.data[ii] = types[ii];
+        };
+    };
+
+
+
+
+/*!
  *Sets the size of itt, tti, idxToTag, and tagToIdx, and sets all of them so that
  array[i] = i,
  i.e., unsorted
@@ -189,21 +219,21 @@ void Simple2DCell::spatiallySortCells()
     //idxToTag and tagToIdx relate the current indexes to the original ones
     HilbertSorter hs(Box);
 
-    vector<pair<int,int> > idxSorter(Ncells);
+    vector<pair<int,int> > idxCellSorter(Ncells);
 
     //sort points by Hilbert Curve location
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host, access_mode::readwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
-        idxSorter[ii].first=hs.getIdx(h_p.data[ii]);
-        idxSorter[ii].second = ii;
+        idxCellSorter[ii].first=hs.getIdx(h_p.data[ii]);
+        idxCellSorter[ii].second = ii;
         };
-    sort(idxSorter.begin(),idxSorter.end());
+    sort(idxCellSorter.begin(),idxCellSorter.end());
 
     //update tti and itt
     for (int ii = 0; ii < Ncells; ++ii)
         {
-        int newidx = idxSorter[ii].second;
+        int newidx = idxCellSorter[ii].second;
         itt[ii] = newidx;
         tti[newidx] = ii;
         };
@@ -219,41 +249,128 @@ void Simple2DCell::spatiallySortCells()
     };
 
 /*!
- * take the current location of the vertices and sort them according the their order along a 2D Hilbert curve
+ * take the current location of the vertices and sort them according the their order along a 2D
+ * Hilbert curve. This routine first sorts the vertices, and then uses the vertex sorting to derive
+ * a sorting of the cells
+ * \post both the itt, tti,... and ittVertex, ttiVertex... arrays are correctly set
  */
 void Simple2DCell::spatiallySortVertices()
     {
-    //itt and tti are the changes that happen in the current sort
-    //idxToTag and tagToIdx relate the current indexes to the original ones
+    //ittVertex and ttiVertex are the changes that happen in the current sort
+    //idxToTagVertex and tagToIdxVertex relate the current indexes to the original ones
     HilbertSorter hs(Box);
 
-    vector<pair<int,int> > idxSorter(Ncells);
+    vector<pair<int,int> > idxSorterVertex(Nvertices);
 
     //sort points by Hilbert Curve location
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host, access_mode::readwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
+    ArrayHandle<Dscalar2> h_p(vertexPositions,access_location::host, access_mode::readwrite);
+    for (int ii = 0; ii < Nvertices; ++ii)
         {
-        idxSorter[ii].first=hs.getIdx(h_p.data[ii]);
-        idxSorter[ii].second = ii;
+        idxSorterVertex[ii].first=hs.getIdx(h_p.data[ii]);
+        idxSorterVertex[ii].second = ii;
         };
-    sort(idxSorter.begin(),idxSorter.end());
+    sort(idxSorterVertex.begin(),idxSorterVertex.end());
+
+    //update tti and itt
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        int newidx = idxSorterVertex[ii].second;
+        ittVertex[ii] = newidx;
+        ttiVertex[newidx] = ii;
+        };
+
+    //update points, idxToTag, and tagToIdx
+    vector<int> tempi = idxToTagVertex;
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        idxToTagVertex[ii] = tempi[ittVertex[ii]];
+        tagToIdxVertex[tempi[ittVertex[ii]]] = ii;
+        };
+    reIndexVertexArray(vertexPositions);
+
+    //grab array handles and old copies of GPUarrays
+    GPUArray<int> TEMP_vertexNeighbors = vertexNeighbors;
+    GPUArray<int> TEMP_vertexCellNeighbors = vertexCellNeighbors;
+    GPUArray<int> TEMP_cellVertices = cellVertices;
+    ArrayHandle<int> temp_vn(TEMP_vertexNeighbors,access_location::host, access_mode::read);
+    ArrayHandle<int> temp_vcn(TEMP_vertexCellNeighbors,access_location::host, access_mode::read);
+    ArrayHandle<int> temp_cv(TEMP_cellVertices,access_location::host, access_mode::read);
+    ArrayHandle<int> vn(vertexNeighbors,access_location::host, access_mode::readwrite);
+    ArrayHandle<int> vcn(vertexCellNeighbors,access_location::host, access_mode::readwrite);
+    ArrayHandle<int> cv(cellVertices,access_location::host, access_mode::readwrite);
+    ArrayHandle<int> cvn(cellVertexNum,access_location::host,access_mode::read);
+
+    //Great, now use the vertex ordering to derive a cell spatial ordering
+    vector<pair<int,int> > idxCellSorter(Ncells);
+
+    vector<bool> cellOrdered(Ncells,false);
+    int cellOrdering = 0;
+    for (int vv = 0; vv < Nvertices; ++vv)
+        {
+        if(cellOrdering == Ncells) continue;
+        int vertexIndex = ittVertex[vv];
+        for (int ii = 0; ii < 3; ++ii)
+            {
+            int cellIndex = vcn.data[3*vertexIndex +ii];
+//printf("cellOrdering:%i   cellindex:%i    vertexIndex:%i \n",cellOrdering,cellIndex,vertexIndex);
+            if(!cellOrdered[cellIndex])
+                {
+                cellOrdered[cellIndex] = true;
+                idxCellSorter[cellIndex].first=cellOrdering;
+                idxCellSorter[cellIndex].second = cellIndex;
+                cellOrdering += 1;
+                };
+            };
+        };
+    sort(idxCellSorter.begin(),idxCellSorter.end());
 
     //update tti and itt
     for (int ii = 0; ii < Ncells; ++ii)
         {
-        int newidx = idxSorter[ii].second;
+        int newidx = idxCellSorter[ii].second;
         itt[ii] = newidx;
         tti[newidx] = ii;
         };
 
     //update points, idxToTag, and tagToIdx
-    vector<int> tempi = idxToTag;
+    vector<int> tempiCell = idxToTag;
     for (int ii = 0; ii < Ncells; ++ii)
         {
-        idxToTag[ii] = tempi[itt[ii]];
-        tagToIdx[tempi[itt[ii]]] = ii;
+        idxToTag[ii] = tempiCell[itt[ii]];
+        tagToIdx[tempiCell[itt[ii]]] = ii;
         };
+
     reIndexCellArray(cellPositions);
+
+
+    //Finally, now that both cell and vertex re-indexing is known, update auxiliary data structures
+    //Start with everything that can be done with just the cell indexing
+    reIndexCellArray(Moduli);
+    reIndexCellArray(AreaPeriPreferences);
+    reIndexCellArray(CellType);
+    reIndexCellArray(cellVertexNum);
+    //Now the rest
+    for (int vv = 0; vv < Nvertices; ++vv)
+        {
+        int vertexIndex = ittVertex[vv];
+        for (int ii = 0; ii < 3; ++ii)
+            {
+            vn.data[3*vv+ii] = ttiVertex[temp_vn.data[3*vertexIndex+ii]];
+            vcn.data[3*vv+ii] = tti[temp_vcn.data[3*vertexIndex+ii]];
+//printf("nv %i c %i \t\t ov %i c %i\n",vv,vcn.data[3*vv+ii],ittVertex[vv], temp_vcn.data[3*vv+ii]);
+            };
+        };
+
+    for (int cc = 0; cc < Ncells; ++cc)
+        {
+        int cellIndex = tti[cc];
+        //the cellVertexNeigh array is already sorted
+        int neighs = cvn.data[cellIndex];
+        for (int nn = 0; nn < neighs; ++nn)
+            cv.data[n_idx(nn,cellIndex)] = ttiVertex[temp_cv.data[n_idx(nn,cc)]];
+        };
+
+
     };
 
 /*!
