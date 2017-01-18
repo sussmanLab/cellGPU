@@ -236,8 +236,7 @@ void AVM2D::growCellVerticesList(int newVertexMax)
 void AVM2D::spatialVertexSorting()
     {
     /*!
-    \todo implement a spatial sorting scheme...needs to handle sorting both the vertices and the
-    cell indices... this is partly done in the Simple2DCell class but needs to be tested
+    \todo push this block into Simple2DActiveCell, build a similar structure for spatialCellSorting, and then edit how the spv2d sorting works
     */
     spatiallySortVertices();
     reIndexCellRNG(cellRNGs);

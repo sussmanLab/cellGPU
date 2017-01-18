@@ -16,6 +16,10 @@ moment the AVM2D class is based off of this, but DelaunayMD and SPV need to be r
 class Simple2DCell
     {
     //public functions first
+    /*!
+    \todo add functions to let the user set positions and cell/vertex topology by hand
+    \todo add a function to deduce vertex topology from cells, and vice versa
+    */
     public:
         //!Currently a vacant constructor
         Simple2DCell();
