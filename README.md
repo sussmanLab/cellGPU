@@ -11,14 +11,6 @@ Information on installing the project and contributing to it is contained in the
 markdown files in the base directory. Documentation of the code is maintained via Doxygen... go
 to the "/doc" directory, type "doxygen Doxyfile", and go from there.
 
-As with many performance-seeking codes, there is a tension between optimized computational speed
-and elegant code structure and organization. As a first pass this repository seeks to err slightly
-on the side of optimiztion, particularly with regards to having very flat data structures for the
-underlying degrees of freedom -- the vertices and centers of cells -- rather than a more natural
-representation of vertices and cells as classes that carry around pointers or other references to
-their properties. We reap the benefits of this when transferring data to the GPU and operating on
-it there.
-
 ## Basic idea of SPV hybrid operation
 
 The following describes the basic operation of the DelaunayMD class
