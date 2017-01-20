@@ -17,7 +17,7 @@ class Simple2DCell
     {
     //public functions first
     /*!
-    \todo add functions to let the user set positions and cell/vertex topology by hand
+    \todo add functions to let the user set cell/vertex topology by hand
     \todo add a function to deduce vertex topology from cells, and vice versa
     */
     public:
@@ -35,6 +35,11 @@ class Simple2DCell
 
         //!Set random cell positions, and set the periodic box to a square with average cell area=1
         void setCellPositionsRandomly();
+
+        //!Set cell positions according to a user-specified vector
+        void setCellPositions(vector<Dscalar2> newCellPositions);
+        //!Set vertex positions according to a user-specified vector
+        void setVertexPositions(vector<Dscalar2> newVertexPositions);
 
         //! set uniform moduli for all cells
         void setModuliUniform(Dscalar newKA, Dscalar newKP);
