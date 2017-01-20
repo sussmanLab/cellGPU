@@ -6,11 +6,11 @@ Refactor class structure... Simple2DCell --> Simple2DActiveCell --> {AVM2D or De
 
 ### version 0.9
 
-Add AVM2D class to implement a simple active vertex model. 
+Numerous bug fixes
 
 ### version 0.8 
 
-Implement separate tension terms between unlike cells in 2DSPV
+Add AVM2D class to implement a simple active vertex model. 
 
 ### version 0.7 
 
