@@ -20,7 +20,6 @@
 //! Perform and test triangulations in an MD setting, using kernels in \ref DelaunayMDKernels
 class DelaunayMD : public Simple2DActiveCell
     {
-    //public functions first
     public:
         //!The constructor!
         DelaunayMD();

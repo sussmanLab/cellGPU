@@ -22,23 +22,7 @@ using namespace std;
  //!A CPU-based class for locally constructing the Delaunay triangulation of part of a point set
 class DelaunayLoc
     {
-    private:
-        std::vector<Dscalar2> pts;    //!<vector of points to triangulate
-        int nV;                       //!<number of vertices
-        bool triangulated;            //!<has a triangulation been performed?
-
-        Dscalar cellsize;               //!<Sets how fine a grid to use in the cell list
-        grid clist;             //!<A grid class to speed up finding the candidate 1-ring
-        gpubox Box;             //!< A box to calculate relative distances in a periodic domain.
-
-        vector<int> DTringIdxCGAL; //!<A vector of Delaunay neighbor indicies that can be repeatedly re-written
-        vector<Dscalar2> DTringCGAL;//!<A vector of Delaunay neighbors that can be repeatedly re-written
-
     public:
-        //!Various aids for timing functions
-        Dscalar polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
-
-
         DelaunayLoc(){triangulated=false;cellsize=2.0;};
         //!constructor via a vector of Dscalar2 objects
         DelaunayLoc(std::vector<Dscalar2> &points, gpubox &bx){setPoints(points);setBox(bx);};
@@ -90,6 +74,20 @@ class DelaunayLoc
         //!simple testing function
         void testDel(int numpts,int tmax,double err, bool verbose);
 
-    };
+        //!Various aids for timing functions
+        Dscalar polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
 
+    private:
+        std::vector<Dscalar2> pts;    //!<vector of points to triangulate
+        int nV;                       //!<number of vertices
+        bool triangulated;            //!<has a triangulation been performed?
+
+        Dscalar cellsize;               //!<Sets how fine a grid to use in the cell list
+        grid clist;             //!<A grid class to speed up finding the candidate 1-ring
+        gpubox Box;             //!< A box to calculate relative distances in a periodic domain.
+
+        vector<int> DTringIdxCGAL; //!<A vector of Delaunay neighbor indicies that can be repeatedly re-written
+        vector<Dscalar2> DTringCGAL;//!<A vector of Delaunay neighbors that can be repeatedly re-written
+
+    };
 #endif

@@ -17,14 +17,6 @@ scheme.
  //! construct Delaunay Triangulation of a 2D, non-periodic point set via Bowyer-Watson algorithm
 class DelaunayNP
     {
-
-    private:
-        std::vector<Dscalar2> pts;      //!<vector of points to triangulate
-        int nV;                       //!<number of vertices
-        bool sorted;                  //!<are the points sorted
-        bool triangulated;            //!<has a triangulation been performed?
-        std::vector< pair<Dscalar2, int> > sortmap;    //!<map from sorted points back to input points
-
     public:
         DelaunayNP(){sorted=false;triangulated=false;};
         //!constructor via a vector of point objects
@@ -72,6 +64,14 @@ class DelaunayNP
 
         //!simple unit test
         void testDel(int numpts,int tmax,bool verbose);
+
+    private:
+        std::vector<Dscalar2> pts;      //!<vector of points to triangulate
+        int nV;                       //!<number of vertices
+        bool sorted;                  //!<are the points sorted
+        bool triangulated;            //!<has a triangulation been performed?
+        std::vector< pair<Dscalar2, int> > sortmap;    //!<map from sorted points back to input points
+
     };
 
 #endif

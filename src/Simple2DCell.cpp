@@ -116,7 +116,88 @@ void Simple2DCell::setCellType(vector<int> &types)
         };
     };
 
+/*!
+This function allows a user to set the vertex topology by hand. The user is responsible for making
+sure the input topology is sensible. DMS NOTE -- this functionality has not been thoroughly tested
+\pre Nvertices and vertex positions are already set
+\param cellVertexIndices a vector of vector of ints. Each vector of ints must correspond to the
+counter-clockwise ordering of vertices that make up the cell, and every vertex should appear at most
+three times in different cells
+*/
+void Simple2DCell::setVertexTopologyFromCells(vector< vector<int> > cellVertexIndices)
+    {
+    //set the number of cells, number of vertices per cell, and the maximum number of vertices per
+    //cell from the input
+    Ncells = cellVertexIndices.size();
+    cellVertexNum.resize(Ncells);
+    ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::overwrite);
+    vertexMax = 0;
+    for (int cc = 0; cc < Ncells; ++cc)
+        {
+        if(cellVertexIndices[cc].size() > vertexMax)
+            vertexMax = cellVertexIndices[cc].size();
+        h_cvn.data[cc] = cellVertexIndices[cc].size();
+        };
+    vertexMax +=2;
+    //set the vertices associated with every cell
+    n_idx = Index2D(vertexMax,Ncells);
+    cellVertices.resize(vertexMax*Ncells);
+    ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::overwrite);
+    for (int cc = 0; cc < Ncells; ++cc)
+        {
+        for (int nn = 0; nn < cellVertexIndices[cc].size(); ++nn)
+            {
+            h_cv.data[n_idx(nn,cc)] = cellVertexIndices[cc][nn];
+            };
+        };
 
+    //deduce the vertex-vertex  and vertex-cell connections from the input
+    vector<int> vertexNeighborsFound(Nvertices,0);
+    vector<int> vertexCellNeighborsFound(Nvertices,0);
+    vertexNeighbors.resize(3*Nvertices);
+    vertexCellNeighbors.resize(3*Nvertices);
+    ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::overwrite);
+    int vlast, vcur, vnext;
+    for (int cc = 0; cc < Ncells; ++cc)
+        {
+        int neighs = cellVertexIndices[cc].size();
+        //iterate through the cell list, starting with vnext being the first item in the list
+        vlast = cellVertexIndices[cc][neighs-2];
+        vcur = cellVertexIndices[cc][neighs-1];
+        for (int nn = 0; nn < neighs; ++nn)
+            {
+            vnext = cellVertexIndices[cc][nn];
+            //find vertex-vertex neighbors
+            if(vertexNeighborsFound[vcur] < 3)
+                {
+                bool addVLast = true;
+                bool addVNext = true;
+                for (int vv = 0; vv < vertexNeighborsFound[vcur]; ++vv)
+                    {
+                    if(h_vn.data[3*vcur+vv] == vlast) addVLast = false;
+                    if(h_vn.data[3*vcur+vv] == vnext) addVNext = false;
+                    };
+                if(addVLast)
+                    {
+                    h_vn.data[3*vcur + vertexNeighborsFound[vcur]] = vlast;
+                    vertexNeighborsFound[vcur] += 1;
+                    };
+                if(addVNext)
+                    {
+                    h_vn.data[3*vcur + vertexNeighborsFound[vcur]] = vnext;
+                    vertexNeighborsFound[vcur] += 1;
+                    };
+                };
+            //find vertex-cell neighbors
+            h_vcn.data[3*vcur + vertexCellNeighborsFound[vcur]] = cc;
+            vertexCellNeighborsFound[vcur] += 1;
+            // advance the loop
+            vlast = vcur;
+            vcur = vnext;
+            };
+        };
+    };
 
 
 /*!

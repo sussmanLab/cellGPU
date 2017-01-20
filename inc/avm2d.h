@@ -6,8 +6,10 @@
 #include "cu_functions.h"
 
 /*!
-A class that implements an active vertex model in 2D. This involves calculating forces on
+A class that implements a simple active vertex model in 2D. This involves calculating forces on
 vertices, moving them around, and updating the topology of the cells according to some criteria.
+Only T1 transitions are currently implemented, and they occur whenever two vertices come closer
+than a set threshold distance. All vertices are three-valent.
 
 This class is a child of the Simple2DCell class, which provides data structures like the positions of
 cells, vertex positions, indices of vertices around each cell, cells around each vertex, etc.
@@ -15,7 +17,6 @@ cells, vertex positions, indices of vertices around each cell, cells around each
 //!Implement a 2D active vertex model, using kernels in \ref avmKernels
 class AVM2D : public Simple2DActiveCell
     {
-    //public functions first...
     public:
         //! the constructor: initialize as a Delaunay configuration with random positions and set all cells to have uniform target A_0 and P_0 parameters
         AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true,bool runSPVToInitialize=false);
@@ -27,7 +28,7 @@ class AVM2D : public Simple2DActiveCell
         void setT1Threshold(Dscalar t1t){T1Threshold = t1t;};
 
         //!Initialize cells to be a voronoi tesselation of a random point set
-        void setCellsVoronoiTesselation(int n, bool spvInitialize = false);
+        void setCellsVoronoiTesselation(bool spvInitialize = false);
 
         //!progress through the parts of a time step...simply an interface to the correct other procedure
         void performTimestep();
@@ -79,6 +80,8 @@ class AVM2D : public Simple2DActiveCell
         //utility functions
         //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
         void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
+        //!Initialize the data structures for edge flipping...should also be called if Nvertices changes
+        void initializeEdgeFlipLists();
 
     //public member variables...most of these should eventually be protected
     public:

@@ -15,11 +15,6 @@ moment the AVM2D class is based off of this, but DelaunayMD and SPV need to be r
 //! Implement data structures and functions common to many off-lattice models of cells in 2D
 class Simple2DCell
     {
-    //public functions first
-    /*!
-    \todo add functions to let the user set cell/vertex topology by hand
-    \todo add a function to deduce vertex topology from cells, and vice versa
-    */
     public:
         //!Currently a vacant constructor
         Simple2DCell();
@@ -51,6 +46,9 @@ class Simple2DCell
 
         //!Set the time between spatial sorting operations.
         void setSortPeriod(int sp){sortPeriod = sp;};
+
+        //!An uncomfortable function to allow the user to set vertex topology "by hand"
+        void setVertexTopologyFromCells(vector< vector<int> > cellVertexIndices);
 
     //protected functions
     protected:

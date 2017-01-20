@@ -22,7 +22,6 @@
  //!Implement the 2D SPV model, with and without some extra bells and whistles, using kernels in \ref spvKernels
 class SPV2D : public DelaunayMD
     {
-    //public functions
     public:
         //!initialize with random positions in a square box
         SPV2D(int n,bool reprod = false,bool initGPURNG=true);

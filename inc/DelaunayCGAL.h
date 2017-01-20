@@ -48,8 +48,6 @@ performed complete triangulation of a periodic point set.
  //! Access the 2D periodic and non-periodic functionality of CGAL Delaunay triangulations
 class DelaunayCGAL
     {
-    protected:
-
     public:
         vector< vector<int> > allneighs; //!<The list of neighbors of every point in the periodic triangulation
 
@@ -57,9 +55,5 @@ class DelaunayCGAL
         void PeriodicTriangulation(vector<pair<Point,int> > &points,Dscalar size);
         //! given a similar vector of points, calculate the neighbors of the first point in a non-periodic domain.
         bool LocalTriangulation(const vector<pair<LPoint,int> > &points, vector<int> &neighs);
-
     };
-
-
-
 #endif

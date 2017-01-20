@@ -51,12 +51,10 @@ Assign cell directors via a simple, reproducible RNG
 */
 void Simple2DActiveCell::setCellDirectorsRandomly()
     {
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::overwrite);
+    cellDirectors.resize(Ncells);
+    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Dscalar theta = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
-        h_cd.data[ii] = theta;
-        };
+        h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
     };
     
 /*!

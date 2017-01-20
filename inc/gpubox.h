@@ -23,15 +23,6 @@ that interface with it do not yet have this functionality implemented.
 //!A simple box defining a 2D periodic domain
 struct gpubox
     {
-    private:
-        //!The transformation matrix defining the periodic box
-        Dscalar x11,x12,x21,x22;//the transformation matrix defining the box
-        Dscalar halfx11,halfx22;
-        //!The inverse of the transformation matrix
-        Dscalar xi11,xi12,xi21,xi22;//it's inverse
-        bool isSquare;
-
-
     public:
         HOSTDEVICE gpubox(){isSquare = false;};
         //!Construct a rectangular box containing the unit cell ((0,0),(x,0),(x,y),(0,y))
@@ -69,7 +60,14 @@ struct gpubox
             other.getBoxDims(b11,b12,b21,b22);
             setGeneral(b11,b12,b21,b22);
             };
-    private:
+    protected:
+        //!The transformation matrix defining the periodic box
+        Dscalar x11,x12,x21,x22;//the transformation matrix defining the box
+        Dscalar halfx11,halfx22;
+        //!The inverse of the transformation matrix
+        Dscalar xi11,xi12,xi21,xi22;//it's inverse
+        bool isSquare;
+
         HOSTDEVICE void putInBox(Dscalar2 &vp);
     };
 

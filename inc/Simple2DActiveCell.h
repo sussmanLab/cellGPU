@@ -19,7 +19,6 @@ class Simple2DActiveCell : public Simple2DCell
     {
     //public functions first
     public:
-        //!Currently a vacant constructor
         Simple2DActiveCell();
 
         //!Set the simulation time stepsize

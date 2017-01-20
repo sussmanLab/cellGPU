@@ -28,20 +28,14 @@ AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG,bool runSP
     };
 
 /*!
-A function of convenience.... initialize cell positions and vertices by starting with the Delaunay
-triangulations of a random point set. If you want something more regular, run the SPV mode for a few
+A function of convenience.... initialize cell positions and vertices by constructing the Delaunay
+triangulation of the current cell positions. If you want something more regular, run the SPV mode for a few
 timesteps to smooth out the random point set first.
+\param spvInitialize only use if the initial cell positions are to be random, and you want to make the points more uniform
 \post After this is called, all topology data structures are initialized
 */
-void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
+void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
     {
-    //set number of cells, and a square box
-    Ncells=n;
-    cellPositions.resize(Ncells);
-
-    //put cells in box randomly
-    setCellPositionsRandomly();
-
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
     //use the SPV class to relax the initial configuration just a bit?
     if(spvInitialize)
@@ -143,13 +137,13 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
             ++fc;
             };
         };
-    //randomly set vertex directors
-    cellDirectors.resize(Ncells);
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
+   };
 
-    //initialize edge flips to zero
+/*!
+ Initialize the auxilliary edge flip data structures to zero
+ */
+void AVM2D::initializeEdgeFlipLists()
+    {
     vertexEdgeFlips.resize(3*Nvertices);
     vertexEdgeFlipsCurrent.resize(3*Nvertices);
     ArrayHandle<int> h_vflip(vertexEdgeFlips,access_location::host,access_mode::overwrite);
@@ -160,15 +154,25 @@ void AVM2D::setCellsVoronoiTesselation(int n, bool spvInitialize)
         h_vflipc.data[i]=0;
         }
 
-   };
+    finishedFlippingEdges.resize(1);
+    ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::overwrite);
+    h_ffe.data[0]=0;
+    };
 
 /*!
 Take care of all class initialization functions, this involves setting arrays to the right size, etc.
 */
 void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     {
-    setCellsVoronoiTesselation(n,spvInitialize);
-
+    //set number of cells, and a square box
+    Ncells=n;
+    cellPositions.resize(Ncells);
+    //put cells in box randomly
+    setCellPositionsRandomly();
+    //derive the vertices from a voronoi tesselation
+    setCellsVoronoiTesselation(spvInitialize);
+    setCellDirectorsRandomly();
+    
     Timestep = 0;
     setDeltaT(0.01);
     setT1Threshold(0.01);
@@ -182,6 +186,7 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     //initializes per-vertex lists
     vertexForces.resize(Nvertices);
     initializeVertexSorting();
+    initializeEdgeFlipLists();
     //initialize per-triple-vertex lists
     vertexForceSets.resize(3*Nvertices);
     voroCur.resize(3*Nvertices);
@@ -192,9 +197,6 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     growCellVertexListAssist.resize(1);
     ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);
     h_grow.data[0]=0;
-    finishedFlippingEdges.resize(1);
-    ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::overwrite);
-    h_ffe.data[0]=0;
     };
 
 /*!
