@@ -237,9 +237,7 @@ void AVM2D::growCellVerticesList(int newVertexMax)
  */
 void AVM2D::spatialVertexSorting()
     {
-    /*!
-    \todo push this block into Simple2DActiveCell, build a similar structure for spatialCellSorting, and then edit how the spv2d sorting works
-    */
+    //the avm class doesn't need to change any other unusual data structures at the moment
     spatiallySortVerticesAndCellActivity();
     };
 

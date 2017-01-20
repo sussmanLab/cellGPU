@@ -168,9 +168,6 @@ void AVMDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
             vndat[3*vv+ii] = s.idxToTagVertex[h_vn.data[3*vertexIndex+ii]];
             };
         };
-    /*!
-     * \todo once hilbert sorting is working for vertex models, make sure database saving is correct
-     */
 
     //Write all the data
     timeVar      ->put_rec(&time,      rec);
