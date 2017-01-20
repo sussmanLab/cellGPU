@@ -10,7 +10,7 @@
 BaseDatabase just provides an interface to a file and a mode of operation.
 */
 //! A base class that implements a details-free  netCDF4-based data storage system
-class BaseDatabase
+class BaseDatabaseNetCDF
 {
 public:
     //! The name of the file
@@ -21,10 +21,10 @@ public:
     NcFile File;
 
     //!The default constructor takes starts a bland filename in readonly mode
-    BaseDatabase(string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
+    BaseDatabaseNetCDF(string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
 };
 
-BaseDatabase::BaseDatabase(string fn, NcFile::FileMode mode)
+BaseDatabaseNetCDF::BaseDatabaseNetCDF(string fn, NcFile::FileMode mode)
     : filename(fn),
       Mode(mode),
       File(fn.c_str(), mode)

@@ -6,7 +6,7 @@
 
 #include "avm2d.h"
 #include "cu_functions.h"
-#include "DatabaseAVM.h"
+#include "DatabaseNetCDFAVM.h"
 
 int main(int argc, char*argv[])
 {
@@ -67,7 +67,7 @@ int main(int argc, char*argv[])
     char dataname[256];
     sprintf(dataname,"../test.nc");
     int Nvert = 2*numpts;
-    AVMDatabase ncdat(Nvert,dataname,NcFile::Replace);
+    AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
     bool runSPV = false;
     AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU,runSPV);
