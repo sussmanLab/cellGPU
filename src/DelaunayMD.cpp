@@ -35,7 +35,7 @@ void DelaunayMD::initializeDelMD(int n)
 
     cellPositions.resize(Ncells);
     repair.resize(Ncells);
-    
+
     setCellPositionsRandomly();
     //initialize spatial sorting, but do not sort by default
     initializeCellSorting();

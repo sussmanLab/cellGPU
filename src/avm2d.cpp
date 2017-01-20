@@ -240,10 +240,7 @@ void AVM2D::spatialVertexSorting()
     /*!
     \todo push this block into Simple2DActiveCell, build a similar structure for spatialCellSorting, and then edit how the spv2d sorting works
     */
-    spatiallySortVertices();
-    reIndexCellRNG(cellRNGs);
-    reIndexCellArray(Motility);
-    reIndexCellArray(cellDirectors);
+    spatiallySortVerticesAndCellActivity();
     };
 
 

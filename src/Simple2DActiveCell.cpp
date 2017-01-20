@@ -45,6 +45,29 @@ void Simple2DActiveCell::reIndexCellRNG(GPUArray<curandState> &array)
         };
     };
 
+/*!
+Calls the spatial vertex sorting routine in Simple2DCell, and re-indexes the arrays for the cell
+RNGS, as well as the cell motility and cellDirector arrays
+*/
+void Simple2DActiveCell::spatiallySortVerticesAndCellActivity()
+    {
+    spatiallySortVertices();
+    reIndexCellRNG(cellRNGs);
+    reIndexCellArray(Motility);
+    reIndexCellArray(cellDirectors);
+    };
+
+/*!
+Calls the spatial vertex sorting routine in Simple2DCell, and re-indexes the arrays for the cell
+RNGS, as well as the cell motility and cellDirector arrays
+*/
+void Simple2DActiveCell::spatiallySortCellsAndCellActivity()
+    {
+    spatiallySortCells();
+    reIndexCellRNG(cellRNGs);
+    reIndexCellArray(Motility);
+    reIndexCellArray(cellDirectors);
+    };
 
 /*!
 Assign cell directors via a simple, reproducible RNG

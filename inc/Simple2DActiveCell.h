@@ -39,7 +39,11 @@ class Simple2DActiveCell : public Simple2DCell
         void initializeCurandStates(int N, int gs, int i);
         //!re-index the RNGs
         void reIndexCellRNG(GPUArray<curandState> &array);
-        
+        //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
+        void spatiallySortVerticesAndCellActivity();
+
+        //!call the Simple2DCell spatial cell sorter, and re-index arrays of cell activity
+        void spatiallySortCellsAndCellActivity();
 
     //public member variables
     public:

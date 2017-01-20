@@ -353,6 +353,9 @@ void Simple2DCell::spatiallySortCells()
         tagToIdx[tempi[itt[ii]]] = ii;
         };
     reIndexCellArray(cellPositions);
+    reIndexCellArray(Moduli);
+    reIndexCellArray(AreaPeriPreferences);
+    reIndexCellArray(CellType);
     };
 
 /*!

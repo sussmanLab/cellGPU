@@ -77,11 +77,11 @@ void SPV2D::Initialize(int n,bool initGPU)
 
 /*
 When sortPeriod < 0, this routine does not get called
-\post call DelaunayMD's underlying Hilbert sort scheme, and re-index spv2d's arrays
+\post call Simple2DActiveCell's underlying Hilbert sort scheme, and re-index spv2d's extra arrays
 */
 void SPV2D::spatialSorting()
     {
-    spatiallySortCells();
+    spatiallySortCellsAndCellActivity();
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
     //get new DelSets and DelOthers
@@ -89,12 +89,7 @@ void SPV2D::spatialSorting()
     allDelSets();
 
     //re-index all cell information arrays
-    reIndexCellArray(Motility);
-    reIndexCellArray(Moduli);
-    reIndexCellArray(AreaPeriPreferences);
-    reIndexCellArray(cellDirectors);
     reIndexCellArray(exclusions);
-    reIndexCellArray(CellType);
     };
 
 /*!
