@@ -3,7 +3,7 @@
 
 #include "std_include.h"
 #include "spv2d.h"
-#include "Database.h"
+#include "DatabaseNetCDF.h"
 #include <netcdfcpp.h>
 #include <string>
 #include "vector_types.h"
@@ -14,7 +14,7 @@ the box dimensions are stored, the 2d unwrapped coordinate of the delaunay verti
 and the shape index parameter for each vertex
 */
 //!Simple databse for reading/writing 2d spv states
-class SPVDatabase : public BaseDatabase
+class SPVDatabaseNetCDF : public BaseDatabaseNetCDF
 {
 private:
     typedef SPV2D STATE;
@@ -26,8 +26,8 @@ private:
 
 
 public:
-    SPVDatabase(int np, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly,bool excluded = false);
-    ~SPVDatabase(){File.close();};
+    SPVDatabaseNetCDF(int np, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly,bool excluded = false);
+    ~SPVDatabaseNetCDF(){File.close();};
 
 private:
     void SetDimVar();
@@ -48,8 +48,8 @@ public:
 
 };
 
-SPVDatabase::SPVDatabase(int np, string fn, NcFile::FileMode mode, bool exclude)
-    : BaseDatabase(fn,mode),
+SPVDatabaseNetCDF::SPVDatabaseNetCDF(int np, string fn, NcFile::FileMode mode, bool exclude)
+    : BaseDatabaseNetCDF(fn,mode),
       Nv(np),
       Current(0),
       exclusions(exclude)
@@ -72,7 +72,7 @@ SPVDatabase::SPVDatabase(int np, string fn, NcFile::FileMode mode, bool exclude)
         };
     }
 
-void SPVDatabase::SetDimVar()
+void SPVDatabaseNetCDF::SetDimVar()
     {
     //Set the dimensions
     recDim = File.add_dim("rec");
@@ -92,7 +92,7 @@ void SPVDatabase::SetDimVar()
         exVar          = File.add_var("externalForce",       ncDscalar,recDim, dofDim);
     }
 
-void SPVDatabase::GetDimVar()
+void SPVDatabaseNetCDF::GetDimVar()
     {
     //Get the dimensions
     recDim = File.get_dim("rec");
@@ -111,7 +111,7 @@ void SPVDatabase::GetDimVar()
         exVar = File.get_var("externalForce");
     }
 
-void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
+void SPVDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
     {
     if(rec<0)   rec = recDim->size();
     if (time < 0) time = s.Timestep*s.deltaT;
@@ -130,7 +130,7 @@ void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
     int idx = 0;
     Dscalar means0=0.0;
 
-    ArrayHandle<Dscalar2> h_p(s.points,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_p(s.cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar> h_cd(s.cellDirectors,access_location::host,access_mode::read);
     ArrayHandle<int> h_ct(s.CellType,access_location::host,access_mode::read);
     ArrayHandle<int> h_ex(s.exclusions,access_location::host,access_mode::read);
@@ -179,7 +179,7 @@ void SPVDatabase::WriteState(STATE &s, Dscalar time, int rec)
     File.sync();
     }
 
-void SPVDatabase::ReadState(STATE &t, int rec,bool geometry)
+void SPVDatabaseNetCDF::ReadState(STATE &t, int rec,bool geometry)
     {
     //initialize the NetCDF dimensions and variables
     //test if there is exclusion data to read...
@@ -204,7 +204,7 @@ void SPVDatabase::ReadState(STATE &t, int rec,bool geometry)
     std::vector<Dscalar> posdata(2*Nv,0.0);
     posVar->get(&posdata[0],1, dofDim->size());
 
-    ArrayHandle<Dscalar2> h_p(t.points,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_p(t.cellPositions,access_location::host,access_mode::overwrite);
     for (int idx = 0; idx < Nv; ++idx)
         {
         Dscalar px = posdata[(2*idx)];

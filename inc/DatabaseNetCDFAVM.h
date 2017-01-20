@@ -4,7 +4,7 @@
 #include "std_include.h"
 #include "avm2d.h"
 #include "spv2d.h"
-#include "Database.h"
+#include "DatabaseNetCDF.h"
 #include <netcdfcpp.h>
 #include <string>
 #include "vector_types.h"
@@ -16,7 +16,7 @@ the box dimensions are stored, the 2d unwrapped coordinate of vertices,
 and the set of connections between vertices
 */
 //!Simple databse for reading/writing 2d AVM states
-class AVMDatabase : public BaseDatabase
+class AVMDatabaseNetCDF : public BaseDatabaseNetCDF
 {
 private:
     typedef AVM2D STATE;
@@ -30,8 +30,8 @@ private:
 
 public:
     //!The default constructor takes the number of *vertices* as the parameter
-    AVMDatabase(int nv, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
-    ~AVMDatabase(){File.close();};
+    AVMDatabaseNetCDF(int nv, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
+    ~AVMDatabaseNetCDF(){File.close();};
 
 private:
     void SetDimVar();
@@ -55,8 +55,8 @@ public:
 //Implementation
 
 
-AVMDatabase::AVMDatabase(int np, string fn, NcFile::FileMode mode)
-    : BaseDatabase(fn,mode),
+AVMDatabaseNetCDF::AVMDatabaseNetCDF(int np, string fn, NcFile::FileMode mode)
+    : BaseDatabaseNetCDF(fn,mode),
       Nv(np),
       Current(0)
 {
@@ -79,7 +79,7 @@ AVMDatabase::AVMDatabase(int np, string fn, NcFile::FileMode mode)
         };
 }
 
-void AVMDatabase::SetDimVar()
+void AVMDatabaseNetCDF::SetDimVar()
 {
     //Set the dimensions
     recDim = File.add_dim("rec");
@@ -99,7 +99,7 @@ void AVMDatabase::SetDimVar()
     timeVar          = File.add_var("time",     ncDscalar,recDim, unitDim);
 }
 
-void AVMDatabase::GetDimVar()
+void AVMDatabaseNetCDF::GetDimVar()
 {
     //Get the dimensions
     recDim = File.get_dim("rec");
@@ -118,7 +118,7 @@ void AVMDatabase::GetDimVar()
 }
 
 
-void AVMDatabase::WriteState(STATE &s, Dscalar time, int rec)
+void AVMDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
 {
     if(rec<0)   rec = recDim->size();
     if (time < 0) time = s.Timestep*s.deltaT;

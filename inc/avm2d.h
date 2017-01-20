@@ -125,6 +125,6 @@ class AVM2D : public Simple2DActiveCell
             cout <<endl;
             };
     //be friends with the associated Database class so it can access data to store or read
-    friend class AVMDatabase;
+    friend class AVMDatabaseNetCDF;
     };
 #endif

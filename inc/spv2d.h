@@ -123,7 +123,7 @@ class SPV2D : public DelaunayMD
         //!Some function-timing-related scalars
         Dscalar triangletiming, forcetiming;
     //be friends with the associated Database class so it can access data to store or read
-    friend class SPVDatabase;
+    friend class SPVDatabaseNetCDF;
     };
 
 #endif

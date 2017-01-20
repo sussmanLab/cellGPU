@@ -44,6 +44,32 @@ void Simple2DCell::setCellPositionsRandomly()
         };
     };
 
+/*!
+Does not update any other lists -- it is the user's responsibility to maintain topology, etc, when
+using this function.
+*/
+void Simple2DCell::setCellPositions(vector<Dscalar2> newCellPositions)
+    {
+    Ncells = newCellPositions.size();
+    if(cellPositions.getNumElements() != Ncells) cellPositions.resize(Ncells);
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        h_p.data[ii] = newCellPositions[ii];
+    }
+
+/*!
+Does not update any other lists -- it is the user's responsibility to maintain topology, etc, when
+using this function.
+*/
+void Simple2DCell::setVertexPositions(vector<Dscalar2> newVertexPositions)
+    {
+    Nvertices = newVertexPositions.size();
+    if(vertexPositions.getNumElements() != Nvertices) vertexPositions.resize(Nvertices);
+    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Nvertices; ++ii)
+        h_v.data[ii] = newVertexPositions[ii];
+    }
+
 
 /*!
 set all cell K_A, K_P preferences to uniform values.

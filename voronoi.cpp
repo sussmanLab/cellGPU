@@ -7,7 +7,7 @@
 
 #include "spv2d.h"
 #include "cu_functions.h"
-//#include "DatabaseSPV.h"
+#include "DatabaseNetCDFSPV.h"
 
 
 using namespace std;
@@ -69,7 +69,7 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabase ncdat(numpts,dataname,NcFile::Replace);
+//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
 
 
 
