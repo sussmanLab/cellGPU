@@ -904,7 +904,9 @@ void AVM2D::flipEdgesGPU()
                                Nvertices,
                                Ncells);
             }; //scope for arrayhandles
-
+        /*!
+        \todo think about a better structure for avoiding simultaneous edge flips on the same cell
+        */
         ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
         if(h_ffe.data[0]==0)
             keepFlipping = false;
