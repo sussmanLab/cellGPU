@@ -1,5 +1,8 @@
 #include "Delaunay1.h"
 
+/*!
+\param points a vector of Dscalars, formatted as [x1,y1,x2,y2,...,xn,yn]
+*/
 void DelaunayNP::setPoints(vector<Dscalar> points)
     {
     nV=points.size()/2;
@@ -22,6 +25,9 @@ void DelaunayNP::setPoints(vector<Dscalar> points)
         };
     };
 
+/*!
+\param points a vector of Dscalar2's
+*/
 void DelaunayNP::setPoints(vector<Dscalar2> points)
     {
     nV=points.size();
@@ -42,6 +48,9 @@ void DelaunayNP::setPoints(vector<Dscalar2> points)
         };
     };
 
+/*!
+Sorts points according to the sortmap array, which itself is via the x-coordinate of the points
+*/
 void DelaunayNP::sortPoints()
     {
     sort(sortmap.begin(),sortmap.end());
@@ -50,11 +59,21 @@ void DelaunayNP::sortPoints()
     sorted = true;
     };
 
+/*!
+A simple wrapper around the naiveBowyerWatson routine written... if DelaunayNP ever gets additional
+algorithms (to reduce how poorly it performs relative to CGAL, for instance), this function can be
+updated, potentially with additional logic if some routines are specialized to particular situations
+*/
 void DelaunayNP::triangulate()
     {//update if a better DT algorithm is implemented
     naiveBowyerWatson();
     };
 
+/*!
+A simple Bowyer-Watson-style algorithm to deduce the Delaunay triangulation of a point set. A fixed
+choice of bounding triangle has been used, which was empirically chosen from its acceptable
+performance on random point sets.
+*/
 void DelaunayNP::naiveBowyerWatson()
     {
     bool incircle;
@@ -195,6 +214,10 @@ void DelaunayNP::naiveBowyerWatson()
 
     };
 
+/*!
+A utility function, of use for debugging
+\param maxprint the number of points to print to screen
+*/
 void DelaunayNP::printTriangulation(int maxprint)
     {
     if (!triangulated)
@@ -212,6 +235,11 @@ void DelaunayNP::printTriangulation(int maxprint)
     cout << endl;
     };
 
+/*!
+A utility function, of use for debugging...outputs a simple representation of the triangulation to
+the file specifed by "outfile"
+\param outfile The file to which the info should be sent
+*/
 void DelaunayNP::writeTriangulation(ofstream &outfile)
     {
     outfile << nV <<"\t"<<DT.nTriangles<<"\t"<<DT.nEdges<<endl;
@@ -223,6 +251,12 @@ void DelaunayNP::writeTriangulation(ofstream &outfile)
         outfile << DT.edges[ii].i <<"\t" <<DT.edges[ii].j<<endl;
     };
 
+/*!
+A utility function for timing random point configurations
+\param numpts the number of points to perform timing tests on
+\param tmax the number of distinct configurations to average over
+\param verbose print extra info if true
+*/
 void DelaunayNP::testDel(int numpts, int tmax,bool verbose)
     {
     cout << "Timing the base, non-periodic routine..." << endl;

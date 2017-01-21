@@ -127,6 +127,9 @@ void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
     };
 
 //the function calls the DelaunayLoc and DelaunayNP classes to determine the Delaunay triangulation of the entire periodic domain
+/*!
+\todo update this function, try to make it more robust
+*/
 void DelaunayMD::fullTriangulation()
     {
     resetDelLocPoints();
