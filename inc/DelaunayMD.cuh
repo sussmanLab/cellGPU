@@ -31,7 +31,7 @@ bool gpu_test_circumcenters(
                             gpubox &Box,
                             Index2D &ci,
                             Index2D &cli,
-                            int &fail
+                            int *fail
                             );
 /** @} */ //end of group declaration
 

@@ -54,6 +54,11 @@ void DelaunayMD::initializeDelMD(int n)
     completeRetriangulationPerformed = 1;
     cellNeighborNum.resize(Ncells);
     globalTriangulationCGAL();
+
+    //initialize the anyCircumcenterTestFailed structure
+    anyCircumcenterTestFailed.resize(1);
+    ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::overwrite);
+    h_actf.data[0]=0;
     };
 
 //The GPU moves the location of points in the GPU memory... this gets a local copy that can be used by the DelaunayLoc class
@@ -413,9 +418,12 @@ synchronization event. At least until non-default streams are added to the code.
 */
 void DelaunayMD::testTriangulation()
     {
-    //first, update the cell list
+    //first, update the cell list, and set the cc test to 0
     updateCellList();
-
+    {
+    ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::overwrite);
+    h_actf.data[0]=0;
+    };
     //access data handles
     ArrayHandle<Dscalar2> d_pt(cellPositions,access_location::device,access_mode::read);
 
@@ -424,6 +432,7 @@ void DelaunayMD::testTriangulation()
 
     ArrayHandle<int> d_repair(repair,access_location::device,access_mode::readwrite);
     ArrayHandle<int3> d_ccs(circumcenters,access_location::device,access_mode::read);
+    ArrayHandle<int> d_actf(anyCircumcenterTestFailed,access_location::device,access_mode::readwrite);
 
     int NumCircumCenters = Ncells*2;
     gpu_test_circumcenters(d_repair.data,
@@ -439,7 +448,7 @@ void DelaunayMD::testTriangulation()
                            Box,
                            celllist.cell_indexer,
                            celllist.cell_list_indexer,
-                           anyCircumcenterTestFailed
+                           d_actf.data 
                            );
     };
 
@@ -451,7 +460,8 @@ behavior of the cpu branch.
 */
 void DelaunayMD::testTriangulationCPU()
     {
-    anyCircumcenterTestFailed=0;
+    ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::readwrite);
+    h_actf.data[0]=0;
     if (globalOnly)
         {
         globalTriangulationCGAL();
@@ -464,7 +474,7 @@ void DelaunayMD::testTriangulationCPU()
         ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
         ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::readwrite);
         ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::readwrite);
-        anyCircumcenterTestFailed = 0;
+        h_actf.data[0]=0;
         for (int nn = 0; nn < Ncells; ++nn)
             {
             h_repair.data[nn] = 0;
@@ -480,7 +490,7 @@ void DelaunayMD::testTriangulationCPU()
             if(!good)
                 {
                 h_repair.data[nn] = 1;
-                anyCircumcenterTestFailed=1;
+                h_actf.data[0]=1;
                 };
             };
         };
@@ -502,7 +512,8 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
         testTriangulationCPU();
         };
 
-    if(anyCircumcenterTestFailed == 1)
+    ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::read);
+    if(h_actf.data[0]==1)
         {
         NeedsFixing.clear();
         ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);

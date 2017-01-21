@@ -121,21 +121,14 @@ bool gpu_test_circumcenters(int *d_repair,
                             gpubox &Box,
                             Index2D &ci,
                             Index2D &cli,
-                            int &fail)
+                            int *fail)
     {
     unsigned int block_size = 128;
     if (Nccs < 128) block_size = 32;
     unsigned int nblocks  = Nccs/block_size + 1;
 
-    fail = 0;
-    int *anyFail;
-    cudaMalloc((void**)&anyFail,sizeof(int));
-    cudaMemcpy(anyFail,&fail,sizeof(int),cudaMemcpyHostToDevice);
-
-
     gpu_test_circumcenters_kernel<<<nblocks,block_size>>>(
                             d_repair,
-                       //     d_redo2,
                             d_ccs,
                             d_pt,
                             d_cell_sizes,
@@ -147,10 +140,8 @@ bool gpu_test_circumcenters(int *d_repair,
                             Box,
                             ci,
                             cli,
-                            anyFail
+                            fail
                             );
-    cudaMemcpy(&fail,anyFail,sizeof(int),cudaMemcpyDeviceToHost);
-    cudaFree(anyFail);
 
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;

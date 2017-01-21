@@ -342,8 +342,8 @@ void SPV2D::performTimestepGPU()
     if(!spatialSortThisStep)
         {
         testAndRepairTriangulation();
-
-        if(anyCircumcenterTestFailed == 1)
+        ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::read);
+        if(h_actf.data[0] == 1)
             {
             //maintain the auxilliary lists for computing forces
             if(completeRetriangulationPerformed || neighMaxChange)

@@ -105,12 +105,8 @@ class DelaunayMD : public Simple2DActiveCell
         //!The number of circumcircles...for a periodic system, this should never change. This provides one check that local updates to the triangulation are globally consistent
         int NumCircumCenters;
 
-        /*! 
-        \todo the current implementation of anyCircumcenterTestFailed and
-        completeRetriangulationPerformed has a malloc cost on every time step. Revise this.
-        */
         //!A flag that can be accessed by child classes... serves as notification that any change in the network topology has occured
-        int anyCircumcenterTestFailed;
+        GPUArray<int> anyCircumcenterTestFailed;
         //!A flag that notifies that a global re-triangulation has been performed
         int completeRetriangulationPerformed;
         //!A flag that notifies that the maximum number of neighbors may have changed, necessitating resizing of some data arrays
