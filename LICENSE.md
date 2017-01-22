@@ -1,3 +1,5 @@
+# Licensing information {#license}
+
 CellGPU is released under the MIT license
 
 Copyright (c) 2016 - 2017 Daniel M. Sussman

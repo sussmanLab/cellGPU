@@ -10,7 +10,7 @@
 #include "gpubox.h"
 
 /*!
- \file avm.cuh
+ \file
 A file providing an interface to the relevant cuda calls for the AVM2D class
 */
 

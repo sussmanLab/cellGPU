@@ -1,3 +1,5 @@
+# Contributing to cellGPU {#contrib}
+
 Contributions are welcomed via pull requests on the repository homepage! Before beginning work and
 submitting a pull request, please contact the lead developer (currently Daniel M. Sussman) to see
 if your intended feature is under development by anyone else at the moment and to make sure your plans
@@ -55,6 +57,13 @@ broken at some natural point. See any of the code for a feel of the style.
 ## Documentation
 
 Every class, member, function, etc., should be documented with doxygen comments.
+
+## Directory structure
+
+This repository currently follows a simple structure. The main executables, activeVertex.cpp and
+voronoi.cpp are in the base directory and can be used to reproduce timing information. Header files
+are in inc/, source files are in src/, and object files get put in obj/ and obj/cuobj (which are
+.gitignored). A super-explicit makefile is used.
 
 ### Optimizations
 

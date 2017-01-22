@@ -1,4 +1,4 @@
-# Code snippets
+# Code snippets {#code}
 
 These minimal samples show how to run default-initialized simulations. Please see the provided .cpp files in the main directory for more samples, or consult the documentation for more advanced usage.
 

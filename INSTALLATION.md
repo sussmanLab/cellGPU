@@ -1,4 +1,4 @@
-# INSTALLATION
+# INSTALLATION {#install}
 
 A general makefile is included with the repository. To install on your system, update the CUDA_LIB,
 CUDA_INC, LIB_CUDA, LIB_CGAL, LIB_NETCDF paths, and make sure the PATH and LD_LIBRARY_PATH

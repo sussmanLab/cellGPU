@@ -100,7 +100,7 @@ HOSTDEVICE bool Circumcircle(Dscalar2 &xt, Dscalar2 &x1, Dscalar2 &x2, Dscalar2 
     return ((drsqr <=rad)? true: false);
     };
 
-//!Given a separation and a scale, returns true if (xc, yc) is on the same half plane with normal \vec{sep} and passing through midScale*\vec{sep} as the origin
+//!Given a separation and a scale, returns true if (xc, yc) is on the same half plane with normal \f$\vec{sep}\f$ and passing through \f$ midScale*\vec{sep}\f$ as the origin
 HOSTDEVICE bool halfPlane(Dscalar sepx, Dscalar sepy, Dscalar midScale, Dscalar xc, Dscalar yc)
     {
     Dscalar norm = sqrt(sepx*sepx+sepy*sepy);

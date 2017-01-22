@@ -7,7 +7,7 @@
 #include "gpubox.h"
 
 /*!
- \file spv.cuh
+ \file
 A file providing an interface to the relevant cuda calls for the SPV2D class
 */
 

@@ -52,7 +52,7 @@ class Simple2DActiveCell : public Simple2DCell
         //!The time stepsize of the simulation
         Dscalar deltaT;
 
-        //!An array of angles (relative to \hat{x}) that the cell directors point
+        //!An array of angles (relative to the x-axis) that the cell directors point
         GPUArray<Dscalar> cellDirectors;
 
         //!velocity of cells in mono-motile systems

@@ -160,8 +160,8 @@ The main workhorse of the class. First find a set of cells that forms a polygon 
 find all particles in the circumcircles formed by cell i and any two consecutive members of the
 polygon
 \param i the cell to get the candidate 1-ring of
-\param DZTringIdx a reference to a vector of cell indices that will make up the candidate 1-ring
-\param DZTring a reference to a vector of relative cell positions that will make up the candidate 1-ring
+\param DTringIdx a reference to a vector of cell indices that will make up the candidate 1-ring
+\param DTring a reference to a vector of relative cell positions that will make up the candidate 1-ring
 \post DTringIdx and DTring contain cells, of which the Delaunay neighbors of cell i are a strict
 subset
 */
@@ -274,8 +274,8 @@ reduces the computational cost of going from the candidate 1-ring to the true se
 neighbors. This matters a lot for analyzing random point sets, but if the cells are pretty regular
 this routine will almost never be called.
 \param i the cell to get the candidate 1-ring of
-\param DZTringIdx a reference to a vector of cell indices that will make up the candidate 1-ring
-\param DZTring a reference to a vector of relative cell positions that will make up the candidate 1-ring
+\param DTringIdx a reference to a vector of cell indices that will make up the candidate 1-ring
+\param DTring a reference to a vector of relative cell positions that will make up the candidate 1-ring
 subset
 */
 void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
@@ -670,6 +670,7 @@ void DelaunayLoc::writeTriangulation(ofstream &outfile)
 A utility function to test and time several routines in this class
 \param numpts The number of points for which to perform tests
 \param tmax the number of times each function will be called, for averaging timing info
+\param err detect changes by moving points by some amount
 \param verbose if true output even more timing info
 */
 void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
