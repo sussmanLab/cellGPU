@@ -116,5 +116,10 @@ int main(int argc, char*argv[])
 //    ncdat.WriteState(spv);
     if(initializeGPU)
         cudaDeviceReset();
+
+ofstream outfile;
+outfile.open("../timingSPV.txt",std::ios_base::app);
+outfile << numpts <<"\t" << (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << "\n";
+
     return 0;
 };
