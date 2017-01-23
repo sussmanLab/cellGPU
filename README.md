@@ -1,4 +1,4 @@
-# CellGPU 
+# CellGPU
 
 CellGPU implements GPU-accelerated algorithms to simulate off-lattice models of cells. Its current
 two main feature sets focus on a Voronoi-decomposition-based model of two-dimensional monolayers
