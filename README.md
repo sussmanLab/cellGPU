@@ -4,8 +4,9 @@ CellGPU implements GPU-accelerated algorithms to simulate off-lattice models of 
 two main feature sets focus on a Voronoi-decomposition-based model of two-dimensional monolayers
 and on a two-dimensional dynamical version of the vertex model. CellGPU grew out of DMS'
 "DelGPU" and "VoroGuppy" projects, and the current class structure still bears some traces of that
-(please see the [contributing page](@ref contrib) for information on upcoming code refactoring and new planned
-features!)
+(please see the [contributing page](@ref contrib) of the documentation, which is maintained at
+https://dmsussman.gitlab.io/cellGPUdocumentation
+for information on upcoming code refactoring and new planned features!)
 
 Information on installing the project and contributing to it is contained in the relevant
 markdown files in the base directory. Documentation of the code is maintained via Doxygen... go
