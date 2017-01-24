@@ -9,8 +9,9 @@ https://dmsussman.gitlab.io/cellGPUdocumentation
 for information on upcoming code refactoring and new planned features!)
 
 Information on installing the project and contributing to it is contained in the relevant
-markdown files in the base directory. Documentation of the code is maintained via Doxygen... go
-to the "/doc" directory, type "doxygen Doxyfile", and go from there.
+markdown files in the base directory and in the doc/markdown directory. Documentation of the
+code is maintained via Doxygen, and all of the links in this readme function only in the Doxygen
+documentation (link above, or compile it by going to the "/doc" directory and typing "doxygen Doxyfile"
 
 A very rough outline of some of the main classes and the basic operating flow of the primary branches
 of the code can be found [here](@ref basicinfo); this page is a good place to start before diving into
