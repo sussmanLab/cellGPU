@@ -61,7 +61,11 @@ void DelaunayMD::initializeDelMD(int n)
     h_actf.data[0]=0;
     };
 
-//The GPU moves the location of points in the GPU memory... this gets a local copy that can be used by the DelaunayLoc class
+/*!
+The GPU moves the location of points in the GPU memory... this gets a local copy that can be used
+by the DelaunayLoc class
+\post the DelaunayLoc class has the updated set of cell positions, and its cell list is initialized
+*/
 void DelaunayMD::resetDelLocPoints()
     {
     ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
@@ -69,7 +73,9 @@ void DelaunayMD::resetDelLocPoints()
     delLoc.initialize(cellsize);
     };
 
-//update which cell every particle belongs to (for spatial location)
+/*!
+\post the cell list is updated according to the current cell positions
+*/
 void DelaunayMD::updateCellList()
     {
 
@@ -99,7 +105,11 @@ void DelaunayMD::updateCellList()
 
     };
 
-//take a vector of displacements, modify the position of the particles, and put them back in the box...all on the CPU
+/*!
+Displace cells on the CPU
+\param displacements a vector of Dscalar2 specifying how much to move every cell
+\post the cells are displaced according to the input vector, and then put back in the main unit cell.
+*/
 void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
@@ -112,7 +122,11 @@ void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
         };
     };
 
-//take a vector of displacements, modify the position of the particles, and put them back in the box...GPU
+/*!
+Displace cells on the GPU
+\param displacements a vector of Dscalar2 specifying how much to move every cell
+\post the cells are displaced according to the input vector, and then put back in the main unit cell.
+*/
 void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
@@ -126,19 +140,22 @@ void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
         };
     };
 
-//the function calls the DelaunayLoc and DelaunayNP classes to determine the Delaunay triangulation of the entire periodic domain
 /*!
-\todo update this function, try to make it more robust
+The DelaunayLoc and DelaunayNP classes are invoked to performed to determine the Delaunay
+triangulation of the entire periodic domain.
 */
-void DelaunayMD::fullTriangulation()
+void DelaunayMD::fullTriangulation(bool verbose)
     {
+    GlobalFixes +=1;
+    completeRetriangulationPerformed = 1;
     resetDelLocPoints();
-    cout << "Resetting complete triangulation" << endl;
+
     //get neighbors of each cell in CW order
 
     ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
     vector< vector<int> > allneighs(Ncells);
+    int oldNmax = neighMax;
     int totaln = 0;
     int nmax = 0;
     for(int nn = 0; nn < Ncells; ++nn)
@@ -155,10 +172,18 @@ void DelaunayMD::fullTriangulation()
         neighMax = nmax + 2;
     else
         neighMax = nmax + 1;
-    cellNeighbors.resize(neighMax*Ncells);
+
+    n_idx = Index2D(neighMax,Ncells);
+    if(neighMax != oldNmax)
+        {
+        cellNeighbors.resize(neighMax*Ncells);
+        neighMaxChange = true;
+        };
+    updateNeighIdxs();
+
 
     //store data in gpuarray
-    n_idx = Index2D(neighMax,Ncells);
+    {
     ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::overwrite);
     for (int nn = 0; nn < Ncells; ++nn)
         {
@@ -170,6 +195,12 @@ void DelaunayMD::fullTriangulation()
             };
         };
 
+    if(verbose)
+        cout << "global new Nmax = " << neighMax << "; total neighbors = " << totaln << endl;cout.flush();
+    };
+
+    getCircumcenterIndices();
+
     if(totaln != 6*Ncells)
         {
         printf("CPU neighbor creation failed to match topology! NN = %i \n",totaln);
@@ -180,7 +211,6 @@ void DelaunayMD::fullTriangulation()
         writeTriangulation(output);
         throw std::exception();
         };
-    getCircumcenterIndices();
     };
 
 /*!
@@ -261,7 +291,10 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
         };
     };
 
-//this function updates the NeighIdx data structure, which helps cut down on the number of inactive threads in the force set computation function.
+/*!
+\post the NeighIdx data structure is updated, which helps cut down on the number of inactive
+threads in the force set computation function
+*/
 void DelaunayMD::updateNeighIdxs()
     {
     ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
@@ -499,8 +532,11 @@ void DelaunayMD::testTriangulationCPU()
         };
     };
 
-//calls the relevant testing and repairing functions. increments the timestep by one
-//the call to testTriangulation will synchronize the gpu via a memcpy of "anyCircumcenterTestFailed" variable
+/*!
+This function calls the relevant testing and repairing functions, and increments the "timestep"
+by one. Note that the call to testTriangulation will always synchronize the gpu (via a memcpy of
+the "anyCircumcenterTestFailed" variable)
+*/
 void DelaunayMD::testAndRepairTriangulation(bool verb)
     {
     timestep +=1;
