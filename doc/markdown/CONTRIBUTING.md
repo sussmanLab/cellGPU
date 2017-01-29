@@ -15,7 +15,7 @@ are interested in contributing to any of these development branches please conta
 1. The current implementation of the test-and-repair scheme should eventually be ported over to a
 fully GPU-accelerated scheme; this, after all, was the initial motivation for using the Chen and
 Gotsman "candidate 1-ring" approach instead of a more conventional star-splaying method. High
-priority.  
+priority.
     - As an interim feature, add multi-threaded CPU support to the test-and-repair scheme via OpenMP or equivalent. Medium priority.
 2. The current implementation is restricted to square periodic domains. Extensions to non-square
 periodic domains should be trivial; extensions to fixed boundary conditions would be interesting.
@@ -52,7 +52,11 @@ disfavored, but will be considered if the new feature is sufficiently general.
 Code should be written in a style consistent with the existing code base. As a brief summary, the
 Whitesmith indentation style should be used, and 4 spaces, and not tabs, should be used to indent
 lines. A soft maximum line length of 120 characters should be used, with very long lines of code
-broken at some natural point. See any of the code for a feel of the style.
+broken at some natural point.
+
+Variable names should be descriptive; prefer lower camelCase names to using other delimiters. When
+using ArrayHandles stick to the h_variableName and d_variableName convention for accessing GPUArrays
+on either the host or device.
 
 ## Documentation
 
