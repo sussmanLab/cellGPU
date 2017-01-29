@@ -8,7 +8,7 @@
 #include "curand_kernel.h"
 
 #include "Matrix.h"
-#include "cu_functions.h"
+#include "functions.h"
 #include "DelaunayMD.h"
 #include "spv2d.cuh"
 

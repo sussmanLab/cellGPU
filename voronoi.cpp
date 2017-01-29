@@ -6,12 +6,7 @@
 #define ENABLE_CUDA
 
 #include "spv2d.h"
-#include "cu_functions.h"
 #include "DatabaseNetCDFSPV.h"
-
-
-using namespace std;
-
 
 int main(int argc, char*argv[])
 {

@@ -5,7 +5,7 @@
 #include "cellListGPU.cuh"
 #include "indexer.h"
 #include "gpubox.h"
-#include "cu_functions.h"
+#include "functions.h"
 #include <iostream>
 #include <stdio.h>
 #include "DelaunayMD.cuh"

@@ -5,7 +5,7 @@
 #include "std_include.h"
 #include <cuda_runtime.h>
 
-#include "cu_functions.h"
+#include "functions.h"
 #include "indexer.h"
 #include "gpubox.h"
 

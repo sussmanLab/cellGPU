@@ -201,7 +201,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
     Dscalar vx = 0.0;Dscalar vy = 0.0;
     for (int ii = 0; ii < 4; ++ii)
         {
-        valid = CircumCircle(P1[ii].x,P1[ii].y,P1[(ii+1)%4].x,P1[(ii+1)%4].y,Qnew.x,Qnew.y,radius);
+        Circumcircle(P1[ii],P1[(ii+1)%4],Qnew,radius);
         Q0.push_back(Qnew);
         rads.push_back(radius*1.0001);
         };
@@ -313,7 +313,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
     rads.reserve(4);
     for (int ii = 0; ii < Psize; ++ii)
         {
-        valid = CircumCircle(P1[ii].x,P1[ii].y,P1[(ii+1)%Psize].x,P1[(ii+1)%Psize].y,Qnew.x,Qnew.y,radius);
+        Circumcircle(P1[ii],P1[(ii+1)%Psize],Qnew,radius);
         Q0.push_back(Qnew);
         rads.push_back(radius);
         };
@@ -325,8 +325,8 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
         int polyi2 = q-1;
         if(polyi2 < 0) polyi2 = Psize -1;
         Dscalar r1,r2;
-        valid = CircumCircle(DTring[nn].x,DTring[nn].y,P1[polyi1].x,P1[polyi1].y,Qnew.x,Qnew.y,r1);
-        valid = CircumCircle(P1[polyi2].x,P1[polyi2].y,DTring[nn].x,DTring[nn].y,Qnew2.x,Qnew2.y,r2);
+        Circumcircle(DTring[nn],P1[polyi1],Qnew,r1);
+        Circumcircle(P1[polyi2],DTring[nn],Qnew2,r2);
         if(r1+r2 < rads[q]+rads[polyi2])
             {
             P1[q]=DTring[nn];
@@ -529,7 +529,7 @@ bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool tim
         Box.minDist(pts[neigh2],v,pt2);
 
         Dscalar2 Q;
-        bool valid =CircumCircle(pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
+        Circumcircle(pt1,pt2,Q,radius);
         Dscalar rad2 = radius*radius;
 
         //what cell indices to check
@@ -591,7 +591,7 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
 
         Dscalar2 tocenter,disp;
         Dscalar2 Q;
-        bool valid =CircumCircle(pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
+        Circumcircle(pt1,pt2,Q,radius);
         Dscalar rad2 = radius*radius;
 
         //what cell indices to check

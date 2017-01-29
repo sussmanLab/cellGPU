@@ -150,7 +150,13 @@ void DelaunayNP::naiveBowyerWatson()
             if(!complete[jj])
                 {
                 triangle tr(DT.triangles[jj].i,DT.triangles[jj].j,DT.triangles[jj].k);
-                incircle = Circumcircle(Xp,  sortmap[tr.i].first, sortmap[tr.j].first,  sortmap[tr.k].first,c,rad);
+                Circumcircle(sortmap[tr.i].first,sortmap[tr.j].first,sortmap[tr.k].first,c,rad);
+                Dscalar dx = Xp.x-c.x;
+                Dscalar dy = Xp.y-c.y;
+                if (sqrt(dx*dx+dy*dy) <= rad)
+                    incircle = true;
+                else
+                    incircle = false;
                 if (c.x+rad < xp) complete[jj]=true;
                 if (incircle)
                     {

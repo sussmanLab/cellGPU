@@ -3,7 +3,7 @@
 
 #include "std_include.h"
 #include "Simple2DActiveCell.h"
-#include "cu_functions.h"
+#include "functions.h"
 
 /*!
 A class that implements a simple active vertex model in 2D. This involves calculating forces on

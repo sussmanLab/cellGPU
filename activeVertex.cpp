@@ -5,7 +5,6 @@
 #define ENABLE_CUDA
 
 #include "avm2d.h"
-#include "cu_functions.h"
 #include "DatabaseNetCDFAVM.h"
 
 int main(int argc, char*argv[])
