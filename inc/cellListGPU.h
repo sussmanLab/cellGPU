@@ -17,7 +17,7 @@ class cellListGPU
     {
     public:
         //!Blank constructor
-        cellListGPU(){};
+        cellListGPU(){Nmax=0;};
         //!construct with a given set of points
         cellListGPU(vector<Dscalar> &points);
         //! constructor with points, a box, and a size for the underlying grid
@@ -30,7 +30,7 @@ class cellListGPU
         //!Set the objects box object
         void setBox(gpubox &bx);
         //!Set the number of particles to put in the buckets
-        void setNp(int nn){Np=nn;};
+        void setNp(int nn);
 
         //!call setGridSize if the particles and box already set, as this doubles as a general initialization of data structures
         void setGridSize(Dscalar a);

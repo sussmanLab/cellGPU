@@ -11,14 +11,22 @@
 
 cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
     {
+    Nmax = 0;
     setParticles(points);
     setBox(bx);
     setGridSize(a);
     }
 cellListGPU::cellListGPU(vector<Dscalar> &points)
     {
+    Nmax = 0;
     setParticles(points);
     }
+
+void cellListGPU::setNp(int nn)
+    {
+    Np = nn;
+    };
+
 void cellListGPU::setParticles(const vector<Dscalar> &points)
     {
     int newsize = points.size()/2;
@@ -78,7 +86,8 @@ void cellListGPU::setGridSize(Dscalar a)
     cell_indexer = Index2D(xsize,ysize);
 
     //estimate Nmax
-    Nmax = ceil(Np/totalCells)+1;
+    if(ceil(Np/totalCells)+1 > Nmax)
+        Nmax = ceil(Np/totalCells)+1;
     resetCellSizesCPU();
     };
 

@@ -91,12 +91,14 @@ void DelaunayLoc::initialize(Dscalar csize)
     clist.setCellSize(cellsize);
     clist.setPoints(pts);
     clist.setBox(Box);
-    Dscalar bx,bxx,by,byy;
-
-    Box.getBoxDims(bx,bxx,byy,by);
-
     clist.initialize();
     clist.construct();
+
+    cList.setNp(nV);
+    cList.setBox(Box);
+    cList.setGridSize(cellsize);
+    cList.setParticles(pts);
+    cList.compute();
     };
 
 /*!
