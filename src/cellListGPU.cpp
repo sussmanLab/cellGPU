@@ -19,7 +19,6 @@ cellListGPU::cellListGPU(vector<Dscalar> &points)
     {
     setParticles(points);
     }
-
 void cellListGPU::setParticles(const vector<Dscalar> &points)
     {
     int newsize = points.size()/2;
@@ -32,6 +31,21 @@ void cellListGPU::setParticles(const vector<Dscalar> &points)
             {
             h_handle.data[ii].x = points[2*ii];
             h_handle.data[ii].y = points[2*ii+1];
+            };
+        };
+    };
+
+void cellListGPU::setParticles(const vector<Dscalar2> &points)
+    {
+    int newsize = points.size();
+    particles.resize(newsize);
+    Np=newsize;
+    if(true)
+        {
+        ArrayHandle<Dscalar2> h_handle(particles,access_location::host,access_mode::overwrite);
+        for (int ii = 0; ii < points.size(); ++ii)
+            {
+            h_handle.data[ii] = points[ii];
             };
         };
     };

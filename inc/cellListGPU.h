@@ -25,6 +25,8 @@ class cellListGPU
 
         //!Set the object's points to a given vector
         void setParticles(const vector<Dscalar> &points);
+        //!Set the object's points to a given vector of Dscalar2s
+        void setParticles(const vector<Dscalar2> &points);
         //!Set the objects box object
         void setBox(gpubox &bx);
         //!Set the number of particles to put in the buckets
