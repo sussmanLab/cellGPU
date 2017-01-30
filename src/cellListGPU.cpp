@@ -246,7 +246,7 @@ void cellListGPU::compute(GPUArray<Dscalar2> &points)
     while (recompute)
         {
         //reset particles per cell, reset cell_list_indexer, resize idxs
-        resetCellSizes();
+        resetCellSizesCPU();
         ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::readwrite);
         ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::readwrite);
         recompute=false;

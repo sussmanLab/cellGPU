@@ -121,9 +121,10 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
     vector<Dscalar> dists(4,1e6);
     Dscalar2 v = pts[i];
     int cidx = clist.posToCellIdx(v.x,v.y);
+    //int cidx = cList.positionToCellIndex(v.x,v.y);
     vector<bool> found(4,false);
     int wmax = clist.getNx();
-
+   // int wmax = cList.getXsize();
     //while a data point in a quadrant hasn't been found, expand the size of the search grid and keep looking
     int width = 0;
     vector<int> cellneighs;cellneighs.reserve(25);

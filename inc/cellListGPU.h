@@ -50,7 +50,7 @@ class cellListGPU
         //! given a target cell and a width, get all cell indices that sit on the requested shell
         void getCellShellNeighbors(int cellIndex, int width, vector<int> &cellNeighbors);
 
-        //!Initialization and helper
+        //!Initialization and helper without using the GPU
         void resetCellSizesCPU();
         //!Initialization and helper
         void resetCellSizes();
