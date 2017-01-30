@@ -41,6 +41,13 @@ class cellListGPU
         //!Returns the length of the square that forms the base grid size
         Dscalar getBoxsize() {return boxsize;};
 
+        //!If the grid is already initialized, given a spatial position return the cell index
+        int positionToCellIndex(Dscalar x,Dscalar y);
+        //! given a target cell and a width, get all cell indices that sit in the surrounding square
+        void getCellNeighbors(int cellIndex, int width, vector<int> &cellNeighbors);
+        //! given a target cell and a width, get all cell indices that sit on the requested shell
+        void getCellShellNeighbors(int cellIndex, int width, vector<int> &cellNeighbors);
+
         //!Initialization and helper
         void resetCellSizesCPU();
         //!Initialization and helper
@@ -57,13 +64,15 @@ class cellListGPU
             };
 
         //!Compute the cell list on the CPU, given the current particle positions in the GPUArray of particles
-        void compute(); // compute the cell list given current particle positions
+        void compute();
 
         //!Compute the cell list for the class' GPUArray of particles on the GPU
         void computeGPU();
 
-        void computeGPU(GPUArray<Dscalar2> &points); //!< compute the cell list of the gpuarry passed to it. GPU function
-        void compute(GPUArray<Dscalar2> &points); //!< compute the cell list of the gpuarry passed to it. GPU function
+        //! compute the cell list of the gpuarry passed to it. GPU function
+        void computeGPU(GPUArray<Dscalar2> &points);
+        //! compute the cell list of the gpuarry passed to it. GPU function
+        void compute(GPUArray<Dscalar2> &points);
 
         //!A debugging function to report where a point is
         void repP(int i)
@@ -75,22 +84,35 @@ class cellListGPU
                 };
             };
 
-        Index2D cell_indexer; //!< Indexes the cells in the grid themselves (so the bin corresponding to the (j,i) position of the grid is bin=cell_indexer(i,j))
-        Index2D cell_list_indexer; //!<Indexes elements in the cell list
+        //! Indexes the cells in the grid themselves (so the bin corresponding to the (j,i) position of the grid is bin=cell_indexer(i,j))
+        Index2D cell_indexer;
+        //!Indexes elements in the cell list
+        Index2D cell_list_indexer;
 
-        GPUArray<Dscalar2> particles; //!<The particles that some methods act on
-        GPUArray<unsigned int> cell_sizes; //!< An array containing the number of elements in each cell
-        GPUArray<int> idxs; //!<An array containing the indices of particles in various cells. So, idx[cell_list_indexer(nn,bin)] gives the index of the nth particle in the bin "bin" of the cell list
+        //!The particles that some methods act on
+        GPUArray<Dscalar2> particles;
+        //! An array containing the number of elements in each cell
+        GPUArray<unsigned int> cell_sizes;
+        //!An array containing the indices of particles in various cells. So, idx[cell_list_indexer(nn,bin)] gives the index of the nth particle in the bin "bin" of the cell list
+        GPUArray<int> idxs;
 
     private:
-        GPUArray<int> assist; //!<first index is Nmax, second is whether to recompute
-        int Np; //!<THe number of particles to put in cells
-        Dscalar boxsize; //!< The linear size of each grid cell
-        int xsize; //!<The number of bins in the x-direction
-        int ysize; //!the number of bins in the y-direction
-        int totalCells; //!xsize*ysize
-        int Nmax; //!< the maximum number of particles found in any bin
-        gpubox Box; //!<The Box used to compute periodic distances
+        //!first index is Nmax, second is whether to recompute
+        GPUArray<int> assist;
+        //!The number of particles to put in cells
+        int Np;
+        //! The linear size of each grid cell
+        Dscalar boxsize;
+        //!The number of bins in the x-direction
+        int xsize;
+        //!the number of bins in the y-direction
+        int ysize;
+        //!xsize*ysize
+        int totalCells;
+        //! the maximum number of particles found in any bin
+        int Nmax;
+        //!The Box used to compute periodic distances
+        gpubox Box;
 
     };
 

@@ -122,6 +122,51 @@ void cellListGPU::resetCellSizes()
     h_assist.data[1] = 0;
     };
 
+int cellListGPU::positionToCellIndex(Dscalar x, Dscalar y)
+    {
+    int cell_idx = 0;
+    int binx = max(0,min(xsize-1,(int)floor(x/boxsize)));
+    int biny = max(0,min(ysize-1,(int)floor(y/boxsize)));
+    return cell_indexer(binx,biny);
+    };
+
+void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
+    {
+    int w = min(width,xsize/2);
+    int cellix = cellIndex%xsize;
+    int celliy = (cellIndex - cellix)/ysize;
+    cellNeighbors.clear();
+    cellNeighbors.reserve(w*w);
+    for (int ii = -w; ii <=w; ++ii)
+        for (int jj = -w; jj <=w; ++jj)
+            {
+            int cx = (cellix+jj)%xsize;
+            if (cx <0) cx+=xsize;
+            int cy = (celliy+ii)%ysize;
+            if (cy <0) cy+=ysize;
+            cellNeighbors.push_back(cell_indexer(cx,cy));
+            };
+    };
+
+void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
+    {
+    int w = min(width,xsize/2);
+    int cellix = cellIndex%xsize;
+    int celliy = (cellIndex - cellix)/ysize;
+    cellNeighbors.clear();
+    for (int ii = -w; ii <=w; ++ii)
+        for (int jj = -w; jj <=w; ++jj)
+            if(ii ==-w ||ii == w ||jj ==-w ||jj==w)
+                {
+                int cx = (cellix+jj)%xsize;
+                if (cx <0) cx+=xsize;
+                int cy = (celliy+ii)%ysize;
+                if (cy <0) cy+=ysize;
+                cellNeighbors.push_back(cell_indexer(cx,cy));
+                };
+    };
+
+
 void cellListGPU::compute()
     {
     //will loop through particles and put them in cells...
