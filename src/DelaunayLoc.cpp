@@ -1,3 +1,5 @@
+#define ENABLE_CUDA
+
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
 
@@ -121,24 +123,29 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
     vector<Dscalar> dists(4,1e6);
     Dscalar2 v = pts[i];
     int cidx = clist.posToCellIdx(v.x,v.y);
-    //int cidx = cList.positionToCellIndex(v.x,v.y);
+//    int cidx = cList.positionToCellIndex(v.x,v.y);
     vector<bool> found(4,false);
     int wmax = clist.getNx();
-   // int wmax = cList.getXsize();
+    //int wmax = cList.getXsize();
     //while a data point in a quadrant hasn't been found, expand the size of the search grid and keep looking
     int width = 0;
     vector<int> cellneighs;cellneighs.reserve(25);
     int idx;
     Dscalar2 disp;
     Dscalar nrm;
+    ArrayHandle<unsigned int> h_cs(cList.cell_sizes,access_location::host,access_mode::read);
+    ArrayHandle<int> h_idx(cList.idxs,access_location::host,access_mode::read);
     while(!found[0]||!found[1]||!found[2]||!found[3])
         {
         clist.cellShell(cidx,width,cellneighs);
         for (int cc = 0; cc < cellneighs.size(); ++cc)
             {
-            for (int pp = 0; pp < clist.cells[cellneighs[cc]].size();++pp)
+            //int numberInCell = h_cs.data[cellneighs[cc]];
+            int numberInCell = clist.cells[cellneighs[cc]].size();
+            for (int pp = 0; pp < numberInCell;++pp)
                 {
                 idx = clist.cells[cellneighs[cc]][pp];
+//                idx = h_idx.data[cList.cell_list_indexer(pp,cellneighs[cc])];
                 if (idx == i ) continue;
                 Box.minDist(pts[idx],v,disp);
                 nrm = sqrt(disp.x*disp.x+disp.y*disp.y);

@@ -173,9 +173,9 @@ void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &c
 
 void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
     {
-    int w = min(width,xsize/2);
+    int w = min(width,xsize);
     int cellix = cellIndex%xsize;
-    int celliy = (cellIndex - cellix)/ysize;
+    int celliy = (cellIndex - cellix)/xsize;
     cellNeighbors.clear();
     for (int ii = -w; ii <=w; ++ii)
         for (int jj = -w; jj <=w; ++jj)
