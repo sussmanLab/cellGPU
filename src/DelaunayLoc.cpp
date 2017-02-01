@@ -1,3 +1,5 @@
+#define ENABLE_CUDA
+
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
 
@@ -88,15 +90,11 @@ void DelaunayLoc::setBox(gpubox &bx)
 void DelaunayLoc::initialize(Dscalar csize)
     {
     cellsize = csize;
-    clist.setCellSize(cellsize);
-    clist.setPoints(pts);
-    clist.setBox(Box);
-    Dscalar bx,bxx,by,byy;
-
-    Box.getBoxDims(bx,bxx,byy,by);
-
-    clist.initialize();
-    clist.construct();
+    cList.setNp(nV);
+    cList.setBox(Box);
+    cList.setGridSize(cellsize);
+    cList.setParticles(pts);
+    cList.compute();
     };
 
 /*!
@@ -118,24 +116,26 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
 
     vector<Dscalar> dists(4,1e6);
     Dscalar2 v = pts[i];
-    int cidx = clist.posToCellIdx(v.x,v.y);
+    int cidx = cList.positionToCellIndex(v.x,v.y);
     vector<bool> found(4,false);
-    int wmax = clist.getNx();
-
+    int wmax = cList.getXsize();
     //while a data point in a quadrant hasn't been found, expand the size of the search grid and keep looking
     int width = 0;
     vector<int> cellneighs;cellneighs.reserve(25);
     int idx;
     Dscalar2 disp;
     Dscalar nrm;
+    ArrayHandle<unsigned int> h_cs(cList.cell_sizes,access_location::host,access_mode::read);
+    ArrayHandle<int> h_idx(cList.idxs,access_location::host,access_mode::read);
     while(!found[0]||!found[1]||!found[2]||!found[3])
         {
-        clist.cellShell(cidx,width,cellneighs);
+        cList.getCellShellNeighbors(cidx,width,cellneighs);
         for (int cc = 0; cc < cellneighs.size(); ++cc)
             {
-            for (int pp = 0; pp < clist.cells[cellneighs[cc]].size();++pp)
+            int numberInCell = h_cs.data[cellneighs[cc]];
+            for (int pp = 0; pp < numberInCell;++pp)
                 {
-                idx = clist.cells[cellneighs[cc]][pp];
+                idx = h_idx.data[cList.cell_list_indexer(pp,cellneighs[cc])];
                 if (idx == i ) continue;
                 Box.minDist(pts[idx],v,disp);
                 nrm = sqrt(disp.x*disp.x+disp.y*disp.y);
@@ -201,7 +201,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
     Dscalar vx = 0.0;Dscalar vy = 0.0;
     for (int ii = 0; ii < 4; ++ii)
         {
-        valid = CircumCircle(P1[ii].x,P1[ii].y,P1[(ii+1)%4].x,P1[(ii+1)%4].y,Qnew.x,Qnew.y,radius);
+        Circumcircle(P1[ii],P1[(ii+1)%4],Qnew,radius);
         Q0.push_back(Qnew);
         rads.push_back(radius*1.0001);
         };
@@ -213,10 +213,10 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
     int idx;
     for (int ii = 0; ii < 4; ++ii)
         {
-        int cix = clist.posToCellIdx(v.x+Q0[ii].x,v.y+Q0[ii].y);
+        int cix = cList.positionToCellIndex(v.x+Q0[ii].x,v.y+Q0[ii].y);
 
-        int wcheck = ceil(rads[ii]/clist.getCellSize())+1;
-        clist.cellNeighborsShort(cix,wcheck,cns);
+        int wcheck = ceil(rads[ii]/cList.getBoxsize())+1;
+        cList.getCellNeighbors(cix,wcheck,cns);
         //cellschecked += cns.size();
         for (int cc = 0; cc < cns.size(); ++cc)
             cellns.push_back(cns[cc]);
@@ -230,11 +230,14 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
     Dscalar2 disp;
     bool repeat=false;
     Dscalar rr;
+    ArrayHandle<unsigned int> h_cs(cList.cell_sizes,access_location::host,access_mode::read);
+    ArrayHandle<int> h_idx(cList.idxs,access_location::host,access_mode::read);
     for (int cc = 0; cc < cellns.size(); ++cc)
         {
-        for (int pp = 0; pp < clist.cells[cellns[cc]].size();++pp)
+        int numberInCell = h_cs.data[cellns[cc]];
+        for (int pp = 0; pp < numberInCell;++pp)
             {
-            idx = clist.cells[cellns[cc]][pp];
+            idx = h_idx.data[cList.cell_list_indexer(pp,cellns[cc])];
             //exclude anything already in the ring (vertex and polygon)
             if (idx == i || idx == DTringIdx[1] || idx == DTringIdx[2] ||
                             idx == DTringIdx[3] || idx == DTringIdx[4]) continue;
@@ -313,7 +316,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
     rads.reserve(4);
     for (int ii = 0; ii < Psize; ++ii)
         {
-        valid = CircumCircle(P1[ii].x,P1[ii].y,P1[(ii+1)%Psize].x,P1[(ii+1)%Psize].y,Qnew.x,Qnew.y,radius);
+        Circumcircle(P1[ii],P1[(ii+1)%Psize],Qnew,radius);
         Q0.push_back(Qnew);
         rads.push_back(radius);
         };
@@ -325,8 +328,8 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
         int polyi2 = q-1;
         if(polyi2 < 0) polyi2 = Psize -1;
         Dscalar r1,r2;
-        valid = CircumCircle(DTring[nn].x,DTring[nn].y,P1[polyi1].x,P1[polyi1].y,Qnew.x,Qnew.y,r1);
-        valid = CircumCircle(P1[polyi2].x,P1[polyi2].y,DTring[nn].x,DTring[nn].y,Qnew2.x,Qnew2.y,r2);
+        Circumcircle(DTring[nn],P1[polyi1],Qnew,r1);
+        Circumcircle(P1[polyi2],DTring[nn],Qnew2,r2);
         if(r1+r2 < rads[q]+rads[polyi2])
             {
             P1[q]=DTring[nn];
@@ -529,21 +532,24 @@ bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool tim
         Box.minDist(pts[neigh2],v,pt2);
 
         Dscalar2 Q;
-        bool valid =CircumCircle(pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
+        Circumcircle(pt1,pt2,Q,radius);
         Dscalar rad2 = radius*radius;
 
         //what cell indices to check
-        int cix = clist.posToCellIdx(v.x+Q.x,v.y+Q.y);
-        int wcheck = ceil(radius/clist.getCellSize())+1;
-        clist.cellNeighbors(cix,wcheck,cns);
+        int cix = cList.positionToCellIndex(v.x+Q.x,v.y+Q.y);
+        int wcheck = ceil(radius/cList.getBoxsize())+1;
+        cList.getCellNeighbors(cix,wcheck,cns);
+        ArrayHandle<unsigned int> h_cs(cList.cell_sizes,access_location::host,access_mode::read);
+        ArrayHandle<int> h_idx(cList.idxs,access_location::host,access_mode::read);
         for (int cc = 0; cc < cns.size(); ++cc)
             {
             if (repeat) continue;
-            for (int pp = 0; pp < clist.cells[cns[cc]].size();++pp)
+            int numberInCell = h_cs.data[cns[cc]];
+            for (int pp = 0; pp < numberInCell;++pp)
                 {
                 if (repeat) continue;
 
-                int idx  = clist.cells[cns[cc]][pp];
+                int idx = h_idx.data[cList.cell_list_indexer(pp,cns[cc])];
                 Box.minDist(pts[idx],v,disp);
                 //how far is the point from the circumcircle's center?
                 Box.minDist(disp,Q,tocenter);
@@ -591,21 +597,25 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
 
         Dscalar2 tocenter,disp;
         Dscalar2 Q;
-        bool valid =CircumCircle(pt1.x,pt1.y,pt2.x,pt2.y,Q.x,Q.y,radius);
+        Circumcircle(pt1,pt2,Q,radius);
         Dscalar rad2 = radius*radius;
 
         //what cell indices to check
-        int cix = clist.posToCellIdx(v.x+Q.x,v.y+Q.y);
-        int wcheck = ceil(radius/clist.getCellSize())+1;
-        clist.cellNeighbors(cix,wcheck,cns);
+        int cix = cList.positionToCellIndex(v.x+Q.x,v.y+Q.y);
+        int wcheck = ceil(radius/cList.getBoxsize())+1;
+        cList.getCellNeighbors(cix,wcheck,cns);
 
+        ArrayHandle<unsigned int> h_cs(cList.cell_sizes,access_location::host,access_mode::read);
+        ArrayHandle<int> h_idx(cList.idxs,access_location::host,access_mode::read);
         for (int cc = 0; cc < cns.size(); ++cc)
             {
             if (repeat) continue;
-            for (int pp = 0; pp < clist.cells[cns[cc]].size();++pp)
+            int numberInCell = h_cs.data[cns[cc]];
+            for (int pp = 0; pp < numberInCell;++pp)
                 {
                 if (repeat) continue;
-                int idx  = clist.cells[cns[cc]][pp];
+
+                int idx = h_idx.data[cList.cell_list_indexer(pp,cns[cc])];
                 Box.minDist(pts[idx],v,disp);
                 //how far is the point from the circumcircle's center?
                 Box.minDist(disp,Q,tocenter);

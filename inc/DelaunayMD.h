@@ -56,7 +56,7 @@ class DelaunayMD : public Simple2DActiveCell
     //protected functions
     protected:
         //!construct the global periodic triangulation point-by-point using non-CGAL methods
-        void fullTriangulation();
+        void fullTriangulation(bool verbose = false);
         //!Globally construct the triangulation via CGAL
         void globalTriangulationCGAL(bool verbose = false);
 

@@ -11,14 +11,21 @@
 
 cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
     {
+    Nmax = 0;
     setParticles(points);
     setBox(bx);
     setGridSize(a);
     }
 cellListGPU::cellListGPU(vector<Dscalar> &points)
     {
+    Nmax = 0;
     setParticles(points);
     }
+
+void cellListGPU::setNp(int nn)
+    {
+    Np = nn;
+    };
 
 void cellListGPU::setParticles(const vector<Dscalar> &points)
     {
@@ -32,6 +39,21 @@ void cellListGPU::setParticles(const vector<Dscalar> &points)
             {
             h_handle.data[ii].x = points[2*ii];
             h_handle.data[ii].y = points[2*ii+1];
+            };
+        };
+    };
+
+void cellListGPU::setParticles(const vector<Dscalar2> &points)
+    {
+    int newsize = points.size();
+    particles.resize(newsize);
+    Np=newsize;
+    if(true)
+        {
+        ArrayHandle<Dscalar2> h_handle(particles,access_location::host,access_mode::overwrite);
+        for (int ii = 0; ii < points.size(); ++ii)
+            {
+            h_handle.data[ii] = points[ii];
             };
         };
     };
@@ -51,12 +73,11 @@ void cellListGPU::setGridSize(Dscalar a)
     Dscalar b11,b12,b21,b22;
     Box.getBoxDims(b11,b12,b21,b22);
     xsize = (int)floor(b11/a);
+    if(xsize%2==1) xsize +=1;
     ysize = (int)floor(b22/a);
+    if(ysize%2==1) ysize +=1;
 
     boxsize = b11/xsize;
-
-    xsize = (int)ceil(b11/boxsize);
-    ysize = (int)ceil(b22/boxsize);
 
     totalCells = xsize*ysize;
     cell_sizes.resize(totalCells); //number of elements in each cell...initialize to zero
@@ -64,7 +85,8 @@ void cellListGPU::setGridSize(Dscalar a)
     cell_indexer = Index2D(xsize,ysize);
 
     //estimate Nmax
-    Nmax = ceil(Np/totalCells)+1;
+    if(ceil(Np/totalCells)+1 > Nmax)
+        Nmax = ceil(Np/totalCells)+1;
     resetCellSizesCPU();
     };
 
@@ -122,6 +144,51 @@ void cellListGPU::resetCellSizes()
     h_assist.data[1] = 0;
     };
 
+int cellListGPU::positionToCellIndex(Dscalar x, Dscalar y)
+    {
+    int cell_idx = 0;
+    int binx = max(0,min(xsize-1,(int)floor(x/boxsize)));
+    int biny = max(0,min(ysize-1,(int)floor(y/boxsize)));
+    return cell_indexer(binx,biny);
+    };
+
+void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
+    {
+    int w = min(width,xsize/2);
+    int cellix = cellIndex%xsize;
+    int celliy = (cellIndex - cellix)/ysize;
+    cellNeighbors.clear();
+    cellNeighbors.reserve(w*w);
+    for (int ii = -w; ii <=w; ++ii)
+        for (int jj = -w; jj <=w; ++jj)
+            {
+            int cx = (cellix+jj)%xsize;
+            if (cx <0) cx+=xsize;
+            int cy = (celliy+ii)%ysize;
+            if (cy <0) cy+=ysize;
+            cellNeighbors.push_back(cell_indexer(cx,cy));
+            };
+    };
+
+void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
+    {
+    int w = min(width,xsize);
+    int cellix = cellIndex%xsize;
+    int celliy = (cellIndex - cellix)/xsize;
+    cellNeighbors.clear();
+    for (int ii = -w; ii <=w; ++ii)
+        for (int jj = -w; jj <=w; ++jj)
+            if(ii ==-w ||ii == w ||jj ==-w ||jj==w)
+                {
+                int cx = (cellix+jj)%xsize;
+                if (cx <0) cx+=xsize;
+                int cy = (celliy+ii)%ysize;
+                if (cy <0) cy+=ysize;
+                cellNeighbors.push_back(cell_indexer(cx,cy));
+                };
+    };
+
+
 void cellListGPU::compute()
     {
     //will loop through particles and put them in cells...
@@ -178,7 +245,7 @@ void cellListGPU::compute(GPUArray<Dscalar2> &points)
     while (recompute)
         {
         //reset particles per cell, reset cell_list_indexer, resize idxs
-        resetCellSizes();
+        resetCellSizesCPU();
         ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::readwrite);
         ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::readwrite);
         recompute=false;

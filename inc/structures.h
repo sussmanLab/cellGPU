@@ -8,17 +8,13 @@ this file is maintained for historical compatibility, and for operating without 
 */
 
 #include "std_include.h"
+#include "functions.h"
 
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
-
-//a few function protocols needed below...definitions are in functions.h
-//since some structures need to be able to call this function...
-bool CircumCircle(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2, Dscalar x3, Dscalar y3,Dscalar &xc, Dscalar &yc, Dscalar &r);
-inline Dscalar TriangleArea(Dscalar x1, Dscalar y1, Dscalar x2, Dscalar y2);
 
 /*!
  * Really the Voronoi cell of a Delaunay vertex. Given the relative positions of the vertices
@@ -70,7 +66,7 @@ struct DelaunayCell
                 bool placeholder; // Circumcircle is a function with a type
                 Dscalar2 p1 = Dneighs[CWorder[ii].second];
                 Dscalar2 p2 = Dneighs[CWorder[((ii+1)%n)].second];
-                placeholder = CircumCircle(ori.x,ori.y,p1.x,p1.y,p2.x,p2.y,xc,yc,rad);
+                Circumcircle(p1,p2,Vpoints[ii],rad);
                 Vpoints[ii]=make_Dscalar2(xc,yc);
                 };
 
@@ -87,7 +83,7 @@ struct DelaunayCell
                 {
                 Dscalar2 p1 = Vpoints[ii];
                 Dscalar2 p2 = Vpoints[((ii+1)%n)];
-                Varea += TriangleArea(p1.x,p1.y,p2.x,p2.y);
+                Varea += TriangleArea(p1,p2);
                 Dscalar dx = p1.x-p2.x;
                 Dscalar dy = p1.y-p2.y;
                 Vperimeter += sqrt(dx*dx+dy*dy);

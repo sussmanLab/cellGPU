@@ -375,7 +375,7 @@ void AVM2D::computeForcesCPU()
         vlast.x = h_vln.data[fsidx].x;  vlast.y = h_vln.data[fsidx].y;
         vnext.x = h_vln.data[fsidx].z;  vnext.y = h_vln.data[fsidx].w;
 
-        //computeForceSetAVM is defined in inc/cu_functions.h
+        //computeForceSetAVM is defined in inc/functions.h
         computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
 
         h_fs.data[fsidx].x = dEdv.x;
@@ -904,9 +904,6 @@ void AVM2D::flipEdgesGPU()
                                Nvertices,
                                Ncells);
             }; //scope for arrayhandles
-        /*!
-        \todo think about a better structure for avoiding simultaneous edge flips on the same cell
-        */
         ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
         if(h_ffe.data[0]==0)
             keepFlipping = false;
