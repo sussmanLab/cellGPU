@@ -73,12 +73,11 @@ void cellListGPU::setGridSize(Dscalar a)
     Dscalar b11,b12,b21,b22;
     Box.getBoxDims(b11,b12,b21,b22);
     xsize = (int)floor(b11/a);
+    if(xsize%2==1) xsize +=1;
     ysize = (int)floor(b22/a);
+    if(ysize%2==1) ysize +=1;
 
     boxsize = b11/xsize;
-
-    xsize = (int)ceil(b11/boxsize);
-    ysize = (int)ceil(b22/boxsize);
 
     totalCells = xsize*ysize;
     cell_sizes.resize(totalCells); //number of elements in each cell...initialize to zero

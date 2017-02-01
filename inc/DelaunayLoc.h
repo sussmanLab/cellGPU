@@ -4,7 +4,6 @@
 #include "std_include.h"
 #include "gpuarray.h"
 #include "gpubox.h"
-#include "cell.h"
 #include "cellListGPU.h"
 #include "Delaunay1.h"
 using namespace std;
@@ -84,7 +83,6 @@ class DelaunayLoc
         bool triangulated;            //!<has a triangulation been performed?
 
         Dscalar cellsize;               //!<Sets how fine a grid to use in the cell list
-        grid clist;             //!<A grid class to speed up finding the candidate 1-ring
         gpubox Box;             //!< A box to calculate relative distances in a periodic domain.
 
         vector<int> DTringIdxCGAL; //!<A vector of Delaunay neighbor indicies that can be repeatedly re-written
