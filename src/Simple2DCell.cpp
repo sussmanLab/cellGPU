@@ -2,6 +2,7 @@
 
 #include "Simple2DCell.h"
 #include "Simple2DCell.cuh"
+/*! \file Simple2DCell.cpp */
 
 /*!
 An extremely simple constructor that does nothing, but enforces default GPU operation

@@ -3,6 +3,7 @@
 #include "spv2d.h"
 #include "spv2d.cuh"
 #include "cuda_profiler_api.h"
+/*! \file spv2d.cpp */
 
 /*!
 \param n number of cells to initialize

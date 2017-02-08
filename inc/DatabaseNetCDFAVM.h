@@ -10,7 +10,7 @@
 #include "vector_types.h"
 
 
-/*!
+/*! \file DatabaseNetCDFAVM.h
 Class for a state database for an active vertex model state
 the box dimensions are stored, the 2d unwrapped coordinate of vertices,
 and the set of connections between vertices

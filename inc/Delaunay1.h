@@ -6,7 +6,7 @@
 #include "structures.h"
 using namespace std;
 
-/*!
+/*! \file Delaunay1.h
 DelaunayNP implements a naive Bowyer-watson algorithm to compute the Delaunay Triangulation
 of a non-periodic set of points. Ideally this method should not be called (in favor of CGAL-
 based triangulations), but if for some reason CGAL is not available this can be used in a pinch.

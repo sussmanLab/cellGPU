@@ -1,9 +1,7 @@
 #ifndef STDINCLUDE
 #define STDINCLUDE
 
-/*!
-\file std_include.h
-
+/*! \file std_include.h
 a file to be included all the time... carries with it things DMS often uses
 Crucially, it also defines Dscalars as either floats or doubles, depending on
 how the program is compiled

@@ -25,7 +25,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS IS'' AND
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-/*!
+/*! \file indexer.h
  * A class for converting between a 2d index and a 1-d array, which makes calculation on
  * the GPU a bit easier. This was inspired by the indexer class of Hoomd-blue
  */

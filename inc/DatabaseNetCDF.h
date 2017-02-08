@@ -6,7 +6,7 @@
 #include <string>
 #include "vector_types.h"
 
-/*!
+/*! \file DatabaseNetCDF.h
 BaseDatabase just provides an interface to a file and a mode of operation.
 */
 //! A base class that implements a details-free  netCDF4-based data storage system

@@ -1,5 +1,6 @@
-
 #include "DelaunayCGAL.h"
+/*! \file DelaunayCGAL.cpp */
+
 /*!
 \param V a vector of pairs (Delaunay::Lpoint, particle index)
 \param neighs the desired output: a CW-ordered list of the particle indices that neighbor V[0]

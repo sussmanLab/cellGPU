@@ -5,7 +5,7 @@
 #include "curand_kernel.h"
 #include "avm2d.cuh"
 
-/** \file
+/** \file avm2d.cu
     * Defines kernel callers and kernels for GPU calculations of AVM parts
 */
 

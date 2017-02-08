@@ -12,7 +12,7 @@
 #include "DelaunayMD.h"
 #include "spv2d.cuh"
 
-/*!
+/*! \file spv2d.h
  *A child class of DelaunayMD, this implements the SPV model in 2D. This involves mostly calculating
   the forces in the SPV model and then moving cells appropriately. Optimizing these procedures for
   hybrid CPU/GPU-based computation involves declaring and maintaining several related auxiliary

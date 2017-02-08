@@ -14,6 +14,8 @@ __host__ __device__ inline
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
+/*! \file functions.h */
+
 /** @defgroup Functions functions
  * @{
  \brief Utility functions that can be called from host or device

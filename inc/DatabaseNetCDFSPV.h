@@ -8,7 +8,7 @@
 #include <string>
 #include "vector_types.h"
 
-/*!
+/*! \file DatabaseNetCDFSPV.h
 Class for a state database for a 2d delaunay triangulation
 the box dimensions are stored, the 2d unwrapped coordinate of the delaunay vertices,
 and the shape index parameter for each vertex

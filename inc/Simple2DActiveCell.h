@@ -10,7 +10,7 @@
 #include "curand.h"
 #include "curand_kernel.h"
 
-/*!
+/*! \file Simple2DActiveCell.h
 A class defining the simplest aspects of a 2D system in which particles have a constant velocity
 along a director which rotates with gaussian noise
 */

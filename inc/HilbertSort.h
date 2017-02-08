@@ -17,7 +17,7 @@ which is released under the GNU LGPL license
 #endif
 
 
-/*!
+/*! \file HilbertSort.h
 This structure can help sort scalar2's according to their position along a hilbert curve of order M...
 This sorting can improve data locality (i.e. particles that are close to each other in physical space reside
 close to each other in memory). This is a small boost for CPU-based code, but can be very important

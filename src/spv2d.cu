@@ -12,6 +12,7 @@
 #include <iostream>
 #include <stdio.h>
 #include "Matrix.h"
+/*! \file spv2d.cu */
 
 /*!
 \file A file defining some global kernels for use in the spv2d class

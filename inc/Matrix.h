@@ -9,7 +9,7 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-/*!
+/*! \file Matrix.h
 Matrix2x2 provides a simple interface for operations using 2x2 matrices. In particular, it implement
 matrix-maxtrix multiplication, and has specialized matrix-vector and vector-matrix multiplication in
 which Dscalar2 variables take the place of vectors. A dyadic product is implemented which takes two

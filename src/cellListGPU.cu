@@ -7,6 +7,7 @@
 #include "gpubox.h"
 #include <iostream>
 #include <stdio.h>
+/*! \file cellListGPU.cu */
 
 /*!
     \addtogroup cellListGPUKernels

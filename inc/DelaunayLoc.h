@@ -8,7 +8,7 @@
 #include "Delaunay1.h"
 using namespace std;
 
-/*!
+/*! \file DelaunayLoc.h
  * One of the workhorse engines of the hybrid scheme, DelaunayLoc provides methods for finding
  * the Delaunay neighbors of a given point by doing only local calculations. This is done by
  * calculating the candidate 1-ring of vertex i -- a set of points for which the set of Delaunay

@@ -7,7 +7,7 @@
 #include "gpubox.h"
 #include "HilbertSort.h"
 
-/*!
+/*! \file Simple2DCell.h
 A class defining some of the fundamental attributes and operations common to 2D off-lattice models
 of cells. This class will help refactor the AVM and SPV branches into a more coherent set. At the
 moment the AVM2D class is based off of this, but DelaunayMD and SPV need to be refactored.

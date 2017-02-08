@@ -18,7 +18,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS IS'' AND
 //As you might suspect from the above, the classes and structures in this file are modifications of the GPUArray.h file from the HOOMD-Blue package.
 //Credit to Joshua A. Anderson
 
-/*!
+/*!\file gpuarray.h
 This file defines two helpful classes for working with data on both th CPU and GPU.
 GPUArray<T> is a templated array that carries around with it some data, as well as
 information about where that data was last modified and/or accessed. It can be

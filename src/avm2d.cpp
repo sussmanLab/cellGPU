@@ -3,6 +3,7 @@
 #include "avm2d.h"
 #include "avm2d.cuh"
 #include "spv2d.h"
+/*! \file avm2d.cpp */
 
 /*!
 \param n number of CELLS to initialize

@@ -11,7 +11,7 @@
 #include "DelaunayMD.cuh"
 
 
-/*!
+/*! \file DelaunayMD.h
  * DelaunayMD is a core engine class, capable of taking a set of points
  * in a periodic domain, performing Delaunay triangulations on them, testing whether
  * those triangulations are valid on either the CPU or GPU, and locally repair

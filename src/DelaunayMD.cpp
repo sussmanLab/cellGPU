@@ -4,6 +4,8 @@
 #include "DelaunayMD.h"
 #include "DelaunayMD.cuh"
 
+/*! \file DelaunayMD.cpp */
+
 /*!
 A simple constructor that sets many of the class member variables to zero
 */

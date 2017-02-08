@@ -7,6 +7,7 @@
 #include "cuda_runtime.h"
 #include "cellListGPU.cuh"
 #include "cellListGPU.h"
+/*! \file cellListGPU.cpp */
 
 
 cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)

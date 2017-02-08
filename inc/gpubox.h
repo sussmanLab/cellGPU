@@ -9,7 +9,7 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-/*!
+/*! \file gpubox.h
 gpubox  periodic boundary conditions in 2D, computing minimum distances between
 periodic images, displacing particles and putting them back in the central unit cell, etc.
 The workhorse of this class is calling

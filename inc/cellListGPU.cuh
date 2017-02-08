@@ -6,6 +6,9 @@
 #include "indexer.h"
 #include "gpubox.h"
 
+/*! \file cellListGPU.cuh
+*/
+
 /** @defgroup cellListGPUKernels cellListGPU Kernels
  * @{
  * \brief CUDA kernels and callers for the cellListGPU class

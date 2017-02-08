@@ -3,6 +3,8 @@
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
 
+/*! \file DelaunayLoc.cpp */
+
 /*!
 \param points references to a vector of new location for points, formatted as {x1,y1,x2,y2,...}
 */

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "DelaunayMD.cuh"
 
+/*! \file DelaunayMD.cu */
 /*!
     \addtogroup DelaunayMDKernels
     @{

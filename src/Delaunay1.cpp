@@ -1,4 +1,5 @@
 #include "Delaunay1.h"
+/*! \file Delaunay1.cpp */
 
 /*!
 \param points a vector of Dscalars, formatted as [x1,y1,x2,y2,...,xn,yn]

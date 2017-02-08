@@ -4,6 +4,7 @@
 #include "Simple2DCell.cuh"
 #include "Simple2DActiveCell.h"
 #include "Simple2DActiveCell.cuh"
+/*! \file Simple2DActiveCell.cpp */
 
 /*!
 An extremely simple constructor that does nothing, but enforces default GPU operation
