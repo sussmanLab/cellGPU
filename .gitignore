@@ -2,7 +2,6 @@
 *.o
 *.out
 *_store
-*.txt
 callgrind*
 *.dsym
 *.sh

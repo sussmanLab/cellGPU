@@ -17,11 +17,24 @@ spots. This is highly discouraged, and the code may be much less stable as a res
 CGAL-4.9 was used, which in turn requires up to date versions of the gmp and mpfr libraries.
 The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.
 
-The database class uses the netCDF-4 C++  library (tested on version 4.1.3).The dependency on netCDF can be removed by (1) not including any "Database" class, and (2) commenting out everything after the = sign in the LIB_NETCDF entry of the makefile
+The database class uses the netCDF-4 C++  library (tested on version 4.1.3).The dependency on netCDF
+can be removed by (1) not including any "Database" class, and (2) commenting out everything after the
+= sign in the LIB_NETCDF entry of the makefile
 
 Documentation is maintained via doxygen, but is not required for compilation of the executables.
 
 The makefile system is scheduled to be replaced, and will soon change to require cmake.
+
+# Sample programs
+
+The included makefile compiles three programs: avmGPU, spvGPU, and spvMSD. The first two generate timing
+information, and the "Timing.sh" script shows an example of how to quickly call these programs for a
+range of parameters. The last program, spvMSD, uses netCDF to save positional data (log spaced) for a simulation
+of monodisperse cells in the SPV model (as compiled the .nc file will be saved to the current directory).
+Analyzing this positional data, for instance by computing the mean squared displacement, can be used to
+confirm the correct operation of the program. The included "Msd.sh" script will generate some data
+that can be analyzed and directly compared with Fig. 1 of Bi et al. (Phys. Rev. X 6, 021011 (2016)),
+which is the cannonical reference for the SPV model.
 
 # Helpful websites
 The requirements can be obtained by looking at the info on the following:
