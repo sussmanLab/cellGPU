@@ -39,11 +39,11 @@ debug: CXXFLAGS += -g -DCUDATHREADSYNC
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
 debug: build
 
-PROGS= spvGPU.out avmGPU.out
+PROGS= spvGPU.out avmGPU.out spvMSD.out
 
 build: $(PROGS)
 
-PROG_OBJS=obj/activeVertex.o obj/voronoi.o
+PROG_OBJS=obj/activeVertex.o obj/voronoi.o obj.runMakeDatabase.o
 
 CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/hilbert_curve.o
 CLASS_OBJS+=obj/Simple2DCell.o obj/Simple2DActiveCell.o
@@ -74,9 +74,12 @@ avmGPU.out: obj/activeVertex.o $(CLASS_OBJS) $(CUOBJS)
 spvGPU.out: obj/voronoi.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
+spvMSD.out: obj/runMakeDatabase.o $(CLASS_OBJS) $(CUOBJS)
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 run: build
 	./spvGPU.out
+	./spvMSD.out
 	./avmGPU.out
 
 clean:
