@@ -1,7 +1,11 @@
 # Citations for cellGPU {#cite}
 
+If you use cellGPU for a publication or project, please site the main cellGPU paper: "cellGPU:
+massively parallel simulations of dynamic vertex models" https://arxiv.org/abs/1702.02939
+
+
 The local ''test-and-repair'' part of the code used in the SPV branch is parallelized using an idea
-from Chen and Gotsman's ''Localizing the delaunay triangulation and its parallel implementation,''
+from Chen and Gotsman ''Localizing the delaunay triangulation and its parallel implementation,''
 [Transactions on Computational Science XX (M. L. Gavrilova, C.J.K. Tan, and B. Kalantari, eds.),
 Lecture Notes in Computer Science, vol. 8110, Springer Berlin Heidelberg, 2013, Extended abstract
 in ISVD 2012, pp. 24–31, pp. 39–55 (English)]. In particular, that paper points out a locality
