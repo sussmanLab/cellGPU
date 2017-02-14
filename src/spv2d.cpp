@@ -76,7 +76,82 @@ void SPV2D::Initialize(int n,bool initGPU)
     allDelSets();
     };
 
-/*
+/*!
+goes through the process of computing the forces on either the CPU or GPU, either with or without
+exclusions, as determined by the flags. Assumes the geometry has NOT yet been computed.
+\post the geometry is computed, and force per cell is computed.
+*/
+void SPV2D::computeForces()
+    {
+    if (GPUcompute)
+        {
+        computeGeometryGPU();
+        ComputeForceSetsGPU();
+        SumForcesGPU();
+        }
+    else
+        {
+        computeGeometryCPU();
+        for (int ii = 0; ii < Ncells; ++ii)
+            computeSPVForceCPU(ii);
+        };
+    };
+
+/*!
+goes through the process of testing and repairing the topology on either the CPU or GPU
+\post and topological changes needed by cell motion are detected and repaired
+*/
+void SPV2D::enforceTopology()
+    {
+    if (GPUcompute)
+        {
+        testAndRepairTriangulation();
+        ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::read);
+        if(h_actf.data[0] == 1)
+            {
+            //maintain the auxilliary lists for computing forces
+            if(completeRetriangulationPerformed || neighMaxChange)
+                {
+                if(neighMaxChange)
+                    {
+                    resetLists();
+                    neighMaxChange = false;
+                    };
+                allDelSets();
+                }
+            else
+                {
+                bool localFail = false;
+                for (int jj = 0;jj < NeedsFixing.size(); ++jj)
+                    if(!getDelSets(NeedsFixing[jj]))
+                        localFail=true;
+                if (localFail)
+                    {
+                    cout << "Local triangulation failed to return a consistent set of topological information..." << endl;
+                    cout << "Now attempting a global re-triangulation to save the day." << endl;
+                    globalTriangulationCGAL();
+                    //get new DelSets and DelOthers
+                    resetLists();
+                    allDelSets();
+                    };
+                };
+
+            };
+        }
+    else
+        {
+        testAndRepairTriangulation();
+        if(neighMaxChange)
+            {
+            if(neighMaxChange)
+                resetLists();
+            neighMaxChange = false;
+            allDelSets();
+            };
+        };
+    };
+
+/*!
 When sortPeriod < 0, this routine does not get called
 \post call Simple2DActiveCell's underlying Hilbert sort scheme, and re-index spv2d's extra arrays
 */
@@ -282,25 +357,13 @@ if needed
 */
 void SPV2D::performTimestepCPU()
     {
-    computeGeometryCPU();
-    for (int ii = 0; ii < Ncells; ++ii)
-        computeSPVForceCPU(ii);
-    calculateDispCPU();
+    computeForces();
 
+    calculateDispCPU();
     movePointsCPU(displacements);
+
     if(!spatialSortThisStep)
-        {
-        testAndRepairTriangulation();
-        if(neighMaxChange)
-            {
-            if(neighMaxChange)
-                {
-                resetLists();
-                };
-            neighMaxChange = false;
-            allDelSets();
-            };
-        };
+        enforceTopology();
     };
 
 /*!
@@ -333,50 +396,14 @@ repair the topology, updating the size of the data arrays as necessary.
 */
 void SPV2D::performTimestepGPU()
     {
-    computeGeometryGPU();
-    ComputeForceSetsGPU();
-    SumForcesGPU();
+    computeForces();
     DisplacePointsAndRotate();
 
     //spatial sorting triggers a global re-triangulation, so no need to test and repair
     //
     if(!spatialSortThisStep)
         {
-        testAndRepairTriangulation();
-        ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::read);
-        if(h_actf.data[0] == 1)
-            {
-            //maintain the auxilliary lists for computing forces
-            if(completeRetriangulationPerformed || neighMaxChange)
-                {
-                if(neighMaxChange)
-                    {
-                    resetLists();
-                    neighMaxChange = false;
-                    };
-                allDelSets();
-                }
-            else
-                {
-                bool localFail = false;
-                for (int jj = 0;jj < NeedsFixing.size(); ++jj)
-                    {
-                    if(!getDelSets(NeedsFixing[jj]))
-                        localFail=true;
-                    };
-                if (localFail)
-                    {
-                    cout << "Local triangulation failed to return a consistent set of topological information..." << endl;
-                    cout << "Now attempting a global re-triangulation to save the day." << endl;
-                    globalTriangulationCGAL();
-                    //get new DelSets and DelOthers
-                    resetLists();
-                    allDelSets();
-                    };
-                };
-
-            };
-
+        enforceTopology();
         //pre-copy some data back to device; this will overlap with some CPU time
         //...these are the arrays that are used by force_sets but not geometry, and should be switched to Async
         ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);

@@ -33,6 +33,16 @@ class SPV2D : public DelaunayMD
         //!Initialize DelaunayMD, set random orientations for cell directors, prepare data structures
         void Initialize(int n,bool initGPU = true);
 
+        //virtual functions that need to be implemented
+        //!return the forces
+        virtual void getForces(GPUArray<Dscalar2> &forces){forces = cellForces;};
+
+        //!compute the geometry and get the forces
+        virtual void computeForces();
+        
+        //!update/enforce the topology
+        virtual void enforceTopology();
+        
         //!Declare which particles are to be excluded (exes[i]!=0)
         void setExclusions(vector<int> &exes);
 

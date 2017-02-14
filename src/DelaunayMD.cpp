@@ -143,6 +143,19 @@ void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
     };
 
 /*!
+Displace cells on either the GPU or CPU, according to the flag
+\param displacements a vector of Dscalar2 specifying how much to move every cell
+\post the cells are displaced according to the input vector, and then put back in the main unit cell.
+*/
+void DelaunayMD::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
+    {
+    if (GPUcompute)
+        movePoints(displacements);
+    else
+        movePointsCPU(displacements);
+    };
+
+/*!
 The DelaunayLoc and DelaunayNP classes are invoked to performed to determine the Delaunay
 triangulation of the entire periodic domain.
 */
