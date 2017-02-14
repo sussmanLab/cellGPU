@@ -263,6 +263,16 @@ void AVM2D::computeForces()
     };
 
 /*!
+displace vertices and rotate directors, on either the GPU or CPU as determined by flags
+*/
+void AVM2D::displaceAndRotate()
+    {
+    if(GPUcompute)
+        displaceAndRotateGPU();
+    else
+        displaceAndRotateCPU();
+    };
+/*!
 enforce and update topology of vertex wiring on either the GPU or CPU
 */
 void AVM2D::enforceTopology()
@@ -293,7 +303,6 @@ void AVM2D::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
                          d_disp.data,
                          Box,
                          Nvertices);
-
         }
     else
         {
@@ -323,10 +332,7 @@ void AVM2D::performTimestep()
     computeForces();
 
     //next move the vertices around
-    if(GPUcompute)
-        displaceAndRotateGPU();
-    else
-        displaceAndRotateCPU();
+    displaceAndRotate();
 
     //then update the topology of the cells as needed
     enforceTopology();

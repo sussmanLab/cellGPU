@@ -137,6 +137,11 @@ void SPV2D::enforceTopology()
                 };
 
             };
+        //pre-copy some data back to device; this will overlap with some CPU time
+        //...these are the arrays that are used by force_sets but not geometry, and should be switched to Async
+        ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
+        ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
+        ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
         }
     else
         {
@@ -281,14 +286,15 @@ void SPV2D::performTimestep()
             spatialSortThisStep = true;
             };
         };
+    
+    computeForces();
+    displaceCellsAndRotate();
 
-    if(GPUcompute)
-        performTimestepGPU();
-    else
-        performTimestepCPU();
-
+    //spatial sorting also takes care of topology
     if (spatialSortThisStep)
         spatialSorting();
+    else
+        enforceTopology();
     };
 
 /*!
@@ -350,23 +356,6 @@ void SPV2D::calculateDispCPU()
     };
 
 /*!
-The sequence of a time step on the CPU is (1) compute geometry (area and perimeter) for each cell
-(2) calculate the forces, (3) calculate the displacement from the forces and the activity, (4) move
-cells, (5) test the validity of the old triangulation on the new cell positions, updating topology
-if needed
-*/
-void SPV2D::performTimestepCPU()
-    {
-    computeForces();
-
-    calculateDispCPU();
-    movePointsCPU(displacements);
-
-    if(!spatialSortThisStep)
-        enforceTopology();
-    };
-
-/*!
 \pre The geoemtry (area and perimeter) has already been calculated
 \post calculate the contribution to the net force on every particle from each of its voronoi vertices
 via a cuda call
@@ -389,27 +378,18 @@ void SPV2D::SumForcesGPU()
     };
 
 /*!
-The sequence of a time step on the GPU is (1) compute geometry (area and perimeter) for each cell
-(2) calculate the forces sets, (3) sum the force sets up, (4) move cells and rotate directors,
-(5) Test if any circumcenters are non-empty on the GPU. (6) if yes, send data back to host to
-repair the topology, updating the size of the data arrays as necessary.
+call the correct routines to move cells around and rotate the directors
 */
-void SPV2D::performTimestepGPU()
+void SPV2D::displaceCellsAndRotate()
     {
-    computeForces();
-    DisplacePointsAndRotate();
-
-    //spatial sorting triggers a global re-triangulation, so no need to test and repair
-    //
-    if(!spatialSortThisStep)
+    if (GPUcompute)
         {
-        enforceTopology();
-        //pre-copy some data back to device; this will overlap with some CPU time
-        //...these are the arrays that are used by force_sets but not geometry, and should be switched to Async
-        ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
-        ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
-        ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
-
+        DisplacePointsAndRotate();
+        }
+    else
+        {
+        calculateDispCPU();
+        movePointsCPU(displacements);
         };
     };
 

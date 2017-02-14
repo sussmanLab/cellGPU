@@ -42,7 +42,7 @@ class AVM2D : public Simple2DActiveCell
 
         //!compute the geometry and get the forces
         virtual void computeForces();
-        
+
         //!update/enforce the topology
         virtual void enforceTopology();
 
@@ -59,6 +59,8 @@ class AVM2D : public Simple2DActiveCell
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         void computeForcesGPU();
 
+        //! decide whether to move vertices on the CPU or GPU
+        void displaceAndRotate();
         //!Displace vertices and rotate directors on the CPU
         void displaceAndRotateCPU();
         //!Displace vertices and rotate directors on the GPU

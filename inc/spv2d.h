@@ -39,10 +39,13 @@ class SPV2D : public DelaunayMD
 
         //!compute the geometry and get the forces
         virtual void computeForces();
-        
+
         //!update/enforce the topology
         virtual void enforceTopology();
-        
+
+        //!call the correct routine to move cells and update directors
+        void displaceCellsAndRotate();
+
         //!Declare which particles are to be excluded (exes[i]!=0)
         void setExclusions(vector<int> &exes);
 
@@ -67,7 +70,6 @@ class SPV2D : public DelaunayMD
         virtual void computeSPVForceCPU(int i);
         //!Calculates the displacements and cell director changes on the CPU. Uses a non-reproducible RNG
         void calculateDispCPU();
-
 
         //GPU functions
         //!call gpu_displace_and_rotate kernel caller
