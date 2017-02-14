@@ -30,12 +30,24 @@ class AVM2D : public Simple2DActiveCell
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(bool spvInitialize = false);
 
-        //!progress through the parts of a time step...simply an interface to the correct other procedure
+        //virtual functions that need to be implemented
+        //!In vertex models the number of degrees of freedom is the number of vertices
+        virtual int getNumberOfDegreesOfFreedom(){return Nvertices;};
+
+        //!moveDegrees of Freedom calls either the move points or move points CPU routines
+        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements);
+
+        //!return the forces
+        virtual void getForces(GPUArray<Dscalar2> &forces){forces = vertexForces;};
+
+        //!compute the geometry and get the forces
+        virtual void computeForces();
+        
+        //!update/enforce the topology
+        virtual void enforceTopology();
+
+        //!progress through the parts of a time step...simply an interface to the correct other procedures
         void performTimestep();
-        //!progress through the parts of a time step on the CPU
-        void performTimestepCPU();
-        //!progress through the parts of a time step on the GPU
-        void performTimestepGPU();
 
         //!Compute the geometry (area & perimeter) of the cells on the CPU
         void computeGeometryCPU();

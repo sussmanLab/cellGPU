@@ -46,6 +46,12 @@ bool gpu_avm_sum_force_sets(
                     Dscalar2 *d_vertexForces,
                     int      Nvertices);
 
+bool gpu_avm_displace(
+                    Dscalar2 *d_vertexPositions,
+                    Dscalar2 *d_vertexDisplacements,
+                    gpubox &Box,
+                    int Nvertices);
+
 bool gpu_avm_displace_and_rotate(
                     Dscalar2 *d_vertexPositions,
                     Dscalar2 *d_vertexForces,
