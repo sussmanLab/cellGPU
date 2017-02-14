@@ -38,8 +38,13 @@ class DelaunayMD : public Simple2DActiveCell
         //!read positions from text file...for debugging
         void readTriangulation(ifstream &infile);
 
-        //!A very hacky and wrong soft-sphere repulsion between neighbors... strictly for testing purposes
-        void repel(GPUArray<Dscalar2> &disp,Dscalar eps);
+
+        //virtual functions that need to be implemented
+        //!In delaunay-like models the number of degrees of freedom is the number of cells
+        virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
+
+        //!moveDegrees of Freedom calls either the move points or move points CPU routines
+        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements);
 
         //!move particles on the GPU
         void movePoints(GPUArray<Dscalar2> &displacements);
@@ -52,6 +57,9 @@ class DelaunayMD : public Simple2DActiveCell
         void updateCellList();
         //!update the NieghIdxs data structure
         void updateNeighIdxs();
+
+        //!A very hacky and wrong soft-sphere repulsion between neighbors... strictly for testing purposes
+        void repel(GPUArray<Dscalar2> &disp,Dscalar eps);
 
     //protected functions
     protected:

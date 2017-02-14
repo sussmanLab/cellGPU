@@ -242,6 +242,80 @@ void AVM2D::spatialVertexSorting()
     spatiallySortVerticesAndCellActivity();
     };
 
+/*!
+compute the geometry and the forces and the vertices, on either the GPU or CPU as determined by
+flags
+*/
+void AVM2D::computeForces()
+    {
+    //compute the current area and perimeter of every cell
+    //use this information to compute the net force on the vertices
+    if(GPUcompute)
+        {
+        computeGeometryGPU();
+        computeForcesGPU();
+        }
+    else
+        {
+        computeGeometryCPU();
+        computeForcesCPU();
+        };
+    };
+
+/*!
+displace vertices and rotate directors, on either the GPU or CPU as determined by flags
+*/
+void AVM2D::displaceAndRotate()
+    {
+    if(GPUcompute)
+        displaceAndRotateGPU();
+    else
+        displaceAndRotateCPU();
+    };
+/*!
+enforce and update topology of vertex wiring on either the GPU or CPU
+*/
+void AVM2D::enforceTopology()
+    {
+    if(GPUcompute)
+        {
+        //see if vertex motion leads to T1 transitions...ONLY allow one transition per vertex and
+        //per cell per timestep
+        testAndPerformT1TransitionsGPU();
+        }
+    else
+        {
+        //see if vertex motion leads to T1 transitions
+        testAndPerformT1TransitionsCPU();
+        };
+    };
+
+/*!
+move vertices according to an inpute GPUarray
+*/
+void AVM2D::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
+    {
+    if (GPUcompute)
+        {
+        ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::read);
+        ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
+        gpu_avm_displace(d_v.data,
+                         d_disp.data,
+                         Box,
+                         Nvertices);
+        }
+    else
+        {
+        ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::read);
+        ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
+        for (int i = 0; i < Nvertices; ++i)
+            {
+            h_v.data[i].x += h_disp.data[i].x;
+            h_v.data[i].y += h_disp.data[i].y;
+            Box.putInBoxReal(h_v.data[i]);
+            };
+        };
+    };
 
 /*!
 increment the time step, call either the CPU or GPU branch, depending on the state of
@@ -253,44 +327,15 @@ void AVM2D::performTimestep()
     if(sortPeriod > 0)
         if(Timestep % sortPeriod == 0)
             spatialVertexSorting();
-    if(GPUcompute)
-        performTimestepGPU();
-    else
-        performTimestepCPU();
-    };
+    
+    //first compute the forces, which also computes the geometry
+    computeForces();
 
-/*!
-Go through the parts of a timestep on the CPU
-*/
-void AVM2D::performTimestepCPU()
-    {
-    //compute the current area and perimeter of every cell
-    computeGeometryCPU();
-    //use this information to compute the net force on the vertices
-    computeForcesCPU();
-    //move the cells accordingly, and update the director of each cell
-    displaceAndRotateCPU();
-    //see if vertex motion leads to T1 transitions
-    testAndPerformT1TransitionsCPU();
-    //as a utility, one could compute the current "position" of the cells, but this is unnecessary
-    //getCellPositionsCPU();
-    };
+    //next move the vertices around
+    displaceAndRotate();
 
-/*!
-go through the parts of a timestep on the GPU
-*/
-void AVM2D::performTimestepGPU()
-    {
-    //compute the current area and perimeter of every cell
-    computeGeometryGPU();
-    //use this information to compute the net force on the vertices
-    computeForcesGPU();
-    //move the cells accordingly, and update the director of each cell
-    displaceAndRotateGPU();
-    //see if vertex motion leads to T1 transitions...ONLY allow one transition per vertex and per cell per timestep
-    testAndPerformT1TransitionsGPU();
-    //as a utility, one could compute the current "position" of the cells, but this is unnecessary
-    //getCellPositionsGPU();
+    //then update the topology of the cells as needed
+    enforceTopology();
     };
 
 /*!

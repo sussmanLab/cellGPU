@@ -69,7 +69,6 @@ class Simple2DActiveCell : public Simple2DCell
         bool initializeGPURNG;
         //!An array random-number-generators for use on the GPU branch of the code
         GPUArray<curandState> cellRNGs;
-    
     };
 
 #endif

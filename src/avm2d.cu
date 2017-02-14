@@ -134,6 +134,26 @@ __global__ void avm_sum_force_sets_kernel(
     };
 
 /*!
+  This kernel jsut moves the vertices around according to the input vector, then makes sure the
+  vertices stay in the box.
+  */
+__global__ void avm_move_vertices_kernel(
+                                        Dscalar2 *d_vertexPositions,
+                                        Dscalar2 *d_vertexDisplacements,
+                                        gpubox   Box,
+                                        int      Nvertices)
+    {
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= Nvertices)
+        return;
+
+    d_vertexPositions[idx].x += d_vertexDisplacements[idx].x;
+    d_vertexPositions[idx].y += d_vertexDisplacements[idx].y;
+    //make sure the vertices stay in the box
+    Box.putInBoxReal(d_vertexPositions[idx]);
+    };
+
+/*!
   In this version of the active vertex model, the motility of a vertex is a straight average of the
   motility of the three adjacent cells
   */
@@ -662,8 +682,24 @@ bool gpu_avm_sum_force_sets(
     return cudaSuccess;
     };
 
+//!Call the kernel to displace vertices according to the displacement vector
+bool gpu_avm_displace(
+                    Dscalar2 *d_vertexPositions,
+                    Dscalar2 *d_vertexDisplacements,
+                    gpubox   &Box,
+                    int      Nvertices)
+    {
+    unsigned int block_size = 128;
+    if (Nvertices < 128) block_size = 32;
+    unsigned int nblocks  = Nvertices/block_size + 1;
 
-//!Call the kernel to calculate the area and perimeter of each cell
+    avm_move_vertices_kernel<<<nblocks,block_size>>>(d_vertexPositions,d_vertexDisplacements,
+                                                     Box,Nvertices);
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    };
+
+//!Call the kernel to displace vertices and rotate directors according to the forces
 bool gpu_avm_displace_and_rotate(
                     Dscalar2 *d_vertexPositions,
                     Dscalar2 *d_vertexForces,

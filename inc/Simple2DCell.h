@@ -25,6 +25,22 @@ class Simple2DCell
         //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
         virtual void setCPU(){GPUcompute = false;};
 
+        //!get the number of degrees of freedom
+        virtual int getNumberOfDegreesOfFreedom(){};
+
+        //!do everything necessary to compute forces in the current model
+        virtual void computeForces(){};
+
+        //!do everything necessary to compute forces in the current model
+        virtual void getForces(GPUArray<Dscalar2> &forces){};
+
+        //!move the degrees of freedom
+        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements){};
+
+        //!Do everything necessary to update or enforce the topology in the current model
+        virtual void enforceTopology(){};
+
+
         //!Set uniform cell area and perimeter preferences
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
 
