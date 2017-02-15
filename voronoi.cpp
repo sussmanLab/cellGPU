@@ -89,8 +89,6 @@ int main(int argc, char*argv[])
     spv.reportMeanCellForce(false);
     spv.repPerFrame = 0.0;
 
-    if(initializeGPU)
-        cudaProfilerStart();
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
@@ -103,24 +101,26 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
     t2=clock();
-    if(initializeGPU)
-        cudaProfilerStop();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
 
+    if(initializeGPU)
+        cudaProfilerStart();
 
     if(program_switch ==1)
         {
-        ncdat.WriteState(spv);
-        for (int i = 0; i <100;++i)
+    //    ncdat.WriteState(spv);
+        for (int i = 0; i <1;++i)
             {
             EnergyMinimizerFIRE<SPV2D> emin(spv);
             emin.setGPU();
             emin.setMaximumIterations(50);
             emin.minimize();
-            ncdat.WriteState(spv);
+    //        ncdat.WriteState(spv);
             };
         };
+    if(initializeGPU)
+        cudaProfilerStop();
 
 //    ncdat.WriteState(spv);
     if(initializeGPU)
