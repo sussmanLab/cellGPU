@@ -108,6 +108,16 @@ class EnergyMinimizerFIRE
         GPUArray<Dscalar2> velocity;
         //!an array of displacements
         GPUArray<Dscalar2> displacement;
+        
+        //!Utility array for computing force.velocity
+        GPUArray<Dscalar> forceDotVelocity;
+        //!Utility array for computing force.force
+        GPUArray<Dscalar> forceDotForce;
+        //!Utility array for computing velocity.velocity
+        GPUArray<Dscalar> velocityDotVelocity;
+
+        //!Utility array for simple reductions
+        GPUArray<Dscalar> sumReductions;
 
         //!Should calculations be done on the GPU?
         bool GPUcompute;

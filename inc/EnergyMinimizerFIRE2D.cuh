@@ -15,12 +15,31 @@ A file providing an interface to the relevant cuda calls for the EnergyMinimizer
  * \brief CUDA kernels and callers for the EnergyMinimizerFIRE2D class
  */
 
+//!Zero out the velocity (if the power is negative)
+bool gpu_zero_velocity(Dscalar2 *d_velocity,
+                       int N);
+
+//! (Dscalar) ans = (Dscalar2) vec1 . vec2
+bool gpu_dot_Dscalar2_vectors(Dscalar2 *d_vec1,
+                              Dscalar2 *d_vec2,
+                              Dscalar  *d_ans,
+                              int N);
+
 //!velocity = velocity +0.5*deltaT*force
 bool gpu_update_velocity(Dscalar2 *d_velocity,
                       Dscalar2 *d_force,
                       Dscalar deltaT,
                       int N
                       );
+
+//!velocity = (1-a)velocity +a*scaling*force
+bool gpu_update_velocity_FIRE(Dscalar2 *d_velocity,
+                      Dscalar2 *d_force,
+                      Dscalar alpha,
+                      Dscalar scaling,
+                      int N
+                      );
+
 
 //!displacement = dt*velocity + 0.5*dt^2*force
 bool gpu_displacement_velocity_verlet(Dscalar2 *d_displacement,
@@ -29,6 +48,13 @@ bool gpu_displacement_velocity_verlet(Dscalar2 *d_displacement,
                       Dscalar deltaT,
                       int N
                       );
+
+//!A stupid serial reduction algorithm...just replace with the parallel reduction scheme
+bool gpu_serial_reduction(
+                    Dscalar *array,
+                    Dscalar *output,
+                    int helperIdx,
+                    int N);
 
 /** @} */ //end of group declaration
 

@@ -15,9 +15,13 @@ EnergyMinimizerFIRE<T>::EnergyMinimizerFIRE(T &system)
             :State(&system)
     {
     N = State->getNumberOfDegreesOfFreedom();
+    forceDotForce.resize(N);
+    forceDotVelocity.resize(N);
+    velocityDotVelocity.resize(N);
     force.resize(N);
     velocity.resize(N);
     displacement.resize(N);
+    sumReductions.resize(3);
     ArrayHandle<Dscalar2> h_f(force);
     ArrayHandle<Dscalar2> h_v(velocity);
     Dscalar2 zero; zero.x = 0.0; zero.y = 0.0;
@@ -72,7 +76,6 @@ void EnergyMinimizerFIRE<T>::fireStep()
 template <class T>
 void EnergyMinimizerFIRE<T>::velocityVerletGPU()
     {
-    printf("GPU");
     //calculated displacements and update velocities
     if (true) //scope for array handles
         {
@@ -138,6 +141,53 @@ void EnergyMinimizerFIRE<T>::velocityVerletCPU()
 template <class T>
 void EnergyMinimizerFIRE<T>::fireStepGPU()
     {
+    Power = 0.0;
+    forceMax = 0.0;
+    if(true)//scope for array handles
+        {
+        ArrayHandle<Dscalar2> d_f(force,access_location::device,access_mode::read);
+        ArrayHandle<Dscalar2> d_v(velocity,access_location::device,access_mode::readwrite);
+        ArrayHandle<Dscalar> d_ff(forceDotForce,access_location::device,access_mode::readwrite);
+        ArrayHandle<Dscalar> d_fv(forceDotVelocity,access_location::device,access_mode::readwrite);
+        ArrayHandle<Dscalar> d_vv(velocityDotVelocity,access_location::device,access_mode::readwrite);
+        gpu_dot_Dscalar2_vectors(d_f.data,d_f.data,d_ff.data,N);
+        gpu_dot_Dscalar2_vectors(d_f.data,d_v.data,d_fv.data,N);
+        gpu_dot_Dscalar2_vectors(d_v.data,d_v.data,d_vv.data,N);
+        //parallel reduction
+        if (true)//scope for reduction arrays
+            {
+            ArrayHandle<Dscalar> d_assist(sumReductions,access_location::device,access_mode::overwrite);
+            gpu_serial_reduction(d_ff.data,d_assist.data,0,N);
+            gpu_serial_reduction(d_fv.data,d_assist.data,1,N);
+            gpu_serial_reduction(d_vv.data,d_assist.data,2,N);
+            };
+        ArrayHandle<Dscalar> h_assist(sumReductions,access_location::host,access_mode::read);
+        Dscalar forceNorm = h_assist.data[0];
+        Power = h_assist.data[1];
+        Dscalar velocityNorm = h_assist.data[2];
+        forceMax = forceNorm / (Dscalar)N;
+        Dscalar scaling = 0.0;
+        if(forceNorm > 0.)
+            scaling = sqrt(velocityNorm/forceNorm);
+        gpu_update_velocity_FIRE(d_v.data,d_f.data,alpha,scaling,N);
+        };
+
+    if (Power > 0)
+        {
+        if (NSinceNegativePower > NMin)
+            {
+            deltaT = min(deltaT*deltaTInc,deltaTMax);
+            alpha = alpha * alphaDec;
+            };
+        NSinceNegativePower += 1;
+        }
+    else
+        {
+        deltaT = deltaT*deltaTDec;
+        alpha = alphaStart;
+        ArrayHandle<Dscalar2> d_v(velocity,access_location::device,access_mode::overwrite);
+        gpu_zero_velocity(d_v.data,N);
+        };
     };
 
 /*!
@@ -194,7 +244,6 @@ void EnergyMinimizerFIRE<T>::fireStepCPU()
             h_v.data[i].y = 0.0;
             };
         };
-    printf("step %i max force:%f \tpower: %f\n",iterations,forceMax,Power);
     };
 
 /*!
@@ -211,6 +260,7 @@ void EnergyMinimizerFIRE<T>::minimize()
         iterations +=1;
         velocityVerlet();
         fireStep();
+//        printf("step %i max force:%e \tpower: %f\n",iterations,forceMax,Power);
         };
 
     };
