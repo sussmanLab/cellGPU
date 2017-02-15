@@ -8,6 +8,7 @@
 #include "spv2d.h"
 #include "DatabaseNetCDFSPV.h"
 #include "EnergyMinimizerFIRE2D.h"
+#include "EnergyMinimizerFIRE2D.cpp"
 int main(int argc, char*argv[])
 {
     int numpts = 200;
@@ -64,7 +65,7 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
 
 
 
@@ -110,8 +111,15 @@ int main(int argc, char*argv[])
 
     if(program_switch ==1)
         {
-        EnergyMinimizerFIRE<SPV2D> emin(spv);
-        emin.minimize();
+        ncdat.WriteState(spv);
+        for (int i = 0; i <100;++i)
+            {
+            EnergyMinimizerFIRE<SPV2D> emin(spv);
+            emin.setGPU();
+            emin.setMaximumIterations(50);
+            emin.minimize();
+            ncdat.WriteState(spv);
+            };
         };
 
 //    ncdat.WriteState(spv);

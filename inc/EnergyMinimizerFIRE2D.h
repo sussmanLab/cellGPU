@@ -2,9 +2,11 @@
 #define ENERGYMINIMIZERFIRE_H
 
 #include "std_include.h"
+#include "functions.h"
 #include "gpuarray.h"
 
-/*! \file EnergyMinimizerFire.h
+
+/*! \file EnergyMinimizerFIRE2D.h
 This templated class uses the "FIRE" algorithm to perform an energy minimization. It requires that
 the templated class, T, provides access to the following functions:
 T.getNumberOfDegreesOfFreedom() should return the number of degrees of freedom (up to a factor of
@@ -20,6 +22,8 @@ template <class T>
 class EnergyMinimizerFIRE
     {
     public:
+        //!A no-initialization constructor for template instantiation
+        EnergyMinimizerFIRE(){};
         //!The basic constructor that feeds in a target system to minimize
         EnergyMinimizerFIRE(T &system);
 
@@ -49,20 +53,14 @@ class EnergyMinimizerFIRE
         void setCPU(){GPUcompute = false;};
 
         //!an interface to call either the CPU or GPU velocity Verlet algorithm
-        void velocityVerlet()
-            {
-            if (GPUcompute) velocityVerletGPU(); else velocityVerletCPU();
-            };
+        void velocityVerlet();
         //!Perform a velocity Verlet step on the CPU
         void velocityVerletCPU();
         //!Perform a velocity Verlet step on the GPU
         void velocityVerletGPU();
 
         //!an interface to call either the CPU or GPU FIRE algorithm
-        void fireStep()
-            {
-            if (GPUcompute) fireStepGPU(); else fireStepCPU();
-            };
+        void fireStep();
         //!Perform a velocity Verlet step on the CPU
         void fireStepCPU();
         //!Perform a velocity Verlet step on the GPU
@@ -116,170 +114,6 @@ class EnergyMinimizerFIRE
 
     };
 
-/*!
-Initialize the minimizer with a reference to a target system, set a bunch of default parameters.
-Of note, the current default is CPU operation
-*/
-template <class T>
-EnergyMinimizerFIRE<T>::EnergyMinimizerFIRE(T &system)
-            :State(&system)
-    {
-    N = State->getNumberOfDegreesOfFreedom();
-    force.resize(N);
-    velocity.resize(N);
-    displacement.resize(N);
-    ArrayHandle<Dscalar2> h_f(force);
-    ArrayHandle<Dscalar2> h_v(velocity);
-    Dscalar2 zero; zero.x = 0.0; zero.y = 0.0;
-    for(int i = 0; i <N; ++i)
-        {
-        h_f.data[i]=zero;
-        h_v.data[i]=zero;
-        };
-    iterations = 0;
-    Power = 0;
-    NSinceNegativePower = 0;
-    forceMax = 100.;
-    setMaximumIterations(1000);
-    setForceCutoff(1e-7);
-    setAlphaStart(0.99);
-    setDeltaT(0.01);
-    setDeltaTMax(.1);
-    setDeltaTInc(1.05);
-    setDeltaTDec(0.95);
-    setAlphaDec(.9);
-    setNMin(5);
-    setCPU();
-    };
-
-/*!
- * Perform a velocity verlet integration step on the GPU
- */
-template <class T>
-void EnergyMinimizerFIRE<T>::velocityVerletGPU()
-    {
-    };
-
-
-/*!
- * Perform a velocity verlet integration step on the CPU
- */
-template <class T>
-void EnergyMinimizerFIRE<T>::velocityVerletCPU()
-    {
-    if(true) // scope for array handles
-        {
-        ArrayHandle<Dscalar2> h_f(force);
-        ArrayHandle<Dscalar2> h_v(velocity);
-        ArrayHandle<Dscalar2> h_d(displacement);
-        for (int i = 0; i < N; ++i)
-            {
-            //update displacement
-            h_d.data[i].x = deltaT*h_v.data[i].x+0.5*deltaT*deltaT*h_f.data[i].x;
-            h_d.data[i].y = deltaT*h_v.data[i].y+0.5*deltaT*deltaT*h_f.data[i].y;
-            //do first half of velocity update
-            h_v.data[i].x += 0.5*deltaT*h_f.data[i].x;
-            h_v.data[i].y += 0.5*deltaT*h_f.data[i].y;
-            };
-        };
-    //move particles, then update the forces
-    State->moveDegreesOfFreedom(displacement);
-    State->enforceTopology();
-    State->computeForces();
-    State->getForces(force);
-
-    //update second half of velocity vector based on new forces
-    ArrayHandle<Dscalar2> h_f(force);
-    ArrayHandle<Dscalar2> h_v(velocity);
-    for (int i = 0; i < N; ++i)
-        {
-        h_v.data[i].x += 0.5*deltaT*h_f.data[i].x;
-        h_v.data[i].y += 0.5*deltaT*h_f.data[i].y;
-        };
-    };
-
-/*!
- * Perform a FIRE minimization step on the GPU
- */
-template <class T>
-void EnergyMinimizerFIRE<T>::fireStepGPU()
-    {
-    };
-
-/*!
- * Perform a FIRE minimization step on the CPU
- */
-template <class T>
-void EnergyMinimizerFIRE<T>::fireStepCPU()
-    {
-    Power = 0.0;
-    forceMax = 0.0;
-    if (true)//scope for array handles
-        {
-        //calculate the power, and precompute norms of vectors
-        ArrayHandle<Dscalar2> h_f(force);
-        ArrayHandle<Dscalar2> h_v(velocity);
-        Dscalar forceNorm = 0.0;
-        Dscalar velocityNorm = 0.0;
-        for (int i = 0; i < N; ++i)
-            {
-            Power += dot(h_f.data[i],h_v.data[i]);
-            Dscalar fdot = dot(h_f.data[i],h_f.data[i]);
-            if (fdot > forceMax) forceMax = fdot;
-            forceNorm += fdot;
-            velocityNorm += dot(h_v.data[i],h_v.data[i]);
-            };
-        Dscalar scaling = 0.0;
-        if(forceNorm > 0.)
-            scaling = sqrt(velocityNorm/forceNorm);
-        //adjust the velocity according to the FIRE algorithm
-        for (int i = 0; i < N; ++i)
-            {
-            h_v.data[i].x = (1.0-alpha)*h_v.data[i].x + alpha*scaling*h_f.data[i].x;
-            h_v.data[i].y = (1.0-alpha)*h_v.data[i].y + alpha*scaling*h_f.data[i].y;
-            };
-        };
-
-    if (Power > 0)
-        {
-        if (NSinceNegativePower > NMin)
-            {
-            deltaT = min(deltaT*deltaTInc,deltaTMax);
-            alpha = alpha * alphaDec;
-            };
-        NSinceNegativePower += 1;
-        }
-    else
-        {
-        deltaT = deltaT*deltaTDec;
-        alpha = alphaStart;
-        ArrayHandle<Dscalar2> h_v(velocity);
-        for (int i = 0; i < N; ++i)
-            {
-            h_v.data[i].x = 0.0;
-            h_v.data[i].y = 0.0;
-            };
-        };
-    printf("step %i max force:%f \tpower: %f\n",iterations,forceMax,Power);
-    };
-
-/*!
- * Perform a FIRE minimization step on the CPU
- */
-template <class T>
-void EnergyMinimizerFIRE<T>::minimize()
-    {
-    //initialized the forces?
-    State->computeForces();
-    State->getForces(force);
-    while( (iterations < maxIterations) && (forceMax > forceCutoff) )
-        {
-        iterations +=1;
-        velocityVerlet();
-        fireStep();
-        };
-
-    };
 
 #endif
 
