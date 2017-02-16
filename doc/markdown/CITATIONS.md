@@ -18,8 +18,9 @@ Also on the "Delaunay" branch, there are two underlying routines for computing f
 triangulation of non-periodic and periodoc point sets. In default operation of the code, the
 routines called are all part of the CGAL library, and that should be cited [at least CGAL,
 Computational Geometry Algorithms Library, http://www.cgal.org]. In less-ideal operations the user
-can call a naive $(O(N^{1.5}))$ Bowyer-Watson algorithm based off of Paul Bourke's Triangulate
+can call a naive $(O(N^{1.5}))$ Bowyer-Watson algorithm based off of the Paul Bourke Triangulate
 code: paulbourke.net/papers/triangulate (Pan-Pacific Computer Conference, Beijing, China)
 
-
+Energy minimization via the EnergyMinimizerFIRE class uses the FIRE algorithm:
+[E. Bitzek et al. Phys. Rev. Lett. 97, 170201 (2006)](http://journals.aps.org/prl/abstract/10.1103/PhysRevLett.97.170201)
 

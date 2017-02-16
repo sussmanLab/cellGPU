@@ -22,6 +22,11 @@ and update their underlying Delaunay triangulation
 * AVM2D -- A child of Simple2DActiveCell that implements a simple 2D dynamic ("active") vertex model
 where the topology changes via a simple rule for T1 transitions
 
+### Energy minimization
+
+* EnergyMinimizerFIRE -- provides a templated interface allowing for FIRE minimization of any model
+that provides an interface to be able to compute forces, move degrees of freedom, and handle any
+extra topological features.
 
 ## Basic idea of SPV hybrid operation
 

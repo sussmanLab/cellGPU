@@ -3,6 +3,7 @@
 ### version 0.10
 
 Refactor class structure... Simple2DCell --> Simple2DActiveCell --> {AVM2D or DelaunayMD --> SPV2D --> SPV2DTension}
+Add FIRE minimization algorithm
 
 ### version 0.9
 

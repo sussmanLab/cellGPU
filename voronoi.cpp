@@ -7,7 +7,8 @@
 
 #include "spv2d.h"
 #include "DatabaseNetCDFSPV.h"
-
+#include "EnergyMinimizerFIRE2D.h"
+#include "EnergyMinimizerFIRE2D.cpp"
 int main(int argc, char*argv[])
 {
     int numpts = 200;
@@ -64,7 +65,7 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
 
 
 
@@ -88,8 +89,6 @@ int main(int argc, char*argv[])
     spv.reportMeanCellForce(false);
     spv.repPerFrame = 0.0;
 
-    if(initializeGPU)
-        cudaProfilerStart();
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
@@ -102,11 +101,40 @@ int main(int argc, char*argv[])
         spv.performTimestep();
         };
     t2=clock();
-    if(initializeGPU)
-        cudaProfilerStop();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
 
+    if(initializeGPU)
+        cudaProfilerStart();
+
+    if(program_switch ==1)
+        {
+    //    ncdat.WriteState(spv);
+        for (int i = 0; i <1;++i)
+            {
+            EnergyMinimizerFIRE<SPV2D> emin(spv);
+            emin.setGPU();
+            emin.setMaximumIterations(50);
+            emin.minimize();
+    //        ncdat.WriteState(spv);
+            };
+        };
+    if(initializeGPU)
+        cudaProfilerStop();
+
+    if(program_switch ==2)
+        {
+        EnergyMinimizerFIRE<SPV2D> emin(spv);
+        GPUArray<Dscalar> test;
+        test.resize(numpts);
+        if(true)
+            {
+            ArrayHandle<Dscalar> t(test);
+            for (int i =0; i < numpts; ++i)
+                t.data[i] = (Dscalar) i;
+            };
+        emin.parallelReduce(test);
+        };
 
 //    ncdat.WriteState(spv);
     if(initializeGPU)
