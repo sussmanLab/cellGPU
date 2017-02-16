@@ -49,7 +49,7 @@ bool gpu_displacement_velocity_verlet(Dscalar2 *d_displacement,
                       int N
                       );
 
-//!A stupid serial reduction algorithm...just replace with the parallel reduction scheme
+//!A trivial reduction of an array by one thread in serial. Think before you use this.
 bool gpu_serial_reduction(
                     Dscalar *array,
                     Dscalar *output,

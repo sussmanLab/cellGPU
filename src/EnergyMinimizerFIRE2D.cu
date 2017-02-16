@@ -291,5 +291,17 @@ bool gpu_parallel_reduction(Dscalar *input, Dscalar *intermediate, Dscalar *outp
     return cudaSuccess;
     };
 
+/*!
+This serial reduction routine should probably never be called. It provides an interface to the 
+gpu_serial_reduction_kernel above that may be usefull for testing
+  */
+bool gpu_serial_reduction(Dscalar *array, Dscalar *output, int helperIdx, int N)
+    {
+    gpu_serial_reduction_kernel<<<1,1>>>(array,output,helperIdx,N);
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    };
+
+
 
 /** @} */ //end of group declaration
