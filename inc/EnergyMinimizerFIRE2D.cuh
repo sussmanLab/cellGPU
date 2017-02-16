@@ -56,6 +56,14 @@ bool gpu_serial_reduction(
                     int helperIdx,
                     int N);
 
+//!A straightforward two-step parallel reduction algorithm.
+bool gpu_parallel_reduction(
+                    Dscalar *input,
+                    Dscalar *intermediate,
+                    Dscalar *output,
+                    int helperIdx,
+                    int N);
+
 /** @} */ //end of group declaration
 
 #endif

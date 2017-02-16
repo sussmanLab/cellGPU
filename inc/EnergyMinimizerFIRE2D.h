@@ -69,6 +69,8 @@ class EnergyMinimizerFIRE
         //!Minimize to either the force tolerance or the maximum number of iterations
         void minimize();
 
+        void parallelReduce(GPUArray<Dscalar> &vec);
+
     protected:
         //!The system that can compute forces, move degrees of freedom, etc.
         T *State;
@@ -108,7 +110,7 @@ class EnergyMinimizerFIRE
         GPUArray<Dscalar2> velocity;
         //!an array of displacements
         GPUArray<Dscalar2> displacement;
-        
+
         //!Utility array for computing force.velocity
         GPUArray<Dscalar> forceDotVelocity;
         //!Utility array for computing force.force
@@ -116,6 +118,8 @@ class EnergyMinimizerFIRE
         //!Utility array for computing velocity.velocity
         GPUArray<Dscalar> velocityDotVelocity;
 
+        //!Utility array for simple reductions
+        GPUArray<Dscalar> sumReductionIntermediate;
         //!Utility array for simple reductions
         GPUArray<Dscalar> sumReductions;
 

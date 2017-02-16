@@ -122,6 +122,20 @@ int main(int argc, char*argv[])
     if(initializeGPU)
         cudaProfilerStop();
 
+    if(program_switch ==2)
+        {
+        EnergyMinimizerFIRE<SPV2D> emin(spv);
+        GPUArray<Dscalar> test;
+        test.resize(numpts);
+        if(true)
+            {
+            ArrayHandle<Dscalar> t(test);
+            for (int i =0; i < numpts; ++i)
+                t.data[i] = (Dscalar) i;
+            };
+        emin.parallelReduce(test);
+        };
+
 //    ncdat.WriteState(spv);
     if(initializeGPU)
         cudaDeviceReset();

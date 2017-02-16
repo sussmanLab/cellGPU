@@ -21,6 +21,7 @@ EnergyMinimizerFIRE<T>::EnergyMinimizerFIRE(T &system)
     force.resize(N);
     velocity.resize(N);
     displacement.resize(N);
+    sumReductionIntermediate.resize(N);
     sumReductions.resize(3);
     ArrayHandle<Dscalar2> h_f(force);
     ArrayHandle<Dscalar2> h_v(velocity);
@@ -156,10 +157,11 @@ void EnergyMinimizerFIRE<T>::fireStepGPU()
         //parallel reduction
         if (true)//scope for reduction arrays
             {
+            ArrayHandle<Dscalar> d_intermediate(sumReductionIntermediate,access_location::device,access_mode::overwrite);
             ArrayHandle<Dscalar> d_assist(sumReductions,access_location::device,access_mode::overwrite);
-            gpu_serial_reduction(d_ff.data,d_assist.data,0,N);
-            gpu_serial_reduction(d_fv.data,d_assist.data,1,N);
-            gpu_serial_reduction(d_vv.data,d_assist.data,2,N);
+            gpu_parallel_reduction(d_ff.data,d_intermediate.data,d_assist.data,0,N);
+            gpu_parallel_reduction(d_fv.data,d_intermediate.data,d_assist.data,1,N);
+            gpu_parallel_reduction(d_vv.data,d_intermediate.data,d_assist.data,2,N);
             };
         ArrayHandle<Dscalar> h_assist(sumReductions,access_location::host,access_mode::read);
         Dscalar forceNorm = h_assist.data[0];
@@ -262,5 +264,33 @@ void EnergyMinimizerFIRE<T>::minimize()
         fireStep();
 //        printf("step %i max force:%e \tpower: %f\n",iterations,forceMax,Power);
         };
+    };
+
+template <class T>
+void EnergyMinimizerFIRE<T>::parallelReduce(GPUArray<Dscalar> &vec)
+    {
+    int n = vec.getNumElements();
+    //
+    if(true)
+        {
+        Dscalar sum = 0.0;
+        ArrayHandle<Dscalar> v(vec);
+        for (int i = 0; i < n; ++i)
+            sum += v.data[i];
+        printf("CPU-based reduction: %f\n",sum);
+        };
+    if(true)
+    {
+    ArrayHandle<Dscalar> input(vec,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar> intermediate(sumReductionIntermediate,access_location::device,access_mode::overwrite);
+    ArrayHandle<Dscalar> output(sumReductions,access_location::device,access_mode::overwrite);
+    gpu_parallel_reduction(input.data,
+            intermediate.data,
+            output.data,
+            0,n);
+    };
+    ArrayHandle<Dscalar> output(sumReductions);
+    printf("GPU-based reduction: %f\n",output.data[0]); 
+
 
     };

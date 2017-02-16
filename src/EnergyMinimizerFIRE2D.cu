@@ -10,6 +10,9 @@
  @{
  */
 
+/*!
+  set the first N elements of the d_velocity vector to 0.0
+*/
 __global__ void gpu_zero_velocity_kernel(Dscalar2 *d_velocity,
                                               int N)
     {
@@ -24,6 +27,9 @@ __global__ void gpu_zero_velocity_kernel(Dscalar2 *d_velocity,
     };
 
 
+/*!
+take two vectors of Dscalar2 and return a vector of Dscalars, where each entry is vec1[i].vec2[i]
+*/
 __global__ void gpu_dot_Dscalar2_vectors_kernel(Dscalar2 *d_vec1, Dscalar2 *d_vec2, Dscalar *d_ans, int n)
     {
     // read in the index that belongs to this thread
@@ -33,6 +39,9 @@ __global__ void gpu_dot_Dscalar2_vectors_kernel(Dscalar2 *d_vec1, Dscalar2 *d_ve
     d_ans[idx] = d_vec1[idx].x*d_vec2[idx].x + d_vec1[idx].y*d_vec2[idx].y;
     };
 
+/*!
+update the velocity in a velocity Verlet step
+*/
 __global__ void gpu_update_velocity_kernel(Dscalar2 *d_velocity, Dscalar2 *d_force, Dscalar deltaT, int n)
     {
     // read in the index that belongs to this thread
@@ -43,6 +52,9 @@ __global__ void gpu_update_velocity_kernel(Dscalar2 *d_velocity, Dscalar2 *d_for
     d_velocity[idx].y += 0.5*deltaT*d_force[idx].y;
     };
 
+/*!
+update the velocity according to a FIRE step
+*/
 __global__ void gpu_update_velocity_FIRE_kernel(Dscalar2 *d_velocity, Dscalar2 *d_force, Dscalar alpha, Dscalar scaling, int n)
     {
     // read in the index that belongs to this thread
@@ -53,6 +65,9 @@ __global__ void gpu_update_velocity_FIRE_kernel(Dscalar2 *d_velocity, Dscalar2 *
     d_velocity[idx].y = (1-alpha)*d_velocity[idx].y + alpha*scaling*d_force[idx].y;
     };
 
+/*!
+calculate the displacement in a velocity verlet step according to the force and velocity 
+*/
 __global__ void gpu_displacement_vv_kernel(Dscalar2 *d_displacement, Dscalar2 *d_velocity,
                                            Dscalar2 *d_force, Dscalar deltaT, int n)
     {
@@ -174,6 +189,9 @@ bool gpu_displacement_velocity_verlet(Dscalar2 *d_displacement,
 
 
 
+/*!
+add the first N elements of array and put it in output[helperIdx]
+*/
 __global__ void gpu_serial_reduction_kernel(Dscalar *array, Dscalar *output, int helperIdx,int N)
     {
     Dscalar ans = 0.0;
@@ -184,13 +202,94 @@ __global__ void gpu_serial_reduction_kernel(Dscalar *array, Dscalar *output, int
     };
 
 /*!
-  This just exists to test the rest of the program, and will be replaced with a parallel reduction scheme ASAP
-  */
-bool gpu_serial_reduction(Dscalar *array, Dscalar *output,int helperIdx, int N)
+perform a block reduction, storing the partial sums of input into output
+*/
+__global__ void gpu_parallel_block_reduction_kernel(Dscalar *input, Dscalar *output,int N)
     {
-    gpu_serial_reduction_kernel<<<1,1>>>(array,output,helperIdx,N);
+    extern __shared__ Dscalar sharedArray[];
+
+    unsigned int tidx = threadIdx.x;
+    unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
+    //load into shared memory and synchronize
+    if(i < N)
+        sharedArray[tidx] = input[i];
+    else
+        sharedArray[tidx] = 0.0;
+    __syncthreads();
+
+    //reduce
+    for (int s = blockDim.x/2; s>0; s>>=1)
+        {
+        if (tidx < s)
+            sharedArray[tidx] += sharedArray[tidx+s];
+        __syncthreads();
+        };
+    //write to the correct block of the output array
+    if (tidx==0)
+        output[blockIdx.x] = sharedArray[0];
+    };
+
+/*!
+a slight optimization of the previous block reduction, c.f. M. Harris presentation
+*/
+__global__ void gpu_parallel_block_reduction2_kernel(Dscalar *input, Dscalar *output,int N)
+    {
+    extern __shared__ Dscalar sharedArray[];
+
+    unsigned int tidx = threadIdx.x;
+    unsigned int i = 2*blockDim.x * blockIdx.x + threadIdx.x;
+
+    Dscalar sum;
+    //load into shared memory and synchronize
+    if(i < N)
+        sum = input[i];
+    else
+        sum = 0.0;
+    if(i + blockDim.x < N)
+        sum += input[i+blockDim.x];
+
+    sharedArray[tidx] = sum;
+    __syncthreads();
+
+    //reduce
+    for (int s = blockDim.x/2; s>0; s>>=1)
+        {
+        if (tidx < s)
+            sharedArray[tidx] = sum = sum+sharedArray[tidx+s];
+        __syncthreads();
+        };
+    //write to the correct block of the output array
+    if (tidx==0)
+        output[blockIdx.x] = sum;
+    };
+
+
+
+/*!
+a two-step parallel reduction alorithm that first does a partial sum reduction of input into the
+intermediate array, then launches a second kernel to sum reduce intermediate into output[helperIdx]
+\param input the input array to sum
+\param intermediate an array that input is block-reduced to
+\param output the intermediate array will be sum reduced and stored in one of the components of output
+\param helperIdx the location in output to store the answer
+\param N the size of the input and  intermediate arrays
+*/
+bool gpu_parallel_reduction(Dscalar *input, Dscalar *intermediate, Dscalar *output, int helperIdx, int N)
+    {
+    unsigned int block_size = 256;
+    unsigned int nblocks  = N/block_size + 1;
+    //first do a block reduction of input
+    unsigned int smem = block_size*sizeof(Dscalar);
+
+    //Do a block reduction of the input array
+    gpu_parallel_block_reduction2_kernel<<<nblocks,block_size,smem>>>(input,intermediate, N);
+    HANDLE_ERROR(cudaGetLastError());
+
+    //sum reduce the temporary array, saving the result in the right slot of the output array
+    gpu_serial_reduction_kernel<<<1,1>>>(intermediate,output,helperIdx,nblocks);
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
+
 
 /** @} */ //end of group declaration
