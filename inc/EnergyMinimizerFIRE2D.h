@@ -69,6 +69,7 @@ class EnergyMinimizerFIRE
         //!Minimize to either the force tolerance or the maximum number of iterations
         void minimize();
 
+        //!Test the parallel reduction routines by passing in a known vector
         void parallelReduce(GPUArray<Dscalar> &vec);
 
     protected:

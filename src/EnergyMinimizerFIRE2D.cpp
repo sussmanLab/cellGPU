@@ -266,6 +266,9 @@ void EnergyMinimizerFIRE<T>::minimize()
         };
     };
 
+/*!
+A utility function to help test the parallel reduction routines
+ */
 template <class T>
 void EnergyMinimizerFIRE<T>::parallelReduce(GPUArray<Dscalar> &vec)
     {
