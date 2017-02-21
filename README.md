@@ -16,7 +16,9 @@ documentation (link above, or compile it by going to the "/doc" directory and ty
 
 A very rough outline of some of the main classes and the basic operating flow of the primary branches
 of the code can be found [here](@ref basicinfo); this page is a good place to start before diving into
-the code.
+the code (Please note that if you are reading this on the Gitlab main page the links will not work...
+visit the main documentation page at https://dmsussman.gitlab.io/cellGPUdocumentation or compile
+Doxygen documentation locally).
 
 
 ## Project information

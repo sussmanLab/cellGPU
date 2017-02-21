@@ -91,7 +91,7 @@ int main(int argc, char*argv[])
             ncdat.WriteState(avm);
             };
         };
-    
+
     avm.setSortPeriod(-1);
     t1=clock();
     if(initializeGPU)

@@ -3,6 +3,8 @@
 ## Classes of note
 
 The following are a handful of classes that make up the most important operations and interfaces of cellGPU.
+Please additionally see the cellGPU paper for details:
+https://arxiv.org/abs/1702.02939
 
 ### General structures and analysis classes
 

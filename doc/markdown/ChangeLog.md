@@ -1,42 +1,34 @@
 # Change log {#changelog}
 
-### version 0.10
 
-Refactor class structure... Simple2DCell --> Simple2DActiveCell --> {AVM2D or DelaunayMD --> SPV2D --> SPV2DTension}
-Add FIRE minimization algorithm
+### version 0.5.1
 
-### version 0.9
-
-Numerous bug fixes
-
-### version 0.8 
-
-Add AVM2D class to implement a simple active vertex model. 
-
-### version 0.7 
-
-GPU optimizations
-
-### version 0.6 
-
-Numerous bug fixes
+* added FIRE minimization algorithm
+* Simplified interface to SPV2D and AVM2D; have all models implement virtual functions to provide a
+common interface for MD
 
 ### version 0.5
 
-Remove references to Triangle...make CGAL the default triangulation library
+* Refactor class structure... Simple2DCell --> Simple2DActiveCell --> AVM2D and Simple2DActiveCell
+--> DelaunayMD --> SPV2D
 
 ### version 0.4
 
-SPV2D class inherits from DelaunayMD and implements the 2D self-propelled voronoi model
+* The AVM2D class implements a simple active vertex model
+* numerous bug fixes
+* GPU optimizations
 
 ### version 0.3
 
-DelaunayMD class integrates functionality of DelaunayCheck with DelaunayLoc for local repairs
+* SPV2D class inherits from DelaunayMD; implements the 2D self-propelled voronoi model
+* references to Triangle are removed; CGAL becomes the default triangulation library
 
 ### version 0.2
 
-DelaunayCheck class checks the validity of a proposed triangulation on either the CPU or GPU
+* "DelGPU" implements the DelaunayCheck class to assess the validity of a proposed triangulation on
+either the CPU or GPU; DelaunayMD provides a simple interface to an MD-like protocol
 
-### version 0.1 
+### version 0.1
 
-CPU implementation of Chen and Gotsman's  localized Delaunay triangulation, comparisons with Shewchuck's Triangle program and a Bowyer-Watson implementation.
+* "VoroGuppy" has a CPU implementation of Chen and Gotsman's  localized Delaunay triangulation,
+comparisons with Shewchuck's Triangle program and a Bowyer-Watson implementation.

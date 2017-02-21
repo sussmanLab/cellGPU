@@ -2,9 +2,6 @@
 CUDA_INC = /usr/local/cuda/includes
 CUDA_LIB = /usr/local/cuda/lib64
 CUDA_LIB2 = /usr/local/cuda/lib
-#CUDA_INC = /usr/local/cuda-8.0/includes
-#CUDA_LIB = /usr/local/cuda-8.0/lib64
-#CUDA_LIB2 = /usr/local/cuda-8.0/lib
 
 CXX := g++
 CC := gcc
@@ -39,11 +36,11 @@ debug: CXXFLAGS += -g -DCUDATHREADSYNC
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
 debug: build
 
-PROGS= spvGPU.out avmGPU.out spvMSD.out
+PROGS= spvGPU.out avmGPU.out spvMSD.out spvMinimize.out
 
 build: $(PROGS)
 
-PROG_OBJS=obj/activeVertex.o obj/voronoi.o obj.runMakeDatabase.o
+PROG_OBJS=obj/activeVertex.o obj/voronoi.o obj/runMakeDatabase.o obj/minimize.o
 
 CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/hilbert_curve.o obj/EnergyMinimizerFIRE2D.o
 CLASS_OBJS+=obj/Simple2DCell.o obj/Simple2DActiveCell.o
@@ -74,7 +71,8 @@ avmGPU.out: obj/activeVertex.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 spvGPU.out: obj/voronoi.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
-
+spvMinimize.out: obj/minimize.o $(CLASS_OBJS) $(CUOBJS)
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 spvMSD.out: obj/runMakeDatabase.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
