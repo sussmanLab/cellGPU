@@ -129,6 +129,4 @@ class EnergyMinimizerFIRE
 
     };
 
-
 #endif
-

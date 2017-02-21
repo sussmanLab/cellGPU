@@ -90,7 +90,7 @@ class SPV2D : public DelaunayMD
         void reportForces(bool verbose);
 
     //protected functions
-    protected: 
+    protected:
         //! call getDelSets for all particles
         void allDelSets();
 

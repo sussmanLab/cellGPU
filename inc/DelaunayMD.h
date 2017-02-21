@@ -92,7 +92,7 @@ class DelaunayMD : public Simple2DActiveCell
         //!How often were global re-triangulations performed?
         int GlobalFixes;
 
-        
+
     protected:
         cellListGPU celllist;        //!<The associated cell list structure
         Dscalar cellsize;            //!<The size of the cell list's underlying grid

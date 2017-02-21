@@ -191,4 +191,3 @@ void gpubox::move(Dscalar2 &p1, const Dscalar2 &disp)
 #undef HOSTDEVICE
 
 #endif
-

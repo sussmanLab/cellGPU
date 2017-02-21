@@ -295,5 +295,3 @@ void DelaunayNP::testDel(int numpts, int tmax,bool verbose)
     cout << "average time per complete triangulation = " << timing<< endl;
 
     };
-
-

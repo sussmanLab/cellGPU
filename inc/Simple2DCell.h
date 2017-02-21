@@ -9,8 +9,8 @@
 
 /*! \file Simple2DCell.h
 A class defining some of the fundamental attributes and operations common to 2D off-lattice models
-of cells. This class will help refactor the AVM and SPV branches into a more coherent set. At the
-moment the AVM2D class is based off of this, but DelaunayMD and SPV need to be refactored.
+of cells. Note that while all 2D off-lattice models use some aspects of this base class, not all of
+them are required to implement or use all of the below
 */
 //! Implement data structures and functions common to many off-lattice models of cells in 2D
 class Simple2DCell
@@ -94,7 +94,7 @@ class Simple2DCell
     public:
         //!Number of cells in the simulation
         int Ncells;
-        //!Number of vertices (i.e, degrees of freedom)
+        //!Number of vertices
         int Nvertices;
 
         //! Cell positions... not used for computation, but can track, e.g., MSD of cell centers
@@ -197,7 +197,7 @@ class Simple2DCell
         vector<int> tagToIdxVertex;
         //!A temporary structure that inverse tagToIdx
         vector<int> idxToTagVertex;
-        //! Determines how frequently he spatial sorter be called...once per sortPeriod Timesteps. When sortPeriod < 0 no sorting occurs
+        //! Determines how frequently the spatial sorter be called...once per sortPeriod Timesteps. When sortPeriod < 0 no sorting occurs
         int sortPeriod;
         //!A flag that determins if a spatial sorting is due to occur this Timestep
         bool spatialSortThisStep;

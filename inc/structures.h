@@ -33,7 +33,7 @@ struct DelaunayCell
         Dscalar Vperimeter; //!< The perimeter of the cell
         bool Voro; //!<have the voronoi points of the cell already been calculated?
 
-        DelaunayCell(){Voro=false;};
+        DelaunayCell(){Voro=false;};//!<base constructor
 
         //! Declare how many neighbors the cell has
         void setSize(int nn){n=nn;Dneighs.resize(n);Voro=false;};
@@ -90,29 +90,29 @@ struct DelaunayCell
                 };
             };
 
-    };
+    };//end of struct
 
 //! contains a pair of integers of vertex labels
 struct edge
     {
     public:
-        int i;
-        int j;
-        edge(){};
-        ~edge(){};
-        edge(int ii, int jj){i=ii;j=jj;};
+        int i;//!<vertex 1 of the edge
+        int j;//!<vertex 2 of the edge
+        edge(){};//!<constructor
+        ~edge(){};//!<destructor
+        edge(int ii, int jj){i=ii;j=jj;};//!<full constructor
     };
 
 //!contains a triplet of integers {i,j,k} of vertex labels
 struct triangle
     {
     public:
-        int i;
-        int j;
-        int k;
-        triangle(){};
-        ~triangle(){};
-        triangle(int ii, int jj,int kk){i=ii;j=jj;k=kk;};
+        int i;//!<vertex 1 of the triangle
+        int j;//!<vertex 2 of the triangle
+        int k;//!<vertex 3 of the triangle
+        triangle(){};//!<blank constructor
+        ~triangle(){};//!<destructor
+        triangle(int ii, int jj,int kk){i=ii;j=jj;k=kk;};//!<full constructor
     };
 
 /*!
@@ -145,7 +145,5 @@ struct triangulation
 
     };
 
-
 #undef HOSTDEVICE
-
 #endif

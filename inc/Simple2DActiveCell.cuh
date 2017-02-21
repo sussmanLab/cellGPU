@@ -20,8 +20,6 @@ bool gpu_initialize_curand(curandState *states,
                     int Timestep,
                     int GlobalSeed
                     );
+
 /** @} */ //end of group declaration
-
-
  #endif
-

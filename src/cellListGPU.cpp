@@ -9,7 +9,11 @@
 #include "cellListGPU.h"
 /*! \file cellListGPU.cpp */
 
-
+/*!
+\param a the approximate side length of the cells
+\param points the positions of points to populate the cell list with
+\param bx the period box for the system
+ */
 cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
     {
     Nmax = 0;
@@ -17,17 +21,27 @@ cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
     setBox(bx);
     setGridSize(a);
     }
+
+/*!
+\param points the positions of points to populate the cell list with
+ */
 cellListGPU::cellListGPU(vector<Dscalar> &points)
     {
     Nmax = 0;
     setParticles(points);
     }
 
+/*!
+\param nn the number of particles to sort
+ */
 void cellListGPU::setNp(int nn)
     {
     Np = nn;
     };
 
+/*!
+\param points set the list of points cellListGPU knows about to this vector
+ */
 void cellListGPU::setParticles(const vector<Dscalar> &points)
     {
     int newsize = points.size()/2;
@@ -44,6 +58,9 @@ void cellListGPU::setParticles(const vector<Dscalar> &points)
         };
     };
 
+/*!
+\param points set the list of points cellListGPU knows about to this vector of Dscalar2's
+ */
 void cellListGPU::setParticles(const vector<Dscalar2> &points)
     {
     int newsize = points.size();
@@ -59,6 +76,9 @@ void cellListGPU::setParticles(const vector<Dscalar2> &points)
         };
     };
 
+/*!
+\param bx the box defining the periodic unit cell
+ */
 void cellListGPU::setBox(gpubox &bx)
     {
     Dscalar b11,b12,b21,b22;
@@ -69,6 +89,10 @@ void cellListGPU::setBox(gpubox &bx)
         Box.setGeneral(b11,b12,b21,b22);
     };
 
+/*!
+\param a the approximate side length of all of the cells.
+This routine currently picks an even integer of cells, close to the desired size, that fit in the box.
+ */
 void cellListGPU::setGridSize(Dscalar a)
     {
     Dscalar b11,b12,b21,b22;
@@ -91,6 +115,10 @@ void cellListGPU::setGridSize(Dscalar a)
     resetCellSizesCPU();
     };
 
+/*!
+Sets all cell sizes to zero, all cell indices to zero, and resets the "assist" utility structure,
+all on the CPU (so that no expensive copies are needed)
+ */
 void cellListGPU::resetCellSizesCPU()
     {
     //set all cell sizes to zero
@@ -119,6 +147,10 @@ void cellListGPU::resetCellSizesCPU()
     };
 
 
+/*!
+Sets all cell sizes to zero, all cell indices to zero, and resets the "assist" utility structure,
+all on the GPU so that arrays don't need to be copied back to the host
+*/
 void cellListGPU::resetCellSizes()
     {
     //set all cell sizes to zero
@@ -145,6 +177,11 @@ void cellListGPU::resetCellSizes()
     h_assist.data[1] = 0;
     };
 
+/*!
+\param x the x coordinate of the position
+\param y the y coordinate of the position
+returns the cell index that (x,y) would be contained in for the current cell list
+ */
 int cellListGPU::positionToCellIndex(Dscalar x, Dscalar y)
     {
     int cell_idx = 0;
@@ -153,6 +190,11 @@ int cellListGPU::positionToCellIndex(Dscalar x, Dscalar y)
     return cell_indexer(binx,biny);
     };
 
+/*!
+\param cellIndex the base cell index to find the neighbors of
+\param width the distance (in cells) to search
+\param cellNeighbors a vector of all cell indices that are neighbors of cellIndex
+ */
 void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
     {
     int w = min(width,xsize/2);
@@ -171,6 +213,13 @@ void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &c
             };
     };
 
+/*!
+\param cellIndex the base cell index to find the neighbors of
+\param width the distance (in cells) to search
+\param cellNeighbors a vector of all cell indices that are neighbors of cellIndex
+This method returns a square outline of neighbors (the neighbor shell) rather than all neighbors
+within a set distance
+ */
 void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
     {
     int w = min(width,xsize);
@@ -190,6 +239,9 @@ void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<in
     };
 
 
+/*!
+This puts the points the cellList currently knows about into cells
+ */
 void cellListGPU::compute()
     {
     //will loop through particles and put them in cells...
@@ -234,6 +286,9 @@ void cellListGPU::compute()
     };
 
 
+/*!
+\param points the set of points to assign to cells
+ */
 void cellListGPU::compute(GPUArray<Dscalar2> &points)
     {
     //will loop through particles and put them in cells...
@@ -278,6 +333,9 @@ void cellListGPU::compute(GPUArray<Dscalar2> &points)
     };
 
 
+/*!
+Assign known points to cells on the GPU
+ */
 void cellListGPU::computeGPU()
     {
     bool recompute = true;
@@ -343,6 +401,9 @@ void cellListGPU::computeGPU()
 
     };
 
+/*!
+\param points the set of points to assign to cells...on the GPU
+ */
 void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
     {
     bool recompute = true;
@@ -400,4 +461,3 @@ void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
         };
     cell_list_indexer = Index2D(Nmax,totalCells);
     };
-

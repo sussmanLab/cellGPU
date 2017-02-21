@@ -53,8 +53,6 @@ public:
 };
 
 //Implementation
-
-
 AVMDatabaseNetCDF::AVMDatabaseNetCDF(int np, string fn, NcFile::FileMode mode)
     : BaseDatabaseNetCDF(fn,mode),
       Nv(np),

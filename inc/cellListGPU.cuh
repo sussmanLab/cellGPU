@@ -40,4 +40,3 @@ bool gpu_zero_array(unsigned int *arr,
 /** @} */ //end of group declaration
 
 #endif
-

@@ -115,8 +115,6 @@ class cellListGPU
         int Nmax;
         //!The Box used to compute periodic distances
         gpubox Box;
-
     };
-
 
 #endif

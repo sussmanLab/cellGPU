@@ -14,7 +14,6 @@
     @{
 */
 
-
 /*!
   Since the cells are NOT guaranteed to be convex, the area of the cell must take into account any
   self-intersections. The strategy is the same as in the CPU branch.

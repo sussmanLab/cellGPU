@@ -34,4 +34,3 @@ bool gpu_set_integer_array(int *d_array,
 /** @} */ //end of group declaration
 
 #endif
-

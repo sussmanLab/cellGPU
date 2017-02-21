@@ -80,6 +80,4 @@ bool gpu_sum_force_sets_with_exclusions(
                     );
 
 /** @} */ //end of group declaration
-
 #endif
-

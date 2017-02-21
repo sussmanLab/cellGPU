@@ -115,5 +115,3 @@ void Simple2DActiveCell::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &d
         h_mot.data[ii].y = drs[ii];
         };
     };
-
-

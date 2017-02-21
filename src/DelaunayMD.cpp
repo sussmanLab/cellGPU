@@ -499,7 +499,7 @@ void DelaunayMD::testTriangulation()
                            Box,
                            celllist.cell_indexer,
                            celllist.cell_list_indexer,
-                           d_actf.data 
+                           d_actf.data
                            );
     };
 

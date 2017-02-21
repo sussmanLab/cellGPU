@@ -66,7 +66,7 @@ __global__ void gpu_update_velocity_FIRE_kernel(Dscalar2 *d_velocity, Dscalar2 *
     };
 
 /*!
-calculate the displacement in a velocity verlet step according to the force and velocity 
+calculate the displacement in a velocity verlet step according to the force and velocity
 */
 __global__ void gpu_displacement_vv_kernel(Dscalar2 *d_displacement, Dscalar2 *d_velocity,
                                            Dscalar2 *d_force, Dscalar deltaT, int n)
@@ -292,7 +292,7 @@ bool gpu_parallel_reduction(Dscalar *input, Dscalar *intermediate, Dscalar *outp
     };
 
 /*!
-This serial reduction routine should probably never be called. It provides an interface to the 
+This serial reduction routine should probably never be called. It provides an interface to the
 gpu_serial_reduction_kernel above that may be usefull for testing
   */
 bool gpu_serial_reduction(Dscalar *array, Dscalar *output, int helperIdx, int N)

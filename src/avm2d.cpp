@@ -173,7 +173,7 @@ void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
     //derive the vertices from a voronoi tesselation
     setCellsVoronoiTesselation(spvInitialize);
     setCellDirectorsRandomly();
-    
+
     Timestep = 0;
     setDeltaT(0.01);
     setT1Threshold(0.01);
@@ -327,7 +327,7 @@ void AVM2D::performTimestep()
     if(sortPeriod > 0)
         if(Timestep % sortPeriod == 0)
             spatialVertexSorting();
-    
+
     //first compute the forces, which also computes the geometry
     computeForces();
 
@@ -982,4 +982,3 @@ void AVM2D::getCellPositionsGPU()
                                n_idx,
                                Box);
     };
-

@@ -131,4 +131,3 @@ static void HandleError(cudaError_t err, const char *file, int line)
 #undef HOSTDEVICE
 
 #endif
-

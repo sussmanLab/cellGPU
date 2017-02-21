@@ -286,7 +286,7 @@ void SPV2D::performTimestep()
             spatialSortThisStep = true;
             };
         };
-    
+
     computeForces();
     displaceCellsAndRotate();
 
@@ -768,7 +768,6 @@ void SPV2D::computeSPVForceCPU(int i)
         }
     };
 
-
 /*!
 a utility function...output some information assuming the system is uniform
 */
@@ -776,4 +775,3 @@ void SPV2D::reportCellInfo()
     {
     printf("Ncells=%i\tv0=%f\tDr=%f\n",Ncells,v0,Dr);
     };
-

@@ -234,8 +234,6 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     };
 
 
-
-
 /*!
   Since the cells are guaranteed to be convex, the area of the cell is the sum of the areas of
   the triangles formed by consecutive Voronoi vertices
@@ -474,8 +472,6 @@ bool gpu_force_sets(Dscalar2 *d_points,
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
-
-
 
 
 //!call the kernel to add up the forces

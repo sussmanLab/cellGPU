@@ -50,7 +50,6 @@ __global__ void gpu_set_integer_array_kernel(int *d_array,
     };
 
 
-
 /*!
 \param d_points Dscalar2 array of locations
 \param d_disp   Dscalar2 array of displacements
@@ -101,8 +100,4 @@ bool gpu_set_integer_array(int *d_array,
     return cudaSuccess;
     };
 
-
-
-
 /** @} */ //end of group declaration
-

@@ -45,6 +45,4 @@ bool gpu_initialize_curand(curandState *states,
     return cudaSuccess;
     };
 
-
 /** @} */ //end of group declaration
-

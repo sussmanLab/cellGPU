@@ -17,8 +17,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS IS'' AND
 //As you might suspect from the above, the classes and structures in this file are modifications of the Index1D.h file from the HOOMD-Blue package.
 //Credit to Joshua A. Anderson
 
-
-
 #ifdef NVCC
 #define HOSTDEVICE __host__ __device__ inline
 #else

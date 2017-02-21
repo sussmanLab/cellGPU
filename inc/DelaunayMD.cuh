@@ -36,4 +36,3 @@ bool gpu_test_circumcenters(
 /** @} */ //end of group declaration
 
 #endif
-

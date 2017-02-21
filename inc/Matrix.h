@@ -47,6 +47,7 @@ struct Matrix2x2
                                 );
                             };
 
+        //!matrix multiplication operator
         HOSTDEVICE friend Matrix2x2 operator*(const Matrix2x2 &m1,const Matrix2x2 &m2)
                             {
                             Matrix2x2 temp(m1);
@@ -60,6 +61,7 @@ struct Matrix2x2
                             set(a*x11,a*x12,a*x21,a*x22);
                             };
 
+        //!scalar right multiplication operator
         HOSTDEVICE friend Matrix2x2 operator*(const Matrix2x2 &m,const Dscalar a)
                             {
                             Matrix2x2 temp(m);
@@ -67,6 +69,7 @@ struct Matrix2x2
                             return temp;
                             };
 
+        //!scalar left multiplication operator
         HOSTDEVICE friend Matrix2x2 operator*(const Dscalar a, const Matrix2x2 &m)
                             {
                             Matrix2x2 temp(m);
@@ -84,6 +87,7 @@ struct Matrix2x2
                                );
                             };
 
+        //!Matrix addition operator
         HOSTDEVICE friend Matrix2x2 operator+(const Matrix2x2 &m1,const Matrix2x2 &m2)
                             {
                             Matrix2x2 temp(m1);
@@ -100,6 +104,8 @@ struct Matrix2x2
                                 x22-m2.x22
                                );
                             };
+
+        //!matrix subtraction operator
         HOSTDEVICE friend Matrix2x2 operator-(const Matrix2x2 &m1,const Matrix2x2 &m2)
                             {
                             Matrix2x2 temp(m1);
@@ -116,6 +122,7 @@ struct Matrix2x2
                             return temp;
                             };
 
+        //!matrix-vector multiplication operator
         HOSTDEVICE friend Dscalar2 operator*(const Matrix2x2 &m, const Dscalar2 &v)
                             {
                             Dscalar2 temp;

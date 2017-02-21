@@ -785,5 +785,3 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
         };
 
     };
-
-

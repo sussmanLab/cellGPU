@@ -67,5 +67,3 @@ bool gpu_parallel_reduction(
 /** @} */ //end of group declaration
 
 #endif
-
-

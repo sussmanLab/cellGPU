@@ -65,7 +65,7 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"/hdd2/data/spv/test.nc");
-    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
 
 
 
@@ -92,8 +92,11 @@ int main(int argc, char*argv[])
     for (int i = 0; i <1;++i)
         {
         EnergyMinimizerFIRE<SPV2D> emin(spv);
-        emin.setGPU();
-        emin.setMaximumIterations(50);
+        if(USE_GPU >=0 )
+            emin.setGPU();
+        else
+            emin.setCPU();
+        emin.setMaximumIterations(tSteps);
         emin.minimize();
         //ncdat.WriteState(spv);
         };

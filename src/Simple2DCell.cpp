@@ -259,6 +259,9 @@ void Simple2DCell::reIndexCellArray(GPUArray<Dscalar2> &array)
         };
     };
 
+/*!
+Re-indexes GPUarrays of Dscalars
+*/
 void Simple2DCell::reIndexCellArray(GPUArray<Dscalar> &array)
     {
     GPUArray<Dscalar> TEMP = array;
@@ -270,6 +273,9 @@ void Simple2DCell::reIndexCellArray(GPUArray<Dscalar> &array)
         };
     };
 
+/*!
+Re-indexes GPUarrays of ints
+*/
 void Simple2DCell::reIndexCellArray(GPUArray<int> &array)
     {
     GPUArray<int> TEMP = array;
@@ -449,9 +455,8 @@ void Simple2DCell::spatiallySortVertices()
         idxToTag[ii] = tempiCell[itt[ii]];
         tagToIdx[tempiCell[itt[ii]]] = ii;
         };
-        
-    reIndexCellArray(cellPositions);
 
+    reIndexCellArray(cellPositions);
 
     //Finally, now that both cell and vertex re-indexing is known, update auxiliary data structures
     //Start with everything that can be done with just the cell indexing
@@ -512,5 +517,3 @@ void Simple2DCell::reportMeanCellForce(bool verbose)
         printf("min/max force : (%f,%f)\n",min,max);
     printf("Mean force = (%e,%e)\n" ,fx/Ncells,fy/Ncells);
     };
-
-

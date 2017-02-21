@@ -108,7 +108,6 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     return;
     };
 
-
 bool gpu_test_circumcenters(int *d_repair,
                             int3 *d_ccs,
                             int Nccs,
