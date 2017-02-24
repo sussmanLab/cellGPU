@@ -7,8 +7,22 @@
 
 #include "spv2d.h"
 #include "DatabaseNetCDFSPV.h"
-#include "EnergyMinimizerFIRE2D.h"
-#include "EnergyMinimizerFIRE2D.cpp"
+
+/*!
+This file compiles to produce an executable that can be used to reproduce the timing information
+for the 2D SPV model found in the "cellGPU" paper, using the following parameters:
+i = 20001
+t = 5000
+e = 0.05
+v=0.01
+dr = 1.0
+p=3.8
+along with some other choices of v0 and p0. The SPV timing is sensitive to how often the
+triangulation needs to be updated, so these parameters can be quite important. Note the longer
+"warm up" time (i=20001), representing a large number of time steps for the system to move from a
+random configuration of cells to one that looks more like a tissue before starting to time the
+program.
+*/
 int main(int argc, char*argv[])
 {
     int numpts = 200;
@@ -66,8 +80,6 @@ int main(int argc, char*argv[])
     char dataname[256];
     sprintf(dataname,"/hdd2/data/spv/test.nc");
     SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-
-
 
     SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
     if (!initializeGPU)

@@ -6,7 +6,15 @@
 
 #include "avm2d.h"
 #include "DatabaseNetCDFAVM.h"
-
+/*!
+This file compiles to produce an executable that can be used to reproduce the timing information
+for the 2D AVM model found in the "cellGPU" paper, using the following parameters:
+i = 1000
+t = 4000
+e = 0.01
+dr = 1.0,
+along with a range of v0 and p0. This model is not very sensitive to these other choices
+*/
 int main(int argc, char*argv[])
 {
     int numpts = 200;

@@ -17,7 +17,7 @@ The same thing, but for running the 2D SPV model
 
 # minimize.cpp
 
-Provides an example of using the FIRE minimizer to minimize a 2D SPV system.
+Provides an example of using the FIRE minimizer to minimize either a 2D SPV or AVM system.
 
 # runMakeDatabase.cpp
 

@@ -295,3 +295,6 @@ void EnergyMinimizerFIRE<T>::parallelReduce(GPUArray<Dscalar> &vec)
     ArrayHandle<Dscalar> output(sumReductions);
     printf("GPU-based reduction: %f\n",output.data[0]);
     };
+
+template class EnergyMinimizerFIRE<SPV2D>;
+template class EnergyMinimizerFIRE<AVM2D>;

@@ -6,9 +6,32 @@
 #define ENABLE_CUDA
 
 #include "spv2d.h"
+#include "avm2d.h"
 #include "DatabaseNetCDFSPV.h"
+#include "DatabaseNetCDFAVM.h"
 #include "EnergyMinimizerFIRE2D.h"
-#include "EnergyMinimizerFIRE2D.cpp"
+
+/*!
+This file compiles to produce an executable that shows how to use the energy minimization
+functionality of cellGPU. Note that the choice of CPU or GPU operation for the minimization class
+is independent of the choice of CPU or GPU operation of the cell model used.
+*/
+
+template <class T>
+void setFIREParameters(EnergyMinimizerFIRE<T> &emin, Dscalar deltaT, Dscalar alphaStart,
+        Dscalar deltaTMax, Dscalar deltaTInc, Dscalar deltaTDec, Dscalar alphaDec, int nMin,
+        Dscalar forceCutoff)
+    {
+    emin.setDeltaT(deltaT);
+    emin.setAlphaStart(alphaStart);
+    emin.setDeltaTMax(deltaTMax);
+    emin.setDeltaTInc(deltaTInc);
+    emin.setDeltaTDec(deltaTDec);
+    emin.setAlphaDec(alphaDec);
+    emin.setNMin(nMin);
+    emin.setForceCutoff(forceCutoff);
+    };
+
 int main(int argc, char*argv[])
 {
     int numpts = 200;
@@ -64,50 +87,82 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     char dataname[256];
-    sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+    sprintf(dataname,"../test.nc");
 
-
-
-    SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
-    if (!initializeGPU)
-        spv.setCPU(false);
-
-    spv.setCellPreferencesUniform(1.0,p0);
-    spv.setv0Dr(v0,1.0);
-    spv.setDeltaT(dt);
-    printf("starting initialization\n");
-    spv.setSortPeriod(initSteps/10);
-    for(int ii = 0; ii < initSteps; ++ii)
+    if(program_switch == 0)
         {
-        spv.performTimestep();
-        };
-
-    printf("Finished with initialization\n");
-
-    if(initializeGPU)
-        cudaProfilerStart();
-
-    //    ncdat.WriteState(spv);
-    for (int i = 0; i <1;++i)
+        SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+        SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
+        if (!initializeGPU)
+            spv.setCPU(false);
+        spv.setCellPreferencesUniform(1.0,p0);
+        spv.setv0Dr(v0,1.0);
+        spv.setDeltaT(dt);
+        printf("starting initialization\n");
+        spv.setSortPeriod(initSteps/10);
+        for(int ii = 0; ii < initSteps; ++ii)
+            {
+            spv.performTimestep();
+            };
+        if(initializeGPU)
+            cudaProfilerStart();
+        ncdat.WriteState(spv);
+        for (int i = 0; i <tSteps;++i)
+            {
+            EnergyMinimizerFIRE<SPV2D> emin(spv);
+            setFIREParameters(emin,0.01,0.99,0.1,1.1,0.95,.9,4,1e-12);
+            if(USE_GPU >=0 )
+                emin.setGPU();
+            else
+                emin.setCPU();
+            emin.setMaximumIterations(50);
+            emin.minimize();
+            ncdat.WriteState(spv);
+            };
+        printf("minimized value of q = %f\n",spv.reportq());
+        if(initializeGPU)
+            cudaProfilerStop();
+        ncdat.WriteState(spv);
+        if(initializeGPU)
+            cudaDeviceReset();
+    };
+    if(program_switch == 1)
         {
-        EnergyMinimizerFIRE<SPV2D> emin(spv);
-        if(USE_GPU >=0 )
-            emin.setGPU();
-        else
-            emin.setCPU();
-        emin.setMaximumIterations(tSteps);
-        emin.minimize();
-        //ncdat.WriteState(spv);
-        };
-
-    if(initializeGPU)
-        cudaProfilerStop();
-
-//    ncdat.WriteState(spv);
-    if(initializeGPU)
-        cudaDeviceReset();
-
+        AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU);
+        AVMDatabaseNetCDF ncdat(avm.Nvertices,dataname,NcFile::Replace);
+        if (!initializeGPU)
+            avm.setCPU();
+        avm.setCellPreferencesUniform(1.0,p0);
+        avm.setv0Dr(v0,1.0);
+        avm.setDeltaT(dt);
+        printf("starting initialization\n");
+        avm.setSortPeriod(initSteps/10);
+        for(int ii = 0; ii < initSteps; ++ii)
+            {
+            avm.performTimestep();
+            };
+        if(initializeGPU)
+            cudaProfilerStart();
+        ncdat.WriteState(avm);
+        for (int i = 0; i <tSteps;++i)
+            {
+            EnergyMinimizerFIRE<AVM2D> emin(avm);
+            setFIREParameters(emin,0.01,0.99,0.1,1.1,0.95,.9,4,1e-12);
+            if(USE_GPU >=0 )
+                emin.setGPU();
+            else
+                emin.setCPU();
+            emin.setMaximumIterations(50);
+            emin.minimize();
+            ncdat.WriteState(avm);
+            };
+        printf("minimized value of q = %f\n",avm.reportq());
+        if(initializeGPU)
+            cudaProfilerStop();
+        ncdat.WriteState(avm);
+        if(initializeGPU)
+            cudaDeviceReset();
+    };
     return 0;
 };
 

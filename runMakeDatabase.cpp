@@ -10,7 +10,12 @@
 #include "functions.h"
 #include "DatabaseNetCDFSPV.h"
 
-
+/*!
+Provides an example of using the NetCDF database class to write snapshots of a simulation of the 2D
+SPV model. Note that netCDF database functionality is currently only partially implemented for the
+AVM, and some refactoring is in the works. In particular, netCDF will be clunky when the cell number
+changes
+*/
 int main(int argc, char*argv[])
 {
     int numpts = 200;

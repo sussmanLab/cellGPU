@@ -4,6 +4,9 @@
 #include "std_include.h"
 #include "functions.h"
 #include "gpuarray.h"
+//include for explicit instantiation in the cpp file
+#include "avm2d.h"
+#include "spv2d.h"
 
 
 /*! \file EnergyMinimizerFIRE2D.h
