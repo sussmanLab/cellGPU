@@ -25,8 +25,8 @@ class Simple2DCell
         //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
         virtual void setCPU(){GPUcompute = false;};
 
-        //!get the number of degrees of freedom
-        virtual int getNumberOfDegreesOfFreedom(){};
+        //!get the number of degrees of freedom, defaulting to the number of cells
+        virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 
         //!do everything necessary to compute forces in the current model
         virtual void computeForces(){};

@@ -15,6 +15,10 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         selfPropelledParticleDynamics(int N);
         //!the fundamental function that advances the simulation
         virtual void integrateEquationsOfMotion(GPUArray<Dscalar2> &forces, GPUArray<Dscalar2> &displacements);
+        //!call the CPU routine to integrate the e.o.m.
+        void integrateEquationsOfMotionCPU(GPUArray<Dscalar2> &forces, GPUArray<Dscalar2> &displacements);
+        //!call the GPU routine to integrate the e.o.m.
+        void integrateEquationsOfMotionGPU(GPUArray<Dscalar2> &forces, GPUArray<Dscalar2> &displacements);
 
         //!Get the inverse friction constant, mu
         Dscalar getMu(){return mu;};

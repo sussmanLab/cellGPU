@@ -66,12 +66,20 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     selfPropelledParticleDynamics spp(numpts);
+    if(!initializeGPU)
+        {
+        spp.setCPU();
+        }
+    else
+        {
+        spp.initializeRNGs(1337,0);
+        };
     spp.setReproducible(true);
     spp.setv0Dr(v0,1.0);
     spp.setDeltaT(dt);
 
     spp.setCellDirectorsRandomly();
-    GPUArray<Dscalar2> bop;
+    GPUArray<Dscalar2> bop(numpts,false);
 
     simpleEquationOfMotion *pSPP = &spp;
     pSPP->integrateEquationsOfMotion(bop,bop);

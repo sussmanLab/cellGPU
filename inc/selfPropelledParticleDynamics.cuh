@@ -21,6 +21,18 @@ bool gpu_initialize_sppRNG(curandState *states,
                     int GlobalSeed
                     );
 
+//!set the vector of displacements from forces and activity
+bool gpu_spp_eom_integration(
+                    Dscalar2 *forces,
+                    Dscalar2 *displacements,
+                    Dscalar2 *motility,
+                    Dscalar *cellDirectors,
+                    curandState *RNGs,
+                    int N,
+                    Dscalar deltaT,
+                    int Timestep,
+                    Dscalar mu);
+
 /** @} */ //end of group declaration
  #endif
 
