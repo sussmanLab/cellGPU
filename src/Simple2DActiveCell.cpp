@@ -80,7 +80,7 @@ void Simple2DActiveCell::setCellDirectorsRandomly()
     for (int ii = 0; ii < Ncells; ++ii)
         h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
     };
-    
+
 /*!
 \param v0new the new value of velocity for all cells
 \param drnew the new value of the rotational diffusion of cell directors for all cells
