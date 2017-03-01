@@ -8,7 +8,7 @@
 An extremely simple constructor that does nothing, but enforces default GPU operation
 */
 Simple2DCell::Simple2DCell() :
-    Ncells(0), Nvertices(0),GPUcompute(true),sortPeriod(-1),spatialSortThisStep(false)
+    Ncells(0), Nvertices(0),GPUcompute(true),sortPeriod(-1),spatialSortThisStep(false), equationOfMotion(new simpleEquationOfMotion())
     {
     };
 /*!

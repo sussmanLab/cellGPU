@@ -2,6 +2,7 @@
 #define SIMPLE2DCELL_H
 
 #include "std_include.h"
+#include "simpleEquationOfMotion.h"
 #include "indexer.h"
 #include "gpuarray.h"
 #include "gpubox.h"
@@ -18,6 +19,17 @@ class Simple2DCell
     public:
         //!Currently a vacant constructor
         Simple2DCell();
+
+        //!Destructor needed.
+        ~Simple2DCell()
+            {
+            //delete equationOfMotion;
+            };
+
+        //!Simple2DCells are static; they are allowed to know about dynamics via a pointer
+        simpleEquationOfMotion *equationOfMotion;
+
+        void setEquationOfMotion(simpleEquationOfMotion &_eom){equationOfMotion = &_eom;};
 
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};

@@ -81,8 +81,10 @@ int main(int argc, char*argv[])
     spp.setCellDirectorsRandomly();
     GPUArray<Dscalar2> bop(numpts,false);
 
-    simpleEquationOfMotion *pSPP = &spp;
-    pSPP->integrateEquationsOfMotion(bop,bop);
+//    simpleEquationOfMotion *pSPP = &spp;
+//    pSPP->integrateEquationsOfMotion(bop,bop);
+    spp.setNdof(103);
+    printf("dof %i\n",spp.getNdof());
 
 
     char dataname[256];
@@ -92,6 +94,13 @@ int main(int argc, char*argv[])
     SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
     if (!initializeGPU)
         spv.setCPU(false);
+
+
+    printf("initialized eom dof %i \n",spv.equationOfMotion->getNdof());
+    spv.setEquationOfMotion(spp);
+    printf("initialized eom dof %i \n",spv.equationOfMotion->getNdof());
+
+
 
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
