@@ -6,23 +6,35 @@ The following are a handful of classes that make up the most important operation
 Please additionally see the cellGPU paper for details:
 https://arxiv.org/abs/1702.02939
 
-### General structures and analysis classes
+### General data structures and analysis classes
 
 * Simple2DCell -- a class that defines flat data structures for some of the most common features of
 off-lattice cell models, such as cell positions, vertex positions, neighbor information, etc. Also
 contains the functionality to perform spatial sorting of cells and vertices for better memory locality.
 
-* Simple2DActiveCell -- a child of Simple2DCell class with data structures and functions common to many off-lattice cell models with active dynamics
+* Simple2DActiveCell -- a child of Simple2DCell class with data structures and functions common to many
+off-lattice cell models with active dynamics
 
-* DelaunayLoc -- Calculates candidate 1-rings of particles by finding an enclosing polygon of nearby points and finding all points in the circumcircle of the point and any two consecutive vertices of that polygon.
+* DelaunayLoc -- Calculates candidate 1-rings of particles by finding an enclosing polygon of nearby points
+and finding all points in the circumcircle of the point and any two consecutive vertices of that polygon.
 
-### Cellular dynamics
+### Cellular models
 
 * DelaunayMD -- A core engine that operates as described below in ''Basic idea.'' Can move particles
 and update their underlying Delaunay triangulation
-* SPV2D -- A child class of DelaunayMD that implements cell motion according to the 2D SPV model.
-* AVM2D -- A child of Simple2DActiveCell that implements a simple 2D dynamic ("active") vertex model
+* SPV2D -- A child class of DelaunayMD that calculates forces according to the 2D SPV model.
+* AVM2D -- A child of Simple2DActiveCell that calculates forces for a simple 2D ("active") vertex model
 where the topology changes via a simple rule for T1 transitions
+
+### Equations of motion
+
+* simpleEquationOfMotion -- a base class implementing the following idea: given various data from a
+model, for instance the forces on the degrees of freedom, calculate the displacements that would
+integrate the equations of motion by one time step.
+* selfPropelledParticleDynamics -- the time derivative of a particle is the force on it, plus an "active"
+term corresponding to a constant velocity in a direction that rotates
+* selfPropelledCellVertexDynamics -- a specialization of the above class where the vertices are the degrees
+of freedom but where the cells are the things with activity.
 
 ### Energy minimization
 

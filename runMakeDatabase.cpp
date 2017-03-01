@@ -7,7 +7,7 @@
 #define ENABLE_CUDA
 
 #include "spv2d.h"
-#include "functions.h"
+#include "selfPropelledParticleDynamics.h"
 #include "DatabaseNetCDFSPV.h"
 
 /*!
@@ -61,8 +61,6 @@ int main(int argc, char*argv[])
         };
     clock_t t1,t2;
 
-
-
     if (USE_GPU >= 0)
         {
         bool gpu = chooseGPU(USE_GPU);
@@ -75,12 +73,19 @@ int main(int argc, char*argv[])
     printf("Initializing a system with N= %i, p0 = %.2f, v0 = %.2f, Dr = %.3f\n",numpts,p0,v0,Dr);
     sprintf(dataname,"./monodisperse_N%i_p%.4f_v%.2f_Dr%.3f.nc",numpts,p0,v0,Dr);
     SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace,false);
+
+
+    selfPropelledParticleDynamics spp(numpts);
     SPV2D spv(numpts,1.0,p0);
+    spv.setEquationOfMotion(spp);
     if (USE_GPU < 0)
+        {
         spv.setCPU(false);
+        spp.setCPU();
+        };
 
     spv.setv0Dr(v0,Dr);
-    spv.setDeltaT(dt);
+    spp.setDeltaT(dt);
     spv.setSortPeriod(5000);
 
     //initialize

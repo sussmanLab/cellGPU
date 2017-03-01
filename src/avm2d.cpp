@@ -10,22 +10,65 @@
 \param A0 set uniform preferred area for all cells
 \param P0 set uniform preferred perimeter for all cells
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
-\param initGPURNG does the GPU RNG array need to be initialized?
 \param runSPVToInitialize the default constructor has the cells start as a Voronoi tesselation of
 a random point set. Set this flag to true to relax this initial configuration via the SPV2D class
-\post Initialize(n,initGPURNG,runSPVToInitialize) is called, setCellPreferencesUniform(A0,P0), and
+\post Initialize(n,runSPVToInitialize) is called, setCellPreferencesUniform(A0,P0), and
 setModuliUniform(1.0,1.0)
 */
-AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG,bool runSPVToInitialize) :
+AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool runSPVToInitialize) :
     T1Threshold(0.01)
     {
     printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
     Reproducible = reprod;
     GPUcompute=true;
-    Initialize(n,initGPURNG,runSPVToInitialize);
+    Initialize(n,runSPVToInitialize);
     setCellPreferencesUniform(A0,P0);
     setModuliUniform(1.0,1.0);
     setCellTypeUniform(0);
+    };
+
+/*!
+Take care of all class initialization functions, this involves setting arrays to the right size, etc.
+*/
+void AVM2D::Initialize(int n,bool spvInitialize)
+    {
+    //set number of cells, and a square box
+    Ncells=n;
+    cellPositions.resize(Ncells);
+    //put cells in box randomly
+    setCellPositionsRandomly();
+    //derive the vertices from a voronoi tesselation
+    setCellsVoronoiTesselation(spvInitialize);
+    setCellDirectorsRandomly();
+
+    Timestep = 0;
+    setDeltaT(0.01);
+    setT1Threshold(0.01);
+
+    //initializes per-cell lists
+    AreaPeri.resize(Ncells);
+    AreaPeriPreferences.resize(Ncells);
+    initializeCellSorting();
+
+    //initializes per-vertex lists
+    vertexForces.resize(Nvertices);
+    displacements.resize(Nvertices);
+    initializeVertexSorting();
+    initializeEdgeFlipLists();
+    //initialize per-triple-vertex lists
+    vertexForceSets.resize(3*Nvertices);
+    voroCur.resize(3*Nvertices);
+    voroLastNext.resize(3*Nvertices);
+
+    growCellVertexListAssist.resize(1);
+    ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);
+    h_grow.data[0]=0;
+
+    //initialize the vectors passed to the e.o.m.s
+    IntArrayInfo.push_back(vertexCellNeighbors);
+    DscalarArrayInfo.push_back(cellDirectors);
+    Dscalar2ArrayInfo.push_back(vertexForces);
+    Dscalar2ArrayInfo.push_back(Motility);
     };
 
 /*!
@@ -41,10 +84,14 @@ void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
     //use the SPV class to relax the initial configuration just a bit?
     if(spvInitialize)
         {
-        SPV2D spv(Ncells,1.0,3.8,false);
+        SPV2D spv(Ncells,1.0,3.8);
+        selfPropelledParticleDynamics spp(Ncells);
+        spv.setEquationOfMotion(spp);
         spv.setCPU(false);
         spv.setv0Dr(0.1,1.0);
-        spv.setDeltaT(0.1);
+        spp.setReproducible(true);
+        spp.setCPU();
+        spp.setDeltaT(0.1);
         for (int ii = 0; ii < 100;++ii)
             spv.performTimestep();
         ArrayHandle<Dscalar2> h_pp(spv.cellPositions,access_location::host,access_mode::read);
@@ -161,46 +208,6 @@ void AVM2D::initializeEdgeFlipLists()
     };
 
 /*!
-Take care of all class initialization functions, this involves setting arrays to the right size, etc.
-*/
-void AVM2D::Initialize(int n,bool initGPU,bool spvInitialize)
-    {
-    //set number of cells, and a square box
-    Ncells=n;
-    cellPositions.resize(Ncells);
-    //put cells in box randomly
-    setCellPositionsRandomly();
-    //derive the vertices from a voronoi tesselation
-    setCellsVoronoiTesselation(spvInitialize);
-    setCellDirectorsRandomly();
-
-    Timestep = 0;
-    setDeltaT(0.01);
-    setT1Threshold(0.01);
-
-    //initializes per-cell lists
-    cellRNGs.resize(Ncells);
-    AreaPeri.resize(Ncells);
-    AreaPeriPreferences.resize(Ncells);
-    initializeCellSorting();
-
-    //initializes per-vertex lists
-    vertexForces.resize(Nvertices);
-    initializeVertexSorting();
-    initializeEdgeFlipLists();
-    //initialize per-triple-vertex lists
-    vertexForceSets.resize(3*Nvertices);
-    voroCur.resize(3*Nvertices);
-    voroLastNext.resize(3*Nvertices);
-    if(initGPU)
-        initializeCurandStates(Ncells,1337,Timestep);
-
-    growCellVertexListAssist.resize(1);
-    ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);
-    h_grow.data[0]=0;
-    };
-
-/*!
 when a T1 transition increases the maximum number of vertices around any cell in the system,
 call this function first to copy over the cellVertices structure into a larger array
  */
@@ -239,6 +246,7 @@ void AVM2D::growCellVerticesList(int newVertexMax)
 void AVM2D::spatialVertexSorting()
     {
     //the avm class doesn't need to change any other unusual data structures at the moment
+    equationOfMotion->spatialSorting(itt);
     spatiallySortVerticesAndCellActivity();
     };
 
@@ -267,10 +275,22 @@ displace vertices and rotate directors, on either the GPU or CPU as determined b
 */
 void AVM2D::displaceAndRotate()
     {
-    if(GPUcompute)
-        displaceAndRotateGPU();
-    else
-        displaceAndRotateCPU();
+    //swap in data for the equation of motion
+    DscalarArrayInfo[0].swap(cellDirectors);
+    Dscalar2ArrayInfo[0].swap(vertexForces);
+    Dscalar2ArrayInfo[1].swap(Motility);
+    IntArrayInfo[0].swap(vertexCellNeighbors);
+
+    //call the equation of motion to get displacements
+    equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
+    //swap it back into the model
+    DscalarArrayInfo[0].swap(cellDirectors);
+    Dscalar2ArrayInfo[0].swap(vertexForces);
+    Dscalar2ArrayInfo[1].swap(Motility);
+    IntArrayInfo[0].swap(vertexCellNeighbors);
+
+    //move the vertices around
+    moveDegreesOfFreedom(displacements);
     };
 /*!
 enforce and update topology of vertex wiring on either the GPU or CPU
@@ -295,6 +315,7 @@ move vertices according to an inpute GPUarray
 */
 void AVM2D::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
     {
+    //handle things either on the GPU or CPU
     if (GPUcompute)
         {
         ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::read);
@@ -439,49 +460,6 @@ void AVM2D::computeForcesCPU()
             };
         h_f.data[v] = ftemp;
         };
-    };
-
-/*!
-Move every vertex according to the net force on it and its motility...CPU routine
-For debugging, the random number generator gives the same sequence of "random" numbers every time.
-For more random behavior, uncomment the "random_device rd;" line, and replace
-mt19937 gen(rand());
-with
-mt19937 gen(rd());
-*/
-void AVM2D::displaceAndRotateCPU()
-    {
-    ArrayHandle<Dscalar2> h_f(vertexForces,access_location::host, access_mode::read);
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host, access_mode::readwrite);
-    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
-
-    //random_device rd;
-    mt19937 gen(rand());
-    normal_distribution<> normal(0.0,1.0);
-
-    Dscalar directorx,directory;
-    Dscalar2 disp;
-    for (int i = 0; i < Nvertices; ++i)
-        {
-        //for uniform v0, the vertex director is the straight average of the directors of the cell neighbors
-        directorx  = cos(h_cd.data[ h_vcn.data[3*i] ]);
-        directorx += cos(h_cd.data[ h_vcn.data[3*i+1] ]);
-        directorx += cos(h_cd.data[ h_vcn.data[3*i+2] ]);
-        directorx /= 3.0;
-        directory  = sin(h_cd.data[ h_vcn.data[3*i] ]);
-        directory += sin(h_cd.data[ h_vcn.data[3*i+1] ]);
-        directory += sin(h_cd.data[ h_vcn.data[3*i+2] ]);
-        directory /= 3.0;
-        //move vertices
-        h_v.data[i].x += deltaT*(v0*directorx+h_f.data[i].x);
-        h_v.data[i].y += deltaT*(v0*directory+h_f.data[i].y);
-        Box.putInBoxReal(h_v.data[i]);
-        };
-
-    //update cell directors
-    for (int i = 0; i < Ncells; ++i)
-        h_cd.data[i] += normal(gen)*sqrt(2.0*deltaT*Dr);
     };
 
 /*!
@@ -771,6 +749,7 @@ void AVM2D::testAndPerformT1TransitionsCPU()
 /*!
 One would prefer the cell position to be defined as the centroid, requiring an additional computation of the cell area.
 This may be implemented some day, but for now we define the cell position as the straight average of the vertex positions.
+This isn't really used much, anyway, so update this only when the functionality becomes needed
 */
 void AVM2D::getCellPositionsCPU()
     {
@@ -801,7 +780,6 @@ void AVM2D::getCellPositionsCPU()
         h_p.data[cell] = pos;
         };
     };
-
 
 /*!
 Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the vertices)
@@ -859,25 +837,6 @@ void AVM2D::computeForcesGPU()
                     Nvertices);
     };
 
-/*!
-Move every vertex according to the net force on it and its motility...GPU routine
-*/
-void AVM2D::displaceAndRotateGPU()
-    {
-    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device, access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_f(vertexForces,access_location::device, access_mode::read);
-    ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device, access_mode::readwrite);
-    ArrayHandle<curandState> d_cs(cellRNGs,access_location::device,access_mode::read);
-    ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
-
-    gpu_avm_displace_and_rotate(d_v.data,
-                                d_f.data,
-                                d_cd.data,
-                                d_vcn.data,
-                                d_cs.data,
-                                v0,Dr,deltaT,
-                                Box, Nvertices,Ncells);
-    };
 /*!
 perform whatever check is desired for T1 transtions (here just a "is the edge too short")
 and detect whether the edge needs to grow. If so, grow it!

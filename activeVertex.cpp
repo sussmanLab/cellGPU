@@ -5,6 +5,7 @@
 #define ENABLE_CUDA
 
 #include "avm2d.h"
+#include "selfPropelledCellVertexDynamics.h"
 #include "DatabaseNetCDFAVM.h"
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -77,11 +78,24 @@ int main(int argc, char*argv[])
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
     bool runSPV = false;
-    AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU,runSPV);
+    AVM2D avm(numpts,1.0,p0,reproducible,runSPV);
+
+    selfPropelledCellVertexDynamics sppCellVertex(numpts,Nvert);
+    sppCellVertex.setReproducible(reproducible);
+    avm.setEquationOfMotion(sppCellVertex);
+
     if(USE_GPU < 0)
+        {
         avm.setCPU();
+        sppCellVertex.setCPU();
+        }
+    else
+        {
+        sppCellVertex.initializeRNGs(1337,0);
+        };
     avm.setv0Dr(v0,Dr);
     avm.setDeltaT(dt);
+    sppCellVertex.setDeltaT(dt);
     avm.setT1Threshold(0.04);
     avm.setSortPeriod(initSteps/10);
     for (int timestep = 0; timestep < initSteps+1; ++timestep)

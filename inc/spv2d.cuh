@@ -16,19 +16,6 @@ A file providing an interface to the relevant cuda calls for the SPV2D class
  * \brief CUDA kernels and callers for the SPV2D class
  */
 
-//!Given the positions, forces, and cell directors, move the particles and add noise to the director direction
-bool gpu_displace_and_rotate(
-                    Dscalar2 *d_points,
-                    Dscalar2 *d_force,
-                    Dscalar  *directors,
-                    Dscalar2 *d_motility,
-                    int N,
-                    Dscalar dt,
-                    int seed,
-                    curandState *states,
-                    gpubox &Box
-                    );
-
 //!compute the area and perimeter of all Voronoi cells, and save the voronoi vertices
 bool gpu_compute_geometry(
                     Dscalar2 *d_points,

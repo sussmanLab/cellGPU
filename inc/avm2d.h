@@ -4,6 +4,8 @@
 #include "std_include.h"
 #include "Simple2DActiveCell.h"
 #include "functions.h"
+//include spp dynamics for SPV-based initialization of configurations
+#include "selfPropelledParticleDynamics.h"
 
 /*! \file avm2d.h
 A class that implements a simple active vertex model in 2D. This involves calculating forces on
@@ -19,10 +21,10 @@ class AVM2D : public Simple2DActiveCell
     {
     public:
         //! the constructor: initialize as a Delaunay configuration with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true,bool runSPVToInitialize=false);
+        AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool runSPVToInitialize=false);
 
         //!Initialize AVM2D, set random orientations for vertex directors, prepare data structures
-        void Initialize(int n,bool initGPU = true,bool spvInitialize = false);
+        void Initialize(int n,bool spvInitialize = false);
 
         //!Set the length threshold for T1 transitions
         void setT1Threshold(Dscalar t1t){T1Threshold = t1t;};
@@ -61,10 +63,6 @@ class AVM2D : public Simple2DActiveCell
 
         //! decide whether to move vertices on the CPU or GPU
         void displaceAndRotate();
-        //!Displace vertices and rotate directors on the CPU
-        void displaceAndRotateCPU();
-        //!Displace vertices and rotate directors on the GPU
-        void displaceAndRotateGPU();
 
         //!Simple test for T1 transitions (edge length less than threshold) on the CPU
         void testAndPerformT1TransitionsCPU();

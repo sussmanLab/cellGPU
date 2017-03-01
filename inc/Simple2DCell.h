@@ -2,6 +2,7 @@
 #define SIMPLE2DCELL_H
 
 #include "std_include.h"
+#include "simpleEquationOfMotion.h"
 #include "indexer.h"
 #include "gpuarray.h"
 #include "gpubox.h"
@@ -19,14 +20,25 @@ class Simple2DCell
         //!Currently a vacant constructor
         Simple2DCell();
 
+        //!Destructor needed.
+        ~Simple2DCell()
+            {
+            //delete equationOfMotion;
+            };
+
+        //!Simple2DCells are static; they are allowed to know about dynamics via a pointer
+        simpleEquationOfMotion *equationOfMotion;
+
+        void setEquationOfMotion(simpleEquationOfMotion &_eom){equationOfMotion = &_eom;};
+
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};
 
         //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
         virtual void setCPU(){GPUcompute = false;};
 
-        //!get the number of degrees of freedom
-        virtual int getNumberOfDegreesOfFreedom(){};
+        //!get the number of degrees of freedom, defaulting to the number of cells
+        virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 
         //!do everything necessary to compute forces in the current model
         virtual void computeForces(){};
@@ -202,7 +214,18 @@ class Simple2DCell
         //!A flag that determins if a spatial sorting is due to occur this Timestep
         bool spatialSortThisStep;
 
+        //utility data structures for interfacing with equations of motion
+        //! a vector of Dscalars to be passed to the equation of motion
+        vector<Dscalar> DscalarInfo;
+        //! a vector of GPUArray of ints to be passed to the equation of motion
+        vector<GPUArray<int> > IntArrayInfo;
+        //! a vector of GPUArray of Dscalars to be passed to the equation of motion
+        vector<GPUArray<Dscalar> > DscalarArrayInfo;
+        //! a vector of GPUArray of Dscalar2s to be passed to the equation of motion
+        vector<GPUArray<Dscalar2> > Dscalar2ArrayInfo;
 
+        //!An array of displacements used only for the equations of motion
+        GPUArray<Dscalar2> displacements;
 
     //reporting functions
     public:

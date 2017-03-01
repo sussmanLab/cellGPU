@@ -264,7 +264,6 @@ void cellListGPU::compute()
             if (recompute) continue;
             ibin = floor(h_pt.data[nn].x/boxsize);
             jbin = floor(h_pt.data[nn].y/boxsize);
-
             int bin = cell_indexer(ibin,jbin);
             int offset = h_cell_sizes.data[bin];
             if (offset < Nmax)

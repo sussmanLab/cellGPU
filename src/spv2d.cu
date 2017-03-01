@@ -326,45 +326,6 @@ __global__ void gpu_compute_geometry_kernel(const Dscalar2* __restrict__ d_point
     return;
     };
 
-
-/*!
-  move particles according to their motility and forces...each thread checks out its RNG, advances
-  it by one increment, and returns it.
-  */
-__global__ void gpu_displace_and_rotate_kernel(Dscalar2 *d_points,
-                                          Dscalar2 *d_force,
-                                          Dscalar *d_directors,
-                                          Dscalar2 *d_motility,
-                                          int N,
-                                          Dscalar dt,
-                                          int seed,
-                                          curandState *states,
-                                          gpubox Box
-                                         )
-    {
-    // read in the particle that belongs to this thread
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= N)
-        return;
-
-    curandState_t randState;
-
-    randState=states[idx];
-    Dscalar dirx = Cos(d_directors[idx]);
-    Dscalar diry = Sin(d_directors[idx]);
-    Dscalar v0 = d_motility[idx].x;
-    Dscalar Dr = d_motility[idx].y;
-    Dscalar angleDiff = cur_norm(&randState)*sqrt(2.0*dt*Dr);
-    d_directors[idx] += angleDiff;
-
-    states[idx] = randState;
-
-    d_points[idx].x += dt*(v0*dirx + d_force[idx].x);
-    d_points[idx].y += dt*(v0*diry + d_force[idx].y);
-    Box.putInBoxReal(d_points[idx]);
-    return;
-    };
-
 ////////////////
 //kernel callers
 ////////////////
@@ -395,37 +356,6 @@ bool gpu_compute_geometry(Dscalar2 *d_points,
                                                 d_vln,
                                                 N,
                                                 n_idx,
-                                                Box
-                                                );
-    HANDLE_ERROR(cudaGetLastError());
-    return cudaSuccess;
-    };
-
-//!Call the kernel to move particles around
-bool gpu_displace_and_rotate(Dscalar2 *d_points,
-                        Dscalar2 *d_force,
-                        Dscalar  *d_directors,
-                        Dscalar2 *d_motility,
-                        int N,
-                        Dscalar dt,
-                        int timestep,
-                        curandState *states,
-                        gpubox &Box
-                        )
-    {
-    unsigned int block_size = 128;
-    if (N < 128) block_size = 32;
-    unsigned int nblocks  = N/block_size + 1;
-
-    gpu_displace_and_rotate_kernel<<<nblocks,block_size>>>(
-                                                d_points,
-                                                d_force,
-                                                d_directors,
-                                                d_motility,
-                                                N,
-                                                dt,
-                                                timestep,
-                                                states,
                                                 Box
                                                 );
     HANDLE_ERROR(cudaGetLastError());

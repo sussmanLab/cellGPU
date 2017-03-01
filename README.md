@@ -41,4 +41,3 @@ documenation website)
 [cellGPU version information](@ref changelog)
 
 [Contributors](@ref contributorList)
-

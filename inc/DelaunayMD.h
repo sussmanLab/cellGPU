@@ -3,7 +3,6 @@
 
 #include "std_include.h"
 #include "Simple2DActiveCell.h"
-#include "Simple2DActiveCell.cuh"
 #include "cellListGPU.cuh"
 #include "cellListGPU.h"
 #include "DelaunayLoc.h"
@@ -137,7 +136,5 @@ class DelaunayMD : public Simple2DActiveCell
         int timestep;
 
     };
-
-
 
 #endif

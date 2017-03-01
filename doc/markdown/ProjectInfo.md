@@ -15,4 +15,3 @@
 @subpage changelog
 
 @subpage contributorList
-

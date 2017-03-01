@@ -23,4 +23,3 @@ code: paulbourke.net/papers/triangulate (Pan-Pacific Computer Conference, Beijin
 
 Energy minimization via the EnergyMinimizerFIRE class uses the FIRE algorithm:
 [E. Bitzek et al. Phys. Rev. Lett. 97, 170201 (2006)](http://journals.aps.org/prl/abstract/10.1103/PhysRevLett.97.170201)
-

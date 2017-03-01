@@ -27,14 +27,18 @@ The makefile system is scheduled to be replaced, and will soon change to require
 
 # Sample programs
 
-The included makefile compiles three programs: avmGPU, spvGPU, and spvMSD. The first two generate timing
+The included makefile compiles four programs: avmGPU, spvGPU, spvMSD, and Minimize.out. The first two generate timing
 information, and the "Timing.sh" script shows an example of how to quickly call these programs for a
-range of parameters. The last program, spvMSD, uses netCDF to save positional data (log spaced) for a simulation
+range of parameters.
+
+The third program, spvMSD, uses netCDF to save positional data (log spaced) for a simulation
 of monodisperse cells in the SPV model (as compiled the .nc file will be saved to the current directory).
 Analyzing this positional data, for instance by computing the mean squared displacement, can be used to
 confirm the correct operation of the program. The included "Msd.sh" script will generate some data
 that can be analyzed and directly compared with Fig. 1 of Bi et al. (Phys. Rev. X 6, 021011 (2016)),
 which is the cannonical reference for the SPV model.
+
+The fourth program, Minimize.out, shows how to use the included FIRE minimizer to do simple energy minimization.
 
 # Helpful websites
 The requirements can be obtained by looking at the info on the following:

@@ -8,14 +8,13 @@
 /*!
 \param n number of cells to initialize
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
-\param initGPURNG does the GPU RNG array need to be initialized?
 \post Initialize(n,initGPURNcellsG) is called, as is setCellPreferenceUniform(1.0,4.0)
 */
-SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
+SPV2D::SPV2D(int n, bool reprod)
     {
     printf("Initializing %i cells with random positions in a square box...\n",n);
     Reproducible = reprod;
-    Initialize(n,initGPURNG);
+    Initialize(n);
     setCellPreferencesUniform(1.0,4.0);
     };
 
@@ -24,27 +23,25 @@ SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
 \param A0 set uniform preferred area for all cells
 \param P0 set uniform preferred perimeter for all cells
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
-\param initGPURNG does the GPU RNG array need to be initialized?
 \post Initialize(n,initGPURNG) is called
 */
-SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
+SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod)
     {
     printf("Initializing %i cells with random positions in a square box... ",n);
     Reproducible = reprod;
-    Initialize(n,initGPURNG);
+    Initialize(n);
     setCellPreferencesUniform(A0,P0);
     };
 
 /*!
 \param  n Number of cells to initialized
-\param initGPU Should the GPU be initialized?
 \post all GPUArrays are set to the correct size, v0 is set to 0.05, Dr is set to 1.0, the
 Hilbert sorting period is set to -1 (i.e. off), the moduli are set to KA=KP=1.0, DelaunayMD is
 initialized (initializeDelMD(n) gets called), particle exclusions are turned off, and auxiliary
 data structures for the topology are set
 */
 //take care of all class initialization functions
-void SPV2D::Initialize(int n,bool initGPU)
+void SPV2D::Initialize(int n)
     {
     Ncells=n;
     particleExclusions=false;
@@ -69,11 +66,13 @@ void SPV2D::Initialize(int n,bool initGPU)
     particleExclusions=false;
 
     setCellDirectorsRandomly();
-    cellRNGs.resize(Ncells);
-    if(initGPU)
-        initializeCurandStates(Ncells,1337,Timestep);
     resetLists();
     allDelSets();
+
+    //initialize the vectors passed to the e.o.m.s
+    DscalarArrayInfo.push_back(cellDirectors);
+    Dscalar2ArrayInfo.push_back(cellForces);
+    Dscalar2ArrayInfo.push_back(Motility);
     };
 
 /*!
@@ -162,6 +161,7 @@ When sortPeriod < 0, this routine does not get called
 */
 void SPV2D::spatialSorting()
     {
+    equationOfMotion->spatialSorting(itt);
     spatiallySortCellsAndCellActivity();
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
@@ -298,64 +298,6 @@ void SPV2D::performTimestep()
     };
 
 /*!
-if forces have already been computed, displace particles according to net force and motility,
-and rotate the cell directors via a cuda call
-*/
-void SPV2D::DisplacePointsAndRotate()
-    {
-
-    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_f(cellForces,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_motility(Motility,access_location::device,access_mode::read);
-    ArrayHandle<curandState> d_cs(cellRNGs,access_location::device,access_mode::read);
-
-    gpu_displace_and_rotate(d_p.data,
-                            d_f.data,
-                            d_cd.data,
-                            d_motility.data,
-                            Ncells,
-                            deltaT,
-                            Timestep,
-                            d_cs.data,
-                            Box);
-
-    };
-
-/*!
-\pre The force per cell has already been computed
-\post displace particles according to net force and motility,and rotate the cell directors via the CPU
-*/
-void SPV2D::calculateDispCPU()
-    {
-    ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_motility(Motility,access_location::host,access_mode::read);
-
-    random_device rd;
-    mt19937 gen(rand());
-    normal_distribution<> normal(0.0,1.0);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Dscalar v0i = h_motility.data[ii].x;
-        Dscalar Dri = h_motility.data[ii].y;
-        Dscalar dx,dy;
-        Dscalar directorx = cos(h_cd.data[ii]);
-        Dscalar directory = sin(h_cd.data[ii]);
-
-        dx= deltaT*(v0i*directorx+h_f.data[ii].x);
-        dy= deltaT*(v0i*directory+h_f.data[ii].y);
-        h_disp.data[ii].x = dx;
-        h_disp.data[ii].y = dy;
-
-        //rotate each director a bit
-        h_cd.data[ii] +=normal(gen)*sqrt(2.0*deltaT*Dri);
-        };
-    //vector of displacements is forces*timestep + v0's*timestep
-    };
-
-/*!
 \pre The geoemtry (area and perimeter) has already been calculated
 \post calculate the contribution to the net force on every particle from each of its voronoi vertices
 via a cuda call
@@ -378,19 +320,24 @@ void SPV2D::SumForcesGPU()
     };
 
 /*!
-call the correct routines to move cells around and rotate the directors
+call the equations of motion to determine the dispalcement for each cell
 */
 void SPV2D::displaceCellsAndRotate()
     {
-    if (GPUcompute)
-        {
-        DisplacePointsAndRotate();
-        }
-    else
-        {
-        calculateDispCPU();
-        movePointsCPU(displacements);
-        };
+    //swap in data for the equation of motion
+    DscalarArrayInfo[0].swap(cellDirectors);
+    Dscalar2ArrayInfo[0].swap(cellForces);
+    Dscalar2ArrayInfo[1].swap(Motility);
+    
+    //call the equation of motion to get displacements
+    equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
+    //swap it back into the model
+    DscalarArrayInfo[0].swap(cellDirectors);
+    Dscalar2ArrayInfo[0].swap(cellForces);
+    Dscalar2ArrayInfo[1].swap(Motility);
+
+    //move the cells around
+    moveDegreesOfFreedom(displacements);
     };
 
 /*!
@@ -455,7 +402,6 @@ void SPV2D::sumForceSetsWithExclusions()
                     d_nn.data,
                     Ncells,n_idx);
     };
-
 
 /*!
 Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
