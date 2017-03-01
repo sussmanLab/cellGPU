@@ -6,22 +6,11 @@
 #define ENABLE_CUDA
 
 #include "spv2d.h"
-#include "DatabaseNetCDFSPV.h"
+#include "selfPropelledParticleDynamics.h"
+//#include "DatabaseNetCDFSPV.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
-for the 2D SPV model found in the "cellGPU" paper, using the following parameters:
-i = 20001
-t = 5000
-e = 0.05
-v=0.01
-dr = 1.0
-p=3.8
-along with some other choices of v0 and p0. The SPV timing is sensitive to how often the
-triangulation needs to be updated, so these parameters can be quite important. Note the longer
-"warm up" time (i=20001), representing a large number of time steps for the system to move from a
-random configuration of cells to one that looks more like a tissue before starting to time the
-program.
 */
 int main(int argc, char*argv[])
 {
@@ -65,7 +54,6 @@ int main(int argc, char*argv[])
                        abort();
         };
     clock_t t1,t2;
-
     bool reproducible = true;
     bool initializeGPU = true;
     if (USE_GPU >= 0)
@@ -77,17 +65,33 @@ int main(int argc, char*argv[])
     else
         initializeGPU = false;
 
-    char dataname[256];
-    sprintf(dataname,"/hdd2/data/spv/test.nc");
-    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+    selfPropelledParticleDynamics spp(numpts);
+    spp.setReproducible(reproducible);
+    SPV2D spv(numpts,1.0,p0,reproducible);
+    spv.setEquationOfMotion(spp);
 
-    SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
-    if (!initializeGPU)
+    //set appropriate CPU and GPU flags
+    if(!initializeGPU)
+        {
+        spp.setCPU();
         spv.setCPU(false);
-
+        }
+    else
+        {
+        spp.initializeRNGs(1337,0);
+        };
+    //initialize parameters
+    spp.setReproducible(true);
+    spp.setDeltaT(dt);
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
+
+//    char dataname[256];
+//    sprintf(dataname,"/hdd2/data/spv/test.nc");
+//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+
+
     printf("starting initialization\n");
     spv.setSortPeriod(initSteps/10);
     for(int ii = 0; ii < initSteps; ++ii)
@@ -124,10 +128,6 @@ int main(int argc, char*argv[])
 //    ncdat.WriteState(spv);
     if(initializeGPU)
         cudaDeviceReset();
-
-ofstream outfile;
-outfile.open("../timingSPV.txt",std::ios_base::app);
-outfile << numpts <<"\t" << (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << "\n";
 
     return 0;
 };

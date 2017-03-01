@@ -24,14 +24,14 @@ class SPV2D : public DelaunayMD
     {
     public:
         //!initialize with random positions in a square box
-        SPV2D(int n,bool reprod = false,bool initGPURNG=true);
+        SPV2D(int n,bool reprod = false);
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        SPV2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool initGPURNG=true);
+        SPV2D(int n, Dscalar A0, Dscalar P0,bool reprod = false);
         //!Blank constructor
         SPV2D(){};
 
         //!Initialize DelaunayMD, set random orientations for cell directors, prepare data structures
-        void Initialize(int n,bool initGPU = true);
+        void Initialize(int n);
 
         //virtual functions that need to be implemented
         //!return the forces
@@ -68,12 +68,8 @@ class SPV2D : public DelaunayMD
         void computeGeometryCPU();
         //!Compute the net force on particle i on the CPU
         virtual void computeSPVForceCPU(int i);
-        //!Calculates the displacements and cell director changes on the CPU. Uses a non-reproducible RNG
-        void calculateDispCPU();
 
         //GPU functions
-        //!call gpu_displace_and_rotate kernel caller
-        void DisplacePointsAndRotate();
         //!call gpu_compute_geometry kernel caller
         void computeGeometryGPU();
         //!call gpu_force_sets kernel caller

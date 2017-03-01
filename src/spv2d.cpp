@@ -8,14 +8,13 @@
 /*!
 \param n number of cells to initialize
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
-\param initGPURNG does the GPU RNG array need to be initialized?
 \post Initialize(n,initGPURNcellsG) is called, as is setCellPreferenceUniform(1.0,4.0)
 */
-SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
+SPV2D::SPV2D(int n, bool reprod)
     {
     printf("Initializing %i cells with random positions in a square box...\n",n);
     Reproducible = reprod;
-    Initialize(n,initGPURNG);
+    Initialize(n);
     setCellPreferencesUniform(1.0,4.0);
     };
 
@@ -24,27 +23,25 @@ SPV2D::SPV2D(int n, bool reprod,bool initGPURNG)
 \param A0 set uniform preferred area for all cells
 \param P0 set uniform preferred perimeter for all cells
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
-\param initGPURNG does the GPU RNG array need to be initialized?
 \post Initialize(n,initGPURNG) is called
 */
-SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool initGPURNG)
+SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod)
     {
     printf("Initializing %i cells with random positions in a square box... ",n);
     Reproducible = reprod;
-    Initialize(n,initGPURNG);
+    Initialize(n);
     setCellPreferencesUniform(A0,P0);
     };
 
 /*!
 \param  n Number of cells to initialized
-\param initGPU Should the GPU be initialized?
 \post all GPUArrays are set to the correct size, v0 is set to 0.05, Dr is set to 1.0, the
 Hilbert sorting period is set to -1 (i.e. off), the moduli are set to KA=KP=1.0, DelaunayMD is
 initialized (initializeDelMD(n) gets called), particle exclusions are turned off, and auxiliary
 data structures for the topology are set
 */
 //take care of all class initialization functions
-void SPV2D::Initialize(int n,bool initGPU)
+void SPV2D::Initialize(int n)
     {
     Ncells=n;
     particleExclusions=false;
@@ -69,9 +66,6 @@ void SPV2D::Initialize(int n,bool initGPU)
     particleExclusions=false;
 
     setCellDirectorsRandomly();
-    cellRNGs.resize(Ncells);
-    if(initGPU)
-        initializeCurandStates(Ncells,1337,Timestep);
     resetLists();
     allDelSets();
 
@@ -167,7 +161,7 @@ When sortPeriod < 0, this routine does not get called
 */
 void SPV2D::spatialSorting()
     {
-//    equationOfMotion->spatialSorting(itt);
+    equationOfMotion->spatialSorting(itt);
     spatiallySortCellsAndCellActivity();
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
@@ -326,7 +320,7 @@ void SPV2D::SumForcesGPU()
     };
 
 /*!
-call the correct routines to move cells around and rotate the directors
+call the equations of motion to determine the dispalcement for each cell
 */
 void SPV2D::displaceCellsAndRotate()
     {
@@ -344,9 +338,6 @@ void SPV2D::displaceCellsAndRotate()
 
     //move the cells around
     moveDegreesOfFreedom(displacements);
-/*
-        calculateDispCPU();
-*/
     };
 
 /*!
@@ -411,7 +402,6 @@ void SPV2D::sumForceSetsWithExclusions()
                     d_nn.data,
                     Ncells,n_idx);
     };
-
 
 /*!
 Calculate the contributions to the net force on particle "i" from each of particle i's voronoi

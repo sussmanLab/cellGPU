@@ -41,7 +41,7 @@ void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
     //use the SPV class to relax the initial configuration just a bit?
     if(spvInitialize)
         {
-        SPV2D spv(Ncells,1.0,3.8,false);
+        SPV2D spv(Ncells,1.0,3.8);
         spv.setCPU(false);
         spv.setv0Dr(0.1,1.0);
         spv.setDeltaT(0.1);

@@ -6,6 +6,7 @@
 #define ENABLE_CUDA
 
 #include "spv2d.h"
+#include "selfPropelledParticleDynamics.h"
 #include "avm2d.h"
 #include "DatabaseNetCDFSPV.h"
 #include "DatabaseNetCDFAVM.h"
@@ -92,12 +93,14 @@ int main(int argc, char*argv[])
     if(program_switch == 0)
         {
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-        SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
+        SPV2D spv(numpts,1.0,p0,reproducible);
         if (!initializeGPU)
             spv.setCPU(false);
         spv.setCellPreferencesUniform(1.0,p0);
         spv.setv0Dr(v0,1.0);
-        spv.setDeltaT(dt);
+        selfPropelledParticleDynamics spp(numpts);
+        spp.setDeltaT(dt);
+        spv.setEquationOfMotion(spp);
         printf("starting initialization\n");
         spv.setSortPeriod(initSteps/10);
         for(int ii = 0; ii < initSteps; ++ii)
