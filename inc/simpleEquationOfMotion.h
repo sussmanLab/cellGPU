@@ -19,7 +19,11 @@ class simpleEquationOfMotion
         //!base constructor sets default time step size
         simpleEquationOfMotion(){deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;};
 
-        //!the fundamental function that models will call to advance the simulation
+        //!the fundamental function that models will call, using vectors of different data structures
+        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, GPUArray<Dscalar2> &displacements){};
+
+
+        //!the fundamental function that models will call to advance the simulation...sometimes the function signature is so simple that this specialization helps
         virtual void integrateEquationsOfMotion(GPUArray<Dscalar2> &forces, GPUArray<Dscalar2> &displacements){};
         //!allow for spatial sorting to be called if necessary... models should pass the "itt" vector to this function
         virtual void spatialSorting(const vector<int> &reIndexer){};

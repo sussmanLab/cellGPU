@@ -74,6 +74,11 @@ void SPV2D::Initialize(int n,bool initGPU)
         initializeCurandStates(Ncells,1337,Timestep);
     resetLists();
     allDelSets();
+
+    //initialize the vectors passed to the e.o.m.s
+    DscalarArrayInfo.push_back(cellDirectors);
+    Dscalar2ArrayInfo.push_back(cellForces);
+    Dscalar2ArrayInfo.push_back(Motility);
     };
 
 /*!
@@ -162,6 +167,7 @@ When sortPeriod < 0, this routine does not get called
 */
 void SPV2D::spatialSorting()
     {
+//    equationOfMotion->spatialSorting(itt);
     spatiallySortCellsAndCellActivity();
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
@@ -298,64 +304,6 @@ void SPV2D::performTimestep()
     };
 
 /*!
-if forces have already been computed, displace particles according to net force and motility,
-and rotate the cell directors via a cuda call
-*/
-void SPV2D::DisplacePointsAndRotate()
-    {
-
-    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_f(cellForces,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_motility(Motility,access_location::device,access_mode::read);
-    ArrayHandle<curandState> d_cs(cellRNGs,access_location::device,access_mode::read);
-
-    gpu_displace_and_rotate(d_p.data,
-                            d_f.data,
-                            d_cd.data,
-                            d_motility.data,
-                            Ncells,
-                            deltaT,
-                            Timestep,
-                            d_cs.data,
-                            Box);
-
-    };
-
-/*!
-\pre The force per cell has already been computed
-\post displace particles according to net force and motility,and rotate the cell directors via the CPU
-*/
-void SPV2D::calculateDispCPU()
-    {
-    ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_motility(Motility,access_location::host,access_mode::read);
-
-    random_device rd;
-    mt19937 gen(rand());
-    normal_distribution<> normal(0.0,1.0);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Dscalar v0i = h_motility.data[ii].x;
-        Dscalar Dri = h_motility.data[ii].y;
-        Dscalar dx,dy;
-        Dscalar directorx = cos(h_cd.data[ii]);
-        Dscalar directory = sin(h_cd.data[ii]);
-
-        dx= deltaT*(v0i*directorx+h_f.data[ii].x);
-        dy= deltaT*(v0i*directory+h_f.data[ii].y);
-        h_disp.data[ii].x = dx;
-        h_disp.data[ii].y = dy;
-
-        //rotate each director a bit
-        h_cd.data[ii] +=normal(gen)*sqrt(2.0*deltaT*Dri);
-        };
-    //vector of displacements is forces*timestep + v0's*timestep
-    };
-
-/*!
 \pre The geoemtry (area and perimeter) has already been calculated
 \post calculate the contribution to the net force on every particle from each of its voronoi vertices
 via a cuda call
@@ -382,15 +330,23 @@ call the correct routines to move cells around and rotate the directors
 */
 void SPV2D::displaceCellsAndRotate()
     {
-    if (GPUcompute)
-        {
-        DisplacePointsAndRotate();
-        }
-    else
-        {
+    //swap in data for the equation of motion
+    DscalarArrayInfo[0].swap(cellDirectors);
+    Dscalar2ArrayInfo[0].swap(cellForces);
+    Dscalar2ArrayInfo[1].swap(Motility);
+    
+    //call the equation of motion to get displacements
+    equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,displacements);
+    //swap it back into the model
+    DscalarArrayInfo[0].swap(cellDirectors);
+    Dscalar2ArrayInfo[0].swap(cellForces);
+    Dscalar2ArrayInfo[1].swap(Motility);
+
+    //move the cells around
+    moveDegreesOfFreedom(displacements);
+/*
         calculateDispCPU();
-        movePointsCPU(displacements);
-        };
+*/
     };
 
 /*!

@@ -15,6 +15,7 @@ selfPropelledParticleDynamics::selfPropelledParticleDynamics(int _N)
     GPUcompute = true;
     mu = 1.0;
     Ndof = _N;
+    RNGs.resize(Ndof);
     };
 
 /*!
@@ -25,7 +26,8 @@ from a databse and continue the dynamics in the same way every time. This is not
 */
 void selfPropelledParticleDynamics::initializeRNGs(int globalSeed, int offset)
     {
-    RNGs.resize(Ndof);
+    if(RNGs.getNumElements() != Ndof)
+        RNGs.resize(Ndof);
     ArrayHandle<curandState> d_curandRNGs(RNGs,access_location::device,access_mode::overwrite);
     int globalseed = globalSeed;
     if(!Reproducible)
@@ -37,88 +39,70 @@ void selfPropelledParticleDynamics::initializeRNGs(int globalSeed, int offset)
     gpu_initialize_sppRNG(d_curandRNGs.data,Ndof,offset,globalseed);
     };
 
-
-/*!
-Assign cell directors via a simple, reproducible RNG
-*/
-void selfPropelledParticleDynamics::setCellDirectorsRandomly()
-    {
-    cellDirectors.resize(Ndof);
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
-    for (int ii = 0; ii < Ndof; ++ii)
-        h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
-    };
-
 void selfPropelledParticleDynamics::spatialSorting(const vector<int> &reIndexer)
     {
     reIndexing = reIndexer;
     reIndexRNG(RNGs);
-    reIndexArray(Motility);
-    reIndexArray(cellDirectors);
     };
-
-/*!
-\param v0new the new value of velocity for all cells
-\param drnew the new value of the rotational diffusion of cell directors for all cells
-*/
-void selfPropelledParticleDynamics::setv0Dr(Dscalar v0new,Dscalar drnew)
-    {
-    Motility.resize(Ndof);
-    v0=v0new;
-    Dr=drnew;
-    if (true)
-        {
-        ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
-        for (int ii = 0; ii < Ndof; ++ii)
-            {
-            h_mot.data[ii].x = v0new;
-            h_mot.data[ii].y = drnew;
-            };
-        };
-    };
-
-/*!
-\param v0s the per-particle vector of what all velocities will be
-\param drs the per-particle vector of what all rotational diffusions will be
-*/
-void selfPropelledParticleDynamics::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs)
-    {
-    Motility.resize(Ndof);
-    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
-    for (int ii = 0; ii < Ndof; ++ii)
-        {
-        h_mot.data[ii].x = v0s[ii];
-        h_mot.data[ii].y = drs[ii];
-        };
-    };
-
 
 /*!
 Given a vector of forces, update the displacements array to the amounts needed to advance the simulation one step
+For the self-propelled particle model, the data buckest need to be the following:
+DscalarInfo = {} (empty vector)
+DscalarArrayInfo[0] = cellDirectors
+Dscalar2ArrayInfo[0] = forces
+Dscalar2ArrayInfo[1] = Motility (each entry is (v0 and Dr) per cell)
 */
-void selfPropelledParticleDynamics::integrateEquationsOfMotion(GPUArray<Dscalar2> &forces,
-                                                               GPUArray<Dscalar2> &displacements)
+void selfPropelledParticleDynamics::integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
+        vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, GPUArray<Dscalar2> &displacements)
     {
+    Timestep += 1;
     if(GPUcompute)
         {
-        integrateEquationsOfMotionGPU(forces,displacements);
+        integrateEquationsOfMotionGPU(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,displacements);
         }
     else
         {
-        integrateEquationsOfMotionCPU(forces,displacements);
+        integrateEquationsOfMotionCPU(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo, displacements);
         }
+    };
+
+
+
+/*!
+The straightforward GPU implementation
+*/
+void selfPropelledParticleDynamics::integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
+        vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, GPUArray<Dscalar2> &displacements)
+    {
+    ArrayHandle<Dscalar2> d_f(Dscalar2ArrayInfo[0],access_location::device,access_mode::read);
+    ArrayHandle<Dscalar> d_cd(DscalarArrayInfo[0],access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::overwrite);
+    ArrayHandle<Dscalar2> d_motility(Dscalar2ArrayInfo[1],access_location::device,access_mode::read);
+
+    ArrayHandle<curandState> d_RNG(RNGs,access_location::device,access_mode::readwrite);
+
+    gpu_spp_eom_integration(d_f.data,
+                 d_disp.data,
+                 d_motility.data,
+                 d_cd.data,
+                 d_RNG.data,
+                 Ndof,
+                 deltaT,
+                 Timestep,
+                 mu);
     };
 
 /*!
 The straightforward CPU implementation
 */
-void selfPropelledParticleDynamics::integrateEquationsOfMotionCPU(GPUArray<Dscalar2> &forces,
-                                                               GPUArray<Dscalar2> &displacements)
+void selfPropelledParticleDynamics::integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
+        vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, GPUArray<Dscalar2> &displacements)
     {
-    ArrayHandle<Dscalar2> h_f(forces,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_f(Dscalar2ArrayInfo[0],access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> h_cd(DscalarArrayInfo[0],access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_motility(Motility,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_motility(Dscalar2ArrayInfo[1],access_location::host,access_mode::read);
 
     random_device rd;
     mt19937 gen(rand());
@@ -136,30 +120,3 @@ void selfPropelledParticleDynamics::integrateEquationsOfMotionCPU(GPUArray<Dscal
         };
     //vector of displacements is mu*forces*timestep + v0's*timestep
     };
-
-
-/*!
-The straightforward GPU implementation
-*/
-void selfPropelledParticleDynamics::integrateEquationsOfMotionGPU(GPUArray<Dscalar2> &forces,
-                                                               GPUArray<Dscalar2> &displacements)
-    {
-    ArrayHandle<Dscalar2> d_f(forces,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar> d_cd(cellDirectors,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::overwrite);
-    ArrayHandle<Dscalar2> d_motility(Motility,access_location::device,access_mode::read);
-
-    ArrayHandle<curandState> d_RNG(RNGs,access_location::device,access_mode::readwrite);
-
-    gpu_spp_eom_integration(d_f.data,
-                 d_disp.data,
-                 d_motility.data,
-                 d_cd.data,
-                 d_RNG.data,
-                 Ndof,
-                 deltaT,
-                 Timestep,
-                 mu);
-
-    };
-

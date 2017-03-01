@@ -66,45 +66,32 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     selfPropelledParticleDynamics spp(numpts);
+    spp.setReproducible(reproducible);
+    SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
+    spv.setEquationOfMotion(spp);
+
+    //set appropriate CPU and GPU flags
     if(!initializeGPU)
         {
         spp.setCPU();
+        spv.setCPU(false);
         }
     else
         {
         spp.initializeRNGs(1337,0);
         };
+    //initialize parameters
     spp.setReproducible(true);
-    spp.setv0Dr(v0,1.0);
     spp.setDeltaT(dt);
-
-    spp.setCellDirectorsRandomly();
-    GPUArray<Dscalar2> bop(numpts,false);
-
-//    simpleEquationOfMotion *pSPP = &spp;
-//    pSPP->integrateEquationsOfMotion(bop,bop);
-    spp.setNdof(103);
-    printf("dof %i\n",spp.getNdof());
-
-
-    char dataname[256];
-    sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-
-    SPV2D spv(numpts,1.0,p0,reproducible,initializeGPU);
-    if (!initializeGPU)
-        spv.setCPU(false);
-
-
-    printf("initialized eom dof %i \n",spv.equationOfMotion->getNdof());
-    spv.setEquationOfMotion(spp);
-    printf("initialized eom dof %i \n",spv.equationOfMotion->getNdof());
-
-
-
     spv.setCellPreferencesUniform(1.0,p0);
     spv.setv0Dr(v0,1.0);
     spv.setDeltaT(dt);
+
+//    char dataname[256];
+//    sprintf(dataname,"/hdd2/data/spv/test.nc");
+//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+
+
     printf("starting initialization\n");
     spv.setSortPeriod(initSteps/10);
     for(int ii = 0; ii < initSteps; ++ii)
