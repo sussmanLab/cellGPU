@@ -224,7 +224,8 @@ class Simple2DCell
         //! a vector of GPUArray of Dscalar2s to be passed to the equation of motion
         vector<GPUArray<Dscalar2> > Dscalar2ArrayInfo;
 
-
+        //!An array of displacements used only for the equations of motion
+        GPUArray<Dscalar2> displacements;
 
     //reporting functions
     public:

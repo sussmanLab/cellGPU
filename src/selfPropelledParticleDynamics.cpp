@@ -36,7 +36,7 @@ void selfPropelledParticleDynamics::initializeRNGs(int globalSeed, int offset)
         globalseed = (int)t1 % 100000;
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
-    gpu_initialize_sppRNG(d_curandRNGs.data,Ndof,offset,globalseed);
+    gpu_initialize_RNG(d_curandRNGs.data,Ndof,offset,globalseed);
     };
 
 void selfPropelledParticleDynamics::spatialSorting(const vector<int> &reIndexer)
@@ -67,8 +67,6 @@ void selfPropelledParticleDynamics::integrateEquationsOfMotion(vector<Dscalar> &
         integrateEquationsOfMotionCPU(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo, IntArrayInfo, displacements);
         }
     };
-
-
 
 /*!
 The straightforward GPU implementation

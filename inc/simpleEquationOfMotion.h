@@ -5,6 +5,7 @@
 #include "gpuarray.h"
 #include "curand.h"
 #include "curand_kernel.h"
+#include "simpleEquationOfMotion.cuh"
 
 /*! \file simpleEquationOfMotion.h
 In cellGPU a "simple" equation of motion is one that can take a GPUArray of forces and return a set
@@ -73,7 +74,7 @@ class simpleEquationOfMotion
             GPUArray<curandState> TEMP = array;
             ArrayHandle<curandState> temp(TEMP,access_location::host,access_mode::read);
             ArrayHandle<curandState> ar(array,access_location::host,access_mode::readwrite);
-            for (int ii = 0; ii < Ndof; ++ii)
+            for (int ii = 0; ii < reIndexing.size(); ++ii)
                 {
                 ar.data[ii] = temp.data[reIndexing[ii]];
                 };

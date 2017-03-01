@@ -16,6 +16,8 @@ selfPropelledCellVertexDynamics::selfPropelledCellVertexDynamics(int _Ncells, in
     GPUcompute = true;
     mu = 1.0;
     Ndof = _Nvertices;
+    Nvertices = _Nvertices;
+    Ncells = _Ncells;
     RNGs.resize(Ncells);
     };
 
@@ -37,7 +39,7 @@ void selfPropelledCellVertexDynamics::initializeRNGs(int globalSeed, int offset)
         globalseed = (int)t1 % 100000;
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
-    gpu_initialize_sppRNG(d_curandRNGs.data,Ncells,offset,globalseed);
+    gpu_initialize_RNG(d_curandRNGs.data,Ncells,offset,globalseed);
     };
 
 /*!

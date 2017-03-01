@@ -10,7 +10,7 @@
 */
 
 /*!
-    \addtogroup selfPropelledParticleDynamicsKernels
+    \addtogroup simpleEquationOfMotionKernels
     @{
 */
 

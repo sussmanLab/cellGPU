@@ -7,6 +7,7 @@
 
 #include "spv2d.h"
 #include "selfPropelledParticleDynamics.h"
+#include "selfPropelledCellVertexDynamics.h"
 #include "avm2d.h"
 #include "DatabaseNetCDFSPV.h"
 #include "DatabaseNetCDFAVM.h"
@@ -94,13 +95,16 @@ int main(int argc, char*argv[])
         {
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
         SPV2D spv(numpts,1.0,p0,reproducible);
-        if (!initializeGPU)
-            spv.setCPU(false);
         spv.setCellPreferencesUniform(1.0,p0);
         spv.setv0Dr(v0,1.0);
         selfPropelledParticleDynamics spp(numpts);
         spp.setDeltaT(dt);
         spv.setEquationOfMotion(spp);
+        if (!initializeGPU)
+            {
+            spv.setCPU(false);
+            spp.setCPU();
+            };
         printf("starting initialization\n");
         spv.setSortPeriod(initSteps/10);
         for(int ii = 0; ii < initSteps; ++ii)
@@ -131,10 +135,16 @@ int main(int argc, char*argv[])
     };
     if(program_switch == 1)
         {
-        AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU);
+        AVM2D avm(numpts,1.0,p0,reproducible,true);
         AVMDatabaseNetCDF ncdat(avm.Nvertices,dataname,NcFile::Replace);
+        selfPropelledCellVertexDynamics sppCV(numpts,2*numpts);
+        sppCV.setDeltaT(dt);
+        avm.setEquationOfMotion(sppCV);
         if (!initializeGPU)
+            {
             avm.setCPU();
+            sppCV.setCPU();
+            };
         avm.setCellPreferencesUniform(1.0,p0);
         avm.setv0Dr(v0,1.0);
         avm.setDeltaT(dt);
@@ -168,4 +178,3 @@ int main(int argc, char*argv[])
     };
     return 0;
 };
-

@@ -48,9 +48,9 @@ CLASS_OBJS+=obj/selfPropelledParticleDynamics.o obj/selfPropelledCellVertexDynam
 CLASS_OBJS+=obj/avm2d.o obj/spv2d.o
 
 CUOBJS= obj/cuobj/cellListGPU.cu.o obj/cuobj/DelaunayMD.cu.o
-CUOBJS+=obj/cuobj/Simple2DCell.cu.o obj/cuobj/Simple2DActiveCell.cu.o
+CUOBJS+=obj/cuobj/Simple2DCell.cu.o
 CUOBJS+=obj/cuobj/EnergyMinimizerFIRE2D.cu.o
-CUOBJS+=obj/cuobj/selfPropelledParticleDynamics.cu.o obj/cuobj/selfPropelledCellVertexDynamics.cu.o
+CUOBJS+=obj/cuobj/simpleEquationOfMotion.cu.o obj/cuobj/selfPropelledParticleDynamics.cu.o obj/cuobj/selfPropelledCellVertexDynamics.cu.o
 CUOBJS+=obj/cuobj/spv2d.cu.o obj/cuobj/avm2d.cu.o
 #cuda objects
 $(CUOBJ_DIR)/%.cu.o: $(SRC_DIR)/%.cu

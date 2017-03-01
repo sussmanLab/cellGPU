@@ -98,14 +98,11 @@ class SPV2D : public DelaunayMD
         //!sort points along a Hilbert curve for data locality
         void spatialSorting();
 
-
     //protected member variables
     protected:
         //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
         bool particleExclusions;
 
-        //!An array of displacements used only for the CPU-only branch of operating
-        GPUArray<Dscalar2> displacements;
 
         //!delSet.data[n_idx(nn,i)] are the previous and next consecutive delaunay neighbors,
         //!orientationally ordered, of point i (for use in computing forces on GPU)

@@ -78,7 +78,7 @@ int main(int argc, char*argv[])
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
     bool runSPV = false;
-    AVM2D avm(numpts,1.0,p0,reproducible,initializeGPU,runSPV);
+    AVM2D avm(numpts,1.0,p0,reproducible,runSPV);
 
     selfPropelledCellVertexDynamics sppCellVertex(numpts,Nvert);
     sppCellVertex.setReproducible(reproducible);

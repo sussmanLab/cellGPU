@@ -3,7 +3,6 @@
 #include "Simple2DCell.h"
 #include "Simple2DCell.cuh"
 #include "Simple2DActiveCell.h"
-#include "Simple2DActiveCell.cuh"
 /*! \file Simple2DActiveCell.cpp */
 
 /*!
@@ -15,45 +14,12 @@ Simple2DActiveCell::Simple2DActiveCell() :
     };
 
 /*!
-\param N the number of independent RNGs to initialize
-\param i the value of the offset that should be sent to the cuda RNG...
-\param gs the global seed to use
-This is one part of what would be required to support reproducibly being able to load a state
-from a databse and continue the dynamics in the same way every time. This is not currently supported.
-*/
-void Simple2DActiveCell::initializeCurandStates(int N, int gs, int i)
-    {
-    cellRNGs.resize(N);
-    ArrayHandle<curandState> d_curandRNGs(cellRNGs,access_location::device,access_mode::overwrite);
-    int globalseed = gs;
-    if(!Reproducible)
-        {
-        clock_t t1=clock();
-        globalseed = (int)t1 % 100000;
-        printf("initializing curand RNG with seed %i\n",globalseed);
-        };
-    gpu_initialize_curand(d_curandRNGs.data,N,i,globalseed);
-    };
-
-void Simple2DActiveCell::reIndexCellRNG(GPUArray<curandState> &array)
-    {
-    GPUArray<curandState> TEMP = array;
-    ArrayHandle<curandState> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<curandState> ar(array,access_location::host,access_mode::readwrite);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        ar.data[ii] = temp.data[itt[ii]];
-        };
-    };
-
-/*!
 Calls the spatial vertex sorting routine in Simple2DCell, and re-indexes the arrays for the cell
 RNGS, as well as the cell motility and cellDirector arrays
 */
 void Simple2DActiveCell::spatiallySortVerticesAndCellActivity()
     {
     spatiallySortVertices();
-    reIndexCellRNG(cellRNGs);
     reIndexCellArray(Motility);
     reIndexCellArray(cellDirectors);
     };

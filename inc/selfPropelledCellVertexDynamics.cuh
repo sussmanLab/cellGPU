@@ -9,9 +9,8 @@
 A file providing an interface to the relevant cuda calls for the selfPropelledCellVertex class
 */
 
-/** @addtogroup selfPropelledParticleDynamicsKernels selfPropelledParticleDynamics Kernels
+/** @addtogroup simpleEquationOfMotionKernels simpleEquationsOfMotion Kernels
  * @{
- * \brief CUDA kernels and callers for the selfPropelledParticleDynamics class
  */
 
 //!set the vector of displacements from forces and activity

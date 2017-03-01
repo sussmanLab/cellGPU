@@ -38,10 +38,6 @@ class Simple2DActiveCell : public Simple2DCell
 
     //protected functions
     protected:
-        //!initialize the cuda RNG
-        void initializeCurandStates(int N, int gs, int i);
-        //!re-index the RNGs
-        void reIndexCellRNG(GPUArray<curandState> &array);
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
         void spatiallySortVerticesAndCellActivity();
 
@@ -64,14 +60,5 @@ class Simple2DActiveCell : public Simple2DCell
         Dscalar Dr;
         //!The motility parameters (v0 and Dr) for each cell
         GPUArray<Dscalar2> Motility;
-
-
-    //protected member variables
-    protected:
-        //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
-        bool initializeGPURNG;
-        //!An array random-number-generators for use on the GPU branch of the code
-        GPUArray<curandState> cellRNGs;
     };
-
 #endif

@@ -6,12 +6,11 @@
 
 /*!
  \file selfPropelledParticleDynamics.cuh
-A file providing an interface to the relevant cuda calls for the Simple2DActiveCell class
+A file providing an interface to the relevant cuda calls for the selfPropelledParticleDynamics class
 */
 
-/** @addtogroup selfPropelledParticleDynamicsKernels selfPropelledParticleDynamics Kernels
+/** @addtogroup simpleEquationOfMotionKernels simpleEquationsOfMotion Kernels
  * @{
- * \brief CUDA kernels and callers for the selfPropelledParticleDynamics class
  */
 
 //!Initialize the GPU's random number generator
