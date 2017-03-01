@@ -32,7 +32,7 @@ class Simple2DActiveCell : public Simple2DCell
 
         //!Set random cell directors (for active cell models)
         void setCellDirectorsRandomly();
-        
+
         //!get the number of degrees of freedom, defaulting to the number of cells
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 

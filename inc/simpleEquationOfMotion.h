@@ -20,7 +20,7 @@ class simpleEquationOfMotion
         simpleEquationOfMotion(){deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;};
 
         //!the fundamental function that models will call, using vectors of different data structures
-        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, GPUArray<Dscalar2> &displacements){};
+        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements){};
 
 
         //!the fundamental function that models will call to advance the simulation...sometimes the function signature is so simple that this specialization helps

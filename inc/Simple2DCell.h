@@ -214,6 +214,16 @@ class Simple2DCell
         //!A flag that determins if a spatial sorting is due to occur this Timestep
         bool spatialSortThisStep;
 
+        //utility data structures for interfacing with equations of motion
+        //! a vector of Dscalars to be passed to the equation of motion
+        vector<Dscalar> DscalarInfo;
+        //! a vector of GPUArray of ints to be passed to the equation of motion
+        vector<GPUArray<int> > IntArrayInfo;
+        //! a vector of GPUArray of Dscalars to be passed to the equation of motion
+        vector<GPUArray<Dscalar> > DscalarArrayInfo;
+        //! a vector of GPUArray of Dscalar2s to be passed to the equation of motion
+        vector<GPUArray<Dscalar2> > Dscalar2ArrayInfo;
+
 
 
     //reporting functions

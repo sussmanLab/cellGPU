@@ -330,7 +330,7 @@ void SPV2D::displaceCellsAndRotate()
     Dscalar2ArrayInfo[1].swap(Motility);
     
     //call the equation of motion to get displacements
-    equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,displacements);
+    equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
     //swap it back into the model
     DscalarArrayInfo[0].swap(cellDirectors);
     Dscalar2ArrayInfo[0].swap(cellForces);

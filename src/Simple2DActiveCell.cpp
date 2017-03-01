@@ -65,7 +65,6 @@ RNGS, as well as the cell motility and cellDirector arrays
 void Simple2DActiveCell::spatiallySortCellsAndCellActivity()
     {
     spatiallySortCells();
-    reIndexCellRNG(cellRNGs);
     reIndexCellArray(Motility);
     reIndexCellArray(cellDirectors);
     };

@@ -1,21 +1,22 @@
 #define ENABLE_CUDA
 
-#include "selfPropelledParticleDynamics.h"
+#include "selfPropelledCellVertexDynamics.h"
 #include "selfPropelledParticleDynamics.cuh"
-/*! \file selfPropelledParticleDynamics.cpp */
+#include "selfPropelledCellVertexDynamics.cuh"
+/*! \file selfPropelledCellVertexDynamics.cpp */
 
 /*!
 An extremely simple constructor that does nothing, but enforces default GPU operation
 \param the number of points in the system (cells or particles)
 */
-selfPropelledParticleDynamics::selfPropelledParticleDynamics(int _N)
+selfPropelledCellVertexDynamics::selfPropelledCellVertexDynamics(int _Ncells, int _Nvertices)
     {
     Timestep = 0;
     deltaT = 0.01;
     GPUcompute = true;
     mu = 1.0;
-    Ndof = _N;
-    RNGs.resize(Ndof);
+    Ndof = _Nvertices;
+    RNGs.resize(Ncells);
     };
 
 /*!
@@ -24,10 +25,10 @@ selfPropelledParticleDynamics::selfPropelledParticleDynamics(int _N)
 This is one part of what would be required to support reproducibly being able to load a state
 from a databse and continue the dynamics in the same way every time. This is not currently supported.
 */
-void selfPropelledParticleDynamics::initializeRNGs(int globalSeed, int offset)
+void selfPropelledCellVertexDynamics::initializeRNGs(int globalSeed, int offset)
     {
-    if(RNGs.getNumElements() != Ndof)
-        RNGs.resize(Ndof);
+    if(RNGs.getNumElements() != Ncells)
+        RNGs.resize(Ncells);
     ArrayHandle<curandState> d_curandRNGs(RNGs,access_location::device,access_mode::overwrite);
     int globalseed = globalSeed;
     if(!Reproducible)
@@ -36,13 +37,7 @@ void selfPropelledParticleDynamics::initializeRNGs(int globalSeed, int offset)
         globalseed = (int)t1 % 100000;
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
-    gpu_initialize_sppRNG(d_curandRNGs.data,Ndof,offset,globalseed);
-    };
-
-void selfPropelledParticleDynamics::spatialSorting(const vector<int> &reIndexer)
-    {
-    reIndexing = reIndexer;
-    reIndexRNG(RNGs);
+    gpu_initialize_sppRNG(d_curandRNGs.data,Ncells,offset,globalseed);
     };
 
 /*!
@@ -54,7 +49,7 @@ Dscalar2ArrayInfo[0] = forces
 Dscalar2ArrayInfo[1] = Motility (each entry is (v0 and Dr) per cell)
 IntArrayInfo = {} (empty vector)
 */
-void selfPropelledParticleDynamics::integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
+void selfPropelledCellVertexDynamics::integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
         vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
     {
     Timestep += 1;
@@ -73,51 +68,75 @@ void selfPropelledParticleDynamics::integrateEquationsOfMotion(vector<Dscalar> &
 /*!
 The straightforward GPU implementation
 */
-void selfPropelledParticleDynamics::integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
+void selfPropelledCellVertexDynamics::integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
         vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> d_f(Dscalar2ArrayInfo[0],access_location::device,access_mode::read);
     ArrayHandle<Dscalar> d_cd(DscalarArrayInfo[0],access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::overwrite);
     ArrayHandle<Dscalar2> d_motility(Dscalar2ArrayInfo[1],access_location::device,access_mode::read);
+    ArrayHandle<int> d_vcn(IntArrayInfo[0],access_location::device,access_mode::read);
 
     ArrayHandle<curandState> d_RNG(RNGs,access_location::device,access_mode::readwrite);
 
-    gpu_spp_eom_integration(d_f.data,
+    gpu_spp_cellVertex_eom_integration(d_f.data,
                  d_disp.data,
                  d_motility.data,
                  d_cd.data,
+                 d_vcn.data,
                  d_RNG.data,
-                 Ndof,
+                 Nvertices,Ncells,
                  deltaT,
                  Timestep,
                  mu);
     };
 
 /*!
-The straightforward CPU implementation
+Move every vertex according to the net force on it and its motility...CPU routine
+For debugging, the random number generator can give the same sequence of "random" numbers every time.
+For more random behavior, uncomment the "random_device rd;" line, and replace
+mt19937 gen(rand());
+with
+mt19937 gen(rd());
 */
-void selfPropelledParticleDynamics::integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
+void selfPropelledCellVertexDynamics::integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
         vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> h_f(Dscalar2ArrayInfo[0],access_location::host,access_mode::read);
     ArrayHandle<Dscalar> h_cd(DscalarArrayInfo[0],access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
     ArrayHandle<Dscalar2> h_motility(Dscalar2ArrayInfo[1],access_location::host,access_mode::read);
+    ArrayHandle<int> h_vcn(IntArrayInfo[0],access_location::host,access_mode::read);
 
-    random_device rd;
+    //random_device rd;
     mt19937 gen(rand());
     normal_distribution<> normal(0.0,1.0);
-    for (int ii = 0; ii < Ndof; ++ii)
+
+    Dscalar directorx,directory;
+    Dscalar2 disp;
+    for (int i = 0; i < Nvertices; ++i)
         {
-        Dscalar v0i = h_motility.data[ii].x;
-        Dscalar Dri = h_motility.data[ii].y;
-        Dscalar directorx = cos(h_cd.data[ii]);
-        Dscalar directory = sin(h_cd.data[ii]);
-        h_disp.data[ii].x = deltaT*(v0i * directorx + mu * h_f.data[ii].x);
-        h_disp.data[ii].y = deltaT*(v0i * directory + mu * h_f.data[ii].y);
-        //rotate each director a bit
-        h_cd.data[ii] +=normal(gen)*sqrt(2.0*deltaT*Dri);
+        Dscalar v1 = h_motility.data[h_vcn.data[3*i]].x;
+        Dscalar v2 = h_motility.data[h_vcn.data[3*i+1]].x;
+        Dscalar v3 = h_motility.data[h_vcn.data[3*i+2]].x;
+        //for uniform v0, the vertex director is the straight average of the directors of the cell neighbors
+        directorx  = v1*cos(h_cd.data[ h_vcn.data[3*i] ]);
+        directorx += v2*cos(h_cd.data[ h_vcn.data[3*i+1] ]);
+        directorx += v3*cos(h_cd.data[ h_vcn.data[3*i+2] ]);
+        directorx /= 3.0;
+        directory  = v1*sin(h_cd.data[ h_vcn.data[3*i] ]);
+        directory += v2*sin(h_cd.data[ h_vcn.data[3*i+1] ]);
+        directory += v3*sin(h_cd.data[ h_vcn.data[3*i+2] ]);
+        directory /= 3.0;
+        //move vertices
+        h_disp.data[i].x = deltaT*(directorx + mu*h_f.data[i].x);
+        h_disp.data[i].y = deltaT*(directory + mu*h_f.data[i].y);
         };
-    //vector of displacements is mu*forces*timestep + v0's*timestep
+
+    //update cell directors
+    for (int i = 0; i < Ncells; ++i)
+        {
+        Dscalar Dr = h_motility.data[i].y;
+        h_cd.data[i] += normal(gen)*sqrt(2.0*deltaT*Dr);
+        };
     };

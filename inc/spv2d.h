@@ -117,13 +117,6 @@ class SPV2D : public DelaunayMD
         //!In GPU mode, interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
         GPUArray<Dscalar2> forceSets;
 
-        //! a vector of Dscalars to be passed to the equation of motion
-        vector<Dscalar> DscalarInfo;
-        //! a vector of GPUArray of Dscalars to be passed to the equation of motion
-        vector<GPUArray<Dscalar> > DscalarArrayInfo;
-        //! a vector of GPUArray of Dscalar2s to be passed to the equation of motion
-        vector<GPUArray<Dscalar2> > Dscalar2ArrayInfo;
-
     //public member variables
     public:
         //! Read from a database what the time of the simulation when saved was

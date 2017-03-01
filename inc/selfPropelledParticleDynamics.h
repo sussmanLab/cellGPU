@@ -11,16 +11,18 @@ d theta/dt = (brownian noise)
 class selfPropelledParticleDynamics : public simpleEquationOfMotion
     {
     public:
-        //!base constructor sets default time step size
+        //!base constructor sets the default time step size
+        selfPropelledParticleDynamics(){deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;};
+
+        //!additionally set the number of particles andinitialize things
         selfPropelledParticleDynamics(int N);
 
-
         //!the fundamental function that models will call
-        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, GPUArray<Dscalar2> &displacements);
+        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
         //!call the CPU routine to integrate the e.o.m.
-        void integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, GPUArray<Dscalar2> &displacements);
+        virtual void integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
         //!call the GPU routine to integrate the e.o.m.
-        void integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, GPUArray<Dscalar2> &displacements);
+        virtual void integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
 
 
         //!Get the inverse friction constant, mu
