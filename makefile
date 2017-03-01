@@ -73,7 +73,7 @@ avmGPU.out: obj/activeVertex.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 spvGPU.out: obj/voronoi.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
-spvMinimize.out: obj/minimize.o $(CLASS_OBJS) $(CUOBJS)
+minimize.out: obj/minimize.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 spvMSD.out: obj/runMakeDatabase.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
@@ -82,6 +82,7 @@ run: build
 	./spvGPU.out
 	./spvMSD.out
 	./avmGPU.out
+	./Minimize.out
 
 clean:
 	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) spvGPU.out avmGPU.out

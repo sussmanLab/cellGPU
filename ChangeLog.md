@@ -1,6 +1,10 @@
 # Change log {#changelog}
 
 
+### version 0.6
+
+* refactored code to implement simpleEquationOfMotion and child classes.
+
 ### version 0.5.1
 
 * added FIRE minimization algorithm

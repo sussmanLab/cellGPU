@@ -78,4 +78,3 @@ trying to maintain an OO-perspective for code growth and maintainability. In cos
 unexpected optimizations are allowed, but a straightforward and less optimized function that does
 the same thing should be provided for testing and debugging. Once the optimized functions are
 thoroughly vetted, the unoptimized code paths can be relegated to in-code documentation.
-
