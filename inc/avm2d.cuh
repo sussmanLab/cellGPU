@@ -52,19 +52,6 @@ bool gpu_avm_displace(
                     gpubox &Box,
                     int Nvertices);
 
-bool gpu_avm_displace_and_rotate(
-                    Dscalar2 *d_vertexPositions,
-                    Dscalar2 *d_vertexForces,
-                    Dscalar  *d_cellDirectors,
-                    int      *d_vertexCellNeighbors,
-                    curandState *d_curandRNGs,
-                    Dscalar v0,
-                    Dscalar Dr,
-                    Dscalar deltaT,
-                    gpubox &Box,
-                    int Nvertices,
-                    int Ncells);
-
 bool gpu_avm_test_edges_for_T1(
                     Dscalar2 *d_vertexPositions,
                     int      *d_vertexNeighbors,

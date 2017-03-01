@@ -36,7 +36,7 @@ debug: CXXFLAGS += -g -DCUDATHREADSYNC
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
 debug: build
 
-PROGS= avmGPU.out spvMSD.out spvMinimize.out spvGPU.out
+PROGS= avmGPU.out spvMSD.out Minimize.out spvGPU.out
 
 build: $(PROGS)
 
@@ -73,7 +73,7 @@ avmGPU.out: obj/activeVertex.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 spvGPU.out: obj/voronoi.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
-minimize.out: obj/minimize.o $(CLASS_OBJS) $(CUOBJS)
+Minimize.out: obj/minimize.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 spvMSD.out: obj/runMakeDatabase.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+

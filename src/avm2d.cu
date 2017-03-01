@@ -133,7 +133,7 @@ __global__ void avm_sum_force_sets_kernel(
     };
 
 /*!
-  This kernel jsut moves the vertices around according to the input vector, then makes sure the
+  This kernel just moves the vertices around according to the input vector, then makes sure the
   vertices stay in the box.
   */
 __global__ void avm_move_vertices_kernel(
@@ -148,39 +148,6 @@ __global__ void avm_move_vertices_kernel(
 
     d_vertexPositions[idx].x += d_vertexDisplacements[idx].x;
     d_vertexPositions[idx].y += d_vertexDisplacements[idx].y;
-    //make sure the vertices stay in the box
-    Box.putInBoxReal(d_vertexPositions[idx]);
-    };
-
-/*!
-  In this version of the active vertex model, the motility of a vertex is a straight average of the
-  motility of the three adjacent cells
-  */
-__global__ void avm_displace_vertices_kernel(
-                                        Dscalar2 *d_vertexPositions,
-                                        Dscalar2 *d_vertexForces,
-                                        Dscalar  *d_cellDirectors,
-                                        int      *d_vertexCellNeighbors,
-                                        Dscalar  v0,
-                                        Dscalar  deltaT,
-                                        gpubox   Box,
-                                        int      Nvertices)
-    {
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= Nvertices)
-        return;
-
-    //the vertex motility is the average of th motility of the connected cells
-    int vn1 = d_vertexCellNeighbors[3*idx];
-    int vn2 = d_vertexCellNeighbors[3*idx+1];
-    int vn3 = d_vertexCellNeighbors[3*idx+2];
-    Dscalar directorx =
-            (Cos(d_cellDirectors[vn1])+Cos(d_cellDirectors[vn2])+Cos(d_cellDirectors[vn3]))/3.0;
-    Dscalar directory =
-            (Sin(d_cellDirectors[vn1])+Sin(d_cellDirectors[vn2])+Sin(d_cellDirectors[vn3]))/3.0;
-    //update positions from forces and motility
-    d_vertexPositions[idx].x += deltaT*(v0*directorx + d_vertexForces[idx].x);
-    d_vertexPositions[idx].y += deltaT*(v0*directory + d_vertexForces[idx].y);
     //make sure the vertices stay in the box
     Box.putInBoxReal(d_vertexPositions[idx]);
     };
@@ -697,40 +664,6 @@ bool gpu_avm_displace(
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
-
-//!Call the kernel to displace vertices and rotate directors according to the forces
-bool gpu_avm_displace_and_rotate(
-                    Dscalar2 *d_vertexPositions,
-                    Dscalar2 *d_vertexForces,
-                    Dscalar  *d_cellDirectors,
-                    int      *d_vertexCellNeighbors,
-                    curandState *d_curandRNGs,
-                    Dscalar  v0,
-                    Dscalar  Dr,
-                    Dscalar  deltaT,
-                    gpubox   &Box,
-                    int      Nvertices,
-                    int      Ncells)
-    {
-    unsigned int block_size = 128;
-    if (Nvertices < 128) block_size = 32;
-    unsigned int nblocks  = Nvertices/block_size + 1;
-
-    //displace vertices
-    avm_displace_vertices_kernel<<<nblocks,block_size>>>(d_vertexPositions,d_vertexForces,
-                                                         d_cellDirectors,d_vertexCellNeighbors,
-                                                         v0,deltaT,Box,Nvertices);
-    HANDLE_ERROR(cudaGetLastError());
-    //rotate cell directors
-    if (Ncells < 128) block_size = 32;
-    nblocks = Ncells/block_size + 1;
-    avm_rotate_directors_kernel<<<nblocks,block_size>>>(d_cellDirectors,d_curandRNGs,
-                                                        Dr,deltaT,Ncells);
-    HANDLE_ERROR(cudaGetLastError());
-
-    return cudaSuccess;
-    };
-
 
 //!Call the kernel to test every edge for a T1 event, see if vertexMax needs to increase
 bool gpu_avm_test_edges_for_T1(
