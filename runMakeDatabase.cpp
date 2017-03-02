@@ -8,6 +8,7 @@
 
 #include "spv2d.h"
 #include "selfPropelledParticleDynamics.h"
+#include "brownianParticleDynamics.h"
 #include "DatabaseNetCDFSPV.h"
 
 /*!
@@ -76,16 +77,30 @@ int main(int argc, char*argv[])
 
 
     selfPropelledParticleDynamics spp(numpts);
+    brownianParticleDynamics bd(numpts);
     SPV2D spv(numpts,1.0,p0);
-    spv.setEquationOfMotion(spp);
+    if(program_switch ==0)
+        spv.setEquationOfMotion(spp);
+    else
+        spv.setEquationOfMotion(bd);
     if (USE_GPU < 0)
         {
         spv.setCPU(false);
         spp.setCPU();
+        bd.setCPU();
+        }
+    else
+        {
+        bd.initializeRNGs(1337,0);
+        spp.initializeRNGs(1337,0);
         };
 
     spv.setv0Dr(v0,Dr);
+    bd.setDeltaT(dt);
+    bd.setT(v0*v0/2.0*Dr);
     spp.setDeltaT(dt);
+    bd.setDeltaT(dt);
+    spv.setDeltaT(dt);
     spv.setSortPeriod(5000);
 
     //initialize
@@ -95,8 +110,6 @@ int main(int argc, char*argv[])
         };
 
     printf("Finished with initialization...running and saving states\n");
-
-
 
     int logSaveIdx = 0;
     int nextSave = 0;
@@ -124,6 +137,7 @@ int main(int argc, char*argv[])
 
 
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
+    cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
 
     return 0;
 };

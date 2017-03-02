@@ -33,10 +33,11 @@ range of parameters.
 
 The third program, spvMSD, uses netCDF to save positional data (log spaced) for a simulation
 of monodisperse cells in the SPV model (as compiled the .nc file will be saved to the current directory).
-Analyzing this positional data, for instance by computing the mean squared displacement, can be used to
-confirm the correct operation of the program. The included "Msd.sh" script will generate some data
-that can be analyzed and directly compared with Fig. 1 of Bi et al. (Phys. Rev. X 6, 021011 (2016)),
-which is the cannonical reference for the SPV model.
+The file also contains a command line argument that allows for the system to be run under Brownian dynamics
+rather than as a non-equilibrium active matter model. In any event, analyzing the saved positional data, for
+instance by computing the mean squared displacement, can be used to confirm the correct operation of the
+program. The included "Msd.sh" script will generate some data that can be analyzed and directly compared
+with Fig. 1 of Bi et al. (Phys. Rev. X 6, 021011 (2016)), which is the cannonical reference for the SPV model.
 
 The fourth program, Minimize.out, shows how to use the included FIRE minimizer to do simple energy minimization.
 

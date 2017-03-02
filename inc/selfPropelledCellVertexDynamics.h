@@ -3,11 +3,12 @@
 
 #include "selfPropelledParticleDynamics.h"
 
-/*! \file selfPropelledCellVertexDynamics.h
+/*! \file selfPropelledCellVertexDynamics.h */
+//!A class that implements simple self-propelled particle dynamics in 2D
+/*!
 implements dr/dt = mu*F = 1/3 Sum(v_i \hat{n}_i, where \hat{n}_i = (cos(theta),sin(theta)), and
 d theta/dt = (brownian noise), and the sum is over the cells that neighbor the vertex
 */
-//!A class that implements simple self-propelled particle dynamics in 2D
 class selfPropelledCellVertexDynamics : public selfPropelledParticleDynamics
     {
     public:

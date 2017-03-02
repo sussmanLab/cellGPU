@@ -6,6 +6,7 @@
 ... edges as a pair of vertex numbers, triangles as a triplet, etc.
 this file is maintained for historical compatibility, and for operating without CGAL installed
 */
+/*! \file structures.h */
 
 #include "std_include.h"
 #include "functions.h"
@@ -16,12 +17,12 @@ this file is maintained for historical compatibility, and for operating without 
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-/*! \file structures.h
+/*!
  * Really the Voronoi cell of a Delaunay vertex. Given the relative positions of the vertices
  * Delaunay neighbors, this puts the neighbors in clockwise order and calculates the Voronoi vertices
  * of the Voronoi cell. Also calculates the area and perimeter of the Voronoi cell.
  */
- //! A legacy structure (for use with non-CGAL implementations of the SPV branch)
+//! A legacy structure (for use with non-CGAL implementations of the SPV branch)
 struct DelaunayCell
     {
     public:
@@ -115,12 +116,12 @@ struct triangle
         triangle(int ii, int jj,int kk){i=ii;j=jj;k=kk;};//!<full constructor
     };
 
+//! a deprecated data structure for specifying a triangulation.
 /*!
  * Contains the information needed to specify a triangulation of vertices.
  * It has vectors of edges and triangles, and getNeighbors will sift through the
  * triangles to look for neighbors of vertex i
  */
- //! a deprecated data structure for specifying a triangulation.
 struct triangulation
     {
     public:

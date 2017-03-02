@@ -8,12 +8,13 @@
 #include <string>
 #include "vector_types.h"
 
-/*! \file DatabaseNetCDFSPV.h
+/*! \file DatabaseNetCDFSPV.h */
+//!Simple databse for reading/writing 2d spv states
+/*!
 Class for a state database for a 2d delaunay triangulation
 the box dimensions are stored, the 2d unwrapped coordinate of the delaunay vertices,
 and the shape index parameter for each vertex
 */
-//!Simple databse for reading/writing 2d spv states
 class SPVDatabaseNetCDF : public BaseDatabaseNetCDF
 {
 private:

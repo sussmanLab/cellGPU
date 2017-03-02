@@ -8,7 +8,10 @@
 #include "Delaunay1.h"
 using namespace std;
 
-/*! \file DelaunayLoc.h
+/*! \file DelaunayLoc.h */
+ //!A CPU-based class for locally constructing the Delaunay triangulation of part of a point set
+/*!
+ *
  * One of the workhorse engines of the hybrid scheme, DelaunayLoc provides methods for finding
  * the Delaunay neighbors of a given point by doing only local calculations. This is done by
  * calculating the candidate 1-ring of vertex i -- a set of points for which the set of Delaunay
@@ -19,7 +22,6 @@ using namespace std;
  * triangulation that has become non-Delaunay.
  * This function operates strictly on the CPU
  */
- //!A CPU-based class for locally constructing the Delaunay triangulation of part of a point set
 class DelaunayLoc
     {
     public:

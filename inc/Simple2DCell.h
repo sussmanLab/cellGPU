@@ -1,23 +1,23 @@
 #ifndef SIMPLE2DCELL_H
 #define SIMPLE2DCELL_H
 
-#include "std_include.h"
+#include "Simple2DModel.h"
 #include "simpleEquationOfMotion.h"
 #include "indexer.h"
-#include "gpuarray.h"
 #include "gpubox.h"
 #include "HilbertSort.h"
 
-/*! \file Simple2DCell.h
+/*! \file Simple2DCell.h */
+//! Implement data structures and functions common to many off-lattice models of cells in 2D
+/*!
 A class defining some of the fundamental attributes and operations common to 2D off-lattice models
 of cells. Note that while all 2D off-lattice models use some aspects of this base class, not all of
 them are required to implement or use all of the below
 */
-//! Implement data structures and functions common to many off-lattice models of cells in 2D
-class Simple2DCell
+class Simple2DCell : public Simple2DModel
     {
     public:
-        //!Currently a vacant constructor
+        //!initialize member variables to some defaults
         Simple2DCell();
 
         //!Destructor needed.
@@ -43,8 +43,11 @@ class Simple2DCell
         //!do everything necessary to compute forces in the current model
         virtual void computeForces(){};
 
-        //!do everything necessary to compute forces in the current model
+        //!copy the models current set of forces to the variable
         virtual void getForces(GPUArray<Dscalar2> &forces){};
+
+        //!default to returning forces on cells
+        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
 
         //!move the degrees of freedom
         virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements){};
@@ -142,7 +145,7 @@ class Simple2DCell
         //!the box defining the periodic domain
         gpubox Box;
 
-        //!A flag that, when true, has performTimestep call the GPU routines
+        //!Compute aspects of the model on the GPU
         bool GPUcompute;
 
         //! A flag that determines whether the GPU RNG is the same every time.
@@ -153,7 +156,6 @@ class Simple2DCell
         Dscalar KP;
         //!The area and perimeter moduli of each cell. CURRENTLY NOT SUPPORTED, BUT EASY TO IMPLEMENT
         GPUArray<Dscalar2> Moduli;//(KA,KP)
-
 
         //!The current area and perimeter of each cell
         GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
