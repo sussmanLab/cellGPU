@@ -148,7 +148,6 @@ int main(int argc, char*argv[])
             }
         else
             sppCV.initializeRNGs(1337,0);
-            };
         avm.setCellPreferencesUniform(1.0,p0);
         avm.setv0Dr(v0,1.0);
         avm.setDeltaT(dt);

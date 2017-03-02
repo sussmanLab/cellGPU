@@ -44,13 +44,13 @@ PROG_OBJS=obj/activeVertex.o obj/voronoi.o obj/runMakeDatabase.o obj/minimize.o
 
 CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/hilbert_curve.o obj/EnergyMinimizerFIRE2D.o
 CLASS_OBJS+=obj/Simple2DCell.o obj/Simple2DActiveCell.o
-CLASS_OBJS+=obj/selfPropelledParticleDynamics.o obj/selfPropelledCellVertexDynamics.o
+CLASS_OBJS+=obj/selfPropelledParticleDynamics.o obj/selfPropelledCellVertexDynamics.o obj/brownianParticleDynamics.o
 CLASS_OBJS+=obj/avm2d.o obj/spv2d.o
 
 CUOBJS= obj/cuobj/cellListGPU.cu.o obj/cuobj/DelaunayMD.cu.o
 CUOBJS+=obj/cuobj/Simple2DCell.cu.o
 CUOBJS+=obj/cuobj/EnergyMinimizerFIRE2D.cu.o
-CUOBJS+=obj/cuobj/simpleEquationOfMotion.cu.o obj/cuobj/selfPropelledParticleDynamics.cu.o obj/cuobj/selfPropelledCellVertexDynamics.cu.o
+CUOBJS+=obj/cuobj/simpleEquationOfMotion.cu.o obj/cuobj/selfPropelledParticleDynamics.cu.o obj/cuobj/selfPropelledCellVertexDynamics.cu.o obj/cuobj/brownianParticleDynamics.cu.o
 CUOBJS+=obj/cuobj/spv2d.cu.o obj/cuobj/avm2d.cu.o
 #cuda objects
 $(CUOBJ_DIR)/%.cu.o: $(SRC_DIR)/%.cu

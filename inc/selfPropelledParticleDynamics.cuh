@@ -13,13 +13,6 @@ A file providing an interface to the relevant cuda calls for the selfPropelledPa
  * @{
  */
 
-//!Initialize the GPU's random number generator
-bool gpu_initialize_sppRNG(curandState *states,
-                    int N,
-                    int Timestep,
-                    int GlobalSeed
-                    );
-
 //!set the vector of displacements from forces and activity
 bool gpu_spp_eom_integration(
                     Dscalar2 *forces,
