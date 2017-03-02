@@ -86,6 +86,7 @@ int main(int argc, char*argv[])
 
     spv.setv0Dr(v0,Dr);
     spp.setDeltaT(dt);
+    spv.setDeltaT(dt);
     spv.setSortPeriod(5000);
 
     //initialize
@@ -95,8 +96,6 @@ int main(int argc, char*argv[])
         };
 
     printf("Finished with initialization...running and saving states\n");
-
-
 
     int logSaveIdx = 0;
     int nextSave = 0;

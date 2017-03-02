@@ -7,16 +7,17 @@
 //include spp dynamics for SPV-based initialization of configurations
 #include "selfPropelledParticleDynamics.h"
 
-/*! \file avm2d.h
+/*! \file avm2d.h */
+//!Implement a 2D active vertex model, using kernels in \ref avmKernels
+/*!
 A class that implements a simple active vertex model in 2D. This involves calculating forces on
 vertices, moving them around, and updating the topology of the cells according to some criteria.
 Only T1 transitions are currently implemented, and they occur whenever two vertices come closer
 than a set threshold distance. All vertices are three-valent.
 
-This class is a child of the Simple2DCell class, which provides data structures like the positions of
+This class is a child of the Simple2DActiveCell class, which provides data structures like the positions of
 cells, vertex positions, indices of vertices around each cell, cells around each vertex, etc.
 */
-//!Implement a 2D active vertex model, using kernels in \ref avmKernels
 class AVM2D : public Simple2DActiveCell
     {
     public:

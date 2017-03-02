@@ -8,7 +8,9 @@
 #include "Simple2DActiveCell.h"
 
 
-/*! \file EnergyMinimizerFIRE2D.h
+/*! \file EnergyMinimizerFIRE2D.h */
+//!Implement energy minimization via the FIRE algorithm
+/*!
 This class uses the "FIRE" algorithm to perform an energy minimization. It requires that
 the class, T, of the model provides access to the following functions:
 T.getNumberOfDegreesOfFreedom() should return the number of degrees of freedom (up to a factor of
@@ -19,7 +21,6 @@ T.moveDegreesOfFreedom(disp) moves the degrees of freedom according to the GPUAr
 T.enforceTopology() takes care of any business the model that T implements needs after the
 positions of the underlying degrees of freedom have been updated
 */
-//!Implement energy minimization via the FIRE algorithm
 class EnergyMinimizerFIRE
     {
     public:

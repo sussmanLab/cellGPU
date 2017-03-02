@@ -9,7 +9,9 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-/*! \file gpubox.h
+/*! \file gpubox.h */
+//!A simple box defining a 2D periodic domain
+/*!
 gpubox  periodic boundary conditions in 2D, computing minimum distances between
 periodic images, displacing particles and putting them back in the central unit cell, etc.
 The workhorse of this class is calling
@@ -20,7 +22,6 @@ Box.putInBoxReal(&point), which will take the point and put it back in the prima
 Please note that while the gpubox class can handle generic 2D periodic domains, many of the other classes
 that interface with it do not yet have this functionality implemented.
 */
-//!A simple box defining a 2D periodic domain
 struct gpubox
     {
     public:

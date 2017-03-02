@@ -1,20 +1,18 @@
 #ifndef SIMPLE2DACTIVITY_H
 #define SIMPLE2DACTIVITY_H
 
-#include "std_include.h"
 #include "Simple2DCell.h"
 #include "Simple2DCell.cuh"
 #include "indexer.h"
-#include "gpuarray.h"
-#include "gpubox.h"
 #include "curand.h"
 #include "curand_kernel.h"
 
-/*! \file Simple2DActiveCell.h
+/*! \file Simple2DActiveCell.h */
+//!Data structures and functions for simple active-brownian-particle-like motion
+/*!
 A class defining the simplest aspects of a 2D system in which particles have a constant velocity
 along a director which rotates with gaussian noise
 */
-//!Data structures and functions for simple active-brownian-particle-like motion
 class Simple2DActiveCell : public Simple2DCell
     {
     //public functions first

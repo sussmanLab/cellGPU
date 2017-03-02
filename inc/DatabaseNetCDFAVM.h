@@ -10,12 +10,13 @@
 #include "vector_types.h"
 
 
-/*! \file DatabaseNetCDFAVM.h
+/*! \file DatabaseNetCDFAVM.h */
+//!Simple databse for reading/writing 2d AVM states
+/*!
 Class for a state database for an active vertex model state
 the box dimensions are stored, the 2d unwrapped coordinate of vertices,
 and the set of connections between vertices
 */
-//!Simple databse for reading/writing 2d AVM states
 class AVMDatabaseNetCDF : public BaseDatabaseNetCDF
 {
 private:

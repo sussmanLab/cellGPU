@@ -7,13 +7,14 @@
 #include "curand_kernel.h"
 #include "simpleEquationOfMotion.cuh"
 
-/*! \file simpleEquationOfMotion.h
+/*! \file simpleEquationOfMotion.h */
+//!A base class for implementing simple equations of motion
+/*!
 In cellGPU a "simple" equation of motion is one that can take a GPUArray of forces and return a set
 of displacements. A derived class of this might be the self-propelled particle equations of motion,
 or simple Brownian dynamics.
 Derived classes must implement the integrateEquationsOfMotion function
 */
-//!A base class for implementing simple equations of motion
 class simpleEquationOfMotion
     {
     public:

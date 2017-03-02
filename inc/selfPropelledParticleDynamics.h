@@ -3,11 +3,12 @@
 
 #include "simpleEquationOfMotion.h"
 
-/*! \file selfPropelledParticleDynamics.h
-implements dr/dt = mu*F = v_0 \hat{n}, where \hat{n} = (cos(theta),sin(theta)), and 
+/*! \file selfPropelledParticleDynamics.h */
+//!A class that implements simple self-propelled particle dynamics in 2D
+/*!
+implements dr/dt = mu*F = v_0 \hat{n}, where \hat{n} = (cos(theta),sin(theta)), and
 d theta/dt = (brownian noise)
 */
-//!A class that implements simple self-propelled particle dynamics in 2D
 class selfPropelledParticleDynamics : public simpleEquationOfMotion
     {
     public:

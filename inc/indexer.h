@@ -23,11 +23,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS IS'' AND
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-/*! \file indexer.h
+/*! \file indexer.h */
+//!Switch between a 2D array to a flattened, 1D index
+/*!
  * A class for converting between a 2d index and a 1-d array, which makes calculation on
  * the GPU a bit easier. This was inspired by the indexer class of Hoomd-blue
  */
- //!Switch between a 2D array to a flattened, 1D index
 class Index2D
     {
     public:

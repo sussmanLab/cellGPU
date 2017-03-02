@@ -12,14 +12,15 @@
 #include "DelaunayMD.h"
 #include "spv2d.cuh"
 
-/*! \file spv2d.h
+/*! \file spv2d.h */
+//!Implement the 2D SPV model, with and without some extra bells and whistles, using kernels in \ref spvKernels
+/*!
  *A child class of DelaunayMD, this implements the SPV model in 2D. This involves mostly calculating
   the forces in the SPV model and then moving cells appropriately. Optimizing these procedures for
   hybrid CPU/GPU-based computation involves declaring and maintaining several related auxiliary
   data structures that capture different features of the local topology and local geoemetry for each
   cell.
  */
- //!Implement the 2D SPV model, with and without some extra bells and whistles, using kernels in \ref spvKernels
 class SPV2D : public DelaunayMD
     {
     public:

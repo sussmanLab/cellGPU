@@ -38,14 +38,15 @@ typedef PDT::Vertex_handle     Vertex_handle;
 typedef PDT::Locate_type       Locate_type;
 typedef PDT::Face_handle       Face_handle;
 typedef PDT::Vertex_circulator Vertex_circulator;
-/*! \file DelaunayCGAL.h
+/*! \file DelaunayCGAL.h */
+//! Access the 2D periodic and non-periodic functionality of CGAL Delaunay triangulations
+/*!
 A class for interfacing with the CGAL library.
 In particular, this lets the user access the functionality of the 2D periodic and non-periodic
 schemes for performing a Delaunay Triangulation.
 A public member variable maintains a convenient data structure for keeping track of the most recently
 performed complete triangulation of a periodic point set.
  */
- //! Access the 2D periodic and non-periodic functionality of CGAL Delaunay triangulations
 class DelaunayCGAL
     {
     public:

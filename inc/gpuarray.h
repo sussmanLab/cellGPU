@@ -18,7 +18,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER AND CONTRIBUTORS ``AS IS'' AND
 //As you might suspect from the above, the classes and structures in this file are modifications of the GPUArray.h file from the HOOMD-Blue package.
 //Credit to Joshua A. Anderson
 
-/*!\file gpuarray.h
+/*!\file gpuarray.h */
+/*!
 This file defines two helpful classes for working with data on both th CPU and GPU.
 GPUArray<T> is a templated array that carries around with it some data, as well as
 information about where that data was last modified and/or accessed. It can be
@@ -72,21 +73,21 @@ struct access_mode
         };
     };
 
+//!A class for handling data simultaneously on the CPU and GPU
 /*!This class and accessor are based on GPUArray.h, from the HOOMD-Blue simulation package.
 It is, however, simplified. It takes care of cuda memory copying for templated arrays.
 A flag (default to false) when declaring a GPUArray controls whether the memory is HostRegistered
 but only handles synchronous copy operatations (no Asynch, no HostRegister, etc.)
 It is also only for 1D arrays of data. Importantly, the user accesses and handles data through the ArrayHandle class.
 */
-//!A class for handling data simultaneously on the CPU and GPU
 template<class T> class GPUArray;
 
+//!A mechanism for accessing data in GPUArray objects's
 /*!
 The ArrayHandle, well, handles the data in the GPUArray. Given, e.g., an
 ArrayHandle<int> h(gpuarray,access_location::host, access_mode::readwrite);
 The user would access one of the integers via h.data[i] on the host or a direct acces on the device
 */
-//!A mechanism for accessing data in GPUArray objects's
 template<class T> class ArrayHandle
     {
     public:
