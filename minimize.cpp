@@ -19,8 +19,7 @@ functionality of cellGPU. Note that the choice of CPU or GPU operation for the m
 is independent of the choice of CPU or GPU operation of the cell model used.
 */
 
-template <class T>
-void setFIREParameters(EnergyMinimizerFIRE<T> &emin, Dscalar deltaT, Dscalar alphaStart,
+void setFIREParameters(EnergyMinimizerFIRE &emin, Dscalar deltaT, Dscalar alphaStart,
         Dscalar deltaTMax, Dscalar deltaTInc, Dscalar deltaTDec, Dscalar alphaDec, int nMin,
         Dscalar forceCutoff)
     {
@@ -116,7 +115,7 @@ int main(int argc, char*argv[])
         ncdat.WriteState(spv);
         for (int i = 0; i <tSteps;++i)
             {
-            EnergyMinimizerFIRE<SPV2D> emin(spv);
+            EnergyMinimizerFIRE emin(spv);
             setFIREParameters(emin,0.01,0.99,0.1,1.1,0.95,.9,4,1e-12);
             if(USE_GPU >=0 )
                 emin.setGPU();
@@ -159,7 +158,7 @@ int main(int argc, char*argv[])
         ncdat.WriteState(avm);
         for (int i = 0; i <tSteps;++i)
             {
-            EnergyMinimizerFIRE<AVM2D> emin(avm);
+            EnergyMinimizerFIRE emin(avm);
             setFIREParameters(emin,0.01,0.99,0.1,1.1,0.95,.9,4,1e-12);
             if(USE_GPU >=0 )
                 emin.setGPU();

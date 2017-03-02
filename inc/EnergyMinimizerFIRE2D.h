@@ -5,13 +5,12 @@
 #include "functions.h"
 #include "gpuarray.h"
 //include for explicit instantiation in the cpp file
-#include "avm2d.h"
-#include "spv2d.h"
+#include "Simple2DActiveCell.h"
 
 
 /*! \file EnergyMinimizerFIRE2D.h
-This templated class uses the "FIRE" algorithm to perform an energy minimization. It requires that
-the templated class, T, provides access to the following functions:
+This class uses the "FIRE" algorithm to perform an energy minimization. It requires that
+the class, T, of the model provides access to the following functions:
 T.getNumberOfDegreesOfFreedom() should return the number of degrees of freedom (up to a factor of
 dimension)
 T.computeForces() should calculate the negative gradient of the energy in whatever model T implements
@@ -21,14 +20,19 @@ T.enforceTopology() takes care of any business the model that T implements needs
 positions of the underlying degrees of freedom have been updated
 */
 //!Implement energy minimization via the FIRE algorithm
-template <class T>
 class EnergyMinimizerFIRE
     {
     public:
         //!A no-initialization constructor for template instantiation
         EnergyMinimizerFIRE(){};
+
+        //!The system that can compute forces, move degrees of freedom, etc.
+        Simple2DActiveCell *State;
+
         //!The basic constructor that feeds in a target system to minimize
-        EnergyMinimizerFIRE(T &system);
+        EnergyMinimizerFIRE(Simple2DActiveCell &system);
+
+        void setSystem(Simple2DActiveCell  &_sys){State = &_sys;};
 
         //!Set the maximum number of iterations before terminating (or set to -1 to ignore)
         void setMaximumIterations(int maxIt){maxIterations = maxIt;};
@@ -76,8 +80,6 @@ class EnergyMinimizerFIRE
         void parallelReduce(GPUArray<Dscalar> &vec);
 
     protected:
-        //!The system that can compute forces, move degrees of freedom, etc.
-        T *State;
         //!The number of iterations performed
         int iterations;
         //!The maximum number of iterations allowed

@@ -10,8 +10,7 @@
 Initialize the minimizer with a reference to a target system, set a bunch of default parameters.
 Of note, the current default is CPU operation
 */
-template <class T>
-EnergyMinimizerFIRE<T>::EnergyMinimizerFIRE(T &system)
+EnergyMinimizerFIRE::EnergyMinimizerFIRE(Simple2DActiveCell &system)
             :State(&system)
     {
     N = State->getNumberOfDegreesOfFreedom();
@@ -50,8 +49,7 @@ EnergyMinimizerFIRE<T>::EnergyMinimizerFIRE(T &system)
 /*!
  * Call the correct velocity Verlet routine
  */
-template <class T>
-void EnergyMinimizerFIRE<T>::velocityVerlet()
+void EnergyMinimizerFIRE::velocityVerlet()
     {
     if (GPUcompute)
         velocityVerletGPU();
@@ -62,8 +60,7 @@ void EnergyMinimizerFIRE<T>::velocityVerlet()
 /*!
  * Call the correct FIRE step routine
  */
-template <class T>
-void EnergyMinimizerFIRE<T>::fireStep()
+void EnergyMinimizerFIRE::fireStep()
     {
     if (GPUcompute)
         fireStepGPU();
@@ -74,8 +71,7 @@ void EnergyMinimizerFIRE<T>::fireStep()
 /*!
  * Perform a velocity verlet integration step on the GPU
  */
-template <class T>
-void EnergyMinimizerFIRE<T>::velocityVerletGPU()
+void EnergyMinimizerFIRE::velocityVerletGPU()
     {
     //calculated displacements and update velocities
     if (true) //scope for array handles
@@ -102,8 +98,7 @@ void EnergyMinimizerFIRE<T>::velocityVerletGPU()
 /*!
  * Perform a velocity verlet integration step on the CPU
  */
-template <class T>
-void EnergyMinimizerFIRE<T>::velocityVerletCPU()
+void EnergyMinimizerFIRE::velocityVerletCPU()
     {
     if(true) // scope for array handles
         {
@@ -139,8 +134,7 @@ void EnergyMinimizerFIRE<T>::velocityVerletCPU()
 /*!
  * Perform a FIRE minimization step on the GPU
  */
-template <class T>
-void EnergyMinimizerFIRE<T>::fireStepGPU()
+void EnergyMinimizerFIRE::fireStepGPU()
     {
     Power = 0.0;
     forceMax = 0.0;
@@ -195,8 +189,7 @@ void EnergyMinimizerFIRE<T>::fireStepGPU()
 /*!
  * Perform a FIRE minimization step on the CPU
  */
-template <class T>
-void EnergyMinimizerFIRE<T>::fireStepCPU()
+void EnergyMinimizerFIRE::fireStepCPU()
     {
     Power = 0.0;
     forceMax = 0.0;
@@ -251,8 +244,7 @@ void EnergyMinimizerFIRE<T>::fireStepCPU()
 /*!
  * Perform a FIRE minimization step on the CPU
  */
-template <class T>
-void EnergyMinimizerFIRE<T>::minimize()
+void EnergyMinimizerFIRE::minimize()
     {
     //initialized the forces?
     State->computeForces();
@@ -269,8 +261,7 @@ void EnergyMinimizerFIRE<T>::minimize()
 /*!
 A utility function to help test the parallel reduction routines
  */
-template <class T>
-void EnergyMinimizerFIRE<T>::parallelReduce(GPUArray<Dscalar> &vec)
+void EnergyMinimizerFIRE::parallelReduce(GPUArray<Dscalar> &vec)
     {
     int n = vec.getNumElements();
     //
@@ -295,6 +286,3 @@ void EnergyMinimizerFIRE<T>::parallelReduce(GPUArray<Dscalar> &vec)
     ArrayHandle<Dscalar> output(sumReductions);
     printf("GPU-based reduction: %f\n",output.data[0]);
     };
-
-template class EnergyMinimizerFIRE<SPV2D>;
-template class EnergyMinimizerFIRE<AVM2D>;
