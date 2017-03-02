@@ -4,7 +4,7 @@
 #include "std_include.h"
 #include "gpuarray.h"
 
-/*! \file SimpleModel.h
+/*! \file Simple2DModel.h
  * \brief defines an interface for models that compute forces
  */
 
@@ -16,7 +16,7 @@ S.computeForces();
 S.getForces();
 S.moveDegreesOfFreedom();
 */
-class SimpleModel
+class Simple2DModel
     {
     public:
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
@@ -30,8 +30,11 @@ class SimpleModel
         //!do everything necessary to compute forces in the current model
         virtual void computeForces() = 0;
 
-        //!do everything necessary to compute forces in the current model
+        //!copy the models current set of forces to the variable
         virtual void getForces(GPUArray<Dscalar2> &forces) = 0;
+        
+        //!return a reference to the GPUArray of the current forces
+        virtual GPUArray<Dscalar2> & returnForces() = 0;
 
         //!move the degrees of freedom
         virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements) = 0;

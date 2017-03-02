@@ -140,7 +140,8 @@ void EnergyMinimizerFIRE::fireStepGPU()
     forceMax = 0.0;
     if(true)//scope for array handles
         {
-        ArrayHandle<Dscalar2> d_f(force,access_location::device,access_mode::read);
+        //ArrayHandle<Dscalar2> d_f(force,access_location::device,access_mode::read);
+        ArrayHandle<Dscalar2> d_f(State->returnForces(),access_location::device,access_mode::read);
         ArrayHandle<Dscalar2> d_v(velocity,access_location::device,access_mode::readwrite);
         ArrayHandle<Dscalar> d_ff(forceDotForce,access_location::device,access_mode::readwrite);
         ArrayHandle<Dscalar> d_fv(forceDotVelocity,access_location::device,access_mode::readwrite);

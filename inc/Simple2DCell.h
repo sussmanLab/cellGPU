@@ -1,7 +1,7 @@
 #ifndef SIMPLE2DCELL_H
 #define SIMPLE2DCELL_H
 
-#include "SimpleModel.h"
+#include "Simple2DModel.h"
 #include "simpleEquationOfMotion.h"
 #include "indexer.h"
 #include "gpubox.h"
@@ -14,7 +14,7 @@ A class defining some of the fundamental attributes and operations common to 2D 
 of cells. Note that while all 2D off-lattice models use some aspects of this base class, not all of
 them are required to implement or use all of the below
 */
-class Simple2DCell : public SimpleModel
+class Simple2DCell : public Simple2DModel
     {
     public:
         //!initialize member variables to some defaults
@@ -43,8 +43,11 @@ class Simple2DCell : public SimpleModel
         //!do everything necessary to compute forces in the current model
         virtual void computeForces(){};
 
-        //!do everything necessary to compute forces in the current model
+        //!copy the models current set of forces to the variable
         virtual void getForces(GPUArray<Dscalar2> &forces){};
+
+        //!default to returning forces on cells
+        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
 
         //!move the degrees of freedom
         virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements){};

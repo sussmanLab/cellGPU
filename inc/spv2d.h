@@ -38,6 +38,9 @@ class SPV2D : public DelaunayMD
         //!return the forces
         virtual void getForces(GPUArray<Dscalar2> &forces){forces = cellForces;};
 
+        //!return a reference to the GPUArray of the current forces
+        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
+
         //!compute the geometry and get the forces
         virtual void computeForces();
 

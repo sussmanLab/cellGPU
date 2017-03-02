@@ -43,6 +43,9 @@ class AVM2D : public Simple2DActiveCell
         //!return the forces
         virtual void getForces(GPUArray<Dscalar2> &forces){forces = vertexForces;};
 
+        //!return a reference to the GPUArray of the current forces
+        virtual GPUArray<Dscalar2> & returnForces(){return vertexForces;};
+
         //!compute the geometry and get the forces
         virtual void computeForces();
 
