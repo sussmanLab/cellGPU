@@ -103,7 +103,9 @@ int main(int argc, char*argv[])
             {
             spv.setCPU(false);
             spp.setCPU();
-            };
+            }
+        else
+            spp.initializeRNGs(1337,0);
         printf("starting initialization\n");
         spv.setSortPeriod(initSteps/10);
         for(int ii = 0; ii < initSteps; ++ii)
@@ -143,6 +145,9 @@ int main(int argc, char*argv[])
             {
             avm.setCPU();
             sppCV.setCPU();
+            }
+        else
+            sppCV.initializeRNGs(1337,0);
             };
         avm.setCellPreferencesUniform(1.0,p0);
         avm.setv0Dr(v0,1.0);

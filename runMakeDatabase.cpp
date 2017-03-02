@@ -82,6 +82,10 @@ int main(int argc, char*argv[])
         {
         spv.setCPU(false);
         spp.setCPU();
+        }
+    else
+        {
+        spp.initializeRNGs(1337,0);
         };
 
     spv.setv0Dr(v0,Dr);
