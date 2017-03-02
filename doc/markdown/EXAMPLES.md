@@ -22,7 +22,7 @@ Provides an example of using the FIRE minimizer to minimize either a 2D SPV or A
 # runMakeDatabase.cpp
 
 Provides an example of using the NetCDF database class to write snapshots of a simulation of the 2D
-SPV model
+SPV model, using either active cell or overdamped Brownian dynamics
 
 
 ## SPV code snippet

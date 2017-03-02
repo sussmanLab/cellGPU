@@ -1,5 +1,8 @@
 # Change log {#changelog}
 
+### Changes in progress
+
+* added simple Brownian dynamics equation of motion
 
 ### version 0.6
 

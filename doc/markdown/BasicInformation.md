@@ -35,6 +35,8 @@ integrate the equations of motion by one time step.
 term corresponding to a constant velocity in a direction that rotates
 * selfPropelledCellVertexDynamics -- a specialization of the above class where the vertices are the degrees
 of freedom but where the cells are the things with activity.
+* brownianParticleDynamics -- the time derivative of a particle is the force on it, plus a translational
+Gaussian noise, simulating an overdamped langevin equation at some temperature
 
 ### Energy minimization
 
