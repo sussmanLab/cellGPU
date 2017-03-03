@@ -98,12 +98,21 @@ void brownianParticleDynamics::integrateEquationsOfMotionCPU(vector<Dscalar> &Ds
     ArrayHandle<Dscalar2> h_f(Dscalar2ArrayInfo[0],access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
 
-    random_device rd;
-    mt19937 gen(rand());
     normal_distribution<> normal(0.0,1.0);
     for (int ii = 0; ii < Ndof; ++ii)
         {
-        h_disp.data[ii].x = normal(gen)*sqrt(1.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].x;
-        h_disp.data[ii].y = normal(gen)*sqrt(1.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].y;
+        Dscalar randomNumber1,randomNumber2;
+        if (Reproducible)
+            {
+            randomNumber1 = normal(gen);
+            randomNumber2 = normal(gen);
+            }
+        else
+            {
+            randomNumber1 = normal(genrd);
+            randomNumber2 = normal(genrd);
+            }
+        h_disp.data[ii].x = randomNumber1*sqrt(1.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].x;
+        h_disp.data[ii].y = randomNumber2*sqrt(1.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].y;
         };
     };

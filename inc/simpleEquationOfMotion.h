@@ -19,7 +19,14 @@ class simpleEquationOfMotion
     {
     public:
         //!base constructor sets default time step size
-        simpleEquationOfMotion(){deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;};
+        simpleEquationOfMotion()
+            {
+            deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;
+            mt19937 Gener(rand());
+            mt19937 GenerRd(rd());
+            gen = Gener;
+            genrd=GenerRd;
+            };
 
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements){};
@@ -30,7 +37,7 @@ class simpleEquationOfMotion
         //!allow for spatial sorting to be called if necessary... models should pass the "itt" vector to this function
         virtual void spatialSorting(const vector<int> &reIndexer){};
         //!allow for whatever RNG initialization is needed
-        virtual void initializeRNGs(int globalSeed, int tempSeed){};
+        virtual void initializeRNGs(int globalSeed=1337, int tempSeed=0){};
 
         //!get the number of timesteps run
         int getTimestep(){return Timestep;};
@@ -56,6 +63,12 @@ class simpleEquationOfMotion
     protected:
         //!Should the simulation be reproducible (v/v the random numbers generated)?
         bool Reproducible;
+        //!an initializer for non-reproducible random number generation on the cpu
+        random_device rd;
+        //!A reproducible Mersenne Twister
+        mt19937 gen;
+        //!A non-reproducible Mersenne Twister
+        mt19937 genrd;
         //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
         bool initializeGPURNG;
         //!The number of degrees of freedom the equations of motion need to know about

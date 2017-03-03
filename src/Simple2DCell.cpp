@@ -33,13 +33,25 @@ void Simple2DCell::setCellPositionsRandomly()
     {
     Dscalar boxsize = sqrt((Dscalar)Ncells);
     Box.setSquare(boxsize,boxsize);
+    random_device rd;
+    mt19937 gen(rand());
+    mt19937 genrd(rd());
+    uniform_real_distribution<Dscalar> uniRand(0.0,boxsize);
+
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
-        Dscalar x =EPSILON+boxsize/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
-        Dscalar y =EPSILON+boxsize/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
-        if(x >=boxsize) x = boxsize-EPSILON;
-        if(y >=boxsize) y = boxsize-EPSILON;
+        Dscalar x, y;
+        if(Reproducible)
+            {
+            x = uniRand(gen);
+            y = uniRand(gen);
+            }
+        else
+            {
+            x = uniRand(genrd);
+            y = uniRand(genrd);
+            };
         h_p.data[ii].x = x;
         h_p.data[ii].y = y;
         };

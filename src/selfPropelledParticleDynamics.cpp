@@ -103,8 +103,6 @@ void selfPropelledParticleDynamics::integrateEquationsOfMotionCPU(vector<Dscalar
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
     ArrayHandle<Dscalar2> h_motility(Dscalar2ArrayInfo[1],access_location::host,access_mode::read);
 
-    random_device rd;
-    mt19937 gen(rand());
     normal_distribution<> normal(0.0,1.0);
     for (int ii = 0; ii < Ndof; ++ii)
         {
@@ -115,7 +113,12 @@ void selfPropelledParticleDynamics::integrateEquationsOfMotionCPU(vector<Dscalar
         h_disp.data[ii].x = deltaT*(v0i * directorx + mu * h_f.data[ii].x);
         h_disp.data[ii].y = deltaT*(v0i * directory + mu * h_f.data[ii].y);
         //rotate each director a bit
-        h_cd.data[ii] +=normal(gen)*sqrt(2.0*deltaT*Dri);
+        Dscalar randomNumber;
+        if (Reproducible)
+            randomNumber = normal(gen);
+        else
+            randomNumber = normal(genrd);
+        h_cd.data[ii] +=randomNumber*sqrt(2.0*deltaT*Dri);
         };
     //vector of displacements is mu*forces*timestep + v0's*timestep
     };

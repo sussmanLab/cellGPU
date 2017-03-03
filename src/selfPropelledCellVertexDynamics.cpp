@@ -95,11 +95,6 @@ void selfPropelledCellVertexDynamics::integrateEquationsOfMotionGPU(vector<Dscal
 
 /*!
 Move every vertex according to the net force on it and its motility...CPU routine
-For debugging, the random number generator can give the same sequence of "random" numbers every time.
-For more random behavior, uncomment the "random_device rd;" line, and replace
-mt19937 gen(rand());
-with
-mt19937 gen(rd());
 */
 void selfPropelledCellVertexDynamics::integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
         vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
@@ -110,8 +105,6 @@ void selfPropelledCellVertexDynamics::integrateEquationsOfMotionCPU(vector<Dscal
     ArrayHandle<Dscalar2> h_motility(Dscalar2ArrayInfo[1],access_location::host,access_mode::read);
     ArrayHandle<int> h_vcn(IntArrayInfo[0],access_location::host,access_mode::read);
 
-    //random_device rd;
-    mt19937 gen(rand());
     normal_distribution<> normal(0.0,1.0);
 
     Dscalar directorx,directory;
@@ -138,7 +131,12 @@ void selfPropelledCellVertexDynamics::integrateEquationsOfMotionCPU(vector<Dscal
     //update cell directors
     for (int i = 0; i < Ncells; ++i)
         {
+        Dscalar randomNumber;
+        if (Reproducible)
+            randomNumber = normal(gen);
+        else
+            randomNumber = normal(genrd);
         Dscalar Dr = h_motility.data[i].y;
-        h_cd.data[i] += normal(gen)*sqrt(2.0*deltaT*Dr);
+        h_cd.data[i] += randomNumber*sqrt(2.0*deltaT*Dr);
         };
     };
