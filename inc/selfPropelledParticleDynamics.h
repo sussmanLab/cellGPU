@@ -32,7 +32,7 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         void setMu(Dscalar _mu){mu=_mu;};
 
         //!allow for whatever RNG initialization is needed
-        virtual void initializeRNGs(int globalSeed, int tempSeed);
+        virtual void initializeRNGs(int globalSeed=1337, int tempSeed=0);
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
         virtual void spatialSorting(const vector<int> &reIndexer);
 

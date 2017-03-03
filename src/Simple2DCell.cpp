@@ -26,6 +26,20 @@ void Simple2DCell::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
     };
 
 /*!
+Set the Area and Perimeter preferences to the input vector
+*/
+void Simple2DCell::setCellPreferences(vector<Dscalar2> &APPref)
+    {
+    AreaPeriPreferences.resize(Ncells);
+    ArrayHandle<Dscalar2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        h_p.data[ii].x = APPref[ii].x;
+        h_p.data[ii].y = APPref[ii].y;
+        };
+    };
+
+/*!
 Resize the box so that every cell has, on average, area = 1, and place cells via a simple,
 reproducible RNG
 */

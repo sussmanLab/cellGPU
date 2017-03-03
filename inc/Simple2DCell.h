@@ -59,6 +59,9 @@ class Simple2DCell : public Simple2DModel
         //!Set uniform cell area and perimeter preferences
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
 
+        //!Set cell area and perimeter preferences according to input vector
+        void setCellPreferences(vector<Dscalar2> &AreaPeriPreferences);
+
         //!Set random cell positions, and set the periodic box to a square with average cell area=1
         void setCellPositionsRandomly();
 

@@ -23,7 +23,7 @@ class selfPropelledCellVertexDynamics : public selfPropelledParticleDynamics
         virtual void integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
 
         //!allow for whatever RNG initialization is needed
-        virtual void initializeRNGs(int globalSeed, int tempSeed);
+        virtual void initializeRNGs(int globalSeed=1337, int tempSeed=0);
 
         //! In the mixed cell-vertex model, the equations of motion need to know the number of cells
         int Ncells;

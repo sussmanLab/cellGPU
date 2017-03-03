@@ -77,7 +77,7 @@ class SPV2D : public DelaunayMD
         //!call gpu_compute_geometry kernel caller
         void computeGeometryGPU();
         //!call gpu_force_sets kernel caller
-        void computeSPVForceSetsGPU();
+        virtual void computeSPVForceSetsGPU();
         //! call gpu_sum_force_sets kernel caller
         void sumForceSets();
         //!call gpu_sum_force_sets_with_exclusions kernel caller
