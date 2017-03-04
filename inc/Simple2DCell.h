@@ -29,6 +29,7 @@ class Simple2DCell : public Simple2DModel
         //!Simple2DCells are static; they are allowed to know about dynamics via a pointer
         simpleEquationOfMotion *equationOfMotion;
 
+        //!pass in an equation of motion to run
         void setEquationOfMotion(simpleEquationOfMotion &_eom){equationOfMotion = &_eom;};
 
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.

@@ -46,6 +46,7 @@ CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU
 CLASS_OBJS+=obj/Simple2DCell.o obj/Simple2DActiveCell.o
 CLASS_OBJS+=obj/selfPropelledParticleDynamics.o obj/selfPropelledCellVertexDynamics.o obj/brownianParticleDynamics.o
 CLASS_OBJS+=obj/avm2d.o obj/spv2d.o
+CLASS_OBJS+=obj/Simulation.o
 
 CUOBJS= obj/cuobj/cellListGPU.cu.o obj/cuobj/DelaunayMD.cu.o
 CUOBJS+=obj/cuobj/Simple2DCell.cu.o

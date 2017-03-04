@@ -5,6 +5,7 @@
 
 #define ENABLE_CUDA
 
+#include "Simulation.h"
 #include "spv2d.h"
 #include "selfPropelledParticleDynamics.h"
 //#include "DatabaseNetCDFSPV.h"
@@ -53,6 +54,8 @@ int main(int argc, char*argv[])
             default:
                        abort();
         };
+
+
     clock_t t1,t2;
     bool reproducible = true;
     bool initializeGPU = true;
@@ -70,6 +73,10 @@ int main(int argc, char*argv[])
     SPV2D spv(numpts,1.0,p0,reproducible);
     spv.setEquationOfMotion(spp);
 
+    Simulation sim;
+    sim.setEquationOfMotion(spp);
+    sim.setConfiguration(spv);
+    sim.setIntegrationTimestep(dt);
     //set appropriate CPU and GPU flags
     if(!initializeGPU)
         {
