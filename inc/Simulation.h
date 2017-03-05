@@ -19,17 +19,17 @@ class Simulation
         //!The equation of motion to run
         EOMPtr equationOfMotion;
         //!pass in an equation of motion to run
-        void setEquationOfMotion(EOMPtr &_eom){equationOfMotion = _eom;};
+        void setEquationOfMotion(EOMPtr _eom){equationOfMotion = _eom;};
 
         //!The configuration of cells
         ForcePtr cellConfiguration;
         //!Pass in a reference to the configuration
-        void setConfiguration(ForcePtr &_config){cellConfiguration = _config;};
+        void setConfiguration(ForcePtr _config){cellConfiguration = _config;};
 
         //!The domain of the simulation
         BoxPtr Box;
         //!Pass in a reference to the box
-        void setBox(BoxPtr &_box){Box = _box;};
+        void setBox(BoxPtr _box){Box = _box;};
 
         //!A neighbor list assisting the simulation
         cellListGPU *cellList;;

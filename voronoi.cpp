@@ -85,7 +85,7 @@ int main(int argc, char*argv[])
         {
         spp->setCPU();
         spv->setCPU();
-        spv->setCPU(true);
+        //spv->setCPU(false);
         }
     else
         {
