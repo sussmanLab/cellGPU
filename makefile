@@ -36,7 +36,7 @@ debug: CXXFLAGS += -g -DCUDATHREADSYNC
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
 debug: build
 
-PROGS= avmGPU.out spvMSD.out Minimize.out spvGPU.out
+PROGS= spvGPU.out #avmGPU.out spvMSD.out Minimize.out spvGPU.out
 
 build: $(PROGS)
 

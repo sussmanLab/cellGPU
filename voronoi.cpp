@@ -68,10 +68,13 @@ int main(int argc, char*argv[])
     else
         initializeGPU = false;
 
-    selfPropelledParticleDynamics spp(numpts);
-    spp.setReproducible(reproducible);
-    SPV2D spv(numpts,1.0,p0,reproducible);
-    spv.setEquationOfMotion(spp);
+    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+    ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
+
+//    selfPropelledParticleDynamics spp(numpts);
+    spp->setReproducible(reproducible);
+//    SPV2D spv(numpts,1.0,p0,reproducible);
+    spv->setEquationOfMotion(spp);
 
     Simulation sim;
     sim.setEquationOfMotion(spp);
@@ -80,19 +83,20 @@ int main(int argc, char*argv[])
     //set appropriate CPU and GPU flags
     if(!initializeGPU)
         {
-        spp.setCPU();
-        spv.setCPU(false);
+        spp->setCPU();
+        spv->setCPU();
+        spv->setCPU(true);
         }
     else
         {
-        spp.initializeRNGs(1337,0);
+        spp->initializeRNGs(1337,0);
         };
     //initialize parameters
-    spp.setReproducible(true);
-    spp.setDeltaT(dt);
-    spv.setCellPreferencesUniform(1.0,p0);
-    spv.setv0Dr(v0,1.0);
-    spv.setDeltaT(dt);
+    spp->setReproducible(true);
+    spp->setDeltaT(dt);
+    spv->setCellPreferencesUniform(1.0,p0);
+    spv->setv0Dr(v0,1.0);
+    spv->setDeltaT(dt);
 
 //    char dataname[256];
 //    sprintf(dataname,"/hdd2/data/spv/test.nc");
@@ -100,16 +104,15 @@ int main(int argc, char*argv[])
 
 
     printf("starting initialization\n");
-    spv.setSortPeriod(initSteps/10);
+    spv->setSortPeriod(initSteps/10);
     for(int ii = 0; ii < initSteps; ++ii)
         {
-        spv.performTimestep();
+        spv->performTimestep();
         };
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
-    spv.reportMeanCellForce(false);
-    spv.repPerFrame = 0.0;
+    spv->reportMeanCellForce(false);
 
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
@@ -120,12 +123,12 @@ int main(int argc, char*argv[])
             printf("timestep %i\n",ii);
 //    ncdat.WriteState(spv);
             };
-        spv.performTimestep();
+        spv->performTimestep();
         };
     t2=clock();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
-    cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
-
+    cout << "timestep ~ " << steptime << " per frame; " << endl;
+    cout << spv->reportq() << endl;
     if(initializeGPU)
         cudaProfilerStart();
 

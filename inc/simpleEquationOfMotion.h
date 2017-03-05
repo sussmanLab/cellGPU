@@ -128,4 +128,6 @@ class simpleEquationOfMotion
             };
     };
 
+typedef shared_ptr<simpleEquationOfMotion> EOMPtr;
+
 #endif

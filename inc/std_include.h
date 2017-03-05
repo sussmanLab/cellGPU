@@ -18,6 +18,7 @@ how the program is compiled
 
 #include <cmath>
 #include <algorithm>
+#include <memory>
 #include <ctype.h>
 #include <random>
 #include <stdio.h>
@@ -41,7 +42,6 @@ using namespace std;
 #include "vector_functions.h"
 
 #define PI 3.14159265358979323846
-
 
 //decide whether to compute everything in floating point or double precision
 #ifndef SCALARFLOAT

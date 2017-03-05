@@ -188,6 +188,7 @@ void gpubox::move(Dscalar2 &p1, const Dscalar2 &disp)
     Trans(vP,p1);
     };
 
+typedef shared_ptr<gpubox> BoxPtr;
 // undefine HOSTDEVICE so we don't interfere with other headers
 #undef HOSTDEVICE
 

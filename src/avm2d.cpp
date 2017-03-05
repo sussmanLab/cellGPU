@@ -85,13 +85,13 @@ void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
     if(spvInitialize)
         {
         SPV2D spv(Ncells,1.0,3.8);
-        selfPropelledParticleDynamics spp(Ncells);
+        EOMPtr spp = make_shared<selfPropelledParticleDynamics>(Ncells);
         spv.setEquationOfMotion(spp);
         spv.setCPU(false);
         spv.setv0Dr(0.1,1.0);
-        spp.setReproducible(true);
-        spp.setCPU();
-        spp.setDeltaT(0.1);
+        spp->setReproducible(true);
+        spp->setCPU();
+        spp->setDeltaT(0.1);
         for (int ii = 0; ii < 100;++ii)
             spv.performTimestep();
         ArrayHandle<Dscalar2> h_pp(spv.cellPositions,access_location::host,access_mode::read);

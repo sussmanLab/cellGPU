@@ -27,10 +27,10 @@ class Simple2DCell : public Simple2DModel
             };
 
         //!Simple2DCells are static; they are allowed to know about dynamics via a pointer
-        simpleEquationOfMotion *equationOfMotion;
+        //simpleEquationOfMotion *equationOfMotion;
 
         //!pass in an equation of motion to run
-        void setEquationOfMotion(simpleEquationOfMotion &_eom){equationOfMotion = &_eom;};
+        //void setEquationOfMotion(simpleEquationOfMotion &_eom){equationOfMotion = &_eom;};
 
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};
@@ -282,6 +282,12 @@ class Simple2DCell : public Simple2DModel
                 };
             return q/(Dscalar)Ncells;
             };
+
+        //temporary stuff for testing as I refactor
+        virtual void setDeltaT(Dscalar dt) = 0;
+        virtual void setCPU(bool a) = 0;
+        virtual void setv0Dr(Dscalar a, Dscalar b) = 0;
     };
+typedef shared_ptr<Simple2DCell> ForcePtr;
 
 #endif

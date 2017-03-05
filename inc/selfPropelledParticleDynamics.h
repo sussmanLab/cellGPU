@@ -39,7 +39,7 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
     protected:
         //!The value of the inverse friction constant
         Dscalar mu;
-        //!An array random-number-generators for use on the GPU branch of the code
+        //!An array of random-number-generators for use on the GPU branch of the code
         GPUArray<curandState> RNGs;
 
     };

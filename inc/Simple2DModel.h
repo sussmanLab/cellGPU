@@ -3,6 +3,7 @@
 
 #include "std_include.h"
 #include "gpuarray.h"
+#include "simpleEquationOfMotion.h"
 
 /*! \file Simple2DModel.h
  * \brief defines an interface for models that compute forces
@@ -38,6 +39,17 @@ class Simple2DModel
 
         //!move the degrees of freedom
         virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements) = 0;
+        //!reporting function (remove later...)
+        virtual Dscalar reportq() = 0;
+        virtual void reportMeanCellForce(bool a) = 0;
+        virtual void setSortPeriod(int a) = 0;
+        virtual void performTimestep() = 0;
+
+        //!An EOMPtr (remove later...)
+        EOMPtr equationOfMotion; 
+
+        void setEquationOfMotion(EOMPtr &_eom){equationOfMotion = _eom;};
     };
+
 
 #endif
