@@ -45,6 +45,11 @@ void selfPropelledParticleDynamics::spatialSorting(const vector<int> &reIndexer)
     reIndexRNG(RNGs);
     };
 
+void selfPropelledParticleDynamics::integrateEquationsOfMotion()
+    {
+    cout <<"blah" << endl;
+    }
+
 /*!
 Given a vector of forces, update the displacements array to the amounts needed to advance the simulation one step
 For the self-propelled particle model, the data buckest need to be the following:

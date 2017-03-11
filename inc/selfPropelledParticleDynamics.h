@@ -18,6 +18,8 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         //!additionally set the number of particles andinitialize things
         selfPropelledParticleDynamics(int N);
 
+        //!the fundamental function that models will call, using vectors of different data structures
+        virtual void integrateEquationsOfMotion();
         //!the fundamental function that models will call
         virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
         //!call the CPU routine to integrate the e.o.m.

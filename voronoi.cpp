@@ -95,6 +95,7 @@ int main(int argc, char*argv[])
     for(int ii = 0; ii < initSteps; ++ii)
         {
         spv->performTimestep();
+        sim->performTimestep();
         };
 
     printf("Finished with initialization\n");

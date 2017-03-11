@@ -77,4 +77,32 @@ void Simulation::setReproducible(bool reproducible)
         eom -> initializeGPURNGs(1337,0);
     };
 
+/*!
+Calls the configuration to displace the degrees of freedom
+*/
+void Simulation::computeForces(GPUArray<Dscalar2> &forces)
+    {
+    auto forceComputer = cellConfiguration.lock();
+    forceComputer->computeForces();
+    forces.swap(forceComputer->returnForces());
+    };
 
+/*!
+Calls the configuration to displace the degrees of freedom
+*/
+void Simulation::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
+    {
+    auto cellConf = cellConfiguration.lock();
+    cellConf->moveDegreesOfFreedom(displacements);
+    };
+
+/*!
+Calls the equation of motion to advance the simulation one time step
+*/
+void Simulation::performTimestep()
+    {
+    integerTimestep += 1;
+    Time += integrationTimestep;
+    auto eom = equationOfMotion.lock();
+    eom->integrateEquationsOfMotion();
+    };

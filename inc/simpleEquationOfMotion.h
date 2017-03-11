@@ -28,6 +28,8 @@ class simpleEquationOfMotion
             gen = Gener;
             genrd=GenerRd;
             };
+        //!the fundamental function that models will call, using vectors of different data structures
+        virtual void integrateEquationsOfMotion(){};
 
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements){};

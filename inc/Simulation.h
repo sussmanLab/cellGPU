@@ -16,18 +16,25 @@ class Simulation : public enable_shared_from_this<Simulation>
     public:
         //!Initialize all the shared pointers, etc.
         Simulation();
-        //!The equation of motion to run
-        WeakEOMPtr equationOfMotion;
         //!pass in an equation of motion to run
         void setEquationOfMotion(EOMPtr _eom);
 
-        //!The configuration of cells
-        WeakForcePtr cellConfiguration;
         //!Pass in a reference to the configuration
         void setConfiguration(ForcePtr _config);
 
+        //!Call the force computer to compute the forces
+        void computeForces(GPUArray<Dscalar2> &forces);
+        //!Call the configuration to move particles around
+        void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements);
+        //!Call the equation of motion to advance one time step
+        void performTimestep();
+
         //!return a shared pointer to this Simulation
         shared_ptr<Simulation> getPointer(){ return shared_from_this();};
+        //!The equation of motion to run
+        WeakEOMPtr equationOfMotion;
+        //!The configuration of cells
+        WeakForcePtr cellConfiguration;
         //!The domain of the simulation
         BoxPtr Box;
         //!Pass in a reference to the box
