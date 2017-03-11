@@ -7,6 +7,7 @@
 #include "curand_kernel.h"
 #include "simpleEquationOfMotion.cuh"
 
+class Simulation;
 /*! \file simpleEquationOfMotion.h */
 //!A base class for implementing simple equations of motion
 /*!
@@ -36,8 +37,8 @@ class simpleEquationOfMotion
         virtual void integrateEquationsOfMotion(GPUArray<Dscalar2> &forces, GPUArray<Dscalar2> &displacements){};
         //!allow for spatial sorting to be called if necessary... models should pass the "itt" vector to this function
         virtual void spatialSorting(const vector<int> &reIndexer){};
-        //!allow for whatever RNG initialization is needed
-        virtual void initializeRNGs(int globalSeed=1337, int tempSeed=0){};
+        //!allow for whatever GPU RNG initialization is needed
+        virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0){};
 
         //!get the number of timesteps run
         int getTimestep(){return Timestep;};
@@ -59,6 +60,9 @@ class simpleEquationOfMotion
         virtual void setCPU(){GPUcompute = false;};
 
         void initializeGPU(bool initGPU){initializeGPURNG = initGPU;};
+
+        //! pointer to a Simulation
+        shared_ptr<Simulation> simulation;
 
     protected:
         //!Should the simulation be reproducible (v/v the random numbers generated)?
@@ -129,5 +133,6 @@ class simpleEquationOfMotion
     };
 
 typedef shared_ptr<simpleEquationOfMotion> EOMPtr;
+typedef weak_ptr<simpleEquationOfMotion> WeakEOMPtr;
 
 #endif

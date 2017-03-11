@@ -27,7 +27,7 @@ selfPropelledCellVertexDynamics::selfPropelledCellVertexDynamics(int _Ncells, in
 This is one part of what would be required to support reproducibly being able to load a state
 from a databse and continue the dynamics in the same way every time. This is not currently supported.
 */
-void selfPropelledCellVertexDynamics::initializeRNGs(int globalSeed, int offset)
+void selfPropelledCellVertexDynamics::initializeGPURNGs(int globalSeed, int offset)
     {
     if(RNGs.getNumElements() != Ncells)
         RNGs.resize(Ncells);

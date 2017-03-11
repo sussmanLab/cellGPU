@@ -11,21 +11,23 @@
 //! A class that ties together all the parts of a simulation
 /*!
 */
-class Simulation
+class Simulation : public enable_shared_from_this<Simulation>
     {
     public:
         //!Initialize all the shared pointers, etc.
         Simulation();
         //!The equation of motion to run
-        EOMPtr equationOfMotion;
+        WeakEOMPtr equationOfMotion;
         //!pass in an equation of motion to run
-        void setEquationOfMotion(EOMPtr _eom){equationOfMotion = _eom;};
+        void setEquationOfMotion(EOMPtr _eom);
 
         //!The configuration of cells
-        ForcePtr cellConfiguration;
+        WeakForcePtr cellConfiguration;
         //!Pass in a reference to the configuration
-        void setConfiguration(ForcePtr _config){cellConfiguration = _config;};
+        void setConfiguration(ForcePtr _config);
 
+        //!return a shared pointer to this Simulation
+        shared_ptr<Simulation> getPointer(){ return shared_from_this();};
         //!The domain of the simulation
         BoxPtr Box;
         //!Pass in a reference to the box
@@ -40,10 +42,15 @@ class Simulation
         void setIntegrationTimestep(Dscalar dt);
         //!turn on CPU-only mode for all components
         void setCPUOperation(bool setcpu);
+        //!Enforce reproducible dynamics
+        void setReproducible(bool reproducible);
+
 
         int integerTimestep;
         Dscalar Time;
         Dscalar integrationTimestep;
+        bool USE_GPU;
 
     };
+typedef shared_ptr<Simulation> SimulationPtr;
 #endif

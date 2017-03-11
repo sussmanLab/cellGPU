@@ -4,7 +4,7 @@
 #include "std_include.h"
 #include "gpuarray.h"
 #include "simpleEquationOfMotion.h"
-
+class Simulation;
 /*! \file Simple2DModel.h
  * \brief defines an interface for models that compute forces
  */
@@ -45,6 +45,8 @@ class Simple2DModel
         virtual void setSortPeriod(int a) = 0;
         virtual void performTimestep() = 0;
 
+        //! pointer to a Simulation
+        shared_ptr<Simulation> simulation;
         //!An EOMPtr (remove later...)
         EOMPtr equationOfMotion; 
 

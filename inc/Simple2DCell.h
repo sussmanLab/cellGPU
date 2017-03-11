@@ -289,5 +289,6 @@ class Simple2DCell : public Simple2DModel
         virtual void setv0Dr(Dscalar a, Dscalar b) = 0;
     };
 typedef shared_ptr<Simple2DCell> ForcePtr;
+typedef weak_ptr<Simple2DCell> WeakForcePtr;
 
 #endif

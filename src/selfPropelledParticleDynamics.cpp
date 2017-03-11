@@ -24,7 +24,7 @@ selfPropelledParticleDynamics::selfPropelledParticleDynamics(int _N)
 This is one part of what would be required to support reproducibly being able to load a state
 from a databse and continue the dynamics in the same way every time. This is not currently supported.
 */
-void selfPropelledParticleDynamics::initializeRNGs(int globalSeed, int offset)
+void selfPropelledParticleDynamics::initializeGPURNGs(int globalSeed, int offset)
     {
     if(RNGs.getNumElements() != Ndof)
         RNGs.resize(Ndof);

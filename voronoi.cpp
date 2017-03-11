@@ -69,34 +69,22 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+
     ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
-
-//    selfPropelledParticleDynamics spp(numpts);
-    spp->setReproducible(reproducible);
-//    SPV2D spv(numpts,1.0,p0,reproducible);
     spv->setEquationOfMotion(spp);
-
-    Simulation sim;
-    sim.setEquationOfMotion(spp);
-    sim.setConfiguration(spv);
-    sim.setIntegrationTimestep(dt);
-    //set appropriate CPU and GPU flags
-    if(!initializeGPU)
-        {
-        spp->setCPU();
-        spv->setCPU();
-        //spv->setCPU(false);
-        }
-    else
-        {
-        spp->initializeRNGs(1337,0);
-        };
-    //initialize parameters
-    spp->setReproducible(true);
-    spp->setDeltaT(dt);
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setv0Dr(v0,1.0);
-    spv->setDeltaT(dt);
+    spv->setSortPeriod(initSteps/10);
+
+    SimulationPtr sim = make_shared<Simulation>();
+    sim->setEquationOfMotion(spp);
+    sim->setConfiguration(spv);
+    sim->setIntegrationTimestep(dt);
+    //set appropriate CPU and GPU flags
+    if(!initializeGPU)
+        sim->setCPUOperation(true);
+    sim->setReproducible(true);
+    //initialize parameters
 
 //    char dataname[256];
 //    sprintf(dataname,"/hdd2/data/spv/test.nc");
@@ -104,7 +92,6 @@ int main(int argc, char*argv[])
 
 
     printf("starting initialization\n");
-    spv->setSortPeriod(initSteps/10);
     for(int ii = 0; ii < initSteps; ++ii)
         {
         spv->performTimestep();
