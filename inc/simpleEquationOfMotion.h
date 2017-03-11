@@ -5,6 +5,7 @@
 #include "gpuarray.h"
 #include "curand.h"
 #include "curand_kernel.h"
+#include "Simple2DModel.h"
 #include "simpleEquationOfMotion.cuh"
 
 class Simulation;
@@ -63,6 +64,10 @@ class simpleEquationOfMotion
 
         void initializeGPU(bool initGPU){initializeGPURNG = initGPU;};
 
+        //! pointer to a Simple2DModel
+        shared_ptr<Simple2DModel> model;
+        //! virtual function to allow the model to be a derived class
+        virtual void set2DModel(shared_ptr<Simple2DModel> _model){};
         //! pointer to a Simulation
         shared_ptr<Simulation> simulation;
 

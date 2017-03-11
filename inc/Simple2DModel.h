@@ -3,8 +3,9 @@
 
 #include "std_include.h"
 #include "gpuarray.h"
-#include "simpleEquationOfMotion.h"
+//#include "simpleEquationOfMotion.h"
 class Simulation;
+
 /*! \file Simple2DModel.h
  * \brief defines an interface for models that compute forces
  */
@@ -48,9 +49,9 @@ class Simple2DModel
         //! pointer to a Simulation
         shared_ptr<Simulation> simulation;
         //!An EOMPtr (remove later...)
-        EOMPtr equationOfMotion; 
+        //EOMPtr equationOfMotion; 
 
-        void setEquationOfMotion(EOMPtr &_eom){equationOfMotion = _eom;};
+//        void setEquationOfMotion(EOMPtr &_eom){equationOfMotion = _eom;};
     };
 
 

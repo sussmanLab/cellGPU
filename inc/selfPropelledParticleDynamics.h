@@ -2,6 +2,7 @@
 #define selfPropelledParticleDynamics_H
 
 #include "simpleEquationOfMotion.h"
+#include "Simple2DActiveCell.h"
 
 /*! \file selfPropelledParticleDynamics.h */
 //!A class that implements simple self-propelled particle dynamics in 2D
@@ -37,8 +38,12 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0);
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
         virtual void spatialSorting(const vector<int> &reIndexer);
+        //!set the active model
+        virtual void set2DModel(shared_ptr<Simple2DModel> _model);
 
     protected:
+        //!A shared pointer to a simple active model
+        shared_ptr<Simple2DActiveCell> activeModel;
         //!The value of the inverse friction constant
         Dscalar mu;
         //!An array of random-number-generators for use on the GPU branch of the code

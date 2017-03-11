@@ -14,10 +14,11 @@ Simulation::Simulation(): integerTimestep(0), Time(0.),integrationTimestep(0.01)
 /*!
 Set a pointer to the equation of motion, and give the equation of motion a reference to this
 */
-void Simulation::setEquationOfMotion(EOMPtr _eom)
+void Simulation::setEquationOfMotion(EOMPtr _eom, ForcePtr _config)
     {
     equationOfMotion = _eom;
     _eom->simulation = getPointer();
+    _eom->set2DModel(_config);
     };
 
 /*!

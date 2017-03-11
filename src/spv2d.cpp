@@ -161,7 +161,7 @@ When sortPeriod < 0, this routine does not get called
 */
 void SPV2D::spatialSorting()
     {
-    equationOfMotion->spatialSorting(itt);
+    //equationOfMotion->spatialSorting(itt);
     spatiallySortCellsAndCellActivity();
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
@@ -330,7 +330,7 @@ void SPV2D::displaceCellsAndRotate()
     Dscalar2ArrayInfo[1].swap(Motility);
     
     //call the equation of motion to get displacements
-    equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
+    //equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
     //swap it back into the model
     DscalarArrayInfo[0].swap(cellDirectors);
     Dscalar2ArrayInfo[0].swap(cellForces);

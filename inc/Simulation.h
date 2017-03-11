@@ -17,7 +17,7 @@ class Simulation : public enable_shared_from_this<Simulation>
         //!Initialize all the shared pointers, etc.
         Simulation();
         //!pass in an equation of motion to run
-        void setEquationOfMotion(EOMPtr _eom);
+        void setEquationOfMotion(EOMPtr _eom,ForcePtr _config);
 
         //!Pass in a reference to the configuration
         void setConfiguration(ForcePtr _config);

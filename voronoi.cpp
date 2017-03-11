@@ -71,14 +71,14 @@ int main(int argc, char*argv[])
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
 
     ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
-    spv->setEquationOfMotion(spp);
+    //spv->setEquationOfMotion(spp);
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setv0Dr(v0,1.0);
     spv->setSortPeriod(initSteps/10);
 
     SimulationPtr sim = make_shared<Simulation>();
-    sim->setEquationOfMotion(spp);
     sim->setConfiguration(spv);
+    sim->setEquationOfMotion(spp,spv);
     sim->setIntegrationTimestep(dt);
     //set appropriate CPU and GPU flags
     if(!initializeGPU)
@@ -94,7 +94,7 @@ int main(int argc, char*argv[])
     printf("starting initialization\n");
     for(int ii = 0; ii < initSteps; ++ii)
         {
-        spv->performTimestep();
+        //spv->performTimestep();
         sim->performTimestep();
         };
 
@@ -111,7 +111,8 @@ int main(int argc, char*argv[])
             printf("timestep %i\n",ii);
 //    ncdat.WriteState(spv);
             };
-        spv->performTimestep();
+ //       spv->performTimestep();
+        sim->performTimestep();
         };
     t2=clock();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;

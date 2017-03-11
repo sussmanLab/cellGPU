@@ -45,9 +45,15 @@ void selfPropelledParticleDynamics::spatialSorting(const vector<int> &reIndexer)
     reIndexRNG(RNGs);
     };
 
+void selfPropelledParticleDynamics::set2DModel(shared_ptr<Simple2DModel> _model)
+    {
+    model=_model;
+    activeModel = dynamic_pointer_cast<Simple2DActiveCell>(model);
+    }
+
 void selfPropelledParticleDynamics::integrateEquationsOfMotion()
     {
-    cout <<"blah" << endl;
+    activeModel->computeForces();
     }
 
 /*!
