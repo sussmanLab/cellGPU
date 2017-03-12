@@ -31,12 +31,6 @@ class simpleEquationOfMotion
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion(){};
 
-        //!the fundamental function that models will call, using vectors of different data structures
-        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements){};
-
-
-        //!the fundamental function that models will call to advance the simulation...sometimes the function signature is so simple that this specialization helps
-        virtual void integrateEquationsOfMotion(GPUArray<Dscalar2> &forces, GPUArray<Dscalar2> &displacements){};
         //!allow for spatial sorting to be called if necessary...
         virtual void spatialSorting(){};
         //!allow for whatever GPU RNG initialization is needed

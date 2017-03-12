@@ -71,7 +71,6 @@ int main(int argc, char*argv[])
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
 
     ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
-    //spv->setEquationOfMotion(spp);
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setv0Dr(v0,1.0);
 

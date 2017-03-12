@@ -15,13 +15,12 @@ class selfPropelledCellVertexDynamics : public selfPropelledParticleDynamics
         //!base constructor sets default time step size
         selfPropelledCellVertexDynamics(int Ncells,int Nvertices);
 
-        //!the fundamental function that models will call
-        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
+        //!the fundamental function that models will call, using vectors of different data structures
+        virtual void integrateEquationsOfMotion();
         //!call the CPU routine to integrate the e.o.m.
-        virtual void integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
+        virtual void integrateEquationsOfMotionCPU();
         //!call the GPU routine to integrate the e.o.m.
-        virtual void integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
-
+        virtual void integrateEquationsOfMotionGPU();
         //!allow for whatever RNG initialization is needed
         virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0);
 

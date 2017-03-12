@@ -19,6 +19,7 @@ selfPropelledCellVertexDynamics::selfPropelledCellVertexDynamics(int _Ncells, in
     Nvertices = _Nvertices;
     Ncells = _Ncells;
     RNGs.resize(Ncells);
+    displacements.resize(Nvertices);
     };
 
 /*!
@@ -43,41 +44,33 @@ void selfPropelledCellVertexDynamics::initializeGPURNGs(int globalSeed, int offs
     };
 
 /*!
-Given a vector of forces, update the displacements array to the amounts needed to advance the simulation one step
-For the self-propelled particle model, the data buckest need to be the following:
-DscalarInfo = {} (empty vector)
-DscalarArrayInfo[0] = cellDirectors
-Dscalar2ArrayInfo[0] = forces
-Dscalar2ArrayInfo[1] = Motility (each entry is (v0 and Dr) per cell)
-IntArrayInfo = {} (empty vector)
+Advances self-propelled dynamics with random noise in the director by one time step
 */
-void selfPropelledCellVertexDynamics::integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
-        vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
+void selfPropelledCellVertexDynamics::integrateEquationsOfMotion()
     {
     Timestep += 1;
     if(GPUcompute)
         {
-        integrateEquationsOfMotionGPU(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
+        integrateEquationsOfMotionGPU();
         }
     else
         {
-        integrateEquationsOfMotionCPU(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo, IntArrayInfo, displacements);
+        integrateEquationsOfMotionCPU();
         }
-    };
-
-
+    }
 
 /*!
 The straightforward GPU implementation
 */
-void selfPropelledCellVertexDynamics::integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
-        vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
+void selfPropelledCellVertexDynamics::integrateEquationsOfMotionGPU()
     {
-    ArrayHandle<Dscalar2> d_f(Dscalar2ArrayInfo[0],access_location::device,access_mode::read);
-    ArrayHandle<Dscalar> d_cd(DscalarArrayInfo[0],access_location::device,access_mode::readwrite);
+    activeModel->computeForces();
+    {//scope for array Handles
+    ArrayHandle<Dscalar2> d_f(activeModel->returnForces(),access_location::device,access_mode::read);
+    ArrayHandle<Dscalar> d_cd(activeModel->cellDirectors,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::overwrite);
-    ArrayHandle<Dscalar2> d_motility(Dscalar2ArrayInfo[1],access_location::device,access_mode::read);
-    ArrayHandle<int> d_vcn(IntArrayInfo[0],access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_motility(activeModel->Motility,access_location::device,access_mode::read);
+    ArrayHandle<int> d_vcn(activeModel->vertexCellNeighbors,access_location::device,access_mode::read);
 
     ArrayHandle<curandState> d_RNG(RNGs,access_location::device,access_mode::readwrite);
 
@@ -91,19 +84,23 @@ void selfPropelledCellVertexDynamics::integrateEquationsOfMotionGPU(vector<Dscal
                  deltaT,
                  Timestep,
                  mu);
+    };//end array handle scope
+    activeModel->moveDegreesOfFreedom(displacements);
+    activeModel->enforceTopology();
     };
 
 /*!
 Move every vertex according to the net force on it and its motility...CPU routine
 */
-void selfPropelledCellVertexDynamics::integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
-        vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
+void selfPropelledCellVertexDynamics::integrateEquationsOfMotionCPU()
     {
-    ArrayHandle<Dscalar2> h_f(Dscalar2ArrayInfo[0],access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(DscalarArrayInfo[0],access_location::host,access_mode::readwrite);
+    activeModel->computeForces();
+    {//scope for array Handles
+    ArrayHandle<Dscalar2> h_f(activeModel->returnForces(),access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> h_cd(activeModel->cellDirectors,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_motility(Dscalar2ArrayInfo[1],access_location::host,access_mode::read);
-    ArrayHandle<int> h_vcn(IntArrayInfo[0],access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_motility(activeModel->Motility,access_location::host,access_mode::read);
+    ArrayHandle<int> h_vcn(activeModel->vertexCellNeighbors,access_location::host,access_mode::read);
 
     normal_distribution<> normal(0.0,1.0);
 
@@ -139,4 +136,7 @@ void selfPropelledCellVertexDynamics::integrateEquationsOfMotionCPU(vector<Dscal
         Dscalar Dr = h_motility.data[i].y;
         h_cd.data[i] += randomNumber*sqrt(2.0*deltaT*Dr);
         };
+    }//end array handle scoping
+    activeModel->moveDegreesOfFreedom(displacements);
+    activeModel->enforceTopology();
     };

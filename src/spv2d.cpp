@@ -285,27 +285,6 @@ void SPV2D::SumForcesGPU()
     };
 
 /*!
-call the equations of motion to determine the dispalcement for each cell
-*/
-void SPV2D::displaceCellsAndRotate()
-    {
-    //swap in data for the equation of motion
-    DscalarArrayInfo[0].swap(cellDirectors);
-    Dscalar2ArrayInfo[0].swap(cellForces);
-    Dscalar2ArrayInfo[1].swap(Motility);
-    
-    //call the equation of motion to get displacements
-    //equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
-    //swap it back into the model
-    DscalarArrayInfo[0].swap(cellDirectors);
-    Dscalar2ArrayInfo[0].swap(cellForces);
-    Dscalar2ArrayInfo[1].swap(Motility);
-
-    //move the cells around
-    moveDegreesOfFreedom(displacements);
-    };
-
-/*!
 \pre The topology of the Delaunay triangulation is up-to-date on the GPU
 \post calculate all cell areas, perimenters, and voronoi neighbors
 */
