@@ -17,6 +17,7 @@ brownianParticleDynamics::brownianParticleDynamics(int _N)
     Temperature = 1.0;
     Ndof = _N;
     RNGs.resize(Ndof);
+    displacements.resize(Ndof);
     };
 
 /*!
@@ -25,7 +26,7 @@ brownianParticleDynamics::brownianParticleDynamics(int _N)
 This is one part of what would be required to support reproducibly being able to load a state
 from a databse and continue the dynamics in the same way every time. This is not currently supported.
 */
-void brownianParticleDynamics::initializeRNGs(int globalSeed, int offset)
+void brownianParticleDynamics::initializeGPURNGs(int globalSeed, int offset)
     {
     if(RNGs.getNumElements() != Ndof)
         RNGs.resize(Ndof);
@@ -42,40 +43,43 @@ void brownianParticleDynamics::initializeRNGs(int globalSeed, int offset)
 
 void brownianParticleDynamics::spatialSorting(const vector<int> &reIndexer)
     {
-    reIndexing = reIndexer;
+    reIndexing = cellModel->returnItt();
     reIndexRNG(RNGs);
     };
 
 /*!
-Given a vector of forces, update the displacements array to the amounts needed to advance the simulation one step
-For the self-propelled particle model, the data buckest need to be the following:
-DscalarInfo = {} (empty vector)
-DscalarArrayInfo[0] = cellDirectors
-Dscalar2ArrayInfo[0] = forces
-Dscalar2ArrayInfo[1] = Motility (each entry is (v0 and Dr) per cell)
-IntArrayInfo = {} (empty vector)
+Set the shared pointer of the base class to passed variable
 */
-void brownianParticleDynamics::integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
-        vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
+void brownianParticleDynamics::set2DModel(shared_ptr<Simple2DModel> _model)
+    {
+    model=_model;
+    cellModel = dynamic_pointer_cast<Simple2DCell>(model);
+    }
+
+/*!
+Advances brownian dynamics by one time step
+*/
+void brownianParticleDynamics::integrateEquationsOfMotion()
     {
     Timestep += 1;
     if(GPUcompute)
         {
-        integrateEquationsOfMotionGPU(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
+        integrateEquationsOfMotionGPU();
         }
     else
         {
-        integrateEquationsOfMotionCPU(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo, IntArrayInfo, displacements);
+        integrateEquationsOfMotionCPU();
         }
     };
 
 /*!
 The straightforward GPU implementation
 */
-void brownianParticleDynamics::integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
-        vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
+void brownianParticleDynamics::integrateEquationsOfMotionGPU()
     {
-    ArrayHandle<Dscalar2> d_f(Dscalar2ArrayInfo[0],access_location::device,access_mode::read);
+    cellModel->computeForces();
+    {//scope for array Handles
+    ArrayHandle<Dscalar2> d_f(cellModel->returnForces(),access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::overwrite);
 
     ArrayHandle<curandState> d_RNG(RNGs,access_location::device,access_mode::readwrite);
@@ -87,15 +91,19 @@ void brownianParticleDynamics::integrateEquationsOfMotionGPU(vector<Dscalar> &Ds
                  deltaT,
                  mu,
                  Temperature);
+    };//end array handle scope
+    cellModel->moveDegreesOfFreedom(displacements);
+    cellModel->enforceTopology();
     };
 
 /*!
 The straightforward CPU implementation
 */
-void brownianParticleDynamics::integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo,
-        vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> > &IntArrayInfo, GPUArray<Dscalar2> &displacements)
+void brownianParticleDynamics::integrateEquationsOfMotionCPU()
     {
-    ArrayHandle<Dscalar2> h_f(Dscalar2ArrayInfo[0],access_location::host,access_mode::read);
+    cellModel->computeForces();
+    {//scope for array Handles
+    ArrayHandle<Dscalar2> h_f(cellModel->returnForces(),access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
 
     normal_distribution<> normal(0.0,1.0);
@@ -115,4 +123,7 @@ void brownianParticleDynamics::integrateEquationsOfMotionCPU(vector<Dscalar> &Ds
         h_disp.data[ii].x = randomNumber1*sqrt(1.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].x;
         h_disp.data[ii].y = randomNumber2*sqrt(1.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].y;
         };
+    };//end array handle scope
+    cellModel->moveDegreesOfFreedom(displacements);
+    cellModel->enforceTopology();
     };

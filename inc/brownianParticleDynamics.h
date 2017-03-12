@@ -2,6 +2,7 @@
 #define brownianParticleDynamics_H
 
 #include "simpleEquationOfMotion.h"
+#include "Simple2DCell.h"
 
 /*! \file brownianParticleDynamics.h */
 //!A class that implements simple Brownian particle dynamics in 2D
@@ -19,13 +20,12 @@ class brownianParticleDynamics : public simpleEquationOfMotion
         //!additionally set the number of particles andinitialize things
         brownianParticleDynamics(int N);
 
-        //!the fundamental function that models will call
-        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
+        //!the fundamental function that models will call, using vectors of different data structures
+        virtual void integrateEquationsOfMotion();
         //!call the CPU routine to integrate the e.o.m.
-        virtual void integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
+        virtual void integrateEquationsOfMotionCPU();
         //!call the GPU routine to integrate the e.o.m.
-        virtual void integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
-
+        virtual void integrateEquationsOfMotionGPU();
 
         //!Get temperature, T
         Dscalar getT(){return Temperature;};
@@ -35,19 +35,23 @@ class brownianParticleDynamics : public simpleEquationOfMotion
         Dscalar getMu(){return mu;};
         //!Set the value of the inverse friction coefficient
         void setMu(Dscalar _mu){mu=_mu;};
+        
+        //! virtual function to allow the model to be a derived class
+        virtual void set2DModel(shared_ptr<Simple2DModel> _model);
 
         //!allow for whatever RNG initialization is needed
-        virtual void initializeRNGs(int globalSeed=0, int tempSeed=0);
+        virtual void initializeGPURNGs(int globalSeed=0, int tempSeed=0);
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
         virtual void spatialSorting(const vector<int> &reIndexer);
 
     protected:
+        //!A shared pointer to a simple cell model
+        shared_ptr<Simple2DCell> cellModel;
         //!The temperature. That right there is an A-plus level doxygen description
         Dscalar Temperature;
         //!The value of the inverse friction constant
         Dscalar mu;
         //!An array random-number-generators for use on the GPU branch of the code
         GPUArray<curandState> RNGs;
-
     };
 #endif
