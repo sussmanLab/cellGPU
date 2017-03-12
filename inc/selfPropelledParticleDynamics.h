@@ -21,13 +21,10 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
 
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion();
-        //!the fundamental function that models will call
-        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
         //!call the CPU routine to integrate the e.o.m.
-        virtual void integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
+        virtual void integrateEquationsOfMotionCPU();
         //!call the GPU routine to integrate the e.o.m.
-        virtual void integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
-
+        virtual void integrateEquationsOfMotionGPU();
 
         //!Get the inverse friction constant, mu
         Dscalar getMu(){return mu;};
@@ -37,7 +34,7 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         //!allow for whatever RNG initialization is needed
         virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0);
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
-        virtual void spatialSorting(const vector<int> &reIndexer);
+        virtual void spatialSorting();
         //!set the active model
         virtual void set2DModel(shared_ptr<Simple2DModel> _model);
 

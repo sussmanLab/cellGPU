@@ -52,11 +52,19 @@ class Simulation : public enable_shared_from_this<Simulation>
         //!Enforce reproducible dynamics
         void setReproducible(bool reproducible);
 
+        //!Set the time between spatial sorting operations.
+        void setSortPeriod(int sp){sortPeriod = sp;};
 
         int integerTimestep;
         Dscalar Time;
         Dscalar integrationTimestep;
         bool USE_GPU;
+
+    protected:
+        //! Determines how frequently the spatial sorter be called...once per sortPeriod Timesteps. When sortPeriod < 0 no sorting occurs
+        int sortPeriod;
+        //!A flag that determins if a spatial sorting is due to occur this Timestep
+        bool spatialSortThisStep;
 
     };
 typedef shared_ptr<Simulation> SimulationPtr;

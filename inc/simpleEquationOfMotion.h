@@ -8,7 +8,6 @@
 #include "Simple2DModel.h"
 #include "simpleEquationOfMotion.cuh"
 
-class Simulation;
 /*! \file simpleEquationOfMotion.h */
 //!A base class for implementing simple equations of motion
 /*!
@@ -38,8 +37,8 @@ class simpleEquationOfMotion
 
         //!the fundamental function that models will call to advance the simulation...sometimes the function signature is so simple that this specialization helps
         virtual void integrateEquationsOfMotion(GPUArray<Dscalar2> &forces, GPUArray<Dscalar2> &displacements){};
-        //!allow for spatial sorting to be called if necessary... models should pass the "itt" vector to this function
-        virtual void spatialSorting(const vector<int> &reIndexer){};
+        //!allow for spatial sorting to be called if necessary...
+        virtual void spatialSorting(){};
         //!allow for whatever GPU RNG initialization is needed
         virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0){};
 
@@ -68,8 +67,6 @@ class simpleEquationOfMotion
         shared_ptr<Simple2DModel> model;
         //! virtual function to allow the model to be a derived class
         virtual void set2DModel(shared_ptr<Simple2DModel> _model){};
-        //! pointer to a Simulation
-        shared_ptr<Simulation> simulation;
 
     protected:
         //!Should the simulation be reproducible (v/v the random numbers generated)?
@@ -92,6 +89,9 @@ class simpleEquationOfMotion
         bool GPUcompute;
         //!a vector of the re-indexing information
         vector<int> reIndexing;
+
+        //!an internal GPUArray for holding displacements
+        GPUArray<Dscalar2> displacements;
 
         //!re-index the any RNGs associated with the e.o.m.
         void reIndexRNG(GPUArray<curandState> &array)

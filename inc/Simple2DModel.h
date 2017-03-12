@@ -3,8 +3,6 @@
 
 #include "std_include.h"
 #include "gpuarray.h"
-//#include "simpleEquationOfMotion.h"
-class Simulation;
 
 /*! \file Simple2DModel.h
  * \brief defines an interface for models that compute forces
@@ -17,6 +15,8 @@ S.getNumberOfDegreesOfFreedom();
 S.computeForces();
 S.getForces();
 S.moveDegreesOfFreedom();
+S.enforceTopology();
+S.spatialSorting();
 */
 class Simple2DModel
     {
@@ -25,34 +25,24 @@ class Simple2DModel
         virtual void setGPU() = 0;
         //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
         virtual void setCPU() = 0;
-
         //!get the number of degrees of freedom, defaulting to the number of cells
         virtual int getNumberOfDegreesOfFreedom() = 0;
-
         //!do everything necessary to compute forces in the current model
         virtual void computeForces() = 0;
-
+        //!do everything necessary to perform a Hilbert sort
+        virtual void spatialSorting(){};
+        //!do everything necessary to enforce the topology of the system
+        virtual void enforceTopology(){};
         //!copy the models current set of forces to the variable
         virtual void getForces(GPUArray<Dscalar2> &forces) = 0;
-        
         //!return a reference to the GPUArray of the current forces
         virtual GPUArray<Dscalar2> & returnForces() = 0;
-
         //!move the degrees of freedom
         virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements) = 0;
         //!reporting function (remove later...)
         virtual Dscalar reportq() = 0;
+        //!reporting function (remove later...)
         virtual void reportMeanCellForce(bool a) = 0;
-        virtual void setSortPeriod(int a) = 0;
-        virtual void performTimestep() = 0;
-
-        //! pointer to a Simulation
-        shared_ptr<Simulation> simulation;
-        //!An EOMPtr (remove later...)
-        //EOMPtr equationOfMotion; 
-
-//        void setEquationOfMotion(EOMPtr &_eom){equationOfMotion = _eom;};
     };
-
 
 #endif

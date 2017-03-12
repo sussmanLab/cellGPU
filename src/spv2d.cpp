@@ -50,7 +50,6 @@ void SPV2D::Initialize(int n)
     setDeltaT(0.01);
     initializeDelMD(n);
     setModuliUniform(1.0,1.0);
-    sortPeriod = -1;
 
     setv0Dr(0.05,1.0);
     cellForces.resize(n);
@@ -68,11 +67,6 @@ void SPV2D::Initialize(int n)
     setCellDirectorsRandomly();
     resetLists();
     allDelSets();
-
-    //initialize the vectors passed to the e.o.m.s
-    DscalarArrayInfo.push_back(cellDirectors);
-    Dscalar2ArrayInfo.push_back(cellForces);
-    Dscalar2ArrayInfo.push_back(Motility);
     };
 
 /*!
@@ -161,7 +155,6 @@ When sortPeriod < 0, this routine does not get called
 */
 void SPV2D::spatialSorting()
     {
-    //equationOfMotion->spatialSorting(itt);
     spatiallySortCellsAndCellActivity();
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
@@ -267,34 +260,6 @@ void SPV2D::setExclusions(vector<int> &exes)
             h_ex.data[ii] = 1;
             };
         };
-    };
-
-/*!
-Call all relevant functions to advance the system one time step; every sortPeriod also call the
-spatial sorting routine.
-\post The simulation is advanced one time step
-*/
-void SPV2D::performTimestep()
-    {
-    Timestep += 1;
-
-    spatialSortThisStep = false;
-    if (sortPeriod > 0)
-        {
-        if (Timestep % sortPeriod == 0)
-            {
-            spatialSortThisStep = true;
-            };
-        };
-
-    computeForces();
-    displaceCellsAndRotate();
-
-    //spatial sorting also takes care of topology
-    if (spatialSortThisStep)
-        spatialSorting();
-    else
-        enforceTopology();
     };
 
 /*!

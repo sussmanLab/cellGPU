@@ -74,12 +74,12 @@ int main(int argc, char*argv[])
     //spv->setEquationOfMotion(spp);
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setv0Dr(v0,1.0);
-    spv->setSortPeriod(initSteps/10);
 
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
     sim->setEquationOfMotion(spp,spv);
     sim->setIntegrationTimestep(dt);
+    sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
     if(!initializeGPU)
         sim->setCPUOperation(true);

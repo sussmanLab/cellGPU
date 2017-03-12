@@ -55,12 +55,6 @@ class SPV2D : public DelaunayMD
 
         //cell-dynamics related functions...these call functions in the next section
         //in general, these functions are the common calls, and test flags to know whether to call specific versions of specialty functions
-        //!Perform a timestep for the system
-        void performTimestep();
-        //!call the CPU branch to advance the system
-        void performTimestepCPU();
-        //!call the GPU branch to advance the system
-        void performTimestepGPU();
 
         //!Compute force sets on the GPU
         virtual void ComputeForceSetsGPU();
@@ -107,7 +101,6 @@ class SPV2D : public DelaunayMD
         //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
         bool particleExclusions;
 
-
         //!delSet.data[n_idx(nn,i)] are the previous and next consecutive delaunay neighbors,
         //!orientationally ordered, of point i (for use in computing forces on GPU)
         GPUArray<int2> delSets;
@@ -126,7 +119,6 @@ class SPV2D : public DelaunayMD
         GPUArray<Dscalar2> external_forces;
         //!An array containing the indices of excluded particles
         GPUArray<int> exclusions;
-
 
         //!Some function-timing-related scalars
         Dscalar triangletiming, forcetiming;

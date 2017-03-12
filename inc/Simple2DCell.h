@@ -79,11 +79,11 @@ class Simple2DCell : public Simple2DModel
         //!Set cells to different "type"
         void setCellType(vector<int> &types);
 
-        //!Set the time between spatial sorting operations.
-        void setSortPeriod(int sp){sortPeriod = sp;};
-
         //!An uncomfortable function to allow the user to set vertex topology "by hand"
         void setVertexTopologyFromCells(vector< vector<int> > cellVertexIndices);
+
+        //!return the base "itt" re-indexing vector
+        virtual vector<int> & returnItt(){return itt;};
 
     //protected functions
     protected:
@@ -215,10 +215,6 @@ class Simple2DCell : public Simple2DModel
         vector<int> tagToIdxVertex;
         //!A temporary structure that inverse tagToIdx
         vector<int> idxToTagVertex;
-        //! Determines how frequently the spatial sorter be called...once per sortPeriod Timesteps. When sortPeriod < 0 no sorting occurs
-        int sortPeriod;
-        //!A flag that determins if a spatial sorting is due to occur this Timestep
-        bool spatialSortThisStep;
 
         //utility data structures for interfacing with equations of motion
         //! a vector of Dscalars to be passed to the equation of motion
