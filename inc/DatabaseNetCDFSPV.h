@@ -18,7 +18,7 @@ and the shape index parameter for each vertex
 class SPVDatabaseNetCDF : public BaseDatabaseNetCDF
 {
 private:
-    typedef SPV2D STATE;
+    typedef shared_ptr<SPV2D> STATE;
     int Nv; //!< number of vertices in delaunay triangulation
     NcDim *recDim, *NvDim, *dofDim, *boxDim, *unitDim; //!< NcDims we'll use
     NcVar *posVar, *typeVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var,*exVar; //!<NcVars we'll use
@@ -43,9 +43,9 @@ public:
                     };
 
     //!Write the current state of the system to the database. If the default value of "rec=-1" is used, just append the current state to a new record at the end of the database
-    void WriteState(STATE &c, Dscalar time = -1.0, int rec=-1);
+    void WriteState(STATE c, Dscalar time = -1.0, int rec=-1);
     //!Read the "rec"th entry of the database into SPV2D state c. If geometry=true, after reading a CPU-based triangulation is performed, and local geometry of cells computed.
-    void ReadState(STATE &c, int rec,bool geometry=true);
+    void ReadState(STATE c, int rec,bool geometry=true);
 
 };
 
@@ -112,14 +112,14 @@ void SPVDatabaseNetCDF::GetDimVar()
         exVar = File.get_var("externalForce");
     }
 
-void SPVDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
+void SPVDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
     {
     if(rec<0)   rec = recDim->size();
-    if (time < 0) time = s.Timestep*s.deltaT;
+    if (time < 0) time = s->currentTime;
 
     std::vector<Dscalar> boxdat(4,0.0);
     Dscalar x11,x12,x21,x22;
-    s.Box.getBoxDims(x11,x12,x21,x22);
+    s->Box.getBoxDims(x11,x12,x21,x22);
     boxdat[0]=x11;
     boxdat[1]=x12;
     boxdat[2]=x21;
@@ -131,14 +131,14 @@ void SPVDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
     int idx = 0;
     Dscalar means0=0.0;
 
-    ArrayHandle<Dscalar2> h_p(s.cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(s.cellDirectors,access_location::host,access_mode::read);
-    ArrayHandle<int> h_ct(s.CellType,access_location::host,access_mode::read);
-    ArrayHandle<int> h_ex(s.exclusions,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_p(s->cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> h_cd(s->cellDirectors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_ct(s->CellType,access_location::host,access_mode::read);
+    ArrayHandle<int> h_ex(s->exclusions,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Nv; ++ii)
         {
-        int pidx = s.tagToIdx[ii];
+        int pidx = s->tagToIdx[ii];
         Dscalar px = h_p.data[pidx].x;
         Dscalar py = h_p.data[pidx].y;
         posdat[(2*idx)] = px;
@@ -151,7 +151,7 @@ void SPVDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
         idx +=1;
         };
 //    means0 = means0/Nv;
-    means0 = s.reportq();
+    means0 = s->reportq();
 
     //Write all the data
     means0Var      ->put_rec(&means0,      rec);
@@ -162,12 +162,12 @@ void SPVDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
     BoxMatrixVar->put_rec(&boxdat[0],     rec);
     if(exclusions)
         {
-        ArrayHandle<Dscalar2> h_ef(s.external_forces,access_location::host,access_mode::read);
+        ArrayHandle<Dscalar2> h_ef(s->external_forces,access_location::host,access_mode::read);
         std::vector<Dscalar> exdat(2*Nv);
         int id = 0;
         for (int ii = 0; ii < Nv; ++ii)
             {
-            int pidx = s.tagToIdx[ii];
+            int pidx = s->tagToIdx[ii];
             Dscalar px = h_ef.data[pidx].x;
             Dscalar py = h_ef.data[pidx].y;
             exdat[(2*id)] = px;
@@ -180,7 +180,7 @@ void SPVDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
     File.sync();
     }
 
-void SPVDatabaseNetCDF::ReadState(STATE &t, int rec,bool geometry)
+void SPVDatabaseNetCDF::ReadState(STATE t, int rec,bool geometry)
     {
     //initialize the NetCDF dimensions and variables
     //test if there is exclusion data to read...
@@ -191,21 +191,21 @@ void SPVDatabaseNetCDF::ReadState(STATE &t, int rec,bool geometry)
 
     //get the current time
     timeVar-> set_cur(rec);
-    timeVar->get(&t.SimTime,1,1);
+    timeVar->get(& t->currentTime,1,1);
 
 
     //set the box
     BoxMatrixVar-> set_cur(rec);
     std::vector<Dscalar> boxdata(4,0.0);
     BoxMatrixVar->get(&boxdata[0],1, boxDim->size());
-    t.Box.setGeneral(boxdata[0],boxdata[1],boxdata[2],boxdata[3]);
+    t->Box.setGeneral(boxdata[0],boxdata[1],boxdata[2],boxdata[3]);
 
     //get the positions
     posVar-> set_cur(rec);
     std::vector<Dscalar> posdata(2*Nv,0.0);
     posVar->get(&posdata[0],1, dofDim->size());
 
-    ArrayHandle<Dscalar2> h_p(t.cellPositions,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_p(t->cellPositions,access_location::host,access_mode::overwrite);
     for (int idx = 0; idx < Nv; ++idx)
         {
         Dscalar px = posdata[(2*idx)];
@@ -218,12 +218,12 @@ void SPVDatabaseNetCDF::ReadState(STATE &t, int rec,bool geometry)
     typeVar->set_cur(rec);
     std::vector<int> ctdata(Nv,0.0);
     typeVar->get(&ctdata[0],1, NvDim->size());
-    ArrayHandle<int> h_ct(t.CellType,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> h_ct(t->CellType,access_location::host,access_mode::overwrite);
 
     directorVar->set_cur(rec);
     std::vector<Dscalar> cddata(Nv,0.0);
     directorVar->get(&cddata[0],1, NvDim->size());
-    ArrayHandle<Dscalar> h_cd(t.cellDirectors,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar> h_cd(t->cellDirectors,access_location::host,access_mode::overwrite);
     for (int idx = 0; idx < Nv; ++idx)
         {
         h_cd.data[idx]=cddata[idx];;
@@ -236,7 +236,7 @@ void SPVDatabaseNetCDF::ReadState(STATE &t, int rec,bool geometry)
         exVar-> set_cur(rec);
         std::vector<Dscalar> efdata(2*Nv,0.0);
         exVar->get(&posdata[0],1, dofDim->size());
-        ArrayHandle<Dscalar2> h_ef(t.external_forces,access_location::host,access_mode::overwrite);
+        ArrayHandle<Dscalar2> h_ef(t->external_forces,access_location::host,access_mode::overwrite);
         for (int idx = 0; idx < Nv; ++idx)
             {
             Dscalar efx = efdata[(2*idx)];
@@ -250,17 +250,14 @@ void SPVDatabaseNetCDF::ReadState(STATE &t, int rec,bool geometry)
     //by default, compute the triangulation and geometrical information
     if(geometry)
         {
-        t.resetDelLocPoints();
-        t.updateCellList();
-        t.globalTriangulationCGAL();
-        if(t.GPUcompute)
-            t.computeGeometryGPU();
+        t->resetDelLocPoints();
+        t->updateCellList();
+        t->globalTriangulationCGAL();
+        if(t->GPUcompute)
+            t->computeGeometryGPU();
         else
-            t.computeGeometryCPU();
+            t->computeGeometryCPU();
         };
-
     }
-
-
 
 #endif

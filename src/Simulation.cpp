@@ -107,12 +107,12 @@ void Simulation::performTimestep()
     Time += integrationTimestep;
     auto eom = equationOfMotion.lock();
     eom->integrateEquationsOfMotion();
+    auto cellConf = cellConfiguration.lock();
     //check if spatial sorting needs to occur
     if (sortPeriod > 0 & integerTimestep % sortPeriod == 0)
         {
-        auto cellConf = cellConfiguration.lock();
         cellConf->spatialSorting();
         eom->spatialSorting();
-
         };
+    cellConf->setTime(Time);
     };

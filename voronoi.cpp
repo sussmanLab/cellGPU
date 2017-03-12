@@ -8,7 +8,7 @@
 #include "Simulation.h"
 #include "spv2d.h"
 #include "selfPropelledParticleDynamics.h"
-//#include "DatabaseNetCDFSPV.h"
+#include "DatabaseNetCDFSPV.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -71,6 +71,9 @@ int main(int argc, char*argv[])
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
 
     ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
+    shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
+
+
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setv0Dr(v0,1.0);
 
@@ -85,15 +88,15 @@ int main(int argc, char*argv[])
     sim->setReproducible(true);
     //initialize parameters
 
-//    char dataname[256];
-//    sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+    char dataname[256];
+    sprintf(dataname,"../test.nc");
+    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+    ncdat.WriteState(SPV);
 
 
     printf("starting initialization\n");
     for(int ii = 0; ii < initSteps; ++ii)
         {
-        //spv->performTimestep();
         sim->performTimestep();
         };
 
@@ -105,12 +108,11 @@ int main(int argc, char*argv[])
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
-        if(ii%10000 ==0)
+        if(ii%100 ==0)
             {
             printf("timestep %i\n",ii);
-//    ncdat.WriteState(spv);
+            ncdat.WriteState(SPV);
             };
- //       spv->performTimestep();
         sim->performTimestep();
         };
     t2=clock();
@@ -123,7 +125,10 @@ int main(int argc, char*argv[])
     if(initializeGPU)
         cudaProfilerStop();
 
-//    ncdat.WriteState(spv);
+    ncdat.WriteState(SPV);
+
+    ncdat.ReadState(SPV,0,true);
+    ncdat.WriteState(SPV);
     if(initializeGPU)
         cudaDeviceReset();
 

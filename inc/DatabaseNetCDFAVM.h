@@ -20,7 +20,7 @@ and the set of connections between vertices
 class AVMDatabaseNetCDF : public BaseDatabaseNetCDF
 {
 private:
-    typedef AVM2D STATE;
+    typedef shared_ptr<AVM2D> STATE;
     int Nv; //!< number of vertices in AVM
     int Nc; //!< number of cells in AVM
     int Nvn; //!< the number of vertex-vertex connections
@@ -48,9 +48,9 @@ public:
         };
 
     //!Write the current state of the system to the database. If the default value of "rec=-1" is used, just append the current state to a new record at the end of the database
-    void WriteState(STATE &c, Dscalar time = -1.0, int rec=-1);
+    void WriteState(STATE c, Dscalar time = -1.0, int rec=-1);
     //!Read the "rec"th entry of the database into AVM2D state c. If geometry=true, after reading a CPU-based triangulation is performed, and local geometry of cells computed.
-    void ReadState(STATE &c, int rec,bool geometry=true);
+    void ReadState(STATE c, int rec,bool geometry=true);
 };
 
 //Implementation
@@ -117,14 +117,14 @@ void AVMDatabaseNetCDF::GetDimVar()
 }
 
 
-void AVMDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
+void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
 {
     if(rec<0)   rec = recDim->size();
-    if (time < 0) time = s.Timestep*s.deltaT;
+    if (time < 0) time = s->currentTime;
 
     std::vector<Dscalar> boxdat(4,0.0);
     Dscalar x11,x12,x21,x22;
-    s.Box.getBoxDims(x11,x12,x21,x22);
+    s->Box.getBoxDims(x11,x12,x21,x22);
     boxdat[0]=x11;
     boxdat[1]=x12;
     boxdat[2]=x21;
@@ -136,19 +136,19 @@ void AVMDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
     std::vector<int> vndat(3*Nv);
     int idx = 0;
 
-    ArrayHandle<Dscalar2> h_p(s.vertexPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_f(s.vertexForces,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(s.cellDirectors,access_location::host,access_mode::read);
-    ArrayHandle<int> h_vn(s.vertexNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_p(s->vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_f(s->vertexForces,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> h_cd(s->cellDirectors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_vn(s->vertexNeighbors,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Nc; ++ii)
         {
-        int pidx = s.tagToIdx[ii];
+        int pidx = s->tagToIdx[ii];
         directordat[ii] = h_cd.data[pidx];
         };
     for (int ii = 0; ii < Nv; ++ii)
         {
-        int pidx = s.tagToIdxVertex[ii];
+        int pidx = s->tagToIdxVertex[ii];
         Dscalar px = h_p.data[pidx].x;
         Dscalar py = h_p.data[pidx].y;
         posdat[(2*idx)] = px;
@@ -161,10 +161,10 @@ void AVMDatabaseNetCDF::WriteState(STATE &s, Dscalar time, int rec)
         };
     for (int vv = 0; vv < Nv; ++vv)
         {
-        int vertexIndex = s.tagToIdxVertex[vv];
+        int vertexIndex = s->tagToIdxVertex[vv];
         for (int ii = 0 ;ii < 3; ++ii)
             {
-            vndat[3*vv+ii] = s.idxToTagVertex[h_vn.data[3*vertexIndex+ii]];
+            vndat[3*vv+ii] = s->idxToTagVertex[h_vn.data[3*vertexIndex+ii]];
             };
         };
 

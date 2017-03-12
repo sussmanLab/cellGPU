@@ -6,7 +6,7 @@
 
 #include "avm2d.h"
 #include "selfPropelledCellVertexDynamics.h"
-//#include "DatabaseNetCDFAVM.h"
+#include "DatabaseNetCDFAVM.h"
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
 for the 2D AVM model found in the "cellGPU" paper, using the following parameters:
@@ -75,7 +75,7 @@ int main(int argc, char*argv[])
     char dataname[256];
     sprintf(dataname,"../test.nc");
     int Nvert = 2*numpts;
-//    AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
+    AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
     bool runSPV = false;
 
@@ -109,7 +109,7 @@ int main(int argc, char*argv[])
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {
             cout << timestep << endl;
- //           ncdat.WriteState(avm);
+            ncdat.WriteState(AVMparams);
             };
         };
 

@@ -43,6 +43,10 @@ class Simple2DModel
         virtual Dscalar reportq() = 0;
         //!reporting function (remove later...)
         virtual void reportMeanCellForce(bool a) = 0;
+        //!a time variable for keeping track of the simulation variable (for databases)
+        Dscalar currentTime;
+        //!set the time
+        virtual void setTime(Dscalar time){currentTime = time;};
     };
 
 #endif

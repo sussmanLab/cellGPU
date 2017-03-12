@@ -55,9 +55,15 @@ class Simulation : public enable_shared_from_this<Simulation>
         //!Set the time between spatial sorting operations.
         void setSortPeriod(int sp){sortPeriod = sp;};
 
+        //!reset the simulation clock
+        virtual void setCurrentTimestep(int _cTime){integerTimestep =_cTime;};
+        //! An integer that keeps track of how often performTimestep has been called
         int integerTimestep;
+        //!The current simulation time
         Dscalar Time;
+        //! The dt of a time step
         Dscalar integrationTimestep;
+        //! A flag controlling whether to use the GPU
         bool USE_GPU;
 
     protected:

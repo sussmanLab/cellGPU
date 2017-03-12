@@ -7,6 +7,7 @@
 #define ENABLE_CUDA
 
 #include "spv2d.h"
+#include "Simulation.h"
 #include "selfPropelledParticleDynamics.h"
 #include "brownianParticleDynamics.h"
 #include "DatabaseNetCDFSPV.h"
@@ -61,52 +62,53 @@ int main(int argc, char*argv[])
                        abort();
         };
     clock_t t1,t2;
-
+    bool reproducible = true;
+    bool initializeGPU = true;
     if (USE_GPU >= 0)
         {
         bool gpu = chooseGPU(USE_GPU);
         if (!gpu) return 0;
         cudaSetDevice(USE_GPU);
         }
+    else
+        initializeGPU = false;
 
 
     char dataname[256];
     printf("Initializing a system with N= %i, p0 = %.2f, v0 = %.2f, Dr = %.3f\n",numpts,p0,v0,Dr);
-    sprintf(dataname,"./monodisperse_N%i_p%.4f_v%.2f_Dr%.3f.nc",numpts,p0,v0,Dr);
+    sprintf(dataname,"../monodisperse_N%i_p%.4f_v%.2f_Dr%.3f.nc",numpts,p0,v0,Dr);
     SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace,false);
 
+    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+    EOMPtr bd = make_shared<brownianParticleDynamics>(numpts);
+    shared_ptr<brownianParticleDynamics> BD = dynamic_pointer_cast<brownianParticleDynamics>(bd);
 
-    selfPropelledParticleDynamics spp(numpts);
-    brownianParticleDynamics bd(numpts);
-    SPV2D spv(numpts,1.0,p0);
-    if(program_switch ==0)
-        spv.setEquationOfMotion(spp);
-    else
-        spv.setEquationOfMotion(bd);
-    if (USE_GPU < 0)
-        {
-        spv.setCPU(false);
-        spp.setCPU();
-        bd.setCPU();
-        }
-    else
-        {
-        bd.initializeRNGs(1337,0);
-        spp.initializeRNGs(1337,0);
-        };
+    ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
+    shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
 
-    spv.setv0Dr(v0,Dr);
-    bd.setDeltaT(dt);
-    bd.setT(v0*v0/2.0*Dr);
-    spp.setDeltaT(dt);
-    bd.setDeltaT(dt);
-    spv.setDeltaT(dt);
-    spv.setSortPeriod(5000);
+
+    spv->setCellPreferencesUniform(1.0,p0);
+    spv->setv0Dr(v0,Dr);
+
+    SimulationPtr sim = make_shared<Simulation>();
+    sim->setConfiguration(spv);
+    if(program_switch == 0)
+        sim->setEquationOfMotion(spp,spv);
+    else
+        sim->setEquationOfMotion(bd,spv);
+    sim->setIntegrationTimestep(dt);
+    sim->setSortPeriod(initSteps/10);
+    if(!initializeGPU)
+        sim->setCPUOperation(true);
+    sim->setReproducible(true);
+    //initialize parameters
+
+    BD->setT(v0*v0/2.0*Dr);
 
     //initialize
     for(int ii = 0; ii < initSteps; ++ii)
         {
-        spv.performTimestep();
+        sim->performTimestep();
         };
 
     printf("Finished with initialization...running and saving states\n");
@@ -114,14 +116,14 @@ int main(int argc, char*argv[])
     int logSaveIdx = 0;
     int nextSave = 0;
     t1=clock();
-    spv.Timestep = 0;
+    sim->setCurrentTimestep(0);
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
         if(ii == nextSave)
             {
             printf(" step %i\n",ii);
-            ncdat.WriteState(spv);
+            ncdat.WriteState(SPV);
             nextSave = (int)round(pow(pow(10.0,0.05),logSaveIdx));
             while(nextSave == ii)
                 {
@@ -130,14 +132,14 @@ int main(int argc, char*argv[])
                 };
 
             };
-        spv.performTimestep();
+        sim->performTimestep();
         };
     t2=clock();
-    ncdat.WriteState(spv);
+    ncdat.WriteState(SPV);
 
 
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
-    cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
+    cout << "timestep ~ " << steptime << " per frame; " << endl;
 
     return 0;
 };

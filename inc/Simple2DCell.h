@@ -21,9 +21,8 @@ class Simple2DCell : public Simple2DModel
         Simple2DCell();
 
         //!Destructor needed.
-        ~Simple2DCell()
+        virtual ~Simple2DCell()
             {
-            //delete equationOfMotion;
             };
 
         //!Simple2DCells are static; they are allowed to know about dynamics via a pointer
