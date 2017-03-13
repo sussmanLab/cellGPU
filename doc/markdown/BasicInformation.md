@@ -8,6 +8,10 @@ https://arxiv.org/abs/1702.02939
 
 ### General data structures and analysis classes
 
+* Simulation -- a class that takes shared pointers to things like the data structures, cell models,
+equations of motion, etc., below. This allows for centralized control of very flexible, run-time
+changes to simulations.
+
 * Simple2DCell -- a class that defines flat data structures for some of the most common features of
 off-lattice cell models, such as cell positions, vertex positions, neighbor information, etc. Also
 contains the functionality to perform spatial sorting of cells and vertices for better memory locality.
@@ -37,12 +41,8 @@ term corresponding to a constant velocity in a direction that rotates
 of freedom but where the cells are the things with activity.
 * brownianParticleDynamics -- the time derivative of a particle is the force on it, plus a translational
 Gaussian noise, simulating an overdamped langevin equation at some temperature
-
-### Energy minimization
-
-* EnergyMinimizerFIRE -- provides a templated interface allowing for FIRE minimization of any model
-that provides an interface to be able to compute forces, move degrees of freedom, and handle any
-extra topological features.
+* EnergyMinimizerFIRE -- provides an interface to a FIRE minimizer that is modeled on the simpleEquationOfMotion
+class.
 
 ## Basic idea of SPV hybrid operation
 

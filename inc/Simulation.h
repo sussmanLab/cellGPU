@@ -10,6 +10,9 @@
 
 //! A class that ties together all the parts of a simulation
 /*!
+Simulation objects should have a configuration set, and then an equation of motion. In addition to
+being a centralized object controlling the progression of a simulation of cell models, the Simulation
+class provides some interfaces to cell configuration and equation of motion parameter setters.
 */
 class Simulation : public enable_shared_from_this<Simulation>
     {

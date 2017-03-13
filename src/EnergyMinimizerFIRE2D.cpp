@@ -10,9 +10,9 @@
 Initialize the minimizer with a reference to a target system, set a bunch of default parameters.
 Of note, the current default is CPU operation
 */
-EnergyMinimizerFIRE::EnergyMinimizerFIRE(Simple2DActiveCell &system)
-            :State(&system)
+EnergyMinimizerFIRE::EnergyMinimizerFIRE(shared_ptr<Simple2DModel> system)
     {
+    set2DModel(system);
     N = State->getNumberOfDegreesOfFreedom();
     forceDotForce.resize(N);
     forceDotVelocity.resize(N);

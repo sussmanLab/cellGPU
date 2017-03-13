@@ -12,6 +12,8 @@
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
+in the main cellGPU paper. It sets up a simulation that takes control of a voronoi model and a simple
+model of active motility
 */
 int main(int argc, char*argv[])
 {
@@ -55,7 +57,6 @@ int main(int argc, char*argv[])
                        abort();
         };
 
-
     clock_t t1,t2;
     bool reproducible = true;
     bool initializeGPU = true;
@@ -69,10 +70,8 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
-
     ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
     shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
-
 
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setv0Dr(v0,1.0);

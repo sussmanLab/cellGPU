@@ -5,6 +5,7 @@
 
 #define ENABLE_CUDA
 
+#include "Simulation.h"
 #include "spv2d.h"
 #include "selfPropelledParticleDynamics.h"
 #include "selfPropelledCellVertexDynamics.h"
@@ -14,23 +15,23 @@
 #include "EnergyMinimizerFIRE2D.h"
 
 /*!
-This file compiles to produce an executable that shows how to use the energy minimization
-functionality of cellGPU. Note that the choice of CPU or GPU operation for the minimization class
-is independent of the choice of CPU or GPU operation of the cell model used.
+This file compiles to produce an executable that demonstrates how to use the energy minimization
+functionality of cellGPU. Now that energy minimization behaves like any other equation of motion, this
+demonstration is pretty straightforward
 */
 
-void setFIREParameters(EnergyMinimizerFIRE &emin, Dscalar deltaT, Dscalar alphaStart,
+void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, Dscalar deltaT, Dscalar alphaStart,
         Dscalar deltaTMax, Dscalar deltaTInc, Dscalar deltaTDec, Dscalar alphaDec, int nMin,
         Dscalar forceCutoff)
     {
-    emin.setDeltaT(deltaT);
-    emin.setAlphaStart(alphaStart);
-    emin.setDeltaTMax(deltaTMax);
-    emin.setDeltaTInc(deltaTInc);
-    emin.setDeltaTDec(deltaTDec);
-    emin.setAlphaDec(alphaDec);
-    emin.setNMin(nMin);
-    emin.setForceCutoff(forceCutoff);
+    emin->setDeltaT(deltaT);
+    emin->setAlphaStart(alphaStart);
+    emin->setDeltaTMax(deltaTMax);
+    emin->setDeltaTInc(deltaTInc);
+    emin->setDeltaTDec(deltaTDec);
+    emin->setAlphaDec(alphaDec);
+    emin->setNMin(nMin);
+    emin->setForceCutoff(forceCutoff);
     };
 
 int main(int argc, char*argv[])
@@ -92,92 +93,73 @@ int main(int argc, char*argv[])
 
     if(program_switch == 0)
         {
+        ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
+        shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
+
+        EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
+        shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
+
+        spv->setCellPreferencesUniform(1.0,p0);
+        spv->setv0Dr(v0,1.0);
+
+        SimulationPtr sim = make_shared<Simulation>();
+        sim->setConfiguration(spv);
+        sim->setEquationOfMotion(fireMinimizer,spv);
+        sim->setIntegrationTimestep(dt);
+        if(initSteps > 0)
+            sim->setSortPeriod(initSteps/10);
+        //set appropriate CPU and GPU flags
+        if(!initializeGPU)
+            sim->setCPUOperation(true);
+
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-        SPV2D spv(numpts,1.0,p0,reproducible);
-        spv.setCellPreferencesUniform(1.0,p0);
-        spv.setv0Dr(v0,1.0);
-        selfPropelledParticleDynamics spp(numpts);
-        spp.setDeltaT(dt);
-        spv.setEquationOfMotion(spp);
-        if (!initializeGPU)
-            {
-            spv.setCPU(false);
-            spp.setCPU();
-            }
-        else
-            spp.initializeRNGs(1337,0);
-        printf("starting initialization\n");
-        spv.setSortPeriod(initSteps/10);
-        for(int ii = 0; ii < initSteps; ++ii)
-            {
-            spv.performTimestep();
-            };
-        if(initializeGPU)
-            cudaProfilerStart();
-        ncdat.WriteState(spv);
+        ncdat.WriteState(SPV);
+
         for (int i = 0; i <tSteps;++i)
             {
-            EnergyMinimizerFIRE emin(spv);
-            setFIREParameters(emin,0.01,0.99,0.1,1.1,0.95,.9,4,1e-12);
-            if(USE_GPU >=0 )
-                emin.setGPU();
-            else
-                emin.setCPU();
-            emin.setMaximumIterations(50);
-            emin.minimize();
-            ncdat.WriteState(spv);
+            setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
+            FIREMIN->setMaximumIterations(50*(i+1));
+            sim->performTimestep();
+            ncdat.WriteState(SPV);
             };
-        printf("minimized value of q = %f\n",spv.reportq());
-        if(initializeGPU)
-            cudaProfilerStop();
-        ncdat.WriteState(spv);
-        if(initializeGPU)
-            cudaDeviceReset();
-    };
+        printf("minimized value of q = %f\n",spv->reportq());
+        ncdat.WriteState(SPV);
+        };
     if(program_switch == 1)
         {
-        AVM2D avm(numpts,1.0,p0,reproducible,true);
-        AVMDatabaseNetCDF ncdat(avm.Nvertices,dataname,NcFile::Replace);
-        selfPropelledCellVertexDynamics sppCV(numpts,2*numpts);
-        sppCV.setDeltaT(dt);
-        avm.setEquationOfMotion(sppCV);
-        if (!initializeGPU)
-            {
-            avm.setCPU();
-            sppCV.setCPU();
-            }
-        else
-            sppCV.initializeRNGs(1337,0);
-        avm.setCellPreferencesUniform(1.0,p0);
-        avm.setv0Dr(v0,1.0);
-        avm.setDeltaT(dt);
-        printf("starting initialization\n");
-        avm.setSortPeriod(initSteps/10);
-        for(int ii = 0; ii < initSteps; ++ii)
-            {
-            avm.performTimestep();
-            };
-        if(initializeGPU)
-            cudaProfilerStart();
-        ncdat.WriteState(avm);
+        ForcePtr avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible);
+        shared_ptr<AVM2D> AVM = dynamic_pointer_cast<AVM2D>(avm);
+
+        EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(avm);
+        shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
+
+        avm->setCellPreferencesUniform(1.0,p0);
+        avm->setv0Dr(v0,1.0);
+
+        SimulationPtr sim = make_shared<Simulation>();
+        sim->setConfiguration(avm);
+        sim->setEquationOfMotion(fireMinimizer,avm);
+        sim->setIntegrationTimestep(dt);
+        if(initSteps > 0)
+            sim->setSortPeriod(initSteps/10);
+        //set appropriate CPU and GPU flags
+        if(!initializeGPU)
+            sim->setCPUOperation(true);
+
+        AVMDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+        ncdat.WriteState(AVM);
+
         for (int i = 0; i <tSteps;++i)
             {
-            EnergyMinimizerFIRE emin(avm);
-            setFIREParameters(emin,0.01,0.99,0.1,1.1,0.95,.9,4,1e-12);
-            if(USE_GPU >=0 )
-                emin.setGPU();
-            else
-                emin.setCPU();
-            emin.setMaximumIterations(50);
-            emin.minimize();
-            ncdat.WriteState(avm);
+            setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
+            FIREMIN->setMaximumIterations(50*(i+1));
+            sim->performTimestep();
+            ncdat.WriteState(AVM);
             };
-        printf("minimized value of q = %f\n",avm.reportq());
-        if(initializeGPU)
-            cudaProfilerStop();
-        ncdat.WriteState(avm);
-        if(initializeGPU)
-            cudaDeviceReset();
-    };
+        printf("minimized value of q = %f\n",avm->reportq());
+        ncdat.WriteState(AVM);
+        };
+    if(initializeGPU)
+        cudaDeviceReset();
     return 0;
 };

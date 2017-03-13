@@ -2,6 +2,7 @@
 
 ### Changes in progress
 
+* system-wide refactoring into simulation components
 * added simple Brownian dynamics equation of motion
 
 ### version 0.6

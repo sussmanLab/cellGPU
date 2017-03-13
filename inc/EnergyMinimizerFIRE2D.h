@@ -21,19 +21,18 @@ T.moveDegreesOfFreedom(disp) moves the degrees of freedom according to the GPUAr
 T.enforceTopology() takes care of any business the model that T implements needs after the
 positions of the underlying degrees of freedom have been updated
 */
-class EnergyMinimizerFIRE
+class EnergyMinimizerFIRE : public simpleEquationOfMotion
     {
     public:
         //!A no-initialization constructor for template instantiation
         EnergyMinimizerFIRE(){};
+        //!The basic constructor that feeds in a target system to minimize
+        EnergyMinimizerFIRE(shared_ptr<Simple2DModel> system);
 
         //!The system that can compute forces, move degrees of freedom, etc.
-        Simple2DActiveCell *State;
+        shared_ptr<Simple2DModel> State;
 
-        //!The basic constructor that feeds in a target system to minimize
-        EnergyMinimizerFIRE(Simple2DActiveCell &system);
-
-        void setSystem(Simple2DActiveCell  &_sys){State = &_sys;};
+        virtual void set2DModel(shared_ptr<Simple2DModel> _model){State = _model;};
 
         //!Set the maximum number of iterations before terminating (or set to -1 to ignore)
         void setMaximumIterations(int maxIt){maxIterations = maxIt;};
@@ -58,7 +57,7 @@ class EnergyMinimizerFIRE
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         void setGPU(){GPUcompute = true;};
         //!Enforce CPU-only operation.
-        void setCPU(){GPUcompute = false;};
+        virtual void setCPU(){GPUcompute = false;};
 
         //!an interface to call either the CPU or GPU velocity Verlet algorithm
         void velocityVerlet();
@@ -76,6 +75,9 @@ class EnergyMinimizerFIRE
 
         //!Minimize to either the force tolerance or the maximum number of iterations
         void minimize();
+        //!The "intergate equatios of motion just calls minimize
+        virtual void integrateEquationsOfMotion(){minimize();};
+
 
         //!Test the parallel reduction routines by passing in a known vector
         void parallelReduce(GPUArray<Dscalar> &vec);
@@ -132,7 +134,6 @@ class EnergyMinimizerFIRE
 
         //!Should calculations be done on the GPU?
         bool GPUcompute;
-
     };
 
 #endif
