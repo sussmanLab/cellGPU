@@ -13,23 +13,16 @@ Of note, the current default is CPU operation
 EnergyMinimizerFIRE::EnergyMinimizerFIRE(shared_ptr<Simple2DModel> system)
     {
     set2DModel(system);
-    N = State->getNumberOfDegreesOfFreedom();
-    forceDotForce.resize(N);
-    forceDotVelocity.resize(N);
-    velocityDotVelocity.resize(N);
-    force.resize(N);
-    velocity.resize(N);
-    displacement.resize(N);
-    sumReductionIntermediate.resize(N);
+    initializeParameters();
+    initializeFromModel();
+    };
+
+/*!
+Initialize the minimizer with some default parameters. that do not depend on N
+*/
+void EnergyMinimizerFIRE::initializeParameters()
+    {
     sumReductions.resize(3);
-    ArrayHandle<Dscalar2> h_f(force);
-    ArrayHandle<Dscalar2> h_v(velocity);
-    Dscalar2 zero; zero.x = 0.0; zero.y = 0.0;
-    for(int i = 0; i <N; ++i)
-        {
-        h_f.data[i]=zero;
-        h_v.data[i]=zero;
-        };
     iterations = 0;
     Power = 0;
     NSinceNegativePower = 0;
@@ -43,7 +36,32 @@ EnergyMinimizerFIRE::EnergyMinimizerFIRE(shared_ptr<Simple2DModel> system)
     setDeltaTDec(0.95);
     setAlphaDec(.9);
     setNMin(5);
-    setCPU();
+    setGPU();
+    };
+
+
+/*!
+Initialize the minimizer with some default parameters.
+\pre requires a Simple2DModel (to set N correctly) to be already known
+*/
+void EnergyMinimizerFIRE::initializeFromModel()
+    {
+    N = State->getNumberOfDegreesOfFreedom();
+    forceDotForce.resize(N);
+    forceDotVelocity.resize(N);
+    velocityDotVelocity.resize(N);
+    force.resize(N);
+    velocity.resize(N);
+    displacement.resize(N);
+    sumReductionIntermediate.resize(N);
+    ArrayHandle<Dscalar2> h_f(force);
+    ArrayHandle<Dscalar2> h_v(velocity);
+    Dscalar2 zero; zero.x = 0.0; zero.y = 0.0;
+    for(int i = 0; i <N; ++i)
+        {
+        h_f.data[i]=zero;
+        h_v.data[i]=zero;
+        };
     };
 
 /*!

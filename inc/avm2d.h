@@ -98,7 +98,7 @@ class AVM2D : public Simple2DActiveCell
     //public member variables...most of these should eventually be protected
     public:
         /*!
-        if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting verte i and vertex
+        if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting vertex i and vertex
         vertexNeighbors[3*i+j] has been marked for a T1 transition
         */
         //! flags that indicate whether an edge should be GPU-flipped (1) or not (0)

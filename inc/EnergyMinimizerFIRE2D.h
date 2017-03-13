@@ -11,35 +11,34 @@
 /*! \file EnergyMinimizerFIRE2D.h */
 //!Implement energy minimization via the FIRE algorithm
 /*!
-This class uses the "FIRE" algorithm to perform an energy minimization. It requires that
-the class, T, of the model provides access to the following functions:
-T.getNumberOfDegreesOfFreedom() should return the number of degrees of freedom (up to a factor of
-dimension)
-T.computeForces() should calculate the negative gradient of the energy in whatever model T implements
-T.getForces(f) is able to be called after T.computeForces(), and copies the forces to the variable f
-T.moveDegreesOfFreedom(disp) moves the degrees of freedom according to the GPUArray of displacements
-T.enforceTopology() takes care of any business the model that T implements needs after the
-positions of the underlying degrees of freedom have been updated
+This class uses the "FIRE" algorithm to perform an energy minimization.
+The class is in the same framework as the simpleEquationOfMotion class, so it is called by calling
+performTimestep on a Simulation object that has been given the FIRE minimizer and the configuration
+to minimize. Each timestep, though, is a complete minimization (i.e. will run for the maximum number
+of iterations, or until a target tolerance has been acheived, or whatever stopping condition the user
+sets.
 */
 class EnergyMinimizerFIRE : public simpleEquationOfMotion
     {
     public:
-        //!A no-initialization constructor for template instantiation
-        EnergyMinimizerFIRE(){};
+        //!The basic constructor
+        EnergyMinimizerFIRE(){initializeParameters();};
         //!The basic constructor that feeds in a target system to minimize
         EnergyMinimizerFIRE(shared_ptr<Simple2DModel> system);
+        //!Sets a bunch of default parameters that do not depend on the number of degrees of freedom
+        void initializeParameters();
+        //!Set a bunch of default initialization parameters (if the State is available to determine the size of vectors)
+        void initializeFromModel();
 
         //!The system that can compute forces, move degrees of freedom, etc.
         shared_ptr<Simple2DModel> State;
-
+        //!set the internal State to the given model
         virtual void set2DModel(shared_ptr<Simple2DModel> _model){State = _model;};
 
         //!Set the maximum number of iterations before terminating (or set to -1 to ignore)
         void setMaximumIterations(int maxIt){maxIterations = maxIt;};
-
         //!Set the force cutoff
         void setForceCutoff(Dscalar fc){forceCutoff = fc;};
-
         //!set the initial value of deltaT
         void setDeltaT(Dscalar dt){deltaT = dt;};
         //!set the initial value of alpha and alphaStart
@@ -77,7 +76,6 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         void minimize();
         //!The "intergate equatios of motion just calls minimize
         virtual void integrateEquationsOfMotion(){minimize();};
-
 
         //!Test the parallel reduction routines by passing in a known vector
         void parallelReduce(GPUArray<Dscalar> &vec);

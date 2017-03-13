@@ -141,5 +141,4 @@ HOSTDEVICE Matrix2x2 dyad(const Dscalar2 &v1, const Dscalar2 &v2)
     };
 
 #undef HOSTDEVICE
-
 #endif

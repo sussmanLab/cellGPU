@@ -36,7 +36,6 @@ how the program is compiled
 
 using namespace std;
 
-
 #include <cuda_runtime.h>
 #include "vector_types.h"
 #include "vector_functions.h"
@@ -73,16 +72,19 @@ using namespace std;
 #define Ceil ceilf
 #endif
 
+//!Less than operator for Dscalars just sorts by the x-coordinate
 HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)
     {
     return a.x<b.x;
     }
 
+//!Equality operator tests for.... equality of both elements
 HOSTDEVICE bool operator==(const Dscalar2 &a, const Dscalar2 &b)
     {
     return (a.x==b.x &&a.y==b.y);
     }
 
+//!return a Dscalar2 from two Dscalars
 HOSTDEVICE Dscalar2 make_Dscalar2(Dscalar x, Dscalar y)
     {
     Dscalar2 ans;
@@ -91,16 +93,19 @@ HOSTDEVICE Dscalar2 make_Dscalar2(Dscalar x, Dscalar y)
     return ans;
     }
 
+//!component-wise addition of two Dscalar2s
 HOSTDEVICE Dscalar2 operator+(const Dscalar2 &a, const Dscalar2 &b)
     {
     return make_Dscalar2(a.x+b.x,a.y+b.y);
     }
 
+//!component-wise subtraction of two Dscalar2s
 HOSTDEVICE Dscalar2 operator-(const Dscalar2 &a, const Dscalar2 &b)
     {
     return make_Dscalar2(a.x-b.x,a.y-b.y);
     }
 
+//!return a Dscalar4 from four Dscalars
 HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
     {
     Dscalar4 ans;
@@ -111,7 +116,7 @@ HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
     return ans;
     }
 
-//handle errors in kernel calls
+//!Handle errors in kernel calls...returns file and line numbers if cudaSuccess doesn't pan out
 static void HandleError(cudaError_t err, const char *file, int line)
     {
     //as an additional debugging check, if always synchronize cuda threads after every kernel call
@@ -125,9 +130,10 @@ static void HandleError(cudaError_t err, const char *file, int line)
         }
     }
 
+//A macro to wrap cuda calls
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
-
+//spot-checking of code for debugging
 #define DEBUGCODEHELPER printf("\nReached: file %s at line %d\n",__FILE__,__LINE__);
-#undef HOSTDEVICE
 
+#undef HOSTDEVICE
 #endif

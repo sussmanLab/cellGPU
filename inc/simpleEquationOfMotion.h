@@ -14,7 +14,17 @@
 In cellGPU a "simple" equation of motion is one that can take a GPUArray of forces and return a set
 of displacements. A derived class of this might be the self-propelled particle equations of motion,
 or simple Brownian dynamics.
-Derived classes must implement the integrateEquationsOfMotion function
+Derived classes must implement the integrateEquationsOfMotion function. Additionally, equations of
+motion act on a cell configuration, and in general require that the configuration, C,  passed in to the
+equation of motion provides access to the following:
+C->getNumberOfDegreesOfFreedom() should return the number of degrees of freedom (up to a factor of
+dimension)
+C->computeForces() should calculate the negative gradient of the energy in whatever model T implements
+C->getForces(f) is able to be called after T.computeForces(), and copies the forces to the variable f
+C->moveDegreesOfFreedom(disp) moves the degrees of freedom according to the GPUArray of displacements
+C->enforceTopology() takes care of any business the model that T implements needs after the
+positions of the underlying degrees of freedom have been updated
+
 */
 class simpleEquationOfMotion
     {
@@ -55,6 +65,7 @@ class simpleEquationOfMotion
         //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
         virtual void setCPU(){GPUcompute = false;};
 
+        //!Set the GPU initialization to true
         void initializeGPU(bool initGPU){initializeGPURNG = initGPU;};
 
         //! pointer to a Simple2DModel

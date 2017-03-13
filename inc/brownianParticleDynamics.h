@@ -16,8 +16,7 @@ class brownianParticleDynamics : public simpleEquationOfMotion
     public:
         //!base constructor sets the default time step size
         brownianParticleDynamics(){deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;};
-
-        //!additionally set the number of particles andinitialize things
+        //!additionally set the number of particles and initialize things
         brownianParticleDynamics(int N);
 
         //!the fundamental function that models will call, using vectors of different data structures

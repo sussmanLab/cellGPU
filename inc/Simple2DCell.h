@@ -20,17 +20,6 @@ class Simple2DCell : public Simple2DModel
         //!initialize member variables to some defaults
         Simple2DCell();
 
-        //!Destructor needed.
-        virtual ~Simple2DCell()
-            {
-            };
-
-        //!Simple2DCells are static; they are allowed to know about dynamics via a pointer
-        //simpleEquationOfMotion *equationOfMotion;
-
-        //!pass in an equation of motion to run
-        //void setEquationOfMotion(simpleEquationOfMotion &_eom){equationOfMotion = &_eom;};
-
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};
 
@@ -54,7 +43,6 @@ class Simple2DCell : public Simple2DModel
 
         //!Do everything necessary to update or enforce the topology in the current model
         virtual void enforceTopology(){};
-
 
         //!Set uniform cell area and perimeter preferences
         void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
@@ -119,19 +107,19 @@ class Simple2DCell : public Simple2DModel
         GPUArray<Dscalar2> cellPositions;
         //! Position of the vertices
         GPUArray<Dscalar2> vertexPositions;
+        //! VERTEX neighbors of every vertex
         /*!
         in general, we have:
         vertexNeighbors[3*i], vertexNeighbors[3*i+1], and vertexNeighbors[3*i+2] contain the indices
         of the three vertices that are connected to vertex i
         */
-        //! VERTEX neighbors of every vertex
         GPUArray<int> vertexNeighbors;
+        //! Cell neighbors of every vertex
         /*!
         in general, we have:
         vertexCellNeighbors[3*i], vertexCellNeighbors[3*i+1], and vertexCellNeighbors[3*i+2] contain
         the indices of the three cells are neighbors of vertex i
         */
-        //! Cell neighbors of every vertex
         GPUArray<int> vertexCellNeighbors;
         //! CELL neighbors of every cell
         GPUArray<int> cellNeighbors;
@@ -164,13 +152,14 @@ class Simple2DCell : public Simple2DModel
         GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
         //!The area and perimeter preferences of each cell
         GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
+        //!The number of vertices defining each cell
         /*!
         cellVertexNum[c] is an integer storing the number of vertices that make up the boundary of cell c.
         */
-        //!The number of vertices defining each cell
         GPUArray<int> cellVertexNum;
         //!The number of CELL neighbors of each cell. For simple models this is the same as cellVertexNum, but does not have to be
         GPUArray<int> cellNeighborNum;
+        //!A structure that indexes the vertices defining each cell
         /*!
         cellVertices is a large, 1D array containing the vertices associated with each cell.
         It must be accessed with the help of the Index2D structure n_idx.
@@ -178,27 +167,26 @@ class Simple2DCell : public Simple2DModel
         with a random vertex) is given by
         cellVertices[n_idx(k,c)];
         */
-        //!A structure that indexes the vertices defining each cell
         GPUArray<int> cellVertices;
         //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices
         Index2D n_idx;
         //!An upper bound for the maximum number of neighbors that any cell has
         int vertexMax;
+        //!3*Nvertices length array of the position of vertices around cells
         /*!
         For both AVM and SPV, it may help to save the relative position of the vertices around a
         cell, either for easy force computation or in the geometry routine, etc.
         voroCur.data[n_idx(nn,i)] gives the nth vertex, in CCW order, of cell i
         */
-        //!3*Nvertices length array of the position of vertices around cells
         GPUArray<Dscalar2> voroCur;
         //!3*Nvertices length array of the position of the last and next vertices along the cell
         //!Similarly, voroLastNext.data[n_idx(nn,i)] gives the previous and next vertex of the same
         GPUArray<Dscalar4> voroLastNext;
 
+        //!A map between cell index and the spatially sorted version.
         /*!
         sortedArray[i] = unsortedArray[itt[i]] after a hilbert sort
         */
-        //!A map between cell index and the spatially sorted version.
         vector<int> itt;
         //!A temporary structure that inverts itt
         vector<int> tti;

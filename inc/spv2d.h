@@ -34,7 +34,6 @@ class SPV2D : public DelaunayMD
         //!Initialize DelaunayMD, set random orientations for cell directors, prepare data structures
         void Initialize(int n);
 
-        //virtual functions that need to be implemented
         //!return the forces
         virtual void getForces(GPUArray<Dscalar2> &forces){forces = cellForces;};
 
@@ -98,11 +97,14 @@ class SPV2D : public DelaunayMD
         //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
         bool particleExclusions;
 
-        //!delSet.data[n_idx(nn,i)] are the previous and next consecutive delaunay neighbors,
-        //!orientationally ordered, of point i (for use in computing forces on GPU)
+        //!delSet.data[n_idx(nn,i)] are the previous and next consecutive delaunay neighbors
+        /*! These are orientationally ordered, of point i (for use in computing forces on GPU)
+        */
         GPUArray<int2> delSets;
-        //delOther.data[n_idx(nn,i)] contains the index of the "other" delaunay neighbor. i.e., the mutual
-        //!neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
+        //!delOther.data[n_idx(nn,i)] contains the index of the "other" delaunay neighbor.
+        /*!
+        i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
+        */
         GPUArray<int> delOther;
 
         //!In GPU mode, interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle

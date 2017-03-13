@@ -11,6 +11,8 @@
 #include <CGAL/Triangulation_2.h>
 #include <CGAL/Delaunay_triangulation_2.h>
 
+/*! \file DelaunayCGAL.h */
+//provides an interface to periodic and non-periodic 2D Delaunay triangulations via the CGAL library
 using namespace std;
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
@@ -38,7 +40,6 @@ typedef PDT::Vertex_handle     Vertex_handle;
 typedef PDT::Locate_type       Locate_type;
 typedef PDT::Face_handle       Face_handle;
 typedef PDT::Vertex_circulator Vertex_circulator;
-/*! \file DelaunayCGAL.h */
 //! Access the 2D periodic and non-periodic functionality of CGAL Delaunay triangulations
 /*!
 A class for interfacing with the CGAL library.
