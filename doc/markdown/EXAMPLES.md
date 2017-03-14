@@ -23,28 +23,3 @@ Provides an example of using the FIRE minimizer to minimize either a 2D SPV or A
 
 Provides an example of using the NetCDF database class to write snapshots of a simulation of the 2D
 SPV model, using either active cell or overdamped Brownian dynamics
-
-
-## SPV code snippet
-
-If you do not want to look at the above, just have your main executable including the "spv2d.h" file,
-running a 2D SPV simulation is as simple as
-```
-SPV2D spv(numberOfCells,preferredArea,preferredPerimeter);
-selfPropelledParticleDynamics spp(numberOfCells);
-spp.setEquationOfMotion(spp);
-for (int timeStep = 0; timeStep < maximumTimeStep; ++timeStep)
-    spv.performTimestep();
-```
-Of course, many more features can be accessed with setting functions.
-
-## AVM code
-
-Similarly, with your main executable including the "avm2d.h" file, running a 2D AVM simulation is done by
-```
-AVM2D avm(numberOfCells,preferredArea,preferredPerimeter);
-selfPropelledCellVertexDynamics sppCV(numberOfCells,2*numberOfCells); //2*Ncells = Nvertices for an all 3-fold vertex structure in a periodic box
-avm.setEquationOfMotion(sppCV);
-for (int timeStep = 0; timeStep < maximumTimeStep; ++timeStep)
-    avm.performTimestep();
-```
