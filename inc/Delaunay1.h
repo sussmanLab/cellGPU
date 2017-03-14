@@ -56,7 +56,6 @@ class DelaunayNP
 
         //!a public variable that stores the triangulation as sets of (i,j,k) vertices, referring to the order of sortmap entries
         triangulation DT;
-
         //!output part of triangulation to screen
         void printTriangulation(int maxprint);
         //!write triangulation to text file
@@ -71,7 +70,6 @@ class DelaunayNP
         bool sorted;                  //!<are the points sorted
         bool triangulated;            //!<has a triangulation been performed?
         std::vector< pair<Dscalar2, int> > sortmap;    //!<map from sorted points back to input points
-
     };
 
 #endif

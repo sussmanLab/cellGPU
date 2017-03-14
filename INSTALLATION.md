@@ -7,9 +7,10 @@ Create the /obj and /obj/cuobj directories, and from there, a simple "make" will
 
 # Requirements
 
-The current iteration of the code was compiled using CUDA-8.0. The code has been tested with CUDA
-versions as early as 6.5, and uses compute capability 3.5 devices and higher. It ought to work on
-lower compute capability devices; compile without the "-arch=sm_35" flag to run on them
+The current iteration of the code was written using some features of C++11, and was compiled using
+CUDA-8.0. The code has been tested with CUDA versions as early as 6.5, and uses compute capability
+3.5 devices and higher. It ought to work on lower compute capability devices; compile without the
+"-arch=sm_35" flag to run on them.
 
 The SPV branch uses the CGAL library; this dependency can be removed, if necessary, by monkeying
 with the code to run "fullTriangulation()" rather than "globalTriangulationCGAL()" in the relevant

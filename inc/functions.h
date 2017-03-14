@@ -102,7 +102,11 @@ HOSTDEVICE Dscalar TriangleArea(const Dscalar2 &p1, const Dscalar2 &p2)
     return abs(0.5*(p1.x*p2.y-p1.y*p2.x));
     };
 
-//!Calculate matrix of derivatives needed in the 2D SPV model... this is the change in a voronoi vertex given a change of a Delaunay vertex at the origin, given that rij and rik tell you where the other two Delaunay vertices are.
+//!Calculate matrix of derivatives needed in the 2D SPV model
+/*!
+This is the change in a voronoi vertex given a change of a Delaunay vertex at the origin,
+given that rij and rik tell you where the other two Delaunay vertices are.
+*/
 HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     {
     Matrix2x2 Id;
@@ -116,7 +120,6 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     Dscalar rikDotrjk=dot(rik,rjk);
     Dscalar rijDotrjk=dot(rij,rjk);
     Dscalar rij2=dot(rij,rij);
-
 
     Dscalar2 dDdriOD,z;
     Dscalar cpi = 1.0/(rij.x*rjk.y - rij.y*rjk.x);
@@ -147,20 +150,16 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
 
     dhdr += dyad(rik,dDdriOD);
     //dhdr = Id+D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
-
     return;
     };
 
-/*!
-compute the sign of a Dscalar, and return zero if x = 0
-*/
+//!compute the sign of a Dscalar, and return zero if x = 0
 HOSTDEVICE int computeSign(Dscalar x)
     {
     return ((x>0)-(x<0));
     };
-/*!
-compute the sign of a Dscalar, and return zero if x = 0...but return a Dscalar to avoid expensive casts on the GPU
-*/
+
+//!compute the sign of a Dscalar, and return zero if x = 0...but return a Dscalar to avoid expensive casts on the GPU
 HOSTDEVICE Dscalar computeSignNoCast(Dscalar x)
     {
     if (x > 0.) return 1.0;
@@ -169,6 +168,7 @@ HOSTDEVICE Dscalar computeSignNoCast(Dscalar x)
     return 0.0;
     };
 
+//!compute a force on a vertex from changing cell vertices
 /*! Given three consecutive voronoi vertices and some cell information, compute -dE/dv
  Adiff = KA*(A_i-A_0)
  Pdiff = KP*(P_i-P_0)
@@ -256,8 +256,7 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
     return true;
     };
 #endif
-
 /** @} */ //end of group declaration
-#undef HOSTDEVICE
 
+#undef HOSTDEVICE
 #endif

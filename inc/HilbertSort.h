@@ -16,7 +16,6 @@ which is released under the GNU LGPL license
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-
 /*! \file HilbertSort.h */
 //!Spatially sort points in 2D according to a 1D Hilbert curve
 /*!
@@ -106,5 +105,4 @@ struct HilbertSorter
     };
 
 #undef HOSTDEVICE
-
 #endif

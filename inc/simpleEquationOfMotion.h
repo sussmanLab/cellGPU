@@ -5,6 +5,7 @@
 #include "gpuarray.h"
 #include "curand.h"
 #include "curand_kernel.h"
+#include "Simple2DModel.h"
 #include "simpleEquationOfMotion.cuh"
 
 /*! \file simpleEquationOfMotion.h */
@@ -13,7 +14,17 @@
 In cellGPU a "simple" equation of motion is one that can take a GPUArray of forces and return a set
 of displacements. A derived class of this might be the self-propelled particle equations of motion,
 or simple Brownian dynamics.
-Derived classes must implement the integrateEquationsOfMotion function
+Derived classes must implement the integrateEquationsOfMotion function. Additionally, equations of
+motion act on a cell configuration, and in general require that the configuration, C,  passed in to the
+equation of motion provides access to the following:
+C->getNumberOfDegreesOfFreedom() should return the number of degrees of freedom (up to a factor of
+dimension)
+C->computeForces() should calculate the negative gradient of the energy in whatever model T implements
+C->getForces(f) is able to be called after T.computeForces(), and copies the forces to the variable f
+C->moveDegreesOfFreedom(disp) moves the degrees of freedom according to the GPUArray of displacements
+C->enforceTopology() takes care of any business the model that T implements needs after the
+positions of the underlying degrees of freedom have been updated
+
 */
 class simpleEquationOfMotion
     {
@@ -27,17 +38,13 @@ class simpleEquationOfMotion
             gen = Gener;
             genrd=GenerRd;
             };
-
         //!the fundamental function that models will call, using vectors of different data structures
-        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements){};
+        virtual void integrateEquationsOfMotion(){};
 
-
-        //!the fundamental function that models will call to advance the simulation...sometimes the function signature is so simple that this specialization helps
-        virtual void integrateEquationsOfMotion(GPUArray<Dscalar2> &forces, GPUArray<Dscalar2> &displacements){};
-        //!allow for spatial sorting to be called if necessary... models should pass the "itt" vector to this function
-        virtual void spatialSorting(const vector<int> &reIndexer){};
-        //!allow for whatever RNG initialization is needed
-        virtual void initializeRNGs(int globalSeed=1337, int tempSeed=0){};
+        //!allow for spatial sorting to be called if necessary...
+        virtual void spatialSorting(){};
+        //!allow for whatever GPU RNG initialization is needed
+        virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0){};
 
         //!get the number of timesteps run
         int getTimestep(){return Timestep;};
@@ -58,7 +65,13 @@ class simpleEquationOfMotion
         //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
         virtual void setCPU(){GPUcompute = false;};
 
+        //!Set the GPU initialization to true
         void initializeGPU(bool initGPU){initializeGPURNG = initGPU;};
+
+        //! pointer to a Simple2DModel
+        shared_ptr<Simple2DModel> model;
+        //! virtual function to allow the model to be a derived class
+        virtual void set2DModel(shared_ptr<Simple2DModel> _model){};
 
     protected:
         //!Should the simulation be reproducible (v/v the random numbers generated)?
@@ -81,6 +94,9 @@ class simpleEquationOfMotion
         bool GPUcompute;
         //!a vector of the re-indexing information
         vector<int> reIndexing;
+
+        //!an internal GPUArray for holding displacements
+        GPUArray<Dscalar2> displacements;
 
         //!re-index the any RNGs associated with the e.o.m.
         void reIndexRNG(GPUArray<curandState> &array)
@@ -127,5 +143,8 @@ class simpleEquationOfMotion
                 };
             };
     };
+
+typedef shared_ptr<simpleEquationOfMotion> EOMPtr;
+typedef weak_ptr<simpleEquationOfMotion> WeakEOMPtr;
 
 #endif

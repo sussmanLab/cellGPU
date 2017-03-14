@@ -50,7 +50,6 @@ void SPV2D::Initialize(int n)
     setDeltaT(0.01);
     initializeDelMD(n);
     setModuliUniform(1.0,1.0);
-    sortPeriod = -1;
 
     setv0Dr(0.05,1.0);
     cellForces.resize(n);
@@ -68,11 +67,6 @@ void SPV2D::Initialize(int n)
     setCellDirectorsRandomly();
     resetLists();
     allDelSets();
-
-    //initialize the vectors passed to the e.o.m.s
-    DscalarArrayInfo.push_back(cellDirectors);
-    Dscalar2ArrayInfo.push_back(cellForces);
-    Dscalar2ArrayInfo.push_back(Motility);
     };
 
 /*!
@@ -161,7 +155,6 @@ When sortPeriod < 0, this routine does not get called
 */
 void SPV2D::spatialSorting()
     {
-    equationOfMotion->spatialSorting(itt);
     spatiallySortCellsAndCellActivity();
     //reTriangulate with the new ordering
     globalTriangulationCGAL();
@@ -270,34 +263,6 @@ void SPV2D::setExclusions(vector<int> &exes)
     };
 
 /*!
-Call all relevant functions to advance the system one time step; every sortPeriod also call the
-spatial sorting routine.
-\post The simulation is advanced one time step
-*/
-void SPV2D::performTimestep()
-    {
-    Timestep += 1;
-
-    spatialSortThisStep = false;
-    if (sortPeriod > 0)
-        {
-        if (Timestep % sortPeriod == 0)
-            {
-            spatialSortThisStep = true;
-            };
-        };
-
-    computeForces();
-    displaceCellsAndRotate();
-
-    //spatial sorting also takes care of topology
-    if (spatialSortThisStep)
-        spatialSorting();
-    else
-        enforceTopology();
-    };
-
-/*!
 \pre The geoemtry (area and perimeter) has already been calculated
 \post calculate the contribution to the net force on every particle from each of its voronoi vertices
 via a cuda call
@@ -317,27 +282,6 @@ void SPV2D::SumForcesGPU()
         sumForceSets();
     else
         sumForceSetsWithExclusions();
-    };
-
-/*!
-call the equations of motion to determine the dispalcement for each cell
-*/
-void SPV2D::displaceCellsAndRotate()
-    {
-    //swap in data for the equation of motion
-    DscalarArrayInfo[0].swap(cellDirectors);
-    Dscalar2ArrayInfo[0].swap(cellForces);
-    Dscalar2ArrayInfo[1].swap(Motility);
-    
-    //call the equation of motion to get displacements
-    equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
-    //swap it back into the model
-    DscalarArrayInfo[0].swap(cellDirectors);
-    Dscalar2ArrayInfo[0].swap(cellForces);
-    Dscalar2ArrayInfo[1].swap(Motility);
-
-    //move the cells around
-    moveDegreesOfFreedom(displacements);
     };
 
 /*!

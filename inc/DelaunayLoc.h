@@ -56,16 +56,13 @@ class DelaunayLoc
         //!Just get the neighbors of vertex i, sorted in clockwise order. Calculated by the DelaunayCGAL class
         bool getNeighborsCGAL(int i, vector<int> &neighbors);
 
-
         //!Test whether the passed list of neighbors are the Delaunay neighbors of vertex i
         bool testPointTriangulation(int i, vector<int> &neighbors, bool timing=false);
         //!Given a vector of circumcircle indices, label particles that are part of non-empty circumcircles
         void testTriangulation(vector< int > &ccs, vector<bool> &points, bool timing=false);
 
-
         //!A public variable that stores the triangulation as sets of (i,j,k) vertices when this class is used to generate the entire triangulation of the periodic point set.
         triangulation DT;
-
         //!output part of triangulation to screen for debugging purposes
         void printTriangulation(int maxprint);
         //!write triangulation to text file

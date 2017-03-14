@@ -143,7 +143,6 @@ struct triangulation
             sort(neighs.begin(),neighs.end());
             neighs.erase( unique( neighs.begin(),neighs.end() ), neighs.end() );
             };
-
     };
 
 #undef HOSTDEVICE

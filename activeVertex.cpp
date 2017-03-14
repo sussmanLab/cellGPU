@@ -78,29 +78,28 @@ int main(int argc, char*argv[])
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
     bool runSPV = false;
-    AVM2D avm(numpts,1.0,p0,reproducible,runSPV);
 
-    selfPropelledCellVertexDynamics sppCellVertex(numpts,Nvert);
-    sppCellVertex.setReproducible(reproducible);
-    avm.setEquationOfMotion(sppCellVertex);
+    EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
+    ForcePtr avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible,runSPV);
+    avm->setCellPreferencesUniform(1.0,p0);
+    avm->setv0Dr(v0,1.0);
 
-    if(USE_GPU < 0)
-        {
-        avm.setCPU();
-        sppCellVertex.setCPU();
-        }
-    else
-        {
-        sppCellVertex.initializeRNGs(1337,0);
-        };
-    avm.setv0Dr(v0,Dr);
-    avm.setDeltaT(dt);
-    sppCellVertex.setDeltaT(dt);
-    avm.setT1Threshold(0.04);
-    avm.setSortPeriod(initSteps/10);
+    shared_ptr<AVM2D> AVMparams = dynamic_pointer_cast<AVM2D>(avm);
+    AVMparams->setT1Threshold(0.04);
+    
+
+    SimulationPtr sim = make_shared<Simulation>();
+    sim->setConfiguration(avm);
+    sim->setEquationOfMotion(spp,avm);
+    sim->setIntegrationTimestep(dt);
+    sim->setSortPeriod(initSteps/10);
+    //set appropriate CPU and GPU flags
+    if(!initializeGPU)
+        sim->setCPUOperation(true);
+    sim->setReproducible(true);
     for (int timestep = 0; timestep < initSteps+1; ++timestep)
         {
-        avm.performTimestep();
+        sim->performTimestep();
         if(timestep%((int)(1/dt))==0)
             {
     //        cout << timestep << endl;
@@ -110,24 +109,24 @@ int main(int argc, char*argv[])
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {
             cout << timestep << endl;
-            ncdat.WriteState(avm);
+            ncdat.WriteState(AVMparams);
             };
         };
 
-    avm.setSortPeriod(-1);
     t1=clock();
     if(initializeGPU)
         cudaProfilerStart();
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
-        avm.performTimestep();
+        sim->performTimestep();
         };
     if(initializeGPU)
         cudaProfilerStop();
     t2=clock();
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
 
-    avm.reportMeanVertexForce();
+    avm->reportMeanVertexForce();
+    cout << avm->reportq() << endl;
 
     if(initializeGPU)
         cudaDeviceReset();
@@ -138,4 +137,3 @@ outfile << numpts <<"\t" << (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << "\n";
 
     return 0;
     };
-

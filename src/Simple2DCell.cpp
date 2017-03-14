@@ -8,7 +8,7 @@
 An extremely simple constructor that does nothing, but enforces default GPU operation
 */
 Simple2DCell::Simple2DCell() :
-    Ncells(0), Nvertices(0),GPUcompute(true),sortPeriod(-1),spatialSortThisStep(false), equationOfMotion(new simpleEquationOfMotion())
+    Ncells(0), Nvertices(0),GPUcompute(true)
     {
     };
 /*!
@@ -22,6 +22,20 @@ void Simple2DCell::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
         {
         h_p.data[ii].x = A0;
         h_p.data[ii].y = P0;
+        };
+    };
+
+/*!
+Set the Area and Perimeter preferences to the input vector
+*/
+void Simple2DCell::setCellPreferences(vector<Dscalar2> &APPref)
+    {
+    AreaPeriPreferences.resize(Ncells);
+    ArrayHandle<Dscalar2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        h_p.data[ii].x = APPref[ii].x;
+        h_p.data[ii].y = APPref[ii].y;
         };
     };
 

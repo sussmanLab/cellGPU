@@ -2,6 +2,7 @@
 #define selfPropelledParticleDynamics_H
 
 #include "simpleEquationOfMotion.h"
+#include "Simple2DActiveCell.h"
 
 /*! \file selfPropelledParticleDynamics.h */
 //!A class that implements simple self-propelled particle dynamics in 2D
@@ -18,13 +19,12 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         //!additionally set the number of particles andinitialize things
         selfPropelledParticleDynamics(int N);
 
-        //!the fundamental function that models will call
-        virtual void integrateEquationsOfMotion(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
+        //!the fundamental function that models will call, using vectors of different data structures
+        virtual void integrateEquationsOfMotion();
         //!call the CPU routine to integrate the e.o.m.
-        virtual void integrateEquationsOfMotionCPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
+        virtual void integrateEquationsOfMotionCPU();
         //!call the GPU routine to integrate the e.o.m.
-        virtual void integrateEquationsOfMotionGPU(vector<Dscalar> &DscalarInfo, vector<GPUArray<Dscalar> > &DscalarArrayInfo, vector<GPUArray<Dscalar2> > &Dscalar2ArrayInfo, vector<GPUArray<int> >&IntArrayInfo, GPUArray<Dscalar2> &displacements);
-
+        virtual void integrateEquationsOfMotionGPU();
 
         //!Get the inverse friction constant, mu
         Dscalar getMu(){return mu;};
@@ -32,14 +32,18 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         void setMu(Dscalar _mu){mu=_mu;};
 
         //!allow for whatever RNG initialization is needed
-        virtual void initializeRNGs(int globalSeed, int tempSeed);
+        virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0);
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
-        virtual void spatialSorting(const vector<int> &reIndexer);
+        virtual void spatialSorting();
+        //!set the active model
+        virtual void set2DModel(shared_ptr<Simple2DModel> _model);
 
     protected:
+        //!A shared pointer to a simple active model
+        shared_ptr<Simple2DActiveCell> activeModel;
         //!The value of the inverse friction constant
         Dscalar mu;
-        //!An array random-number-generators for use on the GPU branch of the code
+        //!An array of random-number-generators for use on the GPU branch of the code
         GPUArray<curandState> RNGs;
 
     };

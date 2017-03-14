@@ -25,19 +25,18 @@ class DelaunayMD : public Simple2DActiveCell
         DelaunayMD();
         //!A default initialization scheme
         void initializeDelMD(int n);
+        //!Enforce CPU-only operation.
         /*!
         \param global defaults to true.
         When global is set to true, the CPU branch will try the local repair scheme.
         This is generally slower, but if working in a regime where things change
         very infrequently, it may be faster.
         */
-        //!Enforce CPU-only operation.
         void setCPU(bool global = true){GPUcompute = false;globalOnly=global;};
         //!write triangulation to text file
         void writeTriangulation(ofstream &outfile);
         //!read positions from text file...for debugging
         void readTriangulation(ifstream &infile);
-
 
         //virtual functions that need to be implemented
         //!In delaunay-like models the number of degrees of freedom is the number of cells
@@ -92,7 +91,6 @@ class DelaunayMD : public Simple2DActiveCell
         //!How often were global re-triangulations performed?
         int GlobalFixes;
 
-
     protected:
         cellListGPU celllist;        //!<The associated cell list structure
         Dscalar cellsize;            //!<The size of the cell list's underlying grid
@@ -125,17 +123,15 @@ class DelaunayMD : public Simple2DActiveCell
         //!A smaller vector that, after testing the triangulation, contains the particle indices that need their local topology to be updated.
         vector<int> NeedsFixing;
 
+        //!When true, the CPU branch will execute global retriangulations through CGAL on every time step
         /*!When running on the CPU, should only global retriangulations be performed,
         or should local test-and-updates still be performed? Depending on parameters
         simulated, performance here can be quite difference, since the circumcircle test
         itself is CPU expensive
         */
-        //!When true, the CPU branch will execute global retriangulations through CGAL on every time step
         bool globalOnly;
-
         //!Count the number of times that testAndRepair has been called, separately from the derived class' time
         int timestep;
-
     };
 
 #endif

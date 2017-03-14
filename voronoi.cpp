@@ -5,12 +5,15 @@
 
 #define ENABLE_CUDA
 
+#include "Simulation.h"
 #include "spv2d.h"
 #include "selfPropelledParticleDynamics.h"
-//#include "DatabaseNetCDFSPV.h"
+#include "DatabaseNetCDFSPV.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
+in the main cellGPU paper. It sets up a simulation that takes control of a voronoi model and a simple
+model of active motility
 */
 int main(int argc, char*argv[])
 {
@@ -53,6 +56,7 @@ int main(int argc, char*argv[])
             default:
                        abort();
         };
+
     clock_t t1,t2;
     bool reproducible = true;
     bool initializeGPU = true;
@@ -65,67 +69,65 @@ int main(int argc, char*argv[])
     else
         initializeGPU = false;
 
-    selfPropelledParticleDynamics spp(numpts);
-    spp.setReproducible(reproducible);
-    SPV2D spv(numpts,1.0,p0,reproducible);
-    spv.setEquationOfMotion(spp);
+    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+    ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
+    shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
 
+    spv->setCellPreferencesUniform(1.0,p0);
+    spv->setv0Dr(v0,1.0);
+
+    SimulationPtr sim = make_shared<Simulation>();
+    sim->setConfiguration(spv);
+    sim->setEquationOfMotion(spp,spv);
+    sim->setIntegrationTimestep(dt);
+    sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
     if(!initializeGPU)
-        {
-        spp.setCPU();
-        spv.setCPU(false);
-        }
-    else
-        {
-        spp.initializeRNGs(1337,0);
-        };
+        sim->setCPUOperation(true);
+    sim->setReproducible(true);
     //initialize parameters
-    spp.setReproducible(true);
-    spp.setDeltaT(dt);
-    spv.setCellPreferencesUniform(1.0,p0);
-    spv.setv0Dr(v0,1.0);
-    spv.setDeltaT(dt);
 
-//    char dataname[256];
-//    sprintf(dataname,"/hdd2/data/spv/test.nc");
-//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+    char dataname[256];
+    sprintf(dataname,"../test.nc");
+    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+    ncdat.WriteState(SPV);
 
 
     printf("starting initialization\n");
-    spv.setSortPeriod(initSteps/10);
     for(int ii = 0; ii < initSteps; ++ii)
         {
-        spv.performTimestep();
+        sim->performTimestep();
         };
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
-    spv.reportMeanCellForce(false);
-    spv.repPerFrame = 0.0;
+    spv->reportMeanCellForce(false);
 
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
-        if(ii%10000 ==0)
+        if(ii%100 ==0)
             {
             printf("timestep %i\n",ii);
-//    ncdat.WriteState(spv);
+            ncdat.WriteState(SPV);
             };
-        spv.performTimestep();
+        sim->performTimestep();
         };
     t2=clock();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
-    cout << "timestep ~ " << steptime << " per frame; " << endl << spv.repPerFrame/tSteps*numpts << " particle  edits per frame; " << spv.GlobalFixes << " calls to the global triangulation routine." << endl << spv.skippedFrames << " skipped frames" << endl << endl;
-
+    cout << "timestep ~ " << steptime << " per frame; " << endl;
+    cout << spv->reportq() << endl;
     if(initializeGPU)
         cudaProfilerStart();
 
     if(initializeGPU)
         cudaProfilerStop();
 
-//    ncdat.WriteState(spv);
+    ncdat.WriteState(SPV);
+
+    ncdat.ReadState(SPV,0,true);
+    ncdat.WriteState(SPV);
     if(initializeGPU)
         cudaDeviceReset();
 

@@ -84,17 +84,23 @@ void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
     //use the SPV class to relax the initial configuration just a bit?
     if(spvInitialize)
         {
-        SPV2D spv(Ncells,1.0,3.8);
-        selfPropelledParticleDynamics spp(Ncells);
-        spv.setEquationOfMotion(spp);
-        spv.setCPU(false);
-        spv.setv0Dr(0.1,1.0);
-        spp.setReproducible(true);
-        spp.setCPU();
-        spp.setDeltaT(0.1);
+        EOMPtr spp = make_shared<selfPropelledParticleDynamics>(Ncells);
+
+        ForcePtr spv = make_shared<SPV2D>(Ncells,1.0,3.8,Reproducible);
+        spv->setCellPreferencesUniform(1.0,3.8);
+        spv->setv0Dr(.1,1.0);
+
+        SimulationPtr sim = make_shared<Simulation>();
+        sim->setConfiguration(spv);
+        sim->setEquationOfMotion(spp,spv);
+        sim->setIntegrationTimestep(0.1);
+        sim->setCPUOperation(true);
+        spp->setDeltaT(0.1);
+        sim->setReproducible(true);
+
         for (int ii = 0; ii < 100;++ii)
-            spv.performTimestep();
-        ArrayHandle<Dscalar2> h_pp(spv.cellPositions,access_location::host,access_mode::read);
+            sim->performTimestep();
+        ArrayHandle<Dscalar2> h_pp(spv->cellPositions,access_location::host,access_mode::read);
         for (int ii = 0; ii < Ncells; ++ii)
             h_p.data[ii] = h_pp.data[ii];
         };
@@ -243,10 +249,9 @@ void AVM2D::growCellVerticesList(int newVertexMax)
  \post vertices are re-ordered according to a Hilbert sorting scheme, cells are reordered according
  to what vertices they are near, and all data structures are updated
  */
-void AVM2D::spatialVertexSorting()
+void AVM2D::spatialSorting()
     {
     //the avm class doesn't need to change any other unusual data structures at the moment
-    equationOfMotion->spatialSorting(itt);
     spatiallySortVerticesAndCellActivity();
     };
 
@@ -270,28 +275,6 @@ void AVM2D::computeForces()
         };
     };
 
-/*!
-displace vertices and rotate directors, on either the GPU or CPU as determined by flags
-*/
-void AVM2D::displaceAndRotate()
-    {
-    //swap in data for the equation of motion
-    DscalarArrayInfo[0].swap(cellDirectors);
-    Dscalar2ArrayInfo[0].swap(vertexForces);
-    Dscalar2ArrayInfo[1].swap(Motility);
-    IntArrayInfo[0].swap(vertexCellNeighbors);
-
-    //call the equation of motion to get displacements
-    equationOfMotion->integrateEquationsOfMotion(DscalarInfo,DscalarArrayInfo,Dscalar2ArrayInfo,IntArrayInfo,displacements);
-    //swap it back into the model
-    DscalarArrayInfo[0].swap(cellDirectors);
-    Dscalar2ArrayInfo[0].swap(vertexForces);
-    Dscalar2ArrayInfo[1].swap(Motility);
-    IntArrayInfo[0].swap(vertexCellNeighbors);
-
-    //move the vertices around
-    moveDegreesOfFreedom(displacements);
-    };
 /*!
 enforce and update topology of vertex wiring on either the GPU or CPU
 */
@@ -336,27 +319,6 @@ void AVM2D::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
             Box.putInBoxReal(h_v.data[i]);
             };
         };
-    };
-
-/*!
-increment the time step, call either the CPU or GPU branch, depending on the state of
-the GPUcompute flag
-*/
-void AVM2D::performTimestep()
-    {
-    Timestep += 1;
-    if(sortPeriod > 0)
-        if(Timestep % sortPeriod == 0)
-            spatialVertexSorting();
-
-    //first compute the forces, which also computes the geometry
-    computeForces();
-
-    //next move the vertices around
-    displaceAndRotate();
-
-    //then update the topology of the cells as needed
-    enforceTopology();
     };
 
 /*!

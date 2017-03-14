@@ -6,6 +6,7 @@
 #include "functions.h"
 //include spp dynamics for SPV-based initialization of configurations
 #include "selfPropelledParticleDynamics.h"
+#include "Simulation.h"
 
 /*! \file avm2d.h */
 //!Implement a 2D active vertex model, using kernels in \ref avmKernels
@@ -52,9 +53,6 @@ class AVM2D : public Simple2DActiveCell
         //!update/enforce the topology
         virtual void enforceTopology();
 
-        //!progress through the parts of a time step...simply an interface to the correct other procedures
-        void performTimestep();
-
         //!Compute the geometry (area & perimeter) of the cells on the CPU
         void computeGeometryCPU();
         //!Compute the geometry (area & perimeter) of the cells on the GPU
@@ -65,8 +63,8 @@ class AVM2D : public Simple2DActiveCell
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         void computeForcesGPU();
 
-        //! decide whether to move vertices on the CPU or GPU
-        void displaceAndRotate();
+        //!Enforce CPU-only operation.
+        void setCPU(bool global = true){GPUcompute = false;};
 
         //!Simple test for T1 transitions (edge length less than threshold) on the CPU
         void testAndPerformT1TransitionsCPU();
@@ -79,9 +77,7 @@ class AVM2D : public Simple2DActiveCell
         void getCellPositionsGPU();
 
         //!spatially sort the *vertices* along a Hilbert curve for data locality
-        void spatialVertexSorting();
-
-
+        virtual void spatialSorting();
 
     //protected functions
     protected:
@@ -102,7 +98,7 @@ class AVM2D : public Simple2DActiveCell
     //public member variables...most of these should eventually be protected
     public:
         /*!
-        if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting verte i and vertex
+        if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting vertex i and vertex
         vertexNeighbors[3*i+j] has been marked for a T1 transition
         */
         //! flags that indicate whether an edge should be GPU-flipped (1) or not (0)
