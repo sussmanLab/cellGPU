@@ -3,8 +3,8 @@
 A general makefile is included with the repository. To install on your system, update the CUDA_LIB,
 CUDA_INC, LIB_CUDA, LIB_CGAL, LIB_NETCDF paths, and make sure the PATH and LD_LIBRARY_PATH
 environment variables are appropriately set.
-Create the /obj and /obj/cuobj directories, and from there, a simple "make" will do the trick.
-
+Create the /obj and /obj/cuobj directories, and from there, a simple "make" will do the trick. See below for detailed installation instructions on MacOS
+.
 # Requirements
 
 The current iteration of the code was written using some features of C++11, and was compiled using
@@ -41,6 +41,37 @@ program. The included "Msd.sh" script will generate some data that can be analyz
 with Fig. 1 of Bi et al. (Phys. Rev. X 6, 021011 (2016)), which is the cannonical reference for the SPV model.
 
 The fourth program, Minimize.out, shows how to use the included FIRE minimizer to do simple energy minimization.
+
+# Mac OS X Instructions
+
+The following details were contributed by Gonca Erdemci-Tandogan (https://goncaerdemci.wordpress.com/).
+
+Everything is most conveniently done using homebrew, the installation of which can be followed from https://brew.sh
+
+## CGAL
+
+brew install cgal
+
+## netCDF
+
+brew install homebrew/science/netcdf --with-cxx-compat
+
+## CUDA
+
+1. ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null ; brew install caskroom/cask/brew-cask 2> /dev/null
+2. brew cast install cuda
+3a. After cuda is installed, run "which nvcc". If this returns empty, you must export the path... 
+3b. vim $HOME/.bashrc
+3c. Add the following lines to the .bashrc file:
+    * export PATH=/Developer/NVIDIA/CUDA-8.0/bin${PATH:+:${PATH}}
+    * export DYLD_LIBRARY_PATH=/Developer/NVIDIA/CUDA-8.0/lib\${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}
+
+## Makefile changes
+
+Following the above instructions, change the provided makefile in the following way:
+
+1. “CUDA_LIB = /usr/local/cuda/lib64” to “CUDA_LIB = /usr/local/cuda/lib”
+2. Part of “LIB_CGAL += -L/home/user/CGAL/CGAL-4.9/lib -lCGAL -lCGAL_Core -lgmp -lmpfr” to wherever my CGAL directory is.
 
 # Helpful websites
 The requirements can be obtained by looking at the info on the following:
