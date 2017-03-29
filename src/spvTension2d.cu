@@ -24,7 +24,7 @@
 */
 
 //!the force on a particle is decomposable into the force contribution from each of its voronoi vertices...calculate those sets of forces with an additional tension term between cells of different type
-__global__ void gpu_spvTension_force_sets_kernel(const Dscalar2* __restrict__ d_points,
+__global__ void gpu_spvSimpleTension_force_sets_kernel(const Dscalar2* __restrict__ d_points,
                                           const Dscalar2* __restrict__ d_AP,
                                           const Dscalar2* __restrict__ d_APpref,
                                           const int2* __restrict__ d_delSets,
@@ -192,7 +192,7 @@ __global__ void gpu_spvTension_force_sets_kernel(const Dscalar2* __restrict__ d_
 
 
 //!Call the kernel to compute force sets with additional tension terms
-bool gpu_spvTension_force_sets(Dscalar2 *d_points,
+bool gpu_spvSimpleTension_force_sets(Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
                     int2   *d_delSets,
@@ -214,7 +214,7 @@ bool gpu_spvTension_force_sets(Dscalar2 *d_points,
     if (NeighIdxNum < 128) block_size = 32;
     unsigned int nblocks  = NeighIdxNum/block_size + 1;
 
-    gpu_spvTension_force_sets_kernel<<<nblocks,block_size>>>(
+    gpu_spvSimpleTension_force_sets_kernel<<<nblocks,block_size>>>(
                                                 d_points,
                                                 d_AP,
                                                 d_APpref,

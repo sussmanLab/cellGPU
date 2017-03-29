@@ -128,8 +128,17 @@ class Simple2DCell : public Simple2DModel
         GPUArray<Dscalar2> vertexForces;
         //!an array containing net force on each cell
         GPUArray<Dscalar2> cellForces;
-        //!An array of integers labeling cell type...an easy way of determining if cells are different
+        //!An array of integers labeling cell type...an easy way of determining if cells are different.
+        /*!
+        Please note that "type" is not meaningful unless it is used by child classes. That is, things
+        like area/perimeter preferences, or motility, or whatever are neither set nor accessed by
+        cell type, but rather by cell index! Thus, this is just an additional data structure that
+        can be useful. For instance, the SPVTension2D classes uses the integers of cellType to
+        determine when to apply an additional line tension between cells.
+        */
         GPUArray<int> CellType;
+        //!A indexer for turning a pair of cells into a 1-D index
+        Index2D cellTypeIndexer;
 
     //protected member variables
     protected:

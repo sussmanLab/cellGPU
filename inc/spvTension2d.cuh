@@ -18,7 +18,7 @@ A file providing an interface to the relevant cuda calls for the SPV2D class
  */
 
 //!Compute the contribution to the net force on vertex i from each of i's voronoi vertices
-bool gpu_spvTension_force_sets(
+bool gpu_spvSimpleTension_force_sets(
                     Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
