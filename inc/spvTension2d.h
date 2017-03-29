@@ -8,7 +8,10 @@
 //!Add line tension terms between different "types" of cells in the 2D SPV model using kernels in \ref spvKernels
 /*!
 A child class of SPV2D, this implements an SPV model in 2D that can include tension terms between
-different types of cells. Different routines are called depending on whether multiple different cell-cell surface tension values are needed.
+different types of cells. Different routines are called depending on whether multiple different
+cell-cell surface tension values are needed. This specialization exists because on the GPU using the
+more generic routine has many more costly memory look-ups, so if it isn't needed the simpler algorithm
+should be used.
  */
 class SPVTension2D : public SPV2D
     {
@@ -32,7 +35,7 @@ class SPVTension2D : public SPV2D
         //!Compute the net force on particle i on the CPU with multiple tension values
         virtual void computeSPVTensionForceCPU(int i);
         //!call gpu_force_sets kernel caller
-        virtual void computeSPVTensionForceSetsGPU(){};
+        virtual void computeSPVTensionForceSetsGPU();
 
         //!Use surface tension
         void setUseSurfaceTension(bool use_tension){Tension = use_tension;};

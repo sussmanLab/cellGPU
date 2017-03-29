@@ -127,6 +127,42 @@ void SPVTension2D::computeSPVSimpleTensionForceSetsGPU()
     };
 
 /*!
+Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
+vertices, using the general surface tension matrix
+*/
+void SPVTension2D::computeSPVTensionForceSetsGPU()
+    {
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
+    ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
+    ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
+    ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
+    ArrayHandle<int> d_ct(CellType,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::read);
+
+    ArrayHandle<Dscalar> d_tm(tensionMatrix,access_location::device,access_mode::read);
+
+    gpu_spvTension_force_sets(
+                    d_p.data,
+                    d_AP.data,
+                    d_APpref.data,
+                    d_delSets.data,
+                    d_delOther.data,
+                    d_vc.data,
+                    d_vln.data,
+                    d_forceSets.data,
+                    d_nidx.data,
+                    d_ct.data,
+                    d_tm.data,
+                    cellTypeIndexer,
+                    KA,
+                    KP,
+                    NeighIdxNum,n_idx,Box);
+    };
+/*!
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
 \post the net force on cell i is computed
 */
