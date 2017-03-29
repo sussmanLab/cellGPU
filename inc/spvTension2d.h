@@ -4,14 +4,11 @@
 #include "std_include.h"
 #include "spv2d.h"
 
-/*! \file spv2d.h */
-//!Implement the 2D SPV model, with and without some extra bells and whistles, using kernels in \ref spvKernels
+/*! \file spv2dTension.h */
+//!Add line tension terms between different "types" of cells in the 2D SPV model using kernels in \ref spvKernels
 /*!
- *A child class of DelaunayMD, this implements the SPV model in 2D. This involves mostly calculating
-  the forces in the SPV model and then moving cells appropriately. Optimizing these procedures for
-  hybrid CPU/GPU-based computation involves declaring and maintaining several related auxiliary
-  data structures that capture different features of the local topology and local geoemetry for each
-  cell.
+A child class of SPV2D, this implements an SPV model in 2D that can include tension terms between
+different types of cells. Different routines are called depending on whether multiple different cell-cell surface tension values are needed.
  */
 class SPVTension2D : public SPV2D
     {
