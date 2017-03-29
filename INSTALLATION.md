@@ -59,10 +59,14 @@ brew install homebrew/science/netcdf --with-cxx-compat
 ## CUDA
 
 1. ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null ; brew install caskroom/cask/brew-cask 2> /dev/null
-2. brew cast install cuda
+
+2. brew cask install cuda
+
 3a. After cuda is installed, run "which nvcc". If this returns empty, you must export the path... 
+
 3b. vim $HOME/.bashrc
-3c. Add the following lines to the .bashrc file:
+
+3c. Add the following lines to the .bashrc and .bash_profile files:
     * export PATH=/Developer/NVIDIA/CUDA-8.0/bin${PATH:+:${PATH}}
     * export DYLD_LIBRARY_PATH=/Developer/NVIDIA/CUDA-8.0/lib\${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}
 
