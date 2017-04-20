@@ -36,11 +36,11 @@ debug: CXXFLAGS += -g -DCUDATHREADSYNC
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
 debug: build
 
-PROGS= spvGPU.out avmGPU.out spvMSD.out Minimize.out
+PROGS= spvGPU.out avmGPU.out spvMSD.out Minimize.out DynamicalMatrix.out
 
 build: $(PROGS)
 
-PROG_OBJS=obj/voronoi.o obj/activeVertex.o obj/runMakeDatabase.o obj/minimize.o
+PROG_OBJS=obj/voronoi.o obj/activeVertex.o obj/runMakeDatabase.o obj/minimize.o obj/dynMat.cpp
 
 CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/hilbert_curve.o obj/EnergyMinimizerFIRE2D.o
 CLASS_OBJS+=obj/Simple2DCell.o obj/Simple2DActiveCell.o
@@ -79,6 +79,9 @@ Minimize.out: obj/minimize.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 spvMSD.out: obj/runMakeDatabase.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
+DynamicalMatrix.out: obj/dynMat.o $(CLASS_OBJS) $(CUOBJS)
+	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
+
 
 run: build
 	./spvGPU.out

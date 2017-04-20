@@ -92,9 +92,16 @@ class SPV2D : public DelaunayMD
         //!sort points along a Hilbert curve for data locality
         void spatialSorting();
 
+
+    public:
         //Various partial derivatives related to calculating the dynamical matrix
         //!The derivative of a voronoi vertex position with respect to change in the first cells position
         Matrix2x2 dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk);
+
+        //!Derivative of the area of cell i with respect to the position of cell j
+        Dscalar2 dAidrj(int i, int j);
+        //!Derivative of the perimeter of cell i with respect to the position of cell j
+        Dscalar2 dPidrj(int i, int j);
 
     //protected member variables
     protected:

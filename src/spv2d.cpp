@@ -701,3 +701,102 @@ Matrix2x2 SPV2D::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)
     return Id+1.0/D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
     };
 
+/*!
+\param i The index of cell i
+\param j The index of cell j
+\pre Requires that computeGeometry is current
+Returns the derivative of the area of cell i w/r/t the position of cell j
+*/
+Dscalar2 SPV2D::dAidrj(int i, int j)
+    {
+    Dscalar2 answer;
+    answer.x = 0.0; answer.y=0.0;
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::overwrite);
+
+    //how many neighbors does cell i have?
+    int neigh = h_nn.data[i];
+    vector<int> ns(neigh);
+    bool jIsANeighbor = false;
+    if (j ==i) jIsANeighbor = true;
+
+    //which two vertices are important?
+    int n1, n2;
+    for (int nn = 0; nn < neigh; ++nn)
+        {
+        ns[nn] = h_n.data[n_idx(nn,i)];
+        if (ns[nn] ==j)
+            {
+            jIsANeighbor = true;
+            n1 = nn;
+            n2 = nn+1;
+            if (n2 ==neigh) n2 = 0;
+            }
+        };
+    Dscalar2 vlast, vcur,vnext;
+    //if j is not a neighbor of i (or i itself!) the  derivative vanishes
+    if (!jIsANeighbor)
+        return answer;
+    //if i ==j, do the loop simply
+    if ( i == j)
+        {
+        vlast = h_v.data[n_idx(neigh-1,i)];
+        for (int vv = 0; vv < neigh; ++vv)
+            {
+            vcur = h_v.data[n_idx(vv,i)];
+            vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+            Dscalar2 dAdv;
+            dAdv.x = -0.5*(vlast.y-vnext.y);
+            dAdv.y = -0.5*(vnext.x-vlast.x);
+
+            int indexk = vv - 1;
+            if (indexk <0) indexk = neigh-1;
+            Dscalar2 temp = dAdv*dHdri(h_p.data[i],h_p.data[ h_n.data[n_idx(vv,i)] ],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            answer.x += temp.x;
+            answer.y += temp.y;
+            vlast = vcur;
+            };
+        return answer;
+        };
+
+    //otherwise, the interesting case
+    vlast = h_v.data[n_idx(neigh-1,i)];
+    for (int vv = 0; vv < neigh; ++vv)
+        {
+        vcur = h_v.data[n_idx(vv,i)];
+        vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+        if(vv == n1 || vv == n2)
+            {
+            int indexk;
+            if (vv == n1)
+                indexk=vv-1;
+            else
+                indexk=vv;
+                    
+            if (indexk <0) indexk = neigh-1;
+            Dscalar2 dAdv;
+            dAdv.x = -0.5*(vlast.y-vnext.y);
+            dAdv.y = -0.5*(vnext.x-vlast.x);
+            Dscalar2 temp = dAdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            answer.x += temp.x;
+            answer.y += temp.y;
+            };
+        vlast = vcur;
+        };
+    return answer;
+    }
+
+/*!
+\param i The index of cell i
+\param j The index of cell j
+Returns the derivative of the perimeter of cell i w/r/t the position of cell j
+*/
+Dscalar2 SPV2D::dPidrj(int i, int j)
+    {
+    Dscalar2 answer;
+    answer.x = 0.0; answer.y = 0.0;
+
+    return answer;
+    }
