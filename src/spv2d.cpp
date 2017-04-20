@@ -665,3 +665,39 @@ void SPV2D::reportCellInfo()
     {
     printf("Ncells=%i\tv0=%f\tDr=%f\n",Ncells,v0,Dr);
     };
+
+/*!
+\param ri The position of cell i
+\param rj The position of cell j
+\param rk The position of cell k
+Returns the derivative of the voronoi vertex shared by cells i, j , and k with respect to changing the position of cell i
+*/
+Matrix2x2 SPV2D::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)
+    {
+    Matrix2x2 Id;
+    Dscalar2 rij, rik, rjk;
+    Box.minDist(rj,ri,rij);
+    Box.minDist(rk,ri,rik);
+    rjk.x =rik.x-rij.x;
+    rjk.y =rik.y-rij.y;
+
+    Dscalar2 dbDdri,dgDdri,dDdriOD,z;
+    Dscalar betaD = -dot(rik,rik)*dot(rij,rjk);
+    Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
+    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
+    Dscalar D = 2*cp*cp;
+    z.x = betaD*rij.x+gammaD*rik.x;
+    z.y = betaD*rij.y+gammaD*rik.y;
+
+    dbDdri.x = 2*dot(rij,rjk)*rik.x+dot(rik,rik)*rjk.x;
+    dbDdri.y = 2*dot(rij,rjk)*rik.y+dot(rik,rik)*rjk.y;
+
+    dgDdri.x = -2*dot(rik,rjk)*rij.x-dot(rij,rij)*rjk.x;
+    dgDdri.y = -2*dot(rik,rjk)*rij.y-dot(rij,rij)*rjk.y;
+
+    dDdriOD.x = (-2.0*rjk.y)/cp;
+    dDdriOD.y = (2.0*rjk.x)/cp;
+
+    return Id+1.0/D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
+    };
+

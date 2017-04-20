@@ -92,6 +92,10 @@ class SPV2D : public DelaunayMD
         //!sort points along a Hilbert curve for data locality
         void spatialSorting();
 
+        //Various partial derivatives related to calculating the dynamical matrix
+        //!The derivative of a voronoi vertex position with respect to change in the first cells position
+        Matrix2x2 dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk);
+
     //protected member variables
     protected:
         //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
