@@ -795,8 +795,108 @@ Returns the derivative of the perimeter of cell i w/r/t the position of cell j
 */
 Dscalar2 SPV2D::dPidrj(int i, int j)
     {
+    Dscalar Pthreshold = THRESHOLD;
     Dscalar2 answer;
-    answer.x = 0.0; answer.y = 0.0;
+    answer.x = 0.0; answer.y=0.0;
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::overwrite);
 
+    //how many neighbors does cell i have?
+    int neigh = h_nn.data[i];
+    vector<int> ns(neigh);
+    bool jIsANeighbor = false;
+    if (j ==i) jIsANeighbor = true;
+
+    //which two vertices are important?
+    int n1, n2;
+    for (int nn = 0; nn < neigh; ++nn)
+        {
+        ns[nn] = h_n.data[n_idx(nn,i)];
+        if (ns[nn] ==j)
+            {
+            jIsANeighbor = true;
+            n1 = nn;
+            n2 = nn+1;
+            if (n2 ==neigh) n2 = 0;
+            }
+        };
+    Dscalar2 vlast, vcur,vnext;
+    //if j is not a neighbor of i (or i itself!) the  derivative vanishes
+    if (!jIsANeighbor)
+        return answer;
+    //if i ==j, do the loop simply
+    if ( i == j)
+        {
+        vlast = h_v.data[n_idx(neigh-1,i)];
+        for (int vv = 0; vv < neigh; ++vv)
+            {
+            vcur = h_v.data[n_idx(vv,i)];
+            vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+            Dscalar2 dPdv;
+            Dscalar2 dlast,dnext;
+            dlast.x = vlast.x-vcur.x;
+            dlast.y=vlast.y-vcur.y;
+
+            Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+
+            dnext.x = vcur.x-vnext.x;
+            dnext.y = vcur.y-vnext.y;
+            Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+            if(dnnorm < Pthreshold)
+                dnnorm = Pthreshold;
+            if(dlnorm < Pthreshold)
+                dlnorm = Pthreshold;
+            dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+            dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+
+            int indexk = vv - 1;
+            if (indexk <0) indexk = neigh-1;
+            Dscalar2 temp = dPdv*dHdri(h_p.data[i],h_p.data[ h_n.data[n_idx(vv,i)] ],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            answer.x -= temp.x;
+            answer.y -= temp.y;
+            vlast = vcur;
+            };
+        return answer;
+        };
+
+    //otherwise, the interesting case
+    vlast = h_v.data[n_idx(neigh-1,i)];
+    for (int vv = 0; vv < neigh; ++vv)
+        {
+        vcur = h_v.data[n_idx(vv,i)];
+        vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+        if(vv == n1 || vv == n2)
+            {
+            int indexk;
+            if (vv == n1)
+                indexk=vv-1;
+            else
+                indexk=vv;
+                    
+            if (indexk <0) indexk = neigh-1;
+            Dscalar2 dPdv;
+            Dscalar2 dlast,dnext;
+            dlast.x = vlast.x-vcur.x;
+            dlast.y=vlast.y-vcur.y;
+
+            Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+
+            dnext.x = vcur.x-vnext.x;
+            dnext.y = vcur.y-vnext.y;
+            Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+            if(dnnorm < Pthreshold)
+                dnnorm = Pthreshold;
+            if(dlnorm < Pthreshold)
+                dlnorm = Pthreshold;
+            dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+            dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+            Dscalar2 temp = dPdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            answer.x -= temp.x;
+            answer.y -= temp.y;
+            };
+        vlast = vcur;
+        };
     return answer;
     }

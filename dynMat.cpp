@@ -134,5 +134,12 @@ int main(int argc, char*argv[])
     ans = SPV->dAidrj(26,61);
     printf("%g\t%g\n",ans.x,ans.y);
 
+    ans = SPV->dPidrj(26,25);
+    printf("%g\t%g\n",ans.x,ans.y);
+    ans = SPV->dPidrj(26,26);
+    printf("%g\t%g\n",ans.x,ans.y);
+    ans = SPV->dPidrj(26,61);
+    printf("%g\t%g\n",ans.x,ans.y);
+
     return 0;
 };
