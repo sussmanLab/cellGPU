@@ -139,7 +139,9 @@ class Simple2DCell : public Simple2DModel
         GPUArray<int> CellType;
         //!A indexer for turning a pair of cells into a 1-D index
         Index2D cellTypeIndexer;
-
+        
+        //!The current energy of the system; only updated when an explicit energy calculation is called (i.e. not by default each timestep)
+        Dscalar Energy;
     //protected member variables
     protected:
         //!the box defining the periodic domain
@@ -274,6 +276,9 @@ class Simple2DCell : public Simple2DModel
                 };
             return q/(Dscalar)Ncells;
             };
+
+        //!Return the quadratic energy functional
+        virtual Dscalar quadraticEnergy();
 
         //temporary stuff for testing as I refactor
         virtual void setDeltaT(Dscalar dt) = 0;

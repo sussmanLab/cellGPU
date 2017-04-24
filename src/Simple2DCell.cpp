@@ -543,3 +543,22 @@ void Simple2DCell::reportMeanCellForce(bool verbose)
         printf("min/max force : (%f,%f)\n",min,max);
     printf("Mean force = (%e,%e)\n" ,fx/Ncells,fy/Ncells);
     };
+
+/*!
+Returns the quadratic energy functional:
+E = \sum_{cells} K_A(A-A_0)^2 + K_P(P-P_0)^2
+*/
+Dscalar Simple2DCell::quadraticEnergy()
+    {
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences,access_location::host,access_mode::read);
+    Dscalar energy = 0.0;
+    for (int nn = 0; nn  < Ncells; ++nn)
+        {
+        energy += KA * (h_AP.data[nn].x-h_APP.data[nn].x)*(h_AP.data[nn].x-h_APP.data[nn].x);
+        energy += KP * (h_AP.data[nn].y-h_APP.data[nn].y)*(h_AP.data[nn].y-h_APP.data[nn].y);
+        };
+
+    Energy = energy;
+    return energy;
+    };
