@@ -964,4 +964,109 @@ Dscalar2 SPV2D::dPidrj(int i, int j)
         vlast = vcur;
         };
     return answer;
-    }
+    };
+
+/*!
+\param i The index of cell i
+\param j The index of cell j
+\pre Requires that computeGeometry is current
+*/
+Matrix2x2 SPV2D::d2Edridrj(int i, int j)
+    {
+    Matrix2x2  answer;
+    answer.x11 = 0.0; answer.x12=0.0; answer.x21=0.0;answer.x22=0.0;
+
+    return answer;
+    };
+/*!
+\param i The index of cell i
+\param j The index of cell j
+\pre Requires that computeGeometry is current
+The goal is to return a matrix (x11,x12,x21,x22) with
+x11 = d^2 / dr_{i,x} dr_{j,x}
+x12 = d^2 / dr_{i,x} dr_{j,y}
+x21 = d^2 / dr_{i,y} dr_{j,x}
+x22 = d^2 / dr_{i,y} dr_{j,y}
+*/
+Matrix2x2 SPV2D::d2Edridri(int i)
+    {
+    Matrix2x2  answer;
+    answer.x11 = 0.0; answer.x12=0.0; answer.x21=0.0;answer.x22=0.0;
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+
+    //how many neighbors does cell i have?
+    int neigh = h_nn.data[i];
+    vector<int> ns(neigh);
+    for (int nn = 0; nn < neigh; ++nn)
+        {
+        ns[nn] = h_n.data[n_idx(nn,i)];
+        };
+    //the saved voronoi positions
+    Dscalar2 vlast, vcur,vnext;
+    //the cell indices
+    int cellG, cellB,cellGp1,cellBm1;
+    cellB = ns[neigh-1];
+    cellBm1 = ns[neigh-2];
+    vlast = h_v.data[n_idx(neigh-1,i)];
+    Matrix2x2 tempMatrix;
+    for (int vv = 0; vv < neigh; ++vv)
+        {
+        if (vv+1 == neigh)
+            cellGp1 = ns[0];
+        else
+            cellGp1 = ns[vv+1];
+        cellG = ns[vv];
+        vcur = h_v.data[n_idx(vv,i)];
+        vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+        Matrix2x2 dvidri = dHdri(h_p.data[i],h_p.data[cellG],h_p.data[cellB]);
+        Matrix2x2 dvip1dri = dHdri(h_p.data[i],h_p.data[cellG],h_p.data[cellGp1]);
+        Matrix2x2 dvim1dri = dHdri(h_p.data[i],h_p.data[cellB],h_p.data[cellBm1]);
+
+        Dscalar2 rB,rG;
+        Box.minDist(h_p.data[cellB],h_p.data[i],rB);
+        Box.minDist(h_p.data[cellG],h_p.data[i],rG);
+        vector<Dscalar> d2vidri2 = d2Hdridrj(rB,rG,1);
+
+        //cell alpha terms
+        Dscalar2 dAdv;
+        dAdv.x = -0.5*(vlast.y-vnext.y);
+        dAdv.y = -0.5*(vnext.x-vlast.x);
+        Dscalar dEdA = 2*KA*(h_AP.data[i].x - h_APpref.data[i].x);
+        Dscalar2 dAidri = dAidrj(i,i);
+        //first of three area terms
+        answer += 2*KA*dyad(dAdv*dvidri,dAidri);
+
+        //second of three area terms
+        tempMatrix.x11 = (dvip1dri.x21-dvim1dri.x21)*dvidri.x11 + (dvim1dri.x11-dvip1dri.x11)*dvidri.x21;
+        tempMatrix.x12 = (dvip1dri.x22-dvim1dri.x22)*dvidri.x11 + (dvim1dri.x12-dvip1dri.x12)*dvidri.x21;
+        tempMatrix.x21 = (dvip1dri.x21-dvim1dri.x21)*dvidri.x12 + (dvim1dri.x11-dvip1dri.x11)*dvidri.x22;
+        tempMatrix.x22 = (dvip1dri.x22-dvim1dri.x22)*dvidri.x12 + (dvim1dri.x12-dvip1dri.x12)*dvidri.x22;
+        answer += 0.5*dEdA*tempMatrix;
+
+        //third of three area terms
+        tempMatrix.x11 =dAdv.x*d2vidri2[0]+dAdv.y*d2vidri2[1]; 
+        tempMatrix.x21 =dAdv.x*d2vidri2[2]+dAdv.y*d2vidri2[3]; 
+        tempMatrix.x12 =dAdv.x*d2vidri2[4]+dAdv.y*d2vidri2[5]; 
+        tempMatrix.x22 =dAdv.x*d2vidri2[6]+dAdv.y*d2vidri2[7]; 
+        answer += dEdA*tempMatrix;
+
+        //first of three peri terms
+
+        //second of three peri terms
+
+        //third of three peri terms
+
+        //cell beta terms
+        //cell gamma terms
+        cellB=cellG;
+        cellBm1=cellB;
+        };
+
+    return answer;
+    };
+

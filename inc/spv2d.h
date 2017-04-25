@@ -106,6 +106,11 @@ class SPV2D : public DelaunayMD
         //!second derivatives of voronoi vertex with respect to cell positions
         vector<Dscalar> d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj);
 
+        //! Second derivative of the energy w/r/t cell positions, specialized to d2Edri2
+        Matrix2x2 d2Edridri(int i);
+        //! Second derivative of the energy w/r/t cell positions
+        Matrix2x2 d2Edridrj(int i, int j);
+
     //protected member variables
     protected:
         //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
