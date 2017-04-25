@@ -735,6 +735,7 @@ vector<Dscalar> SPV2D::d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj)
 \param rj The position of cell j
 \param rk The position of cell k
 Returns the derivative of the voronoi vertex shared by cells i, j , and k with respect to changing the position of cell i
+the (row, column) format specifies dH_{row}/dr_{i,column}
 */
 Matrix2x2 SPV2D::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)
     {
