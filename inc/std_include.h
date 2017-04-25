@@ -105,6 +105,12 @@ HOSTDEVICE Dscalar2 operator-(const Dscalar2 &a, const Dscalar2 &b)
     return make_Dscalar2(a.x-b.x,a.y-b.y);
     }
 
+//!multiplication of Dscalar2 by Dscalar
+HOSTDEVICE Dscalar2 operator*(const Dscalar &a, const Dscalar2 &b)
+    {
+    return make_Dscalar2(a*b.x,a*b.y);
+    }
+
 //!return a Dscalar4 from four Dscalars
 HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
     {

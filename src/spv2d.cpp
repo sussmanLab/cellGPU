@@ -1009,7 +1009,7 @@ Matrix2x2 SPV2D::d2Edridri(int i)
     //the saved voronoi positions
     Dscalar2 vlast, vcur,vnext;
     //the cell indices
-    int cellG, cellB,cellGp1,cellBm1;
+    int cellG, cellB,cellGp1,cellBm1,cellCur;
     cellB = ns[neigh-1];
     cellBm1 = ns[neigh-2];
     vlast = h_v.data[n_idx(neigh-1,i)];
@@ -1023,14 +1023,19 @@ Matrix2x2 SPV2D::d2Edridri(int i)
         cellG = ns[vv];
         vcur = h_v.data[n_idx(vv,i)];
         vnext = h_v.data[n_idx((vv+1)%neigh,i)];
-        Matrix2x2 dvidri = dHdri(h_p.data[i],h_p.data[cellG],h_p.data[cellB]);
-        Matrix2x2 dvip1dri = dHdri(h_p.data[i],h_p.data[cellG],h_p.data[cellGp1]);
-        Matrix2x2 dvim1dri = dHdri(h_p.data[i],h_p.data[cellB],h_p.data[cellBm1]);
+
+        Matrix2x2 dvidri = dHdri(h_p.data[i],h_p.data[cellB],h_p.data[cellG]);
+        Matrix2x2 dvip1dri = dHdri(h_p.data[i],h_p.data[cellGp1],h_p.data[cellG]);
+        Matrix2x2 dvim1dri = dHdri(h_p.data[i],h_p.data[cellBm1],h_p.data[cellB]);
 
         Dscalar2 rB,rG;
         Box.minDist(h_p.data[cellB],h_p.data[i],rB);
         Box.minDist(h_p.data[cellG],h_p.data[i],rG);
         vector<Dscalar> d2vidri2 = d2Hdridrj(rB,rG,1);
+        printf("cell beta: (%f, %f)\n cell gamma: (%f, %f)\n derivatives",rB.x,rB.y,rG.x,rG.y);
+        for (int il = 0; il < 8; ++il)
+            printf("%f\t",d2vidri2[il]);
+        printf("\n");
 
         //cell alpha terms
         Dscalar2 dAdv;
@@ -1039,14 +1044,19 @@ Matrix2x2 SPV2D::d2Edridri(int i)
         Dscalar dEdA = 2*KA*(h_AP.data[i].x - h_APpref.data[i].x);
         Dscalar2 dAidri = dAidrj(i,i);
         //first of three area terms
-        answer += 2*KA*dyad(dAdv*dvidri,dAidri);
+        answer += 2.*KA*dyad(dAdv*dvidri,dAidri);
 
         //second of three area terms
-        tempMatrix.x11 = (dvip1dri.x21-dvim1dri.x21)*dvidri.x11 + (dvim1dri.x11-dvip1dri.x11)*dvidri.x21;
-        tempMatrix.x12 = (dvip1dri.x22-dvim1dri.x22)*dvidri.x11 + (dvim1dri.x12-dvip1dri.x12)*dvidri.x21;
-        tempMatrix.x21 = (dvip1dri.x21-dvim1dri.x21)*dvidri.x12 + (dvim1dri.x11-dvip1dri.x11)*dvidri.x22;
-        tempMatrix.x22 = (dvip1dri.x22-dvim1dri.x22)*dvidri.x12 + (dvim1dri.x12-dvip1dri.x12)*dvidri.x22;
-        answer += 0.5*dEdA*tempMatrix;
+        Matrix2x2 d2Advidri;
+        d2Advidri.x11 = dvip1dri.x21-dvim1dri.x21;
+        d2Advidri.x12 = dvip1dri.x22-dvim1dri.x22;
+        d2Advidri.x21 = dvim1dri.x11-dvip1dri.x11;
+        d2Advidri.x22 = dvim1dri.x12-dvip1dri.x12;
+        tempMatrix.x11 = d2Advidri.x11*dvidri.x11+d2Advidri.x21*dvidri.x21;
+        tempMatrix.x12 = d2Advidri.x12*dvidri.x11+d2Advidri.x22*dvidri.x21;
+        tempMatrix.x21 = d2Advidri.x11*dvidri.x12+d2Advidri.x21*dvidri.x22;
+        tempMatrix.x22 = d2Advidri.x12*dvidri.x12+d2Advidri.x22*dvidri.x22;
+        answer += .5*dEdA*tempMatrix;
 
         //third of three area terms
         tempMatrix.x11 =dAdv.x*d2vidri2[0]+dAdv.y*d2vidri2[1]; 
@@ -1063,8 +1073,9 @@ Matrix2x2 SPV2D::d2Edridri(int i)
 
         //cell beta terms
         //cell gamma terms
-        cellB=cellG;
+        vlast=vcur;
         cellBm1=cellB;
+        cellB=cellG;
         };
 
     return answer;

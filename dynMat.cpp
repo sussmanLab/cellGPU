@@ -141,6 +141,8 @@ int main(int argc, char*argv[])
     ans = SPV->dPidrj(26,61);
     printf("%g\t%g\n",ans.x,ans.y);
 
+    Matrix2x2 test = SPV->d2Edridri(26);
+    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
 /*
     SPV->computeForces();
     GPUArray<Dscalar2> fs;
