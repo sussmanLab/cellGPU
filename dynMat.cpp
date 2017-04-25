@@ -141,5 +141,13 @@ int main(int argc, char*argv[])
     ans = SPV->dPidrj(26,61);
     printf("%g\t%g\n",ans.x,ans.y);
 
+/*
+    SPV->computeForces();
+    GPUArray<Dscalar2> fs;
+    fs.resize(numpts);
+    SPV->getForces(fs);
+    ArrayHandle<Dscalar2> hf(fs);
+    printf("Force on cell %i: (%f,%f)\n",26,hf.data[26].x,hf.data[26].y);
+*/
     return 0;
 };

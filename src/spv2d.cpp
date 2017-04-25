@@ -670,6 +670,70 @@ void SPV2D::reportCellInfo()
 \param ri The position of cell i
 \param rj The position of cell j
 \param rk The position of cell k
+\param jj the index EITHER 1 or 2 of the second derivative
+Returns an 8-component vector containing the derivatives of the voronoi vertex formed by cells i, j, and k
+with respect to r_i and r_{jj}... jj should be either 1 (to give d^2H/(d r_i)^2 or 2 (to give d^2H/dridrji)
+The vector is laid out as
+(H_x/r_{i,x}r_{j,x}, H_y/r_{i,x}r_{j,x}  
+H_x/r_{i,y}r_{j,x}, H_y/r_{i,y}r_{j,x}  
+H_x/r_{i,x}r_{j,y}, H_y/r_{i,x}r_{j,y}  
+H_x/r_{i,y}r_{j,y}, H_y/r_{i,y}r_{j,y}  )
+NOTE: This function does not check that ri, rj, and rk actually share a voronoi vertex in the triangulation
+NOTE: This function assumes that rj and rk are w/r/t the position of ri, so ri = (0.,0.)
+*/
+vector<Dscalar> SPV2D::d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj)
+    {
+    vector<Dscalar> answer(8);
+    Dscalar hxr1xr2x, hyr1xr2x, hxr1yr2x,hyr1yr2x;
+    Dscalar hxr1xr2y, hyr1xr2y, hxr1yr2y,hyr1yr2y;
+    Dscalar rjx,rjy,rkx,rky;
+    rjx = rj.x; rjy=rj.y; rkx=rk.x;rky=rk.y;
+
+    Dscalar denominator;
+    denominator = (rjx*rky-rjy*rkx)*(rjx*rky-rjy*rkx)*(rjx*rky-rjy*rkx);
+    hxr1xr2x = hyr1xr2x = hxr1yr2x = hyr1yr2x = hxr1xr2y= hyr1xr2y= hxr1yr2y=hyr1yr2y= (1.0/denominator);
+    //all derivatives in the dynMatTesting notebook
+    //first, handle the d^2h/dr_i^2 case
+    if ( jj == 1)
+        {
+        hxr1xr2x *= rjy*(rjy - rky)*rky*(-2*rjx*rkx - 2*rjy*rky + rjx*rjx + rjy*rjy + rkx*rkx + rky*rky); 
+        hyr1xr2x *= -(rjy*(rjx - rkx)*rky*(-2*rjx*rkx - 2*rjy*rky + rjx*rjx + rjy*rjy + rkx*rkx + rky*rky));
+        hxr1yr2x *= -((rjy - rky)*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) + rjx*(rky*(rjy*rjy) - 2*rjy*(rkx*rkx + rky*rky) + rky*(rkx*rkx + rky*rky))))/2.;
+        hyr1yr2x *= ((rjx - rkx)*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) + rjx*(rky*(rjy*rjy) - 2*rjy*(rkx*rkx + rky*rky) + rky*(rkx*rkx + rky*rky))))/2.;
+        hxr1xr2y *= -((rjy - rky)*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) +rjx*(rky*(rjy*rjy) - 2*rjy*(rkx*rkx + rky*rky) + rky*(rkx*rkx + rky*rky))))/2.;
+        hyr1xr2y *= ((rjx - rkx)*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) + rjx*(rky*(rjy*rjy) - 2*rjy*(rkx*rkx + rky*rky) + rky*(rkx*rkx + rky*rky))))/2.;
+        hxr1yr2y *= rjx*rkx*(rjy - rky)*(-2*rjx*rkx - 2*rjy*rky + rjx*rjx + rjy*rjy + rkx*rkx + rky*rky);
+        hyr1yr2y *= -(rjx*(rjx - rkx)*rkx*(-2*rjx*rkx - 2*rjy*rky + rjx*rjx + rjy*rjy + rkx*rkx + rky*rky));
+        };
+    //next, handle the d^2h/dr_idr_j case
+    if ( jj != 1)
+        {
+        hxr1xr2x *= rjy*(rjy - rky)*rky*(rjx*rkx + (rjy - rky)*rky - rkx*rkx);
+        hyr1xr2x *= (-(rkx*rky*(rjy*rjy*rjy)) + rjx*rjx*rjx*(rky*rky) + rjy*rjy*(rkx*rkx*rkx - rjx*(rky*rky) + 3*rkx*(rky*rky)) +rjy*rky*(-3*rkx*(rjx*rjx) - 2*rkx*(rkx*rkx + rky*rky) + rjx*(3*(rkx*rkx) + rky*rky)))/2.;
+        hxr1yr2x *= -((rjy - rky)*(rjy*rkx*((2*rjy - rky)*rky - rkx*rkx) + rjx*(2*rjy*(rkx*rkx) - rky*(rkx*rkx + rky*rky))))/2.;
+        hyr1yr2x *= (rkx*(3*rjy*rkx*(rjx*rjx) - rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) + rjx*(rky*(rjy*rjy) + rky*(rkx*rkx + rky*rky) - 2*rjy*(2*(rkx*rkx) + rky*rky))))/2.;
+        hxr1xr2y *= -(rky*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-(rjy*rjy) + rkx*rkx + rky*rky) + rjx*(3*rky*(rjy*rjy) + rky*(rkx*rkx + rky*rky) - 2*rjy*(rkx*rkx + 2*(rky*rky)))))/2.;
+        hyr1xr2y *= ((rjx - rkx)*(rjx*rky*(2*rjx*rkx - rkx*rkx - rky*rky) - rjy*(rkx*rkx*rkx - 2*rjx*(rky*rky) + rkx*(rky*rky))))/2.;
+        hxr1yr2y *= (rkx*rky*(rjx*rjx*rjx) - rjy*rjy*rjy*(rkx*rkx) + rjx*rjx*(rjy*(rkx*rkx) - rky*(3*(rkx*rkx) + rky*rky)) + rjx*rkx*(3*rky*(rjy*rjy) + 2*rky*(rkx*rkx + rky*rky) - rjy*(rkx*rkx + 3*(rky*rky))))/2.;
+        hyr1yr2y *= -(rjx*(rjx - rkx)*rkx*(rjx*rkx + (rjy - rky)*rky - rkx*rkx));
+        };
+
+
+    answer[0] = hxr1xr2x;
+    answer[1] = hyr1xr2x;
+    answer[2] = hxr1yr2x;
+    answer[3] = hyr1yr2x;
+    answer[4] = hxr1xr2y;
+    answer[5] = hyr1xr2y;
+    answer[6] = hxr1yr2y;
+    answer[7] = hyr1yr2y;
+    return answer;
+    };
+
+/*!
+\param ri The position of cell i
+\param rj The position of cell j
+\param rk The position of cell k
 Returns the derivative of the voronoi vertex shared by cells i, j , and k with respect to changing the position of cell i
 */
 Matrix2x2 SPV2D::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)

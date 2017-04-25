@@ -103,6 +103,9 @@ class SPV2D : public DelaunayMD
         //!Derivative of the perimeter of cell i with respect to the position of cell j
         Dscalar2 dPidrj(int i, int j);
 
+        //!second derivatives of voronoi vertex with respect to cell positions
+        vector<Dscalar> d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj);
+
     //protected member variables
     protected:
         //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
