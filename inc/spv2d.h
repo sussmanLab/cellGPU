@@ -109,7 +109,7 @@ class SPV2D : public DelaunayMD
         //! Second derivative of the energy w/r/t cell positions, specialized to d2Edri2
         Matrix2x2 d2Edridri(int i);
         //! Second derivative of the energy w/r/t cell positions
-        Matrix2x2 d2Edridrj(int i, int j);
+        Matrix2x2 d2Edridrj(int i, int j, neighborType neighbor);
 
     //protected member variables
     protected:

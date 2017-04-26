@@ -704,17 +704,17 @@ vector<Dscalar> SPV2D::d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj)
         hyr1xr2y *= ((rjx - rkx)*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) + rjx*(rky*(rjy*rjy) - 2*rjy*(rkx*rkx + rky*rky) + rky*(rkx*rkx + rky*rky))))/2.;
         hxr1yr2y *= rjx*rkx*(rjy - rky)*(-2*rjx*rkx - 2*rjy*rky + rjx*rjx + rjy*rjy + rkx*rkx + rky*rky);
         hyr1yr2y *= -(rjx*(rjx - rkx)*rkx*(-2*rjx*rkx - 2*rjy*rky + rjx*rjx + rjy*rjy + rkx*rkx + rky*rky));
-        };
-    //next, handle the d^2h/dr_idr_j case
-    if ( jj != 1)
+        }
+    else
         {
+        //next, handle the d^2h/dr_idr_j case
         hxr1xr2x *= rjy*(rjy - rky)*rky*(rjx*rkx + (rjy - rky)*rky - rkx*rkx);
-        hyr1xr2x *= (-(rkx*rky*(rjy*rjy*rjy)) + rjx*rjx*rjx*(rky*rky) + rjy*rjy*(rkx*rkx*rkx - rjx*(rky*rky) + 3*rkx*(rky*rky)) +rjy*rky*(-3*rkx*(rjx*rjx) - 2*rkx*(rkx*rkx + rky*rky) + rjx*(3*(rkx*rkx) + rky*rky)))/2.;
+        hyr1xr2x *= (-(rjy*rkx*rky*(-3*rjx*rkx + 3*(rjx*rjx) + rjy*rjy + 2*(rkx*rkx))) + rjy*rjy*(rkx*rkx*rkx) +(rjx*rjx*rjx - rjx*(rjy*rjy) + 3*rkx*(rjy*rjy))*(rky*rky) + rjy*(rjx - 2*rkx)*(rky*rky*rky))/2.;
         hxr1yr2x *= -((rjy - rky)*(rjy*rkx*((2*rjy - rky)*rky - rkx*rkx) + rjx*(2*rjy*(rkx*rkx) - rky*(rkx*rkx + rky*rky))))/2.;
-        hyr1yr2x *= (rkx*(3*rjy*rkx*(rjx*rjx) - rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) + rjx*(rky*(rjy*rjy) + rky*(rkx*rkx + rky*rky) - 2*rjy*(2*(rkx*rkx) + rky*rky))))/2.;
-        hxr1xr2y *= -(rky*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-(rjy*rjy) + rkx*rkx + rky*rky) + rjx*(3*rky*(rjy*rjy) + rky*(rkx*rkx + rky*rky) - 2*rjy*(rkx*rkx + 2*(rky*rky)))))/2.;
+        hyr1yr2x *= (rkx*(3*rjy*rkx*(rjx*rjx) - rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) +  rjx*(rky*(rjy*rjy) + rky*(rkx*rkx + rky*rky) - 2*rjy*(2*(rkx*rkx) + rky*rky))))/2.;
+        hxr1xr2y *= -(rky*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-(rjy*rjy) + rkx*rkx + rky*rky) +rjx*(3*rky*(rjy*rjy) + rky*(rkx*rkx + rky*rky) - 2*rjy*(rkx*rkx + 2*(rky*rky)))))/2.;
         hyr1xr2y *= ((rjx - rkx)*(rjx*rky*(2*rjx*rkx - rkx*rkx - rky*rky) - rjy*(rkx*rkx*rkx - 2*rjx*(rky*rky) + rkx*(rky*rky))))/2.;
-        hxr1yr2y *= (rkx*rky*(rjx*rjx*rjx) - rjy*rjy*rjy*(rkx*rkx) + rjx*rjx*(rjy*(rkx*rkx) - rky*(3*(rkx*rkx) + rky*rky)) + rjx*rkx*(3*rky*(rjy*rjy) + 2*rky*(rkx*rkx + rky*rky) - rjy*(rkx*rkx + 3*(rky*rky))))/2.;
+        hxr1yr2y *= (rkx*rky*(rjx*rjx*rjx) - rjy*rjy*rjy*(rkx*rkx) + rjx*rjx*(rjy*(rkx*rkx) - rky*(3*(rkx*rkx) + rky*rky)) +rjx*rkx*(3*rky*(rjy*rjy) + 2*rky*(rkx*rkx + rky*rky) - rjy*(rkx*rkx + 3*(rky*rky))))/2.;
         hyr1yr2y *= -(rjx*(rjx - rkx)*rkx*(rjx*rkx + (rjy - rky)*rky - rkx*rkx));
         };
 
@@ -971,7 +971,7 @@ Dscalar2 SPV2D::dPidrj(int i, int j)
 \param j The index of cell j
 \pre Requires that computeGeometry is current
 */
-Matrix2x2 SPV2D::d2Edridrj(int i, int j)
+Matrix2x2 SPV2D::d2Edridri(int i)
     {
     Matrix2x2  answer;
     answer.x11 = 0.0; answer.x12=0.0; answer.x21=0.0;answer.x22=0.0;
@@ -988,7 +988,7 @@ x12 = d^2 / dr_{i,x} dr_{j,y}
 x21 = d^2 / dr_{i,y} dr_{j,x}
 x22 = d^2 / dr_{i,y} dr_{j,y}
 */
-Matrix2x2 SPV2D::d2Edridri(int i)
+Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
     {
     Matrix2x2  answer;
     answer.x11 = 0.0; answer.x12=0.0; answer.x21=0.0;answer.x22=0.0;
@@ -1009,70 +1009,192 @@ Matrix2x2 SPV2D::d2Edridri(int i)
     //the saved voronoi positions
     Dscalar2 vlast, vcur,vnext;
     //the cell indices
-    int cellG, cellB,cellGp1,cellBm1,cellCur;
+    int cellG, cellB,cellGp1,cellBm1;
     cellB = ns[neigh-1];
     cellBm1 = ns[neigh-2];
     vlast = h_v.data[n_idx(neigh-1,i)];
     Matrix2x2 tempMatrix;
+
+    Dscalar dEdA = 2*KA*(h_AP.data[i].x - h_APpref.data[i].x);
+    Dscalar2 dAadrj = dAidrj(i,j);
+    answer = 2.0*KA*dyad(dAidrj(i,i),dAadrj);
     for (int vv = 0; vv < neigh; ++vv)
         {
+        cellG = ns[vv];
         if (vv+1 == neigh)
             cellGp1 = ns[0];
         else
             cellGp1 = ns[vv+1];
-        cellG = ns[vv];
-        vcur = h_v.data[n_idx(vv,i)];
-        vnext = h_v.data[n_idx((vv+1)%neigh,i)];
 
-        Matrix2x2 dvidri = dHdri(h_p.data[i],h_p.data[cellB],h_p.data[cellG]);
-        Matrix2x2 dvip1dri = dHdri(h_p.data[i],h_p.data[cellGp1],h_p.data[cellG]);
-        Matrix2x2 dvim1dri = dHdri(h_p.data[i],h_p.data[cellBm1],h_p.data[cellB]);
-
+        //first, what is the index and relative position of cell delta (which forms a vertex with gamma and beta connect by an edge to v_i)?
+        int neigh2 = h_nn.data[cellG];
+        int cellD=-1;
+        for (int n2 = 0; n2 < neigh2; ++n2)
+            {
+            int testPoint = h_n.data[n_idx(n2,cellG)];
+            if(testPoint == cellB) cellD = h_n.data[n_idx((n2+1)%neigh2,cellG)];
+            };
+        if(cellD == cellB || cellD  == cellG || cellD == -1)
+            {
+            printf("Triangulation problem %i\n",cellD);
+            throw std::exception();
+            };
         Dscalar2 rB,rG;
         Box.minDist(h_p.data[cellB],h_p.data[i],rB);
         Box.minDist(h_p.data[cellG],h_p.data[i],rG);
-        vector<Dscalar> d2vidri2 = d2Hdridrj(rB,rG,1);
-        printf("cell beta: (%f, %f)\n cell gamma: (%f, %f)\n derivatives",rB.x,rB.y,rG.x,rG.y);
-        for (int il = 0; il < 8; ++il)
-            printf("%f\t",d2vidri2[il]);
-        printf("\n");
+        Dscalar2 rD;
+        Box.minDist(h_p.data[cellD],h_p.data[i],rD);
+        Dscalar2 vother;
+        Circumcenter(rB,rG,rD,vother);
 
+        vcur = h_v.data[n_idx(vv,i)];
+        vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+
+        Matrix2x2 dvidrj(0.0,0.0,0.0,0.0);
+        Matrix2x2 dvidri = dHdri(h_p.data[i],h_p.data[cellB],h_p.data[cellG]);
+        Matrix2x2 dvip1drj(0.0,0.0,0.0,0.0);
+        Matrix2x2 dvim1drj(0.0,0.0,0.0,0.0);
+        Matrix2x2 dvodrj(0.0,0.0,0.0,0.0);
+        vector<Dscalar> d2vidridrj(8,0.0);
+        if (neighbor == neighborType::self)
+            {
+            dvidrj = dHdri(h_p.data[i],h_p.data[cellB],h_p.data[cellG]);
+            dvip1drj = dHdri(h_p.data[i],h_p.data[cellGp1],h_p.data[cellG]);
+            dvim1drj = dHdri(h_p.data[i],h_p.data[cellBm1],h_p.data[cellB]);
+            d2vidridrj = d2Hdridrj(rB,rG,1);
+            };
+        if (neighbor == neighborType::first)
+            {
+            if (j == cellG)
+                {
+                dvidrj = dHdri(h_p.data[cellG],h_p.data[i],h_p.data[cellB]);
+                dvip1drj = dHdri(h_p.data[cellG],h_p.data[i],h_p.data[cellGp1]);
+                dvodrj = dHdri(h_p.data[cellG],h_p.data[cellD],h_p.data[cellB]);
+                //printf("%i\t%i\t%i\n %f\t%f\t%f\t%f\n\n",cellG,i,cellGp1,dvip1drj.x11,dvip1drj.x12,dvip1drj.x21,dvip1drj.x22);
+                d2vidridrj = d2Hdridrj(rG,rB,2);
+                };
+            if (j == cellB)
+                {
+                dvidrj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellG]);
+                dvim1drj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellBm1]);
+                dvodrj = dHdri(h_p.data[cellB],h_p.data[cellD],h_p.data[cellG]);
+                d2vidridrj = d2Hdridrj(rB,rG,2);
+                };
+            };
+        /*
+        for (int il = 0; il < 8; ++il)
+            printf("%f, ",d2vidridrj[il]);
+        int oo = cellB;
+        if (j==cellB) oo=cellG;
+        printf("\n %i %i %i\n", i, j, oo);
+        */
+        //
         //cell alpha terms
+        //
+        //Area part
         Dscalar2 dAdv;
         dAdv.x = -0.5*(vlast.y-vnext.y);
         dAdv.y = -0.5*(vnext.x-vlast.x);
-        Dscalar dEdA = 2*KA*(h_AP.data[i].x - h_APpref.data[i].x);
-        Dscalar2 dAidri = dAidrj(i,i);
-        //first of three area terms
-        answer += 2.*KA*dyad(dAdv*dvidri,dAidri);
+        //first of three area terms... now done as a simple dyadic product outside the loop
+        //answer += 2.*KA*dyad(dAdv*dvidri,dAadrj);
 
         //second of three area terms
-        Matrix2x2 d2Advidri;
-        d2Advidri.x11 = dvip1dri.x21-dvim1dri.x21;
-        d2Advidri.x12 = dvip1dri.x22-dvim1dri.x22;
-        d2Advidri.x21 = dvim1dri.x11-dvip1dri.x11;
-        d2Advidri.x22 = dvim1dri.x12-dvip1dri.x12;
-        tempMatrix.x11 = d2Advidri.x11*dvidri.x11+d2Advidri.x21*dvidri.x21;
-        tempMatrix.x12 = d2Advidri.x12*dvidri.x11+d2Advidri.x22*dvidri.x21;
-        tempMatrix.x21 = d2Advidri.x11*dvidri.x12+d2Advidri.x21*dvidri.x22;
-        tempMatrix.x22 = d2Advidri.x12*dvidri.x12+d2Advidri.x22*dvidri.x22;
-        answer += .5*dEdA*tempMatrix;
+        Matrix2x2 d2Advidrj;
+        d2Advidrj.x11 = dvip1drj.x21-dvim1drj.x21;
+        d2Advidrj.x12 = dvip1drj.x22-dvim1drj.x22;
+        d2Advidrj.x21 = dvim1drj.x11-dvip1drj.x11;
+        d2Advidrj.x22 = dvim1drj.x12-dvip1drj.x12;
+        tempMatrix.x11 = d2Advidrj.x11*dvidri.x11+d2Advidrj.x21*dvidri.x21;
+        tempMatrix.x12 = d2Advidrj.x12*dvidri.x11+d2Advidrj.x22*dvidri.x21;
+        tempMatrix.x21 = d2Advidrj.x11*dvidri.x12+d2Advidrj.x21*dvidri.x22;
+        tempMatrix.x22 = d2Advidrj.x12*dvidri.x12+d2Advidrj.x22*dvidri.x22;
+        //printf("second terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
+        answer += 0.5*dEdA*tempMatrix;
+
 
         //third of three area terms
-        tempMatrix.x11 =dAdv.x*d2vidri2[0]+dAdv.y*d2vidri2[1]; 
-        tempMatrix.x21 =dAdv.x*d2vidri2[2]+dAdv.y*d2vidri2[3]; 
-        tempMatrix.x12 =dAdv.x*d2vidri2[4]+dAdv.y*d2vidri2[5]; 
-        tempMatrix.x22 =dAdv.x*d2vidri2[6]+dAdv.y*d2vidri2[7]; 
+        tempMatrix.x11 =dAdv.x*d2vidridrj[0]+dAdv.y*d2vidridrj[1]; 
+        tempMatrix.x21 =dAdv.x*d2vidridrj[2]+dAdv.y*d2vidridrj[3]; 
+        tempMatrix.x12 =dAdv.x*d2vidridrj[4]+dAdv.y*d2vidridrj[5]; 
+        tempMatrix.x22 =dAdv.x*d2vidridrj[6]+dAdv.y*d2vidridrj[7]; 
+        //printf("third terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
         answer += dEdA*tempMatrix;
 
+        //perimeter part
         //first of three peri terms
 
         //second of three peri terms
 
         //third of three peri terms
 
-        //cell beta terms
+
+
+
+        //now we compute terms related to cells gamma and beta
+        //
         //cell gamma terms
+        //
+        //area part
+        Dscalar dEGdA = 2.0*(h_AP.data[cellG].x  - h_APpref.data[cellG].x);
+        Dscalar2 dAGdv;
+        dAGdv.x = -0.5*(vnext.y-vother.y);
+        dAGdv.y = -0.5*(vother.x-vnext.x);
+        Dscalar2 dAGdrj = dAidrj(cellG,j);
+        //first term
+        answer += 2.*KA*dyad(dAGdv*dvidri,dAGdrj);
+        //second term
+        d2Advidrj.x11 = dvodrj.x21-dvip1drj.x21;
+        d2Advidrj.x12 = dvodrj.x22-dvip1drj.x22;
+        d2Advidrj.x21 = dvip1drj.x11-dvodrj.x11;
+        d2Advidrj.x22 = dvip1drj.x12-dvodrj.x12;
+        tempMatrix.x11 = d2Advidrj.x11*dvidri.x11+d2Advidrj.x21*dvidri.x21;
+        tempMatrix.x12 = d2Advidrj.x12*dvidri.x11+d2Advidrj.x22*dvidri.x21;
+        tempMatrix.x21 = d2Advidrj.x11*dvidri.x12+d2Advidrj.x21*dvidri.x22;
+        tempMatrix.x22 = d2Advidrj.x12*dvidri.x12+d2Advidrj.x22*dvidri.x22;
+        answer += 0.5*dEGdA*tempMatrix;
+
+        //third term
+        tempMatrix.x11 =dAGdv.x*d2vidridrj[0]+dAGdv.y*d2vidridrj[1]; 
+        tempMatrix.x21 =dAGdv.x*d2vidridrj[2]+dAGdv.y*d2vidridrj[3]; 
+        tempMatrix.x12 =dAGdv.x*d2vidridrj[4]+dAGdv.y*d2vidridrj[5]; 
+        tempMatrix.x22 =dAGdv.x*d2vidridrj[6]+dAGdv.y*d2vidridrj[7]; 
+        answer += dEGdA*tempMatrix;
+        
+
+        //perimeter part
+
+        //
+        //cell beta terms
+        //
+        //area terms
+        Dscalar dEBdA = 2.0*(h_AP.data[cellB].x  - h_APpref.data[cellB].x);
+        Dscalar2 dABdv;
+        dABdv.x = 0.5*(vlast.y-vother.y);
+        dABdv.y = 0.5*(vother.x-vlast.x);
+        Dscalar2 dABdrj = dAidrj(cellB,j);
+        
+        //first term
+        answer += 2.*KA*dyad(dABdv*dvidri,dABdrj);
+        //second term
+        d2Advidrj.x11 = dvim1drj.x21-dvodrj.x21;
+        d2Advidrj.x12 = dvim1drj.x22-dvodrj.x22;
+        d2Advidrj.x21 = dvodrj.x11-dvim1drj.x11;
+        d2Advidrj.x22 = dvodrj.x12-dvim1drj.x12;
+        tempMatrix.x11 = d2Advidrj.x11*dvidri.x11+d2Advidrj.x21*dvidri.x21;
+        tempMatrix.x12 = d2Advidrj.x12*dvidri.x11+d2Advidrj.x22*dvidri.x21;
+        tempMatrix.x21 = d2Advidrj.x11*dvidri.x12+d2Advidrj.x21*dvidri.x22;
+        tempMatrix.x22 = d2Advidrj.x12*dvidri.x12+d2Advidrj.x22*dvidri.x22;
+        answer += 0.5*dEBdA*tempMatrix;
+        //third term
+        tempMatrix.x11 =dABdv.x*d2vidridrj[0]+dABdv.y*d2vidridrj[1]; 
+        tempMatrix.x21 =dABdv.x*d2vidridrj[2]+dABdv.y*d2vidridrj[3]; 
+        tempMatrix.x12 =dABdv.x*d2vidridrj[4]+dABdv.y*d2vidridrj[5]; 
+        tempMatrix.x22 =dABdv.x*d2vidridrj[6]+dABdv.y*d2vidridrj[7]; 
+        answer += dEBdA*tempMatrix;
+
+        //peri terms
+
+
         vlast=vcur;
         cellBm1=cellB;
         cellB=cellG;

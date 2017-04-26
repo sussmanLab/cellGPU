@@ -131,18 +131,36 @@ int main(int argc, char*argv[])
     printf("%g\t%g\n",ans.x,ans.y);
     ans = SPV->dAidrj(26,26);
     printf("%g\t%g\n",ans.x,ans.y);
-    ans = SPV->dAidrj(26,61);
+    ans = SPV->dAidrj(26,32);
     printf("%g\t%g\n",ans.x,ans.y);
 
     ans = SPV->dPidrj(26,25);
     printf("%g\t%g\n",ans.x,ans.y);
     ans = SPV->dPidrj(26,26);
     printf("%g\t%g\n",ans.x,ans.y);
-    ans = SPV->dPidrj(26,61);
+    ans = SPV->dPidrj(26,32);
     printf("%g\t%g\n",ans.x,ans.y);
 
-    Matrix2x2 test = SPV->d2Edridri(26);
+    neighborType nt = neighborType::self;
+    neighborType nt1 = neighborType::first;
+    neighborType nt2 = neighborType::second;
+    Matrix2x2 test = SPV->d2Edridrj(26,26,nt);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+    
+    test = SPV->d2Edridrj(26,25,nt1);
+    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+    /*
+    test = SPV->d2Edridrj(26,49,nt1);
+    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+    test = SPV->d2Edridrj(26,32,nt1);
+    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+    test = SPV->d2Edridrj(26,78,nt1);
+    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+    test = SPV->d2Edridrj(26,20,nt1);
+    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+    */
+    //test = SPV->d2Edridrj(78,20,nt1);
+  //  printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
 /*
     SPV->computeForces();
     GPUArray<Dscalar2> fs;

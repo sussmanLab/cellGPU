@@ -33,6 +33,16 @@ struct Matrix2x2
                             x11=y11; x12=y12;x21=y21;x22=y22;
                             };
 
+        //!Transpose
+        HOSTDEVICE void transpose()
+                            {
+                            Dscalar y21,y12;
+                            y21=x12;
+                            y12=x21;
+                            x12=y12;
+                            x21=y21;
+                            };
+
         //!assignment operator
         HOSTDEVICE void operator=(const Matrix2x2 &m2)
                             {

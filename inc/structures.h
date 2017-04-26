@@ -4,7 +4,7 @@
 //!This header file defines useful structures for computing triangulations...
 /*!
 ... edges as a pair of vertex numbers, triangles as a triplet, etc.
-this file is maintained for historical compatibility, and for operating without CGAL installed
+part of this file is maintained for historical compatibility, and for operating without CGAL installed
 */
 /*! \file structures.h */
 
@@ -16,6 +16,11 @@ this file is maintained for historical compatibility, and for operating without 
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
+
+
+//!An enumeration of types of neighbors.
+enum class neighborType {self, first, second};
+
 
 /*!
  * Really the Voronoi cell of a Delaunay vertex. Given the relative positions of the vertices
