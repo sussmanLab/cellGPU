@@ -9,6 +9,7 @@
 #include "spv2d.h"
 #include "selfPropelledParticleDynamics.h"
 #include "DatabaseNetCDFSPV.h"
+#include "eigenMatrixInterface.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -169,5 +170,16 @@ int main(int argc, char*argv[])
     ArrayHandle<Dscalar2> hf(fs);
     printf("Force on cell %i: (%f,%f)\n",26,hf.data[26].x,hf.data[26].y);
 */
+
+    EigMat D(4);
+    D.placeElementSymmetric(0,0,1.);
+    D.placeElementSymmetric(1,1,2.);
+    D.placeElementSymmetric(2,2,4.);
+    D.placeElementSymmetric(3,3,5.);
+    D.placeElementSymmetric(0,2,3.);
+    D.SASolve();
+    for (int ee = 0; ee < 4; ++ee)
+        printf("%f\t",D.eigenvalues[ee]);
+    cout <<endl;
     return 0;
 };

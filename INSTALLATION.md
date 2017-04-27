@@ -22,6 +22,8 @@ The database class uses the netCDF-4 C++  library (tested on version 4.1.3).The 
 can be removed by (1) not including any "Database" class, and (2) commenting out everything after the
 = sign in the LIB_NETCDF entry of the makefile
 
+The calculation of the dynamical matrix makes use of Eigen3.3.3
+
 Documentation is maintained via doxygen, but is not required for compilation of the executables.
 
 The makefile system is scheduled to be replaced, and will soon change to require cmake.
@@ -44,7 +46,7 @@ The fourth program, Minimize.out, shows how to use the included FIRE minimizer t
 
 # Mac OS X Instructions
 
-The following details were contributed by Gonca Erdemci-Tandogan (https://goncaerdemci.wordpress.com/).
+The following details were contributed by Gonca Erdemci-Tandogan (https://goncaerdemci.wordpress.com/). It does not include how to get Eigen, but it is a header-only library
 
 Everything is most conveniently done using homebrew, the installation of which can be followed from https://brew.sh
 
