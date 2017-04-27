@@ -157,6 +157,7 @@ int main(int argc, char*argv[])
 
     SPV->computeGeometryCPU();
     Dscalar2 ans;
+    /*
     ans = SPV->dAidrj(26,25);
     printf("%g\t%g\n",ans.x,ans.y);
     ans = SPV->dAidrj(26,26);
@@ -170,7 +171,7 @@ int main(int argc, char*argv[])
     printf("%g\t%g\n",ans.x,ans.y);
     ans = SPV->dPidrj(26,32);
     printf("%g\t%g\n",ans.x,ans.y);
-
+*/
     neighborType nt = neighborType::self;
     neighborType nt1 = neighborType::first;
     neighborType nt2 = neighborType::second;
@@ -179,9 +180,11 @@ int main(int argc, char*argv[])
     
     test = SPV->d2Edridrj(26,25,nt1,1.0,1.0);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-
-    test = SPV->d2Edridrj(26,53,nt2,1.0,1.0);
+    test = SPV->d2Edridrj(25,26,nt1,1.0,1.0);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+
+ //   test = SPV->d2Edridrj(26,53,nt2,1.0,1.0);
+ //   printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
     /*
     test = SPV->d2Edridrj(26,49,nt1);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);

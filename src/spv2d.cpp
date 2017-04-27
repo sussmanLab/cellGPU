@@ -1161,7 +1161,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
             };
         if (neighbor == neighborType::self)
             {
-            dvidrj = dvidrj;
+            dvidrj = dvidri;
             dvip1drj = dHdri(h_p.data[i],h_p.data[cellGp1],h_p.data[cellG]);
             dvim1drj = dHdri(h_p.data[i],h_p.data[cellBm1],h_p.data[cellB]);
             d2vidridrj = d2Hdridrj(rB,rG,1);
@@ -1173,6 +1173,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
                 dvidrj = dHdri(h_p.data[cellG],h_p.data[i],h_p.data[cellB]);
                 dvip1drj = dHdri(h_p.data[cellG],h_p.data[i],h_p.data[cellGp1]);
                 dvodrj = dHdri(h_p.data[cellG],h_p.data[cellD],h_p.data[cellB]);
+                //printf("%i\t%i\t%i\n %f\t%f\t%f\t%f\n\n",cellG,i,cellB,dvidrj.x11,dvidrj.x12,dvidrj.x21,dvidrj.x22);
                 //printf("%i\t%i\t%i\n %f\t%f\t%f\t%f\n\n",cellG,i,cellGp1,dvip1drj.x11,dvip1drj.x12,dvip1drj.x21,dvip1drj.x22);
                 d2vidridrj = d2Hdridrj(rG,rB,2);
                 };
@@ -1181,6 +1182,8 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
                 dvidrj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellG]);
                 dvim1drj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellBm1]);
                 dvodrj = dHdri(h_p.data[cellB],h_p.data[cellD],h_p.data[cellG]);
+                //printf("%i\t%i\t%i\n %f\t%f\t%f\t%f\n\n",cellB,i,cellG,dvidrj.x11,dvidrj.x12,dvidrj.x21,dvidrj.x22);
+                //printf("%i\t%i\t%i\n %f\t%f\t%f\t%f\n\n",cellB,i,cellBm1,dvim1drj.x11,dvim1drj.x12,dvim1drj.x21,dvim1drj.x22);
                 d2vidridrj = d2Hdridrj(rB,rG,2);
                 };
             };
@@ -1291,9 +1294,10 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
         tempMatrix.x22 =dABdv.x*d2vidridrj[6]+dABdv.y*d2vidridrj[7]; 
         answer += stress*dEBdA*tempMatrix;
 
+*/
         //peri terms
 
-*/
+        //update the vertices and cell indices for the next loop
         vlast=vcur;
         cellBm1=cellB;
         cellB=cellG;
