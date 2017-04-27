@@ -970,18 +970,6 @@ Dscalar2 SPV2D::dPidrj(int i, int j)
 \param i The index of cell i
 \param j The index of cell j
 \pre Requires that computeGeometry is current
-*/
-Matrix2x2 SPV2D::d2Edridri(int i)
-    {
-    Matrix2x2  answer;
-    answer.x11 = 0.0; answer.x12=0.0; answer.x21=0.0;answer.x22=0.0;
-
-    return answer;
-    };
-/*!
-\param i The index of cell i
-\param j The index of cell j
-\pre Requires that computeGeometry is current
 The goal is to return a matrix (x11,x12,x21,x22) with
 x11 = d^2 / dr_{i,x} dr_{j,x}
 x12 = d^2 / dr_{i,x} dr_{j,y}
@@ -1026,7 +1014,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         else
             cellGp1 = ns[vv+1];
 
-        //first, what is the index and relative position of cell delta (which forms a vertex with gamma and beta connect by an edge to v_i)?
+        //What is the index and relative position of cell delta (which forms a vertex with gamma and beta connect by an edge to v_i)?
         int neigh2 = h_nn.data[cellG];
         int cellD=-1;
         for (int n2 = 0; n2 < neigh2; ++n2)
@@ -1050,15 +1038,15 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         vcur = h_v.data[n_idx(vv,i)];
         vnext = h_v.data[n_idx((vv+1)%neigh,i)];
 
-        Matrix2x2 dvidrj(0.0,0.0,0.0,0.0);
         Matrix2x2 dvidri = dHdri(h_p.data[i],h_p.data[cellB],h_p.data[cellG]);
+        Matrix2x2 dvidrj(0.0,0.0,0.0,0.0);
         Matrix2x2 dvip1drj(0.0,0.0,0.0,0.0);
         Matrix2x2 dvim1drj(0.0,0.0,0.0,0.0);
         Matrix2x2 dvodrj(0.0,0.0,0.0,0.0);
         vector<Dscalar> d2vidridrj(8,0.0);
         if (neighbor == neighborType::self)
             {
-            dvidrj = dHdri(h_p.data[i],h_p.data[cellB],h_p.data[cellG]);
+            dvidrj = dvidrj;
             dvip1drj = dHdri(h_p.data[i],h_p.data[cellGp1],h_p.data[cellG]);
             dvim1drj = dHdri(h_p.data[i],h_p.data[cellBm1],h_p.data[cellB]);
             d2vidridrj = d2Hdridrj(rB,rG,1);
@@ -1076,7 +1064,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
             if (j == cellB)
                 {
                 dvidrj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellG]);
-                dvim1drj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellBm1]);
+                dvim1drj = dHdri(h_p.data[cellB],h_p.data[cellBm1],h_p.data[i]);
                 dvodrj = dHdri(h_p.data[cellB],h_p.data[cellD],h_p.data[cellG]);
                 d2vidridrj = d2Hdridrj(rB,rG,2);
                 };
@@ -1088,6 +1076,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         if (j==cellB) oo=cellG;
         printf("\n %i %i %i\n", i, j, oo);
         */
+
         //
         //cell alpha terms
         //
@@ -1110,6 +1099,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         tempMatrix.x22 = d2Advidrj.x12*dvidri.x12+d2Advidrj.x22*dvidri.x22;
         //printf("second terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
         answer += 0.5*dEdA*tempMatrix;
+        //answer += 0.5*tempMatrix;
 
 
         //third of three area terms
@@ -1119,6 +1109,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         tempMatrix.x22 =dAdv.x*d2vidridrj[6]+dAdv.y*d2vidridrj[7]; 
         //printf("third terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
         answer += dEdA*tempMatrix;
+        //answer += tempMatrix;
 
         //perimeter part
         //first of three peri terms
@@ -1126,7 +1117,6 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         //second of three peri terms
 
         //third of three peri terms
-
 
 
 
@@ -1193,7 +1183,6 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         answer += dEBdA*tempMatrix;
 
         //peri terms
-
 
         vlast=vcur;
         cellBm1=cellB;
