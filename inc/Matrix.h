@@ -150,7 +150,7 @@ HOSTDEVICE Matrix2x2 dyad(const Dscalar2 &v1, const Dscalar2 &v2)
     return Matrix2x2(v1.x*v2.x,v1.x*v2.y,v1.y*v2.x,v1.y*v2.y);
     };
 
-HOSTDEVICE void printMatrix(Matrix2x2 &m)
+inline void printMatrix(Matrix2x2 &m)
     {
     cout << endl << m.x11 << "    " << m.x12 << endl <<m.x21<<"    "<<m.x22<<endl<<endl;
     };

@@ -273,8 +273,8 @@ void EnergyMinimizerFIRE::minimize()
         iterations +=1;
         velocityVerlet();
         fireStep();
-//        printf("step %i max force:%e \tpower: %f\n",iterations,forceMax,Power);
         };
+        printf("step %i max force:%e \tpower: %f\n",iterations,forceMax,Power);
     };
 
 /*!

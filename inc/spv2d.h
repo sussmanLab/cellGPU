@@ -107,7 +107,10 @@ class SPV2D : public DelaunayMD
         vector<Dscalar> d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj);
 
         //! Second derivative of the energy w/r/t cell positions
-        Matrix2x2 d2Edridrj(int i, int j, neighborType neighbor);
+        Matrix2x2 d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress = 1.0, Dscalar stress = 1.0);
+
+        //!Save tuples for half of the dynamical matrix
+        void getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress = 1.0, Dscalar stress = 1.0);
 
     //protected member variables
     protected:

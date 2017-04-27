@@ -20,6 +20,7 @@ functionality of cellGPU. Now that energy minimization behaves like any other eq
 demonstration is pretty straightforward
 */
 
+//! A function of convenience for setting FIRE parameters
 void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, Dscalar deltaT, Dscalar alphaStart,
         Dscalar deltaTMax, Dscalar deltaTInc, Dscalar deltaTDec, Dscalar alphaDec, int nMin,
         Dscalar forceCutoff)

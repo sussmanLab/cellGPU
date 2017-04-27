@@ -967,6 +967,112 @@ Dscalar2 SPV2D::dPidrj(int i, int j)
     };
 
 /*!
+\param rcs a vector of (row,col) locations
+\param vals a vector of the corresponding value of the dynamical matrix
+*/
+void SPV2D::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress, Dscalar stress)
+    {
+    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    
+    neighborType nt0 = neighborType::self;
+    neighborType nt1 = neighborType::first;
+    neighborType nt2 = neighborType::second;
+    rcs.reserve(2*Ncells);
+    vals.reserve(2*Ncells);
+    Matrix2x2 d2E;
+    int C1x, C1y,C2x,C2y;
+    int2 loc;
+    for (int cell = 0; cell < Ncells; ++cell)
+        {
+        //always calculate the self term
+        d2E = d2Edridrj(cell,cell,nt0,unstress,stress);
+        C1x = 2*cell;
+        C1y = 2*cell+1;
+        loc.x= C1x; loc.y = C1x;
+        rcs.push_back(loc);
+        vals.push_back(d2E.x11);
+        loc.x= C1x; loc.y = C1y;
+        rcs.push_back(loc);
+        vals.push_back(d2E.x12);
+        loc.x= C1y; loc.y = C1x;
+        rcs.push_back(loc);
+        vals.push_back(d2E.x21);
+        loc.x= C1y; loc.y = C1y;
+        rcs.push_back(loc);
+        vals.push_back(d2E.x22);
+
+        //how many neighbors does cell i have?
+        int neigh = h_nn.data[cell];
+        vector<int> ns(neigh);
+        for (int nn = 0; nn < neigh; ++nn)
+            ns[nn] = h_n.data[n_idx(nn,cell)];
+        int cellG, cellB,cellD;
+        cellB = ns[neigh-1];
+
+        for (int vv = 0; vv < neigh; ++vv)
+            {
+            int cellG = ns[vv];
+            //What is the index and relative position of cell delta (which forms a vertex with gamma and beta connect by an edge to v_i)?
+            int neigh2 = h_nn.data[cellG];
+            int cellD=-1;
+            for (int n2 = 0; n2 < neigh2; ++n2)
+                {
+                int testPoint = h_n.data[n_idx(n2,cellG)];
+                if(testPoint == cellB) cellD = h_n.data[n_idx((n2+1)%neigh2,cellG)];
+                };
+            if(cellD == cellB || cellD  == cellG || cellD == -1)
+                {
+                printf("Triangulation problem %i\n",cellD);
+                throw std::exception();
+                };
+
+            //now that we have cell G, B, and D, calculate the relevant entries, if cellX > cell
+
+            //if cellG > cell, calculate those entries and add to vectors
+            if (cellG > cell)
+                {
+                d2E = d2Edridrj(cell,cellG,nt1,unstress,stress);
+                C2x = 2*cellG;
+                C2y = 2*cellG+1;
+                loc.x= C1x; loc.y = C2x;
+                rcs.push_back(loc);
+                vals.push_back(d2E.x11);
+                loc.x= C1x; loc.y = C2y;
+                rcs.push_back(loc);
+                vals.push_back(d2E.x12);
+                loc.x= C1y; loc.y = C2x;
+                rcs.push_back(loc);
+                vals.push_back(d2E.x21);
+                loc.x= C1y; loc.y = C2y;
+                rcs.push_back(loc);
+                vals.push_back(d2E.x22);
+                };
+            //if cellD > cell, calculate those entries and add to vectors
+            if (cellD > cell)
+                {
+                d2E = d2Edridrj(cell,cellD,nt2,unstress,stress);
+                C2x = 2*cellD;
+                C2y = 2*cellD+1;
+                loc.x= C1x; loc.y = C2x;
+                rcs.push_back(loc);
+                vals.push_back(d2E.x11);
+                loc.x= C1x; loc.y = C2y;
+                rcs.push_back(loc);
+                vals.push_back(d2E.x12);
+                loc.x= C1y; loc.y = C2x;
+                rcs.push_back(loc);
+                vals.push_back(d2E.x21);
+                loc.x= C1y; loc.y = C2y;
+                rcs.push_back(loc);
+                vals.push_back(d2E.x22);
+                };
+            cellB=cellG;
+            }; //end loop over vertices
+        };//end loop over cells
+    };
+
+/*!
 \param i The index of cell i
 \param j The index of cell j
 \pre Requires that computeGeometry is current
@@ -976,7 +1082,7 @@ x12 = d^2 / dr_{i,x} dr_{j,y}
 x21 = d^2 / dr_{i,y} dr_{j,x}
 x22 = d^2 / dr_{i,y} dr_{j,y}
 */
-Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
+Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress, Dscalar stress)
     {
     Matrix2x2  answer;
     answer.x11 = 0.0; answer.x12=0.0; answer.x21=0.0;answer.x22=0.0;
@@ -1004,8 +1110,11 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
     Matrix2x2 tempMatrix;
 
     Dscalar dEdA = 2*KA*(h_AP.data[i].x - h_APpref.data[i].x);
+    Dscalar dEdP = 2*KP*(h_AP.data[i].y - h_APpref.data[i].y);
     Dscalar2 dAadrj = dAidrj(i,j);
-    answer = 2.0*KA*dyad(dAidrj(i,i),dAadrj);
+    Dscalar2 dPadrj = dPidrj(i,j);
+    answer = unstress*2.0*KA*dyad(dAidrj(i,i),dAadrj);
+    answer += unstress*2.0*KP*dyad(dPidrj(i,i),dPadrj);
     for (int vv = 0; vv < neigh; ++vv)
         {
         cellG = ns[vv];
@@ -1044,6 +1153,11 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         Matrix2x2 dvim1drj(0.0,0.0,0.0,0.0);
         Matrix2x2 dvodrj(0.0,0.0,0.0,0.0);
         vector<Dscalar> d2vidridrj(8,0.0);
+        if (neighbor ==neighborType::second)
+            {
+            if (j == cellD)
+                dvodrj = dHdri(h_p.data[cellD],h_p.data[cellG],h_p.data[cellB]);
+            };
         if (neighbor == neighborType::self)
             {
             dvidrj = dvidrj;
@@ -1098,8 +1212,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         tempMatrix.x21 = d2Advidrj.x11*dvidri.x12+d2Advidrj.x21*dvidri.x22;
         tempMatrix.x22 = d2Advidrj.x12*dvidri.x12+d2Advidrj.x22*dvidri.x22;
         //printf("second terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
-        answer += 0.5*dEdA*tempMatrix;
-        //answer += 0.5*tempMatrix;
+        answer += stress*0.5*dEdA*tempMatrix;
 
 
         //third of three area terms
@@ -1108,8 +1221,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         tempMatrix.x12 =dAdv.x*d2vidridrj[4]+dAdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dAdv.x*d2vidridrj[6]+dAdv.y*d2vidridrj[7]; 
         //printf("third terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
-        answer += dEdA*tempMatrix;
-        //answer += tempMatrix;
+        answer += stress*dEdA*tempMatrix;
 
         //perimeter part
         //first of three peri terms
@@ -1131,7 +1243,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         dAGdv.y = -0.5*(vother.x-vnext.x);
         Dscalar2 dAGdrj = dAidrj(cellG,j);
         //first term
-        answer += 2.*KA*dyad(dAGdv*dvidri,dAGdrj);
+        answer += unstress*2.*KA*dyad(dAGdv*dvidri,dAGdrj);
         //second term
         d2Advidrj.x11 = dvodrj.x21-dvip1drj.x21;
         d2Advidrj.x12 = dvodrj.x22-dvip1drj.x22;
@@ -1141,14 +1253,14 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         tempMatrix.x12 = d2Advidrj.x12*dvidri.x11+d2Advidrj.x22*dvidri.x21;
         tempMatrix.x21 = d2Advidrj.x11*dvidri.x12+d2Advidrj.x21*dvidri.x22;
         tempMatrix.x22 = d2Advidrj.x12*dvidri.x12+d2Advidrj.x22*dvidri.x22;
-        answer += 0.5*dEGdA*tempMatrix;
+        answer += stress*0.5*dEGdA*tempMatrix;
 
         //third term
         tempMatrix.x11 =dAGdv.x*d2vidridrj[0]+dAGdv.y*d2vidridrj[1]; 
         tempMatrix.x21 =dAGdv.x*d2vidridrj[2]+dAGdv.y*d2vidridrj[3]; 
         tempMatrix.x12 =dAGdv.x*d2vidridrj[4]+dAGdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dAGdv.x*d2vidridrj[6]+dAGdv.y*d2vidridrj[7]; 
-        answer += dEGdA*tempMatrix;
+        answer += stress*dEGdA*tempMatrix;
         
 
         //perimeter part
@@ -1164,7 +1276,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         Dscalar2 dABdrj = dAidrj(cellB,j);
         
         //first term
-        answer += 2.*KA*dyad(dABdv*dvidri,dABdrj);
+        answer += unstress*2.*KA*dyad(dABdv*dvidri,dABdrj);
         //second term
         d2Advidrj.x11 = dvim1drj.x21-dvodrj.x21;
         d2Advidrj.x12 = dvim1drj.x22-dvodrj.x22;
@@ -1174,13 +1286,13 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor)
         tempMatrix.x12 = d2Advidrj.x12*dvidri.x11+d2Advidrj.x22*dvidri.x21;
         tempMatrix.x21 = d2Advidrj.x11*dvidri.x12+d2Advidrj.x21*dvidri.x22;
         tempMatrix.x22 = d2Advidrj.x12*dvidri.x12+d2Advidrj.x22*dvidri.x22;
-        answer += 0.5*dEBdA*tempMatrix;
+        answer += stress*0.5*dEBdA*tempMatrix;
         //third term
         tempMatrix.x11 =dABdv.x*d2vidridrj[0]+dABdv.y*d2vidridrj[1]; 
         tempMatrix.x21 =dABdv.x*d2vidridrj[2]+dABdv.y*d2vidridrj[3]; 
         tempMatrix.x12 =dABdv.x*d2vidridrj[4]+dABdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dABdv.x*d2vidridrj[6]+dABdv.y*d2vidridrj[7]; 
-        answer += dEBdA*tempMatrix;
+        answer += stress*dEBdA*tempMatrix;
 
         //peri terms
 
