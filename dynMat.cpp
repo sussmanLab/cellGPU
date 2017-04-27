@@ -101,8 +101,7 @@ int main(int argc, char*argv[])
 
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
-    sim->setEquationOfMotion(fireMinimizer,spv);
-    //sim->setEquationOfMotion(spp,spv);
+    sim->setEquationOfMotion(spp,spv);
     sim->setIntegrationTimestep(dt);
     //sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
@@ -115,14 +114,15 @@ int main(int argc, char*argv[])
     sprintf(dataname,"../test.nc");
     SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
     ncdat.WriteState(SPV);
-
+/*
+    sim->setEquationOfMotion(fireMinimizer,spv);
     setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
     for (int ii = 0; ii < initSteps; ++ii)
         {
         FIREMIN->setMaximumIterations((1000)*(1+ii));
         sim->performTimestep();
         };
-/*
+*/
     printf("starting initialization\n");
     for(int ii = 0; ii < initSteps; ++ii)
         {
@@ -147,11 +147,10 @@ int main(int argc, char*argv[])
     t2=clock();
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
-  */
   cout << spv->reportq() << endl;
 
 
-    //ncdat.ReadState(SPV,0,true);
+    ncdat.ReadState(SPV,0,true);
     ncdat.WriteState(SPV);
     if(initializeGPU)
         cudaDeviceReset();
@@ -175,10 +174,13 @@ int main(int argc, char*argv[])
     neighborType nt = neighborType::self;
     neighborType nt1 = neighborType::first;
     neighborType nt2 = neighborType::second;
-    Matrix2x2 test = SPV->d2Edridrj(26,26,nt,1.0,0.0);
+    Matrix2x2 test = SPV->d2Edridrj(26,26,nt,1.0,1.0);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
     
-    test = SPV->d2Edridrj(26,25,nt1,1.0,0.0);
+    test = SPV->d2Edridrj(26,25,nt1,1.0,1.0);
+    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+
+    test = SPV->d2Edridrj(26,53,nt2,1.0,1.0);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
     /*
     test = SPV->d2Edridrj(26,49,nt1);
@@ -213,6 +215,8 @@ int main(int argc, char*argv[])
         printf("%f\t",D.eigenvalues[ee]);
     cout <<endl;
 */
+
+/*
     vector<int2> rowCols;
     vector<Dscalar> entries;
     SPV->getDynMatEntries(rowCols,entries,1.0,0.0);
@@ -237,5 +241,7 @@ int main(int argc, char*argv[])
         printf("%.2f\t",sum);
         };
     printf("\n");
+*/
+
     return 0;
 };

@@ -1114,7 +1114,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
     Dscalar2 dAadrj = dAidrj(i,j);
     Dscalar2 dPadrj = dPidrj(i,j);
     answer = unstress*2.0*KA*dyad(dAidrj(i,i),dAadrj);
-    answer += unstress*2.0*KP*dyad(dPidrj(i,i),dPadrj);
+ //   answer += unstress*2.0*KP*dyad(dPidrj(i,i),dPadrj);
     for (int vv = 0; vv < neigh; ++vv)
         {
         cellG = ns[vv];
@@ -1136,6 +1136,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
             printf("Triangulation problem %i\n",cellD);
             throw std::exception();
             };
+
         Dscalar2 rB,rG;
         Box.minDist(h_p.data[cellB],h_p.data[i],rB);
         Box.minDist(h_p.data[cellG],h_p.data[i],rG);
@@ -1178,7 +1179,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
             if (j == cellB)
                 {
                 dvidrj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellG]);
-                dvim1drj = dHdri(h_p.data[cellB],h_p.data[cellBm1],h_p.data[i]);
+                dvim1drj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellBm1]);
                 dvodrj = dHdri(h_p.data[cellB],h_p.data[cellD],h_p.data[cellG]);
                 d2vidridrj = d2Hdridrj(rB,rG,2);
                 };
@@ -1196,23 +1197,19 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
         //
         //Area part
         Dscalar2 dAdv;
-        dAdv.x = -0.5*(vlast.y-vnext.y);
-        dAdv.y = -0.5*(vnext.x-vlast.x);
+        dAdv.x = 0.5*(vnext.y-vlast.y);
+        dAdv.y = 0.5*(vlast.x-vnext.x);
         //first of three area terms... now done as a simple dyadic product outside the loop
         //answer += 2.*KA*dyad(dAdv*dvidri,dAadrj);
 
         //second of three area terms
-        Matrix2x2 d2Advidrj;
+        Matrix2x2 d2Advidrj; //Get in form M_{rb, psi}
         d2Advidrj.x11 = dvip1drj.x21-dvim1drj.x21;
-        d2Advidrj.x12 = dvip1drj.x22-dvim1drj.x22;
-        d2Advidrj.x21 = dvim1drj.x11-dvip1drj.x11;
+        d2Advidrj.x12 = dvim1drj.x11-dvip1drj.x11;
+        d2Advidrj.x21 = dvip1drj.x22-dvim1drj.x22;
         d2Advidrj.x22 = dvim1drj.x12-dvip1drj.x12;
-        tempMatrix.x11 = d2Advidrj.x11*dvidri.x11+d2Advidrj.x21*dvidri.x21;
-        tempMatrix.x12 = d2Advidrj.x12*dvidri.x11+d2Advidrj.x22*dvidri.x21;
-        tempMatrix.x21 = d2Advidrj.x11*dvidri.x12+d2Advidrj.x21*dvidri.x22;
-        tempMatrix.x22 = d2Advidrj.x12*dvidri.x12+d2Advidrj.x22*dvidri.x22;
         //printf("second terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
-        answer += stress*0.5*dEdA*tempMatrix;
+        answer += 1.0*stress*0.5*dEdA*(d2Advidrj*dvidri);
 
 
         //third of three area terms
@@ -1221,7 +1218,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
         tempMatrix.x12 =dAdv.x*d2vidridrj[4]+dAdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dAdv.x*d2vidridrj[6]+dAdv.y*d2vidridrj[7]; 
         //printf("third terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
-        answer += stress*dEdA*tempMatrix;
+        answer += 1.0*stress*dEdA*tempMatrix;
 
         //perimeter part
         //first of three peri terms
@@ -1230,8 +1227,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
 
         //third of three peri terms
 
-
-
+/*
         //now we compute terms related to cells gamma and beta
         //
         //cell gamma terms
@@ -1286,6 +1282,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
         tempMatrix.x12 = d2Advidrj.x12*dvidri.x11+d2Advidrj.x22*dvidri.x21;
         tempMatrix.x21 = d2Advidrj.x11*dvidri.x12+d2Advidrj.x21*dvidri.x22;
         tempMatrix.x22 = d2Advidrj.x12*dvidri.x12+d2Advidrj.x22*dvidri.x22;
+
         answer += stress*0.5*dEBdA*tempMatrix;
         //third term
         tempMatrix.x11 =dABdv.x*d2vidridrj[0]+dABdv.y*d2vidridrj[1]; 
@@ -1296,6 +1293,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
 
         //peri terms
 
+*/
         vlast=vcur;
         cellBm1=cellB;
         cellB=cellG;
