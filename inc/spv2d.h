@@ -108,6 +108,8 @@ class SPV2D : public DelaunayMD
 
         //! Second derivative of the energy w/r/t cell positions
         Matrix2x2 d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress = 1.0, Dscalar stress = 1.0);
+        //!Second derivative of area w/r/t voronoi and cell position
+        Matrix2x2 d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr);
 
         //!Save tuples for half of the dynamical matrix
         void getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress = 1.0, Dscalar stress = 1.0);
