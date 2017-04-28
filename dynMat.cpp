@@ -184,6 +184,8 @@ int main(int argc, char*argv[])
 
     test = SPV->d2Edridrj(26,53,nt2,1.0,1.0);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+    test = SPV->d2Edridrj(26,7,nt2,1.0,1.0);
+    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
     /*
     test = SPV->d2Edridrj(26,49,nt1);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
@@ -229,27 +231,13 @@ int main(int argc, char*argv[])
         D.placeElementSymmetric(ij.x,ij.y,entries[ii]);
         };
 
+    cout << D.mat.colwise().sum() << endl;
+
     D.SASolve();
     for (int ee = 0; ee < 4; ++ee)
         printf("%f\t",D.eigenvalues[ee]);
     cout <<endl;
 
-    for (int jj = 0; jj < 2*numpts; ++jj)
-        {
-        Dscalar sum = 0.0;
-        for (int ii = 0; ii < 2*numpts; ++ii)
-            sum += D.mat(jj,ii);
-        printf("%.2f\t",sum);
-        };
-    printf("\n");
-
-Matrix2x2 test2 = SPV->d2Edridrj(26,26,nt,1.0,1.0);
-for (int i = 0; i < numpts; ++i)
-    {
-    if (i == 26) continue;
-    test2 += SPV->d2Edridrj(i,26,nt,1.0,1.0);
-    };
-printMatrix(test2);
 
     return 0;
 };

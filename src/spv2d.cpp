@@ -972,19 +972,23 @@ Dscalar2 SPV2D::dPidrj(int i, int j)
 */
 void SPV2D::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress, Dscalar stress)
     {
+    printf("evaluating dynamical matrix\n");
     ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
     
     neighborType nt0 = neighborType::self;
     neighborType nt1 = neighborType::first;
     neighborType nt2 = neighborType::second;
-    rcs.reserve(2*Ncells);
-    vals.reserve(2*Ncells);
+    rcs.reserve(10*Ncells);
+    vals.reserve(10*Ncells);
     Matrix2x2 d2E;
     int C1x, C1y,C2x,C2y;
     int2 loc;
     for (int cell = 0; cell < Ncells; ++cell)
         {
+        vector<int> firstNeighs, secondNeighs;
+        firstNeighs.reserve(6);
+        secondNeighs.reserve(15);
         //always calculate the self term
         d2E = d2Edridrj(cell,cell,nt0,unstress,stress);
         C1x = 2*cell;
@@ -1006,29 +1010,33 @@ void SPV2D::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar un
         int neigh = h_nn.data[cell];
         vector<int> ns(neigh);
         for (int nn = 0; nn < neigh; ++nn)
-            ns[nn] = h_n.data[n_idx(nn,cell)];
-        int cellG, cellB,cellD;
-        cellB = ns[neigh-1];
-
-        for (int vv = 0; vv < neigh; ++vv)
             {
-            int cellG = ns[vv];
-            //What is the index and relative position of cell delta (which forms a vertex with gamma and beta connect by an edge to v_i)?
-            int neigh2 = h_nn.data[cellG];
-            int cellD=-1;
+            ns[nn] = h_n.data[n_idx(nn,cell)];
+            firstNeighs.push_back(ns[nn]);
+            };
+        //find the second neighbors
+        int lastCell = ns[neigh-2];
+        int curCell = ns[neigh-1];
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            int nextCell = ns[nn];
+
+            int neigh2 = h_nn.data[curCell];
             for (int n2 = 0; n2 < neigh2; ++n2)
                 {
-                int testPoint = h_n.data[n_idx(n2,cellG)];
-                if(testPoint == cellB) cellD = h_n.data[n_idx((n2+1)%neigh2,cellG)];
+                int potentialNeighbor = h_n.data[n_idx(n2,curCell)];
+                if (potentialNeighbor != cell && potentialNeighbor != lastCell && potentialNeighbor != nextCell)
+                    secondNeighs.push_back(potentialNeighbor);
                 };
-            if(cellD == cellB || cellD  == cellG || cellD == -1)
-                {
-                printf("Triangulation problem %i\n",cellD);
-                throw std::exception();
-                };
+            lastCell = curCell;
+            curCell = nextCell;
+            };
 
-            //now that we have cell G, B, and D, calculate the relevant entries, if cellX > cell
-
+        //evaluate partial derivatives w/r/t first and second neighbors, but only once each
+        //(i.e., respect equality of mixed partials)
+        for (int ff = 0; ff < firstNeighs.size(); ++ff)
+            {
+            int cellG = firstNeighs[ff];
             //if cellG > cell, calculate those entries and add to vectors
             if (cellG > cell)
                 {
@@ -1048,6 +1056,10 @@ void SPV2D::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar un
                 rcs.push_back(loc);
                 vals.push_back(d2E.x22);
                 };
+            };
+        for (int ss = 0; ss < secondNeighs.size(); ++ss)
+            {
+            int cellD = secondNeighs[ss];
             //if cellD > cell, calculate those entries and add to vectors
             if (cellD > cell)
                 {
@@ -1067,9 +1079,10 @@ void SPV2D::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar un
                 rcs.push_back(loc);
                 vals.push_back(d2E.x22);
                 };
-            cellB=cellG;
-            }; //end loop over vertices
+            };
+
         };//end loop over cells
+    printf("finished building dynamical Matrix\n");
     };
 
 /*!
