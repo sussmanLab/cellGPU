@@ -243,5 +243,13 @@ int main(int argc, char*argv[])
         };
     printf("\n");
 
+Matrix2x2 test2 = SPV->d2Edridrj(26,26,nt,1.0,1.0);
+for (int i = 0; i < numpts; ++i)
+    {
+    if (i == 26) continue;
+    test2 += SPV->d2Edridrj(i,26,nt,1.0,1.0);
+    };
+printMatrix(test2);
+
     return 0;
 };
