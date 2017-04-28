@@ -11,7 +11,7 @@ A simple constructor that sets many of the class member variables to zero
 */
 DelaunayMD::DelaunayMD() :
     cellsize(1.25), timestep(0),repPerFrame(0.0),skippedFrames(0),
-    neighMax(0),neighMaxChange(false),GlobalFixes(0)
+    neighMax(0),neighMaxChange(false),GlobalFixes(0),globalOnly(true)
     {
     //set cellsize to about unity...magic number should be of order 1
     //when the box area is of order N (i.e. on average one particle per bin)
