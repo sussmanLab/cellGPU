@@ -1079,11 +1079,44 @@ void SPV2D::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar un
 Matrix2x2 SPV2D::d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr)
     {
     Matrix2x2 d2Advidrj;
-    d2Advidrj.x11 = dvpdr.x21-dvmdr.x21;
-    d2Advidrj.x12 = dvmdr.x11-dvpdr.x11;
-    d2Advidrj.x21 = dvpdr.x22-dvmdr.x22;
-    d2Advidrj.x22 = dvmdr.x12-dvpdr.x12;
-    return d2Advidrj;
+    d2Advidrj.x11 =(-dvmdr.x21 + dvpdr.x21);
+    d2Advidrj.x12 =(dvmdr.x11 - dvpdr.x11);
+    d2Advidrj.x21 =(-dvmdr.x22 + dvpdr.x22);
+    d2Advidrj.x22 =(dvmdr.x12 - dvpdr.x12);
+    return 0.5*d2Advidrj;
+    };
+
+/*!
+\param dvdr derivative of v_{i} w/r/t a cell position
+\param dvpdr derivative of v_{i+1} w/r/t a cell position
+\param dvmdr derivative of v_{i-1} w/r/t a cell position
+\param vm position of v_{i-1}
+\param v position of v_{i}
+\param vp position of v_{i+1}
+*/
+Matrix2x2 SPV2D::d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr,Matrix2x2 &dvpdr, Dscalar2 vm, Dscalar2 v, Dscalar2 vp)
+    {
+    Dscalar2 dlast = v-vm;
+    Dscalar2 dnext = vp-v;
+    Dscalar dlastNorm = norm(dlast);
+    Dscalar dnextNorm = norm(dnext);
+    Dscalar denNext = 1.0/(dnextNorm*dnextNorm*dnextNorm);
+    Dscalar denLast = 1.0/(dlastNorm*dlastNorm*dlastNorm);
+
+    //dP/dv = dnext/dnextNorm - dlast/dlastNorm; we'll differentiate each of those terms separately
+    Matrix2x2 dNdr, dLdr;
+    dNdr.x11 = (-v.y + vp.y)* ((-dvdr.x21 + dvpdr.x21)* (-v.x + vp.x) - (-dvdr.x11 + dvpdr.x11)* (-v.y + vp.y));
+    dNdr.x12 = -(-v.x + vp.x)* ((-dvdr.x21 + dvpdr.x21)* (-v.x + vp.x) - (-dvdr.x11 + dvpdr.x11)* (-v.y + vp.y));
+    dNdr.x21 = (-v.y + vp.y)* ((-dvdr.x22 + dvpdr.x22)* (-v.x + vp.x) - (-dvdr.x12 + dvpdr.x12)* (-v.y + vp.y));
+    dNdr.x22 = -(-v.x + vp.x)* ((-dvdr.x22 + dvpdr.x22)* (-v.x + vp.x) - (-dvdr.x12 + dvpdr.x12)* (-v.y + vp.y));
+
+    dLdr.x11 = (-v.y + vm.y)*(-(-dvdr.x21 + dvmdr.x21)*(-v.x + vm.x) + (-dvdr.x11 + dvmdr.x11)*(-v.y + vm.y));
+    dLdr.x12 = (-v.x + vm.x)*((-dvdr.x21 + dvmdr.x21)*(-v.x + vm.x) - (-dvdr.x11 + dvmdr.x11)*(-v.y + vm.y));
+    dLdr.x21 = (-v.y + vm.y)*(-(-dvdr.x22 + dvmdr.x22)*(-v.x + vm.x) + (-dvdr.x12 + dvmdr.x12)*(-v.y + vm.y));
+    dLdr.x22 = (-v.x + vm.x)*((-dvdr.x22 + dvmdr.x22)*(-v.x + vm.x) - (-dvdr.x12 + dvmdr.x12)*(-v.y + vm.y));
+    
+    return denNext*dNdr - denLast*dLdr;
+
     };
 
 /*!
@@ -1127,8 +1160,12 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
     Dscalar dEdP = 2*KP*(h_AP.data[i].y - h_APpref.data[i].y);
     Dscalar2 dAadrj = dAidrj(i,j);
     Dscalar2 dPadrj = dPidrj(i,j);
-    answer = unstress*2.0*KA*dyad(dAidrj(i,i),dAadrj);
- //   answer += unstress*2.0*KP*dyad(dPidrj(i,i),dPadrj);
+
+Dscalar area = 0.0;
+Dscalar peri = 1.0;
+
+    answer += area*unstress*2.0*KA*dyad(dAidrj(i,i),dAadrj);
+    answer += peri*unstress*2.0*KP*dyad(dPidrj(i,i),dPadrj);
     for (int vv = 0; vv < neigh; ++vv)
         {
         cellG = ns[vv];
@@ -1222,9 +1259,10 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
         //second of three area terms
         Matrix2x2 d2Advidrj; //Get in form M_{rb, psi}
         d2Advidrj = d2Areadvdr(dvip1drj,dvim1drj);
+        tempMatrix=d2Advidrj*dvidri;
+        tempMatrix.transpose();
         //printf("second terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
-        answer += 1.0*stress*0.5*dEdA*(d2Advidrj*dvidri);
-
+        answer += area*stress*dEdA*(tempMatrix);
 
         //third of three area terms
         tempMatrix.x11 =dAdv.x*d2vidridrj[0]+dAdv.y*d2vidridrj[1]; 
@@ -1232,26 +1270,31 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
         tempMatrix.x12 =dAdv.x*d2vidridrj[4]+dAdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dAdv.x*d2vidridrj[6]+dAdv.y*d2vidridrj[7]; 
         //printf("third terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
-        answer += 1.0*stress*dEdA*tempMatrix;
-/*
+        answer += area*stress*dEdA*tempMatrix;
+
+
         //perimeter part
         Dscalar2 dPdv;
         Dscalar2 dlast,dnext;
-        dlast.x = vlast.x-vcur.x;
-        dlast.y=vlast.y-vcur.y;
+        dlast.x = -vlast.x+vcur.x;
+        dlast.y = -vlast.y+vcur.y;
         Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
-        dnext.x = vcur.x-vnext.x;
-        dnext.y = vcur.y-vnext.y;
+        dnext.x = -vcur.x+vnext.x;
+        dnext.y = -vcur.y+vnext.y;
         Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-        dPdv.x = -dlast.x/dlnorm + dnext.x/dnnorm;
-        dPdv.y = -dlast.y/dlnorm + dnext.y/dnnorm;
+        dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+        dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
         
         //first of three peri terms
         //its a dyadic product outside the loop
 
         //second of three peri terms
-        //This is gross...
-
+        Matrix2x2 d2Pdvidrj; //Get in form M_{rb, psi}
+        d2Pdvidrj = d2Peridvdr(dvidrj,dvim1drj,dvip1drj,vlast,vcur,vnext);
+        tempMatrix=d2Pdvidrj*dvidri;
+        tempMatrix.transpose();
+        //printf("second terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
+        answer += peri*stress*dEdP*(tempMatrix);
 
         //third of three peri terms
         tempMatrix.x11 =dPdv.x*d2vidridrj[0]+dPdv.y*d2vidridrj[1]; 
@@ -1259,64 +1302,115 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
         tempMatrix.x12 =dPdv.x*d2vidridrj[4]+dPdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dPdv.x*d2vidridrj[6]+dPdv.y*d2vidridrj[7]; 
         //printf("third terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
-        answer += 1.0*stress*dEdA*tempMatrix;
-*/
+        answer += peri*stress*dEdP*tempMatrix;
+
 
         //now we compute terms related to cells gamma and beta
         //
         //cell gamma terms
         //
+        Dscalar dEGdP = 2.0*KP*(h_AP.data[cellG].y - h_APpref.data[cellG].y);
+        Dscalar dEGdA = 2.0*KA*(h_AP.data[cellG].x  - h_APpref.data[cellG].x);
         //area part
-        Dscalar dEGdA = 2.0*(h_AP.data[cellG].x  - h_APpref.data[cellG].x);
         Dscalar2 dAGdv;
         dAGdv.x = -0.5*(vnext.y-vother.y);
         dAGdv.y = -0.5*(vother.x-vnext.x);
         Dscalar2 dAGdrj = dAidrj(cellG,j);
         //first term
-        answer += unstress*2.*KA*dyad(dAGdv*dvidri,dAGdrj);
+        answer += area*unstress*2.*KA*dyad(dAGdv*dvidri,dAGdrj);
         //second term
         d2Advidrj=d2Areadvdr(dvodrj,dvip1drj);
         tempMatrix=d2Advidrj*dvidri;
         tempMatrix.transpose();
-        answer += 1.0*stress*0.5*dEGdA*tempMatrix;
+        answer += area*stress*dEGdA*tempMatrix;
 
         //third term
         tempMatrix.x11 =dAGdv.x*d2vidridrj[0]+dAGdv.y*d2vidridrj[1]; 
         tempMatrix.x21 =dAGdv.x*d2vidridrj[2]+dAGdv.y*d2vidridrj[3]; 
         tempMatrix.x12 =dAGdv.x*d2vidridrj[4]+dAGdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dAGdv.x*d2vidridrj[6]+dAGdv.y*d2vidridrj[7]; 
-        answer += stress*dEGdA*tempMatrix;
+        answer += area*stress*dEGdA*tempMatrix;
         
 
         //perimeter part
+        Dscalar2 dPGdv;
+        dlast.x = -vnext.x+vcur.x;
+        dlast.y = -vnext.y+vcur.y;
+        dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+        dnext.x = -vcur.x+vother.x;
+        dnext.y = -vcur.y+vother.y;
+        dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        dPGdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+        dPGdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+        
+        //first term
+        Dscalar2 dPGdrj = dPidrj(cellG,j);
+        answer += peri*unstress*2.*KA*dyad(dPGdv*dvidri,dPGdrj);
+        //second term
+        d2Pdvidrj = d2Peridvdr(dvidrj,dvip1drj,dvodrj,vnext,vcur,vother);
+        tempMatrix=d2Pdvidrj*dvidri;
+        tempMatrix.transpose();
+        answer += peri*stress*dEGdP*(tempMatrix);
+        //third of three peri terms
+        tempMatrix.x11 =dPGdv.x*d2vidridrj[0]+dPGdv.y*d2vidridrj[1]; 
+        tempMatrix.x21 =dPGdv.x*d2vidridrj[2]+dPGdv.y*d2vidridrj[3]; 
+        tempMatrix.x12 =dPGdv.x*d2vidridrj[4]+dPGdv.y*d2vidridrj[5]; 
+        tempMatrix.x22 =dPGdv.x*d2vidridrj[6]+dPGdv.y*d2vidridrj[7]; 
+        answer += peri*stress*dEGdP*tempMatrix;
 
         //
         //cell beta terms
+        Dscalar dEBdP = 2.0*KP*(h_AP.data[cellB].y - h_APpref.data[cellB].y);
+        Dscalar dEBdA = 2.0*KA*(h_AP.data[cellB].x - h_APpref.data[cellB].x);
         //
         //area terms
-        Dscalar dEBdA = 2.0*(h_AP.data[cellB].x  - h_APpref.data[cellB].x);
         Dscalar2 dABdv;
         dABdv.x = 0.5*(vlast.y-vother.y);
         dABdv.y = 0.5*(vother.x-vlast.x);
         Dscalar2 dABdrj = dAidrj(cellB,j);
         
         //first term
-        answer += unstress*2.*KA*dyad(dABdv*dvidri,dABdrj);
+        answer += area*unstress*2.*KA*dyad(dABdv*dvidri,dABdrj);
         //second term
         d2Advidrj=d2Areadvdr(dvim1drj,dvodrj);
         tempMatrix=d2Advidrj*dvidri;
         tempMatrix.transpose();
-        answer += 1.0*stress*0.5*dEBdA*tempMatrix;
+        answer += area*stress*dEBdA*tempMatrix;
 
         //third term
         tempMatrix.x11 =dABdv.x*d2vidridrj[0]+dABdv.y*d2vidridrj[1]; 
         tempMatrix.x21 =dABdv.x*d2vidridrj[2]+dABdv.y*d2vidridrj[3]; 
         tempMatrix.x12 =dABdv.x*d2vidridrj[4]+dABdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dABdv.x*d2vidridrj[6]+dABdv.y*d2vidridrj[7]; 
-        answer += stress*dEBdA*tempMatrix;
+        answer += area*stress*dEBdA*tempMatrix;
 
 
         //peri terms
+        Dscalar2 dPBdv;
+        dlast.x = -vother.x+vcur.x;
+        dlast.y = -vother.y+vcur.y;
+        dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+        dnext.x = -vcur.x+vlast.x;
+        dnext.y = -vcur.y+vlast.y;
+        dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        dPBdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+        dPBdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+
+        //first term
+        Dscalar2 dPBdrj = dPidrj(cellB,j);
+        answer += peri*unstress*2.*KA*dyad(dPBdv*dvidri,dPBdrj);
+        //second term
+        d2Pdvidrj = d2Peridvdr(dvidrj,dvodrj,dvim1drj,vother,vcur,vlast);
+        tempMatrix=d2Pdvidrj*dvidri;
+        tempMatrix.transpose();
+        answer += peri*stress*dEBdP*(tempMatrix);
+        //third of three peri terms
+        tempMatrix.x11 =dPBdv.x*d2vidridrj[0]+dPBdv.y*d2vidridrj[1]; 
+        tempMatrix.x21 =dPBdv.x*d2vidridrj[2]+dPBdv.y*d2vidridrj[3]; 
+        tempMatrix.x12 =dPBdv.x*d2vidridrj[4]+dPBdv.y*d2vidridrj[5]; 
+        tempMatrix.x22 =dPBdv.x*d2vidridrj[6]+dPBdv.y*d2vidridrj[7]; 
+        answer += peri*stress*dEBdP*tempMatrix;
+
 
         //update the vertices and cell indices for the next loop
         vlast=vcur;

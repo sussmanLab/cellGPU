@@ -166,25 +166,24 @@ int main(int argc, char*argv[])
     printf("%g\t%g\n",ans.x,ans.y);
 
     ans = SPV->dPidrj(26,25);
-    printf("%g\t%g\n",ans.x,ans.y);
+    printf("dP26dr25: %g\t%g\n",ans.x,ans.y);
     ans = SPV->dPidrj(26,26);
-    printf("%g\t%g\n",ans.x,ans.y);
-    ans = SPV->dPidrj(26,32);
-    printf("%g\t%g\n",ans.x,ans.y);
+    printf("dP26dr26: %g\t%g\n",ans.x,ans.y);
+    //ans = SPV->dPidrj(26,32);
+    //printf("%g\t%g\n",ans.x,ans.y);
 */
+
     neighborType nt = neighborType::self;
     neighborType nt1 = neighborType::first;
     neighborType nt2 = neighborType::second;
     Matrix2x2 test = SPV->d2Edridrj(26,26,nt,1.0,1.0);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
     
-    test = SPV->d2Edridrj(26,25,nt1,1.0,1.0);
-    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
     test = SPV->d2Edridrj(25,26,nt1,1.0,1.0);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
 
- //   test = SPV->d2Edridrj(26,53,nt2,1.0,1.0);
- //   printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
+    test = SPV->d2Edridrj(26,53,nt2,1.0,1.0);
+    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
     /*
     test = SPV->d2Edridrj(26,49,nt1);
     printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
@@ -219,11 +218,10 @@ int main(int argc, char*argv[])
     cout <<endl;
 */
 
-/*
     vector<int2> rowCols;
     vector<Dscalar> entries;
-    SPV->getDynMatEntries(rowCols,entries,1.0,0.0);
-    printf("Number of partial entries: %i\n",rowCols.size());
+    SPV->getDynMatEntries(rowCols,entries,1.0,1.0);
+    printf("Number of partial entries: %lu\n",rowCols.size());
     EigMat D(2*numpts);
     for (int ii = 0; ii < rowCols.size(); ++ii)
         {
@@ -244,7 +242,6 @@ int main(int argc, char*argv[])
         printf("%.2f\t",sum);
         };
     printf("\n");
-*/
 
     return 0;
 };
