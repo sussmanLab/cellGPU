@@ -1162,20 +1162,20 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
         };
     //the saved voronoi positions
     Dscalar2 vlast, vcur,vnext;
+    Matrix2x2 zeroMat(0.0,0.0,0.0,0.0);
     //the cell indices
     int cellG, cellB,cellGp1,cellBm1;
     cellB = ns[neigh-1];
     cellBm1 = ns[neigh-2];
     vlast = h_v.data[n_idx(neigh-1,i)];
-    Matrix2x2 tempMatrix;
-
     Dscalar dEdA = 2*KA*(h_AP.data[i].x - h_APpref.data[i].x);
     Dscalar dEdP = 2*KP*(h_AP.data[i].y - h_APpref.data[i].y);
     Dscalar2 dAadrj = dAidrj(i,j);
     Dscalar2 dPadrj = dPidrj(i,j);
 
-Dscalar area = 0.0;
-Dscalar peri = 1.0;
+    //For debugging, multiply all of the area or perimeter terms by the values here
+    Dscalar area = 1.0;
+    Dscalar peri = 1.0;
 
     answer += area*unstress*2.0*KA*dyad(dAidrj(i,i),dAadrj);
     answer += peri*unstress*2.0*KP*dyad(dPidrj(i,i),dPadrj);
@@ -1217,6 +1217,7 @@ Dscalar peri = 1.0;
         Matrix2x2 dvip1drj(0.0,0.0,0.0,0.0);
         Matrix2x2 dvim1drj(0.0,0.0,0.0,0.0);
         Matrix2x2 dvodrj(0.0,0.0,0.0,0.0);
+        Matrix2x2 tempMatrix(0.0,0.0,0.0,0.0);
         vector<Dscalar> d2vidridrj(8,0.0);
         if (neighbor ==neighborType::second)
             {
@@ -1237,8 +1238,6 @@ Dscalar peri = 1.0;
                 dvidrj = dHdri(h_p.data[cellG],h_p.data[i],h_p.data[cellB]);
                 dvip1drj = dHdri(h_p.data[cellG],h_p.data[i],h_p.data[cellGp1]);
                 dvodrj = dHdri(h_p.data[cellG],h_p.data[cellD],h_p.data[cellB]);
-                //printf("%i\t%i\t%i\n %f\t%f\t%f\t%f\n\n",cellG,i,cellB,dvidrj.x11,dvidrj.x12,dvidrj.x21,dvidrj.x22);
-                //printf("%i\t%i\t%i\n %f\t%f\t%f\t%f\n\n",cellG,i,cellGp1,dvip1drj.x11,dvip1drj.x12,dvip1drj.x21,dvip1drj.x22);
                 d2vidridrj = d2Hdridrj(rG,rB,2);
                 };
             if (j == cellB)
@@ -1246,18 +1245,13 @@ Dscalar peri = 1.0;
                 dvidrj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellG]);
                 dvim1drj = dHdri(h_p.data[cellB],h_p.data[i],h_p.data[cellBm1]);
                 dvodrj = dHdri(h_p.data[cellB],h_p.data[cellD],h_p.data[cellG]);
-                //printf("%i\t%i\t%i\n %f\t%f\t%f\t%f\n\n",cellB,i,cellG,dvidrj.x11,dvidrj.x12,dvidrj.x21,dvidrj.x22);
-                //printf("%i\t%i\t%i\n %f\t%f\t%f\t%f\n\n",cellB,i,cellBm1,dvim1drj.x11,dvim1drj.x12,dvim1drj.x21,dvim1drj.x22);
                 d2vidridrj = d2Hdridrj(rB,rG,2);
                 };
+            if (j == cellBm1)
+                dvim1drj = dHdri(h_p.data[cellBm1],h_p.data[i],h_p.data[cellB]);
+            if (j == cellGp1)
+                dvip1drj = dHdri(h_p.data[cellGp1],h_p.data[i],h_p.data[cellG]);
             };
-        /*
-        for (int il = 0; il < 8; ++il)
-            printf("%f, ",d2vidridrj[il]);
-        int oo = cellB;
-        if (j==cellB) oo=cellG;
-        printf("\n %i %i %i\n", i, j, oo);
-        */
 
         //
         //cell alpha terms
@@ -1274,7 +1268,6 @@ Dscalar peri = 1.0;
         d2Advidrj = d2Areadvdr(dvip1drj,dvim1drj);
         tempMatrix=d2Advidrj*dvidri;
         tempMatrix.transpose();
-        //printf("second terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
         answer += area*stress*dEdA*(tempMatrix);
 
         //third of three area terms
@@ -1282,9 +1275,7 @@ Dscalar peri = 1.0;
         tempMatrix.x21 =dAdv.x*d2vidridrj[2]+dAdv.y*d2vidridrj[3]; 
         tempMatrix.x12 =dAdv.x*d2vidridrj[4]+dAdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dAdv.x*d2vidridrj[6]+dAdv.y*d2vidridrj[7]; 
-        //printf("third terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
         answer += area*stress*dEdA*tempMatrix;
-
 
         //perimeter part
         Dscalar2 dPdv;
@@ -1298,30 +1289,23 @@ Dscalar peri = 1.0;
         dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
         
-        //first of three peri terms
-        //its a dyadic product outside the loop
-
+        //first of three peri terms...it's a dyadic product outside the loop
         //second of three peri terms
         Matrix2x2 d2Pdvidrj; //Get in form M_{rb, psi}
         d2Pdvidrj = d2Peridvdr(dvidrj,dvim1drj,dvip1drj,vlast,vcur,vnext);
         tempMatrix=d2Pdvidrj*dvidri;
         tempMatrix.transpose();
-        //printf("second terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
         answer += peri*stress*dEdP*(tempMatrix);
-
         //third of three peri terms
         tempMatrix.x11 =dPdv.x*d2vidridrj[0]+dPdv.y*d2vidridrj[1]; 
         tempMatrix.x21 =dPdv.x*d2vidridrj[2]+dPdv.y*d2vidridrj[3]; 
         tempMatrix.x12 =dPdv.x*d2vidridrj[4]+dPdv.y*d2vidridrj[5]; 
         tempMatrix.x22 =dPdv.x*d2vidridrj[6]+dPdv.y*d2vidridrj[7]; 
-        //printf("third terms: %f\t%f\t%f\t%f\n",tempMatrix.x11,tempMatrix.x12,tempMatrix.x21,tempMatrix.x22);
         answer += peri*stress*dEdP*tempMatrix;
 
-
         //now we compute terms related to cells gamma and beta
-        //
+
         //cell gamma terms
-        //
         Dscalar dEGdP = 2.0*KP*(h_AP.data[cellG].y - h_APpref.data[cellG].y);
         Dscalar dEGdA = 2.0*KA*(h_AP.data[cellG].x  - h_APpref.data[cellG].x);
         //area part
@@ -1336,7 +1320,6 @@ Dscalar peri = 1.0;
         tempMatrix=d2Advidrj*dvidri;
         tempMatrix.transpose();
         answer += area*stress*dEGdA*tempMatrix;
-
         //third term
         tempMatrix.x11 =dAGdv.x*d2vidridrj[0]+dAGdv.y*d2vidridrj[1]; 
         tempMatrix.x21 =dAGdv.x*d2vidridrj[2]+dAGdv.y*d2vidridrj[3]; 
@@ -1371,7 +1354,6 @@ Dscalar peri = 1.0;
         tempMatrix.x22 =dPGdv.x*d2vidridrj[6]+dPGdv.y*d2vidridrj[7]; 
         answer += peri*stress*dEGdP*tempMatrix;
 
-        //
         //cell beta terms
         Dscalar dEBdP = 2.0*KP*(h_AP.data[cellB].y - h_APpref.data[cellB].y);
         Dscalar dEBdA = 2.0*KA*(h_AP.data[cellB].x - h_APpref.data[cellB].x);
@@ -1389,7 +1371,6 @@ Dscalar peri = 1.0;
         tempMatrix=d2Advidrj*dvidri;
         tempMatrix.transpose();
         answer += area*stress*dEBdA*tempMatrix;
-
         //third term
         tempMatrix.x11 =dABdv.x*d2vidridrj[0]+dABdv.y*d2vidridrj[1]; 
         tempMatrix.x21 =dABdv.x*d2vidridrj[2]+dABdv.y*d2vidridrj[3]; 
@@ -1424,12 +1405,11 @@ Dscalar peri = 1.0;
         tempMatrix.x22 =dPBdv.x*d2vidridrj[6]+dPBdv.y*d2vidridrj[7]; 
         answer += peri*stress*dEBdP*tempMatrix;
 
-
         //update the vertices and cell indices for the next loop
         vlast=vcur;
         cellBm1=cellB;
         cellB=cellG;
-        };
+        }; //that was gross
 
     return answer;
     };

@@ -157,55 +157,6 @@ int main(int argc, char*argv[])
 
     SPV->computeGeometryCPU();
     Dscalar2 ans;
-    /*
-    ans = SPV->dAidrj(26,25);
-    printf("%g\t%g\n",ans.x,ans.y);
-    ans = SPV->dAidrj(26,26);
-    printf("%g\t%g\n",ans.x,ans.y);
-    ans = SPV->dAidrj(26,32);
-    printf("%g\t%g\n",ans.x,ans.y);
-
-    ans = SPV->dPidrj(26,25);
-    printf("dP26dr25: %g\t%g\n",ans.x,ans.y);
-    ans = SPV->dPidrj(26,26);
-    printf("dP26dr26: %g\t%g\n",ans.x,ans.y);
-    //ans = SPV->dPidrj(26,32);
-    //printf("%g\t%g\n",ans.x,ans.y);
-*/
-
-    neighborType nt = neighborType::self;
-    neighborType nt1 = neighborType::first;
-    neighborType nt2 = neighborType::second;
-    Matrix2x2 test = SPV->d2Edridrj(26,26,nt,1.0,1.0);
-    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-    
-    test = SPV->d2Edridrj(25,26,nt1,1.0,1.0);
-    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-
-    test = SPV->d2Edridrj(26,53,nt2,1.0,1.0);
-    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-    test = SPV->d2Edridrj(26,7,nt2,1.0,1.0);
-    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-    /*
-    test = SPV->d2Edridrj(26,49,nt1);
-    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-    test = SPV->d2Edridrj(26,32,nt1);
-    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-    test = SPV->d2Edridrj(26,78,nt1);
-    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-    test = SPV->d2Edridrj(26,20,nt1);
-    printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-    */
-    //test = SPV->d2Edridrj(78,20,nt1);
-  //  printf("\n\n%g\t%g\n%g\t%g\n\n",test.x11,test.x12,test.x21,test.x22);
-/*
-    SPV->computeForces();
-    GPUArray<Dscalar2> fs;
-    fs.resize(numpts);
-    SPV->getForces(fs);
-    ArrayHandle<Dscalar2> hf(fs);
-    printf("Force on cell %i: (%f,%f)\n",26,hf.data[26].x,hf.data[26].y);
-*/
 
    /*
     EigMat D(4);
@@ -219,7 +170,6 @@ int main(int argc, char*argv[])
         printf("%f\t",D.eigenvalues[ee]);
     cout <<endl;
 */
-
     vector<int2> rowCols;
     vector<Dscalar> entries;
     SPV->getDynMatEntries(rowCols,entries,1.0,1.0);
@@ -231,13 +181,10 @@ int main(int argc, char*argv[])
         D.placeElementSymmetric(ij.x,ij.y,entries[ii]);
         };
 
-    cout << D.mat.colwise().sum() << endl;
-
     D.SASolve();
-    for (int ee = 0; ee < 4; ++ee)
+    for (int ee = 0; ee < 40; ++ee)
         printf("%f\t",D.eigenvalues[ee]);
     cout <<endl;
-
 
     return 0;
 };
