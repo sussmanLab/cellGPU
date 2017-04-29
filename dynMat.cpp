@@ -51,7 +51,7 @@ int main(int argc, char*argv[])
     Dscalar KA = 1.0;
 
     int program_switch = 0;
-    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
+    while((c=getopt(argc,argv,"k:n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
@@ -61,6 +61,7 @@ int main(int argc, char*argv[])
             case 'i': initSteps = atoi(optarg); break;
             case 'z': program_switch = atoi(optarg); break;
             case 'e': dt = atof(optarg); break;
+            case 'k': KA = atof(optarg); break;
             case 's': gamma = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
@@ -98,7 +99,9 @@ int main(int argc, char*argv[])
     shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
 
     spv->setCellPreferencesUniform(1.0,p0);
+    spv->setModuliUniform(KA,1.0);
     spv->setv0Dr(v0,1.0);
+    printf("initializing with KA = %f\t p_0 = %f\n",KA,p0);
 
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
