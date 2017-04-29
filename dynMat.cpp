@@ -123,17 +123,19 @@ int main(int argc, char*argv[])
     //initialize parameters
     setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-20);
     t1=clock();
+    Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
         {
         FIREMIN->setMaximumIterations((tSteps)*(1+ii));
         sim->performTimestep();
         SPV->computeGeometryCPU();
         SPV->computeForces();
-        Dscalar mf = spv->getMaxForce();
+        mf = spv->getMaxForce();
         printf("maxForce = %g\n",mf);
-        if (spv->getMaxForce() < 1e-10)
+        if (mf < 1e-10)
             break;
         };
+    if (mf > 1e-10) return 0;
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
