@@ -48,6 +48,7 @@ int main(int argc, char*argv[])
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.1;
     Dscalar gamma = 0.0;
+    Dscalar KA = 1.0;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
@@ -77,7 +78,7 @@ int main(int argc, char*argv[])
         };
 
     clock_t t1,t2;
-    bool reproducible = true;
+    bool reproducible = false;
     bool initializeGPU = true;
     if (USE_GPU >= 0)
         {
@@ -101,57 +102,48 @@ int main(int argc, char*argv[])
 
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
-    sim->setEquationOfMotion(spp,spv);
-    sim->setIntegrationTimestep(dt);
+//    sim->setEquationOfMotion(spp,spv);
+//    sim->setIntegrationTimestep(dt);
     //sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
+
+    char dataname[256];
+    sprintf(dataname,"../DOS_N%i_p%.3f_KA%.1f.txt",numpts,p0,KA);
+    
+//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+//    ncdat.WriteState(SPV);
+
+    sim->setEquationOfMotion(fireMinimizer,spv);
     if(!initializeGPU)
         sim->setCPUOperation(true);
     sim->setReproducible(true);
     //initialize parameters
-
-    char dataname[256];
-    sprintf(dataname,"../test.nc");
-    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-    ncdat.WriteState(SPV);
-/*
-    sim->setEquationOfMotion(fireMinimizer,spv);
-    setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
+    setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-20);
+    t1=clock();
     for (int ii = 0; ii < initSteps; ++ii)
         {
-        FIREMIN->setMaximumIterations((1000)*(1+ii));
+        FIREMIN->setMaximumIterations((tSteps)*(1+ii));
         sim->performTimestep();
-        };
-*/
-    printf("starting initialization\n");
-    for(int ii = 0; ii < initSteps; ++ii)
-        {
-        sim->performTimestep();
+        SPV->computeGeometryCPU();
+        SPV->computeForces();
+        Dscalar mf = spv->getMaxForce();
+        printf("maxForce = %g\n",mf);
+        if (spv->getMaxForce() < 1e-10)
+            break;
         };
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
     spv->reportMeanCellForce(false);
 
-    t1=clock();
-    for(int ii = 0; ii < tSteps; ++ii)
-        {
-
-        if(ii%100 ==0)
-            {
-            printf("timestep %i\n",ii);
-            ncdat.WriteState(SPV);
-            };
-        sim->performTimestep();
-        };
     t2=clock();
-    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
-    cout << "timestep ~ " << steptime << " per frame; " << endl;
+    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC;
+    cout << "minimization was ~ " << steptime << endl;
   cout << spv->reportq() << endl;
 
 
-    ncdat.ReadState(SPV,0,true);
-    ncdat.WriteState(SPV);
+//    ncdat.ReadState(SPV,0,true);
+//    ncdat.WriteState(SPV);
     if(initializeGPU)
         cudaDeviceReset();
 
@@ -182,9 +174,20 @@ int main(int argc, char*argv[])
         };
 
     D.SASolve();
-    for (int ee = 0; ee < 40; ++ee)
-        printf("%f\t",D.eigenvalues[ee]);
-    cout <<endl;
+//    for (int ee = 0; ee < 40; ++ee)
+//        printf("%f\t",D.eigenvalues[ee]);
+//    cout <<endl;
+ofstream outfile;
+outfile.open(dataname,std::ios_base::app);
+    for (int ee = 0; ee < 2*numpts-1; ++ee)
+        {
+        Dscalar temp = D.eigenvalues[ee];
+        if (temp > 0)
+            temp = sqrt(temp);
+        else
+            temp = 0.;
+        outfile << temp <<"\n";
+        };
 
     return 0;
 };
