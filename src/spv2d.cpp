@@ -1341,7 +1341,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
         
         //first term
         Dscalar2 dPGdrj = dPidrj(cellG,j);
-        answer += peri*unstress*2.*KA*dyad(dPGdv*dvidri,dPGdrj);
+        answer += peri*unstress*2.*KP*dyad(dPGdv*dvidri,dPGdrj);
         //second term
         d2Pdvidrj = d2Peridvdr(dvidrj,dvip1drj,dvodrj,vnext,vcur,vother);
         tempMatrix=d2Pdvidrj*dvidri;
@@ -1392,7 +1392,7 @@ Matrix2x2 SPV2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress,
 
         //first term
         Dscalar2 dPBdrj = dPidrj(cellB,j);
-        answer += peri*unstress*2.*KA*dyad(dPBdv*dvidri,dPBdrj);
+        answer += peri*unstress*2.*KP*dyad(dPBdv*dvidri,dPBdrj);
         //second term
         d2Pdvidrj = d2Peridvdr(dvidrj,dvodrj,dvim1drj,vother,vcur,vlast);
         tempMatrix=d2Pdvidrj*dvidri;

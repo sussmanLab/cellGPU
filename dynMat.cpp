@@ -177,9 +177,9 @@ int main(int argc, char*argv[])
         };
 
     D.SASolve();
-//    for (int ee = 0; ee < 40; ++ee)
-//        printf("%f\t",D.eigenvalues[ee]);
-//    cout <<endl;
+    for (int ee = 0; ee < 40; ++ee)
+        printf("%f\t",D.eigenvalues[ee]);
+    cout <<endl;
 ofstream outfile;
 outfile.open(dataname,std::ios_base::app);
     for (int ee = 0; ee < 2*numpts-1; ++ee)
