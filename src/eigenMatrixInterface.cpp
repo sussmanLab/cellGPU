@@ -18,16 +18,25 @@ void EigMat::placeElementSymmetric(int row, int col, Dscalar value)
     mat(col,row) = value;
     };
 
-void EigMat::SASolve()
+void EigMat::SASolve(int vectors)
     {
     int size = mat.rows();
-    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es;
     es.compute(mat);
 
     eigenvalues.resize(size);
     for (int ee = 0; ee < size; ++ee)
         eigenvalues[ee]=es.eigenvalues()[ee];
 
+    if (vectors > 0)
+        {
+        eigenvectors.resize(vectors);
+        for (int vec = 0; vec < vectors; ++vec)
+            {
+            eigenvectors[vec].resize(size);
+            for (int vv = 0; vv < size; ++vv)
+                eigenvectors[vec][vv] = es.eigenvectors().col(vec)[vv];
+            };
+        };
 //    cout <<mat << endl;
 //    cout << es.eigenvalues() << endl;
     };

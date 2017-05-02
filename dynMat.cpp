@@ -121,7 +121,7 @@ int main(int argc, char*argv[])
         sim->setCPUOperation(true);
     sim->setReproducible(true);
     //initialize parameters
-    setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-20);
+    setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
     t1=clock();
     Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
@@ -178,21 +178,89 @@ int main(int argc, char*argv[])
         D.placeElementSymmetric(ij.x,ij.y,entries[ii]);
         };
 
-    D.SASolve();
+    int evecTest = 11;
+    D.SASolve(evecTest+1);
     for (int ee = 0; ee < 40; ++ee)
         printf("%f\t",D.eigenvalues[ee]);
     cout <<endl;
-ofstream outfile;
-outfile.open(dataname,std::ios_base::app);
+
+    GPUArray<Dscalar2> disp,dispneg;
+    disp.resize(numpts);
+    dispneg.resize(numpts);
+    Dscalar mag = 1e-2;
+    {
+    ArrayHandle<Dscalar2> hp(disp);
+    ArrayHandle<Dscalar2> hn(dispneg);
+    for (int ii = 0; ii < numpts; ++ii)
+        {
+        hp.data[ii].x = mag*D.eigenvectors[evecTest][2*ii];
+        hp.data[ii].y = mag*D.eigenvectors[evecTest][2*ii+1];
+        hn.data[ii].x = -mag*D.eigenvectors[evecTest][2*ii];
+        hn.data[ii].y = -mag*D.eigenvectors[evecTest][2*ii+1];
+        //printf("(%f,%f)\t",hn.data[ii].x,hn.data[ii].y);
+        };
+    };
+
+    Dscalar E0 = spv->quadraticEnergy();
+    printf("initial energy = %g\n",spv->quadraticEnergy());
+    spv->computeForces();
+    printf("initial energy = %g\n",spv->quadraticEnergy());
+    spv->moveDegreesOfFreedom(disp);
+    spv->computeForces();
+    Dscalar E1 = spv->quadraticEnergy();
+    printf("positive delta energy = %g\n",spv->quadraticEnergy());
+    spv->moveDegreesOfFreedom(dispneg);
+    spv->moveDegreesOfFreedom(dispneg);
+    spv->computeForces();
+    Dscalar E2 = spv->quadraticEnergy();
+    printf("negative delta energy = %g\n",spv->quadraticEnergy());
+    printf("differences: %f\t %f\n",E1-E0,E2-E0);
+    printf("der = %f\n",(E1+E2-2.0*E0)/(mag*mag));
+
+
+if (program_switch ==0)
+    {
+    ofstream outfile;
+    outfile.open(dataname,std::ios_base::app);
+        for (int ee = 0; ee < 2*numpts-1; ++ee)
+            {
+            Dscalar temp = D.eigenvalues[ee];
+            if (temp > 0)
+                temp = sqrt(temp);
+            else
+                temp = 0.;
+            outfile << temp <<"\n";
+            };
+
+    //unstressed version?
+    vector<int2> rowColsU;
+    vector<Dscalar> entriesU;
+    SPV->getDynMatEntries(rowColsU,entriesU,1.0,0.0);
+    EigMat DU(2*numpts);
+    for (int ii = 0; ii < rowColsU.size(); ++ii)
+        {
+        int2 ij = rowColsU[ii];
+        DU.placeElementSymmetric(ij.x,ij.y,entriesU[ii]);
+        };
+
+    DU.SASolve();
+    for (int ee = 0; ee < 40; ++ee)
+        printf("%f\t",DU.eigenvalues[ee]);
+    cout <<endl;
+    
+    char datanameU[256];
+    sprintf(datanameU,"../DOS_unstressed_N%i_p%.3f_KA%.1f.txt",numpts,p0,KA);
+    ofstream outfileU;
+    outfileU.open(datanameU,std::ios_base::app);
     for (int ee = 0; ee < 2*numpts-1; ++ee)
         {
-        Dscalar temp = D.eigenvalues[ee];
+        Dscalar temp = DU.eigenvalues[ee];
         if (temp > 0)
             temp = sqrt(temp);
         else
             temp = 0.;
-        outfile << temp <<"\n";
+        outfileU << temp <<"\n";
         };
-
+    };
     return 0;
 };

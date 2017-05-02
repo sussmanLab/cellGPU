@@ -268,13 +268,13 @@ void EnergyMinimizerFIRE::minimize()
     //initialized the forces?
     State->computeForces();
     State->getForces(force);
-    while( (iterations < maxIterations) && (forceMax > forceCutoff) )
+    while( (iterations < maxIterations) && (sqrt(forceMax) > forceCutoff) )
         {
         iterations +=1;
         velocityVerlet();
         fireStep();
         };
-        printf("step %i max force:%e \tpower: %f\n",iterations,forceMax,Power);
+        printf("step %i max force:%e \tpower: %f\n",iterations,sqrt(forceMax),Power);
     };
 
 /*!
