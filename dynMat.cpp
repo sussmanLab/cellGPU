@@ -49,6 +49,7 @@ int main(int argc, char*argv[])
     Dscalar v0 = 0.1;
     Dscalar gamma = 0.0;
     Dscalar KA = 1.0;
+    Dscalar thresh = 1e-12;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"k:n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
@@ -66,6 +67,7 @@ int main(int argc, char*argv[])
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
             case 'v': v0 = atof(optarg); break;
+            case 'r': thresh = atof(optarg); break;
             case '?':
                     if(optopt=='c')
                         std::cerr<<"Option -" << optopt << "requires an argument.\n";
@@ -121,7 +123,7 @@ int main(int argc, char*argv[])
         sim->setCPUOperation(true);
     sim->setReproducible(true);
     //initialize parameters
-    setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
+    setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,thresh);
     t1=clock();
     Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
@@ -132,20 +134,32 @@ int main(int argc, char*argv[])
         SPV->computeForces();
         mf = spv->getMaxForce();
         printf("maxForce = %g\n",mf);
-        if (mf < 1e-10)
+        if (mf < thresh)
             break;
         };
-    if (mf > 1e-10) return 0;
+
+    t2=clock();
+    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC;
+    cout << "minimization was ~ " << steptime << endl;
+    Dscalar meanQ, varQ;
+    meanQ = spv->reportq();
+    varQ = spv->reportVarq();
+    printf("Cell <q> = %f\t Var(q) = %g\n",meanQ,varQ);
 
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
     spv->reportMeanCellForce(false);
 
-    t2=clock();
-    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC;
-    cout << "minimization was ~ " << steptime << endl;
-  cout << spv->reportq() << endl;
+if (program_switch ==1)
+    {
+    sprintf(dataname,"../qData_N%i_p%.3f.txt",numpts);
+    ofstream outfile;
+    outfile.open(dataname,std::ios_base::app);
+    outfile << p0 <<"\t" << meanQ << "\t" << varQ  <<"\n";
+    return 0;
+    };
 
+    if (mf > thresh) return 0;
 
 //    ncdat.ReadState(SPV,0,true);
 //    ncdat.WriteState(SPV);

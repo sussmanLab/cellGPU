@@ -562,3 +562,40 @@ Dscalar Simple2DCell::quadraticEnergy()
     Energy = energy;
     return energy;
     };
+
+/*!
+Returns the mean value of the shape parameter:
+*/
+Dscalar Simple2DCell::reportq()
+    {
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    Dscalar A = 0.0;
+    Dscalar P = 0.0;
+    Dscalar q = 0.0;
+    for (int i = 0; i < Ncells; ++i)
+        {
+        A = h_AP.data[i].x;
+        P = h_AP.data[i].y;
+        q += P / sqrt(A);
+        };
+    return q/(Dscalar)Ncells;
+    };
+
+/*!
+Returns the variance of the shape parameter:
+*/
+Dscalar Simple2DCell::reportVarq()
+    {
+    Dscalar meanQ = reportq();
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    Dscalar qtemp = 0.0;
+    Dscalar var = 0.0;
+    for (int i = 0; i < Ncells; ++i)
+        {
+        Dscalar A = h_AP.data[i].x;
+        Dscalar P = h_AP.data[i].y;
+        qtemp = P / sqrt(A);
+        var += (qtemp-meanQ)*(qtemp-meanQ);
+        };
+    return var/(Dscalar)Ncells;
+    };
