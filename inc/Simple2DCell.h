@@ -279,8 +279,13 @@ class Simple2DCell : public Simple2DModel
         //! Report the average value of p/sqrt(A) for the cells in the system
         Dscalar reportq();
 
-        //! Report the variance of of p/sqrt(A) for the cells in the system
+        //! Report the variance of p/sqrt(A) for the cells in the system
         Dscalar reportVarq();
+        //! Report the variance of A and P for the cells in the system
+        Dscalar2 reportVarAP();
+
+        //! Report the mean value of the perimeter
+        Dscalar reportMeanP();
 
         //!Return the quadratic energy functional
         virtual Dscalar quadraticEnergy();

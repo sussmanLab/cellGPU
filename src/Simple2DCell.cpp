@@ -564,6 +564,23 @@ Dscalar Simple2DCell::quadraticEnergy()
     };
 
 /*!
+Returns the mean value of the perimeter
+*/
+Dscalar Simple2DCell::reportMeanP()
+    {
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    Dscalar P = 0.0;
+    Dscalar ans = 0.0;
+    for (int i = 0; i < Ncells; ++i)
+        {
+        P = h_AP.data[i].y;
+        ans += P ;
+        };
+    return ans/(Dscalar)Ncells;
+    };
+
+
+/*!
 Returns the mean value of the shape parameter:
 */
 Dscalar Simple2DCell::reportq()
@@ -576,6 +593,7 @@ Dscalar Simple2DCell::reportq()
         {
         A = h_AP.data[i].x;
         P = h_AP.data[i].y;
+//    printf("%f\t",P/sqrt(A));
         q += P / sqrt(A);
         };
     return q/(Dscalar)Ncells;
@@ -598,4 +616,38 @@ Dscalar Simple2DCell::reportVarq()
         var += (qtemp-meanQ)*(qtemp-meanQ);
         };
     return var/(Dscalar)Ncells;
+    };
+
+
+/*!
+Returns the variance of the A and P for the system:
+*/
+Dscalar2 Simple2DCell::reportVarAP()
+    {
+    Dscalar meanA = 0;
+    Dscalar meanP = 0;
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    for (int i = 0; i < Ncells; ++i)
+        {
+        Dscalar A = h_AP.data[i].x;
+        Dscalar P = h_AP.data[i].y;
+        meanA += A;
+        meanP += P;
+        };
+    meanA = meanA /(Dscalar)Ncells;
+    meanP = meanP /(Dscalar)Ncells;
+
+    Dscalar2 var;
+    var.x=0.0; var.y=0.0;
+    for (int i = 0; i < Ncells; ++i)
+        {
+        Dscalar A = h_AP.data[i].x;
+        Dscalar P = h_AP.data[i].y;
+        var.x += (A-meanA)*(A-meanA);
+        var.y += (P-meanP)*(P-meanP);
+        };
+    var.x = var.x /(Dscalar)Ncells;
+    var.y = var.y /(Dscalar)Ncells;
+
+    return var;
     };

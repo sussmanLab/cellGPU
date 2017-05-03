@@ -150,6 +150,18 @@ int main(int argc, char*argv[])
     //cout << "current q = " << spv.reportq() << endl;
     spv->reportMeanCellForce(false);
 
+if(program_switch ==2)
+    {
+    Dscalar mp = spv->reportMeanP();
+    Dscalar2 variances = spv->reportVarAP();
+    printf("var(A) = %f\t Var(p) = %g\n",variances.x,variances.y);
+    sprintf(dataname,"../shapeData_N%i.txt",numpts);
+    ofstream outfile;
+    outfile.open(dataname,std::ios_base::app);
+    outfile << p0 <<"\t" << KA <<"\t" << mp << "\t" << variances.x << "\t" <<variances.y << "\t" << mf << "\n" ;
+    return 0;
+    };
+
 if (program_switch ==1)
     {
     sprintf(dataname,"../qData_N%i_p%.3f.txt",numpts);
