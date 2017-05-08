@@ -13,6 +13,8 @@
 This provides an interface, guaranteeing that SimpleModel S will provide access to
 S.getNumberOfDegreesOfFreedom();
 S.computeForces();
+S.getMaxForce();
+S.getDynMatEntries();
 S.getForces();
 S.moveDegreesOfFreedom();
 S.enforceTopology();
@@ -29,12 +31,16 @@ class Simple2DModel
         virtual int getNumberOfDegreesOfFreedom() = 0;
         //!do everything necessary to compute forces in the current model
         virtual void computeForces() = 0;
+        //!Do whatever is necessary to get lists of dynamical matrix elements
+        virtual void getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress = 1.0, Dscalar stress = 1.0){};
         //!do everything necessary to perform a Hilbert sort
         virtual void spatialSorting(){};
         //!do everything necessary to enforce the topology of the system
         virtual void enforceTopology(){};
         //!copy the models current set of forces to the variable
         virtual void getForces(GPUArray<Dscalar2> &forces) = 0;
+        //!Return the maximum force
+        virtual Dscalar getMaxForce(){return 0.;};
         //!return a reference to the GPUArray of the current forces
         virtual GPUArray<Dscalar2> & returnForces() = 0;
         //!move the degrees of freedom

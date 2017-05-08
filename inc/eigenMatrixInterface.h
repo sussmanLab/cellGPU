@@ -11,6 +11,7 @@
 class EigMat
     {
     public:
+        EigMat(){};
         EigMat(int n);
         //!The internal dense matrix
         Eigen::MatrixXd mat;

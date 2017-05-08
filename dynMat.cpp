@@ -9,6 +9,7 @@
 #include "spv2d.h"
 #include "selfPropelledParticleDynamics.h"
 #include "EnergyMinimizerFIRE2D.h"
+#include "EnergyMinimizerNewtonRaphson.h"
 #include "DatabaseNetCDFSPV.h"
 #include "eigenMatrixInterface.h"
 
@@ -123,8 +124,111 @@ int main(int argc, char*argv[])
         sim->setCPUOperation(true);
     sim->setReproducible(true);
     //initialize parameters
-    setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,thresh);
+    setFIREParameters(FIREMIN,dt,0.99,10*dt,1.1,0.95,.95,4,thresh);
     t1=clock();
+
+
+if(program_switch ==4)
+    {
+        Dscalar mf;
+        for (int ii = 0; ii < initSteps; ++ii)
+            {
+            FIREMIN->setMaximumIterations((tSteps)*(1+ii));
+            sim->performTimestep();
+            SPV->computeGeometryCPU();
+            SPV->computeForces();
+            mf = spv->getMaxForce();
+            printf("maxForce = %g\n",mf);
+            if (mf < thresh)
+                break;
+            };
+    Dscalar mf1 = spv->getMaxForce();
+    DEBUGCODEHELPER;
+    printf("pre-NR max force:%e \n",mf1);
+    GPUArray<Dscalar2> f;
+    SPV->getForces(f);
+    Eigen::VectorXd eGradient,eDisp;
+    eGradient.resize(2*numpts);
+    eDisp.resize(2*numpts);
+    ArrayHandle<Dscalar2> hf(f);
+    for (int nn = 0; nn < numpts; ++nn)
+        {
+        eGradient[2*nn] = hf.data[nn].x;
+        eGradient[2*nn+1] = hf.data[nn].x;
+        };
+    vector<int2> rCs;
+    vector<Dscalar> es;
+    SPV->getDynMatEntries(rCs,es,1.0,1.0);
+    EigMat Ds(2*numpts);
+    for (int ii = 0; ii < rCs.size(); ++ii)
+        {
+        int2 ij = rCs[ii];
+        if (ij.x == ij.y) es[ii] += 0.*1e-16;
+        Ds.placeElementSymmetric(ij.x,ij.y,-es[ii]);
+        };
+    Ds.SASolve();
+    Eigen::MatrixXd Hinv = Ds.es.eigenvectors().inverse();
+    eDisp = (Hinv)*eGradient;
+
+    GPUArray<Dscalar2> displacement;
+    displacement.resize(numpts);
+    {
+    ArrayHandle<Dscalar2> hd(displacement);
+    for (int nn = 0; nn < numpts; ++nn)
+        {
+        hd.data[nn].x = eDisp[2*nn];
+        hd.data[nn].y = eDisp[2*nn+1];
+        };
+    };
+    spv->moveDegreesOfFreedom(displacement);
+    spv->enforceTopology();
+    spv->computeForces();
+    Dscalar mf2 = spv->getMaxForce();
+    printf("post-NR max force:%e \n",mf2);
+
+
+    Dscalar mp = spv->reportMeanP();
+    Dscalar2 variances = spv->reportVarAP();
+    printf("var(A) = %f\t Var(p) = %g\n",variances.x,variances.y);
+    return 0;
+    };
+
+
+if(program_switch ==3)
+    {
+    printf("asd\n");
+    int iter = 0;
+    for (Dscalar pp = 3.8; pp < 3.88; pp+=0.005)
+        {
+        SPV->setCellPreferencesUniform(1.0,pp);
+            SPV->computeGeometryCPU();
+            SPV->computeForces();
+        SPV->setModuliUniform(KA,1.0);
+        printf("%f asd\n",pp);
+        sim->setCurrentTimestep(0);
+        Dscalar mf;
+        for (int ii = 0; ii < initSteps; ++ii)
+            {
+    setFIREParameters(FIREMIN,dt,0.99,100*dt,1.1,0.95,.95,4,thresh);
+            FIREMIN->setMaximumIterations((iter+1)*(tSteps)*(1+ii));
+            sim->performTimestep();
+            SPV->computeGeometryCPU();
+            SPV->computeForces();
+            mf = spv->getMaxForce();
+            printf("maxForce = %g\n",mf);
+            if (mf < thresh)
+                break;
+            };
+        iter +=1;
+        };
+
+
+    Dscalar mp = spv->reportMeanP();
+    Dscalar2 variances = spv->reportVarAP();
+    printf("var(A) = %f\t Var(p) = %g\n",variances.x,variances.y);
+    return 0;
+    };
+
     Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
         {
@@ -164,7 +268,7 @@ if(program_switch ==2)
 
 if (program_switch ==1)
     {
-    sprintf(dataname,"../qData_N%i_p%.3f.txt",numpts);
+    sprintf(dataname,"../qData_N%i.txt",numpts);
     ofstream outfile;
     outfile.open(dataname,std::ios_base::app);
     outfile << p0 <<"\t" << meanQ << "\t" << varQ  <<"\n";

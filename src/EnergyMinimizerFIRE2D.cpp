@@ -268,6 +268,7 @@ void EnergyMinimizerFIRE::minimize()
     //initialized the forces?
     State->computeForces();
     State->getForces(force);
+    forceMax = 110.0;
     while( (iterations < maxIterations) && (sqrt(forceMax) > forceCutoff) )
         {
         iterations +=1;

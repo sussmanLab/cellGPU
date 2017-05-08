@@ -4,8 +4,7 @@
 #include "std_include.h"
 #include "functions.h"
 #include "gpuarray.h"
-//include for explicit instantiation in the cpp file
-#include "Simple2DActiveCell.h"
+#include "Simple2DCell.h"
 
 
 /*! \file EnergyMinimizerFIRE2D.h */
