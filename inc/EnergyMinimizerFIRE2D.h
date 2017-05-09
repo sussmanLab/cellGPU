@@ -39,7 +39,7 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         //!Set the force cutoff
         void setForceCutoff(Dscalar fc){forceCutoff = fc;};
         //!set the initial value of deltaT
-        void setDeltaT(Dscalar dt){deltaT = dt;};
+        void setDeltaT(Dscalar dt){deltaT = dt;deltaTMin=dt*.01;};
         //!set the initial value of alpha and alphaStart
         void setAlphaStart(Dscalar as){alphaStart = as;alpha = as;};
         //!Set the maximum deltaT
@@ -96,6 +96,8 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         int NSinceNegativePower;
         //!The internal time step size
         Dscalar deltaT;
+        //!The minimum time step size
+        Dscalar deltaTMin;
         //!The maximum time step size
         Dscalar deltaTMax;
         //!The fraction by which deltaT can get bigger

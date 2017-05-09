@@ -81,6 +81,9 @@ int main(int argc, char*argv[])
                        abort();
         };
 
+    std::cout << std::fixed;
+    std::cout << std::setprecision(9);
+    std::cout.setf( std::ios::fixed, std:: ios::floatfield ); 
     clock_t t1,t2;
     bool reproducible = false;
     bool initializeGPU = true;
@@ -124,9 +127,40 @@ int main(int argc, char*argv[])
         sim->setCPUOperation(true);
     sim->setReproducible(true);
     //initialize parameters
-    setFIREParameters(FIREMIN,dt,0.99,10*dt,1.1,0.95,.95,4,thresh);
+    Dscalar astart, adec, tdec, tinc; int nmin;
+    nmin = 5;
+    astart = 0.1;
+    adec= 0.99;
+    tinc = 1.1;
+    tdec = 0.5;
+    setFIREParameters(FIREMIN,dt,0.99,50*dt,1.1,0.95,.95,20,thresh);
+    setFIREParameters(FIREMIN,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
     t1=clock();
 
+if(program_switch ==5)
+    {
+    Dscalar mf;
+    for (int ii = 0; ii < initSteps; ++ii)
+        {
+        FIREMIN->setMaximumIterations((tSteps)*(1+ii));
+        sim->performTimestep();
+        SPV->computeGeometryCPU();
+        SPV->computeForces();
+        mf = spv->getMaxForce();
+        printf("maxForce = %g\n",mf);
+        if (mf < thresh)
+            break;
+        };
+
+    t2=clock();
+    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC;
+    cout << "minimization was ~ " << steptime << endl;
+    Dscalar meanQ, varQ;
+    meanQ = spv->reportq();
+    varQ = spv->reportVarq();
+    printf("Cell <q> = %f\t Var(q) = %g\n",meanQ,varQ);
+    return 0;
+    };
 
 if(program_switch ==4)
     {
@@ -232,6 +266,7 @@ if(program_switch ==3)
     Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
         {
+        if (ii > 0 && mf >9e-6) return 0;
         FIREMIN->setMaximumIterations((tSteps)*(1+ii));
         sim->performTimestep();
         SPV->computeGeometryCPU();
@@ -262,7 +297,9 @@ if(program_switch ==2)
     sprintf(dataname,"../shapeData_N%i.txt",numpts);
     ofstream outfile;
     outfile.open(dataname,std::ios_base::app);
-    outfile << p0 <<"\t" << KA <<"\t" << mp << "\t" << variances.x << "\t" <<variances.y << "\t" << mf << "\n" ;
+    outfile <<fixed << setprecision(9) << p0 <<"\t" << KA <<"\t" << mp << "\t";
+    outfile << variances.x << "\t" <<variances.y << "\t";
+    outfile << mf << "\n" ;
     return 0;
     };
 

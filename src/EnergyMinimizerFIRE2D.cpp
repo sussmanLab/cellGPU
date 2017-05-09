@@ -244,12 +244,14 @@ void EnergyMinimizerFIRE::fireStepCPU()
             {
             deltaT = min(deltaT*deltaTInc,deltaTMax);
             alpha = alpha * alphaDec;
+            //alpha = max(alpha, 0.75);
             };
         NSinceNegativePower += 1;
         }
     else
         {
         deltaT = deltaT*deltaTDec;
+        deltaT = max (deltaT,deltaTMin);
         alpha = alphaStart;
         ArrayHandle<Dscalar2> h_v(velocity);
         for (int i = 0; i < N; ++i)
@@ -275,7 +277,7 @@ void EnergyMinimizerFIRE::minimize()
         velocityVerlet();
         fireStep();
         };
-        printf("step %i max force:%e \tpower: %e\n",iterations,sqrt(forceMax),Power);
+        printf("step %i max force:%.3g \tpower: %.3g\t alpha %.3g\t dt %g \n",iterations,sqrt(forceMax),Power,alpha,deltaT);
     };
 
 /*!
