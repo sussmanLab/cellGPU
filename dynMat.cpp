@@ -133,7 +133,6 @@ int main(int argc, char*argv[])
     adec= 0.99;
     tinc = 1.1;
     tdec = 0.5;
-    setFIREParameters(FIREMIN,dt,0.99,50*dt,1.1,0.95,.95,20,thresh);
     setFIREParameters(FIREMIN,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
     t1=clock();
 
@@ -266,7 +265,7 @@ if(program_switch ==3)
     Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
         {
-        if (ii > 0 && mf >9e-6) return 0;
+        //if (ii > 0 && mf >9e-6) return 0;
         FIREMIN->setMaximumIterations((tSteps)*(1+ii));
         sim->performTimestep();
         SPV->computeGeometryCPU();
