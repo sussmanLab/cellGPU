@@ -42,7 +42,7 @@ build: $(PROGS)
 
 PROG_OBJS=obj/voronoi.o obj/activeVertex.o obj/runMakeDatabase.o obj/minimize.o obj/dynMat.cpp
 
-CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/hilbert_curve.o obj/EnergyMinimizerFIRE2D.o obj/EnergyMinimizerNewtonRaphson.o
+CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/hilbert_curve.o obj/EnergyMinimizerFIRE2D.o
 CLASS_OBJS+=obj/Simple2DCell.o obj/Simple2DActiveCell.o
 CLASS_OBJS+=obj/selfPropelledParticleDynamics.o obj/selfPropelledCellVertexDynamics.o obj/brownianParticleDynamics.o
 CLASS_OBJS+=obj/spv2d.o obj/avm2d.o #obj/spvTension2d.o
