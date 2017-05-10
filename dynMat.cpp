@@ -197,7 +197,7 @@ if(program_switch ==2)
     outfile <<fixed << setprecision(9) << p0 <<"\t" << KA <<"\t" << mp << "\t";
     outfile << variances.x << "\t" <<variances.y << "\t";
     outfile << mf << "\n" ;
-    return 0;
+    //return 0;
     };
 
 if (program_switch ==1)
@@ -282,9 +282,10 @@ if (program_switch ==1)
     printf("der = %f\n",(E1+E2-2.0*E0)/(mag*mag));
 
 if (mf > thresh) return 0;
-if (program_switch ==0)
+if (program_switch ==0 || program_switch == 2)
     {
     ofstream outfile;
+    sprintf(dataname,"../DOS_N%i_p%.3f_KA%.1f.txt",numpts,p0,KA);
     outfile.open(dataname,std::ios_base::app);
         for (int ee = 0; ee < 2*numpts-1; ++ee)
             {
