@@ -45,13 +45,14 @@ int main(int argc, char*argv[])
     int initSteps = 0;
 
     Dscalar dt = 0.1;
+    Dscalar KA = 1.0;
     Dscalar p0 = 4.0;
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.1;
     Dscalar gamma = 0.0;
 
     int program_switch = 0;
-    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
+    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:k:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
@@ -63,6 +64,7 @@ int main(int argc, char*argv[])
             case 'e': dt = atof(optarg); break;
             case 's': gamma = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
+            case 'k': KA = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
             case 'v': v0 = atof(optarg); break;
             case '?':
@@ -101,6 +103,7 @@ int main(int argc, char*argv[])
         shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
 
         spv->setCellPreferencesUniform(1.0,p0);
+        spv->setModuliUniform(KA,1.0);
         spv->setv0Dr(v0,1.0);
 
         SimulationPtr sim = make_shared<Simulation>();
@@ -135,6 +138,7 @@ int main(int argc, char*argv[])
         shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
 
         avm->setCellPreferencesUniform(1.0,p0);
+        avm->setModuliUniform(KA,1.0);
         avm->setv0Dr(v0,1.0);
 
         SimulationPtr sim = make_shared<Simulation>();
