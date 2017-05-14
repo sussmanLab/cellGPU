@@ -48,6 +48,11 @@ void EigMat::getEvec(int i, vector<Dscalar> &vec)
     {
     vec.resize(mat.rows());
     for (int j = 0; j < mat.rows(); ++j)
-        vec[j] = eigenvectors[i][j];
+        {
+        if (i < eigenvectors.size())
+            vec[j] = eigenvectors[i][j];
+        else
+            vec[j] = es.eigenvectors().col(i)[j];
+        };
     };
 
