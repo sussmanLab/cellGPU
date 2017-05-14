@@ -34,6 +34,20 @@ void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, Dscalar deltaT, Dsc
     };
 
 
+Dscalar getIPR(vector<Dscalar> evec)
+    {
+    Dscalar w2 = 0.0;
+    Dscalar w4 = 0.0;
+    int n = evec.size();
+    for (int i = 0; i < n; ++i)
+        {
+        Dscalar val = evec[i]*evec[i];
+        w2 += val;
+        w4 += val*val;
+        };
+    return w4/w2;
+    };
+
 int main(int argc, char*argv[])
 {
     int numpts = 200;
@@ -266,8 +280,12 @@ if (program_switch ==1)
 
     int evecTest = 11;
     D.SASolve(evecTest+1);
+    vector<Dscalar> eigenv;
     for (int ee = 0; ee < 40; ++ee)
-        printf("%f\t",D.eigenvalues[ee]);
+        {
+        D.getEvec(ee,eigenv);
+        printf("lambda = %f\t IPR = %f\n",D.eigenvalues[ee],getIPR(eigenv));
+        };
     cout <<endl;
 
     GPUArray<Dscalar2> disp,dispneg;

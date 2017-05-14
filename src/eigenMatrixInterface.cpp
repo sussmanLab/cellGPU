@@ -12,10 +12,15 @@ void EigMat::setMatrixToZero(int n)
     mat = Eigen::MatrixXd::Zero(n, n);
     };
 
-void EigMat::placeElementSymmetric(int row, int col, Dscalar value)
+void EigMat::placeElement(int row, int col, Dscalar value)
     {
     mat(row,col) = value;
-    mat(col,row) = value;
+    };
+
+void EigMat::placeElementSymmetric(int row, int col, Dscalar value)
+    {
+    placeElement(row,col,value);
+    placeElement(col,row,value);
     };
 
 void EigMat::SASolve(int vectors)
@@ -37,6 +42,12 @@ void EigMat::SASolve(int vectors)
                 eigenvectors[vec][vv] = es.eigenvectors().col(vec)[vv];
             };
         };
-//    cout <<mat << endl;
-//    cout << es.eigenvalues() << endl;
     };
+
+void EigMat::getEvec(int i, vector<Dscalar> &vec)
+    {
+    vec.resize(mat.rows());
+    for (int j = 0; j < mat.rows(); ++j)
+        vec[j] = eigenvectors[i][j];
+    };
+
