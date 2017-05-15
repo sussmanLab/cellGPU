@@ -191,6 +191,7 @@ if (program_switch == -1)
     {
 
     sprintf(dataname,"/hdd2/data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",numpts,p0,KA);
+    sprintf(dataname,"../../data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",numpts,p0,KA);
     if(ifstream(dataname))
         {
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Write);
