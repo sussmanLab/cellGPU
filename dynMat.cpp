@@ -99,24 +99,24 @@ void incrementalMinimization(int N, Dscalar initialP, Dscalar finalP, Dscalar pS
         Dscalar meanQ = spv->reportq();
         Dscalar varQ = spv->reportVarq();
         printf("current p0 = %f\t Cell <q> = %f\t Var(q) = %g\n",pCur,meanQ,varQ);
+    
+        char dataname[256];
+        sprintf(dataname,"../../data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",N,finalP,KA);
+        if(ifstream(dataname))
+            {
+            SPVDatabaseNetCDF ncdat(N,dataname,NcFile::Write);
+            if (mf < thresh)
+                ncdat.WriteState(SPV);
+            }
+        else
+            {
+            SPVDatabaseNetCDF ncdat(N,dataname,NcFile::Replace);
+            if (mf < thresh)
+                ncdat.WriteState(SPV);
+            };
+
+
         };
-
-    char dataname[256];
-    sprintf(dataname,"../../data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",N,finalP,KA);
-    if(ifstream(dataname))
-        {
-        SPVDatabaseNetCDF ncdat(N,dataname,NcFile::Write);
-        if (mf < thresh)
-            ncdat.WriteState(SPV);
-        }
-    else
-        {
-        SPVDatabaseNetCDF ncdat(N,dataname,NcFile::Replace);
-        if (mf < thresh)
-            ncdat.WriteState(SPV);
-
-        };
-
     };
 
 int main(int argc, char*argv[])
