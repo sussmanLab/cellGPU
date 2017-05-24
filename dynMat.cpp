@@ -101,7 +101,7 @@ void incrementalMinimization(int N, Dscalar initialP, Dscalar finalP, Dscalar pS
         printf("current p0 = %f\t Cell <q> = %f\t Var(q) = %g\n",pCur,meanQ,varQ);
     
         char dataname[256];
-        sprintf(dataname,"../../data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",N,finalP,KA);
+        sprintf(dataname,"../../data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",N,pCur,KA);
         if(ifstream(dataname))
             {
             SPVDatabaseNetCDF ncdat(N,dataname,NcFile::Write);
