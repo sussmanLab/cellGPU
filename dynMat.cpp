@@ -48,6 +48,60 @@ Dscalar getIPR(vector<Dscalar> evec)
     return w4/w2;
     };
 
+void incrementalMinimization(int N, Dscalar initialP, Dscalar finalP, Dscalar pStep, Dscalar dt, Dscalar thresh, int iSteps, int tSteps)
+    {
+    Dscalar KA = 1.0;
+    bool reproducible = true;
+    ForcePtr spv = make_shared<SPV2D>(N,1.0,initialP,reproducible);
+    shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
+
+    EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
+    shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
+
+    spv->setCellPreferencesUniform(1.0,initialP);
+    spv->setModuliUniform(KA,1.0);
+    printf("initializing with KA = %f\t p_0 = %f\n",KA,initialP);
+
+    SimulationPtr sim = make_shared<Simulation>();
+    sim->setConfiguration(spv);
+    sim->setEquationOfMotion(fireMinimizer,spv);
+    sim->setCPUOperation(true);
+    sim->setReproducible(reproducible);
+    //initialize parameters
+    Dscalar astart, adec, tdec, tinc; int nmin;
+    nmin = 5;
+    astart = .1;
+    adec= 0.99;
+    tinc = 1.1;
+    tdec = 0.5;
+    setFIREParameters(FIREMIN,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
+    Dscalar mf;
+    int curMaxIterations = tSteps;
+    for (Dscalar pCur = initialP; pCur < finalP; pCur += pStep)
+        {
+        Dscalar initMaxForce = 0.0;
+        spv->setCellPreferencesUniform(KA,pCur);
+        SPV->computeGeometryCPU();
+        SPV->computeForces();
+        initMaxForce = spv->getMaxForce();
+        for (int ii = 0; ii < iSteps; ++ii)
+            {
+            FIREMIN->setMaximumIterations(curMaxIterations);
+            sim->performTimestep();
+            SPV->computeGeometryCPU();
+            SPV->computeForces();
+            mf = spv->getMaxForce();
+            printf("initMaxForce = %g\tmaxForce = %g\t energy/cell = %g\n",initMaxForce,mf,spv->quadraticEnergy()/(Dscalar)N);
+            curMaxIterations += tSteps;
+            if (mf < thresh)
+                    break;
+            };
+        Dscalar meanQ = spv->reportq();
+        Dscalar varQ = spv->reportVarq();
+        printf("current p0 = %f\t Cell <q> = %f\t Var(q) = %g\n",pCur,meanQ,varQ);
+        };
+    };
+
 int main(int argc, char*argv[])
 {
     int numpts = 200;
@@ -59,14 +113,15 @@ int main(int argc, char*argv[])
 
     Dscalar dt = 0.1;
     Dscalar p0 = 4.0;
+    Dscalar pf = 4.0;
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.1;
     Dscalar gamma = 0.0;
     Dscalar KA = 1.0;
     Dscalar thresh = 1e-12;
-
+    
     int program_switch = 0;
-    while((c=getopt(argc,argv,"k:n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
+    while((c=getopt(argc,argv,"k:n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:q:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
@@ -79,6 +134,7 @@ int main(int argc, char*argv[])
             case 'k': KA = atof(optarg); break;
             case 's': gamma = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
+            case 'q': pf = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
             case 'v': v0 = atof(optarg); break;
             case 'r': thresh = atof(optarg); break;
@@ -92,6 +148,13 @@ int main(int argc, char*argv[])
                     return 1;
             default:
                        abort();
+        };
+
+    if (program_switch == -10)
+        {
+        Dscalar pStep = v0;
+        incrementalMinimization(numpts, p0, pf,pStep, dt ,thresh, initSteps,tSteps);
+        return 0;
         };
 
     std::cout << std::fixed;
@@ -142,10 +205,11 @@ int main(int argc, char*argv[])
     //initialize parameters
     Dscalar astart, adec, tdec, tinc; int nmin;
     nmin = 5;
-    astart = 0.1;
+    astart = .1;
     adec= 0.99;
     tinc = 1.1;
     tdec = 0.5;
+//    tinc = tdec = 1.;
     setFIREParameters(FIREMIN,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
     t1=clock();
 
@@ -159,7 +223,7 @@ if(program_switch ==5)
         SPV->computeGeometryCPU();
         SPV->computeForces();
         mf = spv->getMaxForce();
-        printf("maxForce = %g\n",mf);
+        printf("maxForce = %g\t energy/cell = %g\n",mf,spv->quadraticEnergy()/(Dscalar)numpts);
         if (mf < thresh)
             break;
         };
@@ -177,7 +241,7 @@ if(program_switch ==5)
     Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
         {
-        //if (ii > 0 && mf >9e-6) return 0;
+        if (ii > 0 && mf >1.0) return 0;
         FIREMIN->setMaximumIterations((tSteps)*(1+ii));
         sim->performTimestep();
         SPV->computeGeometryCPU();
