@@ -79,6 +79,9 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         //!Test the parallel reduction routines by passing in a known vector
         void parallelReduce(GPUArray<Dscalar> &vec);
 
+        //!Return the maximum force
+        Dscalar getMaxForce(){return forceMax;};
+
     protected:
         //!The number of iterations performed
         int iterations;

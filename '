@@ -81,7 +81,7 @@ void incrementalMinimizationKA(int N, Dscalar finalP, Dscalar finalKA, Dscalar K
     for (Dscalar kCur = KA; kCur < finalKA; kCur += KAStep)
         {
         Dscalar initMaxForce = 0.0;
-        spv->setModuliUniform(kCur,1.0);
+        spv->setCellPreferencesUniform(kCur,finalP);
         SPV->computeGeometryCPU();
         SPV->computeForces();
         initMaxForce = spv->getMaxForce();
@@ -92,7 +92,7 @@ void incrementalMinimizationKA(int N, Dscalar finalP, Dscalar finalKA, Dscalar K
             SPV->computeGeometryCPU();
             SPV->computeForces();
             mf = spv->getMaxForce();
-            printf("initMaxForce = %g\tmaxForce = %g\t energy/cell = %g\t KA = %f\n",initMaxForce,mf,spv->quadraticEnergy()/(Dscalar)N,kCur);
+            printf("initMaxForce = %g\tmaxForce = %g\t energy/cell = %g\n",initMaxForce,mf,spv->quadraticEnergy()/(Dscalar)N);
             curMaxIterations += tSteps;
             if (mf < thresh)
                     break;

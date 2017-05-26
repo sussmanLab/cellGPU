@@ -153,15 +153,23 @@ int main(int argc, char*argv[])
 
         AVMDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
         ncdat.WriteState(AVM);
+        Dscalar mf;
 
-        for (int i = 0; i <tSteps;++i)
+        for (int i = 0; i <initSteps;++i)
             {
             setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
-            FIREMIN->setMaximumIterations(50*(i+1));
+            FIREMIN->setMaximumIterations(tSteps*(i+1));
             sim->performTimestep();
+            mf = FIREMIN->getMaxForce();
+            if (mf < 1e-12)
+                    break;
             ncdat.WriteState(AVM);
             };
         printf("minimized value of q = %f\n",avm->reportq());
+        Dscalar meanQ = avm->reportq();
+        Dscalar varQ = avm->reportVarq();
+        Dscalar2 variances = avm->reportVarAP();
+        printf("current KA = %f\t Cell <q> = %f\t Var(p) = %g\n",KA,meanQ,variances.y);
         ncdat.WriteState(AVM);
         };
     if(initializeGPU)
