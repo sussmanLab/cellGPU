@@ -110,7 +110,7 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
-    
+
     ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
     shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
 
@@ -131,7 +131,7 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"../DOS_N%i_p%.3f_KA%.1f.txt",numpts,p0,KA);
-    
+
 //    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
 //    ncdat.WriteState(SPV);
 
@@ -177,7 +177,7 @@ if(program_switch ==5)
     Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
         {
-        //if (ii > 0 && mf >9e-6) return 0;
+        if (ii > 0 && mf > 0.0001) return 0;
         FIREMIN->setMaximumIterations((tSteps)*(1+ii));
         sim->performTimestep();
         SPV->computeGeometryCPU();
@@ -230,10 +230,10 @@ if(program_switch ==2)
     sprintf(dataname,"../shapeData_N%i.txt",numpts);
     ofstream outfile;
     outfile.open(dataname,std::ios_base::app);
-    outfile <<fixed << setprecision(9) << p0 <<"\t" << KA <<"\t" << mp << "\t";
+    outfile <<scientific << p0 <<"\t" << KA <<"\t" << mp << "\t";
     outfile << variances.x << "\t" <<variances.y << "\t";
     outfile << mf << "\n" ;
-    //return 0;
+    return 0;
     };
 
 if (program_switch ==1)
