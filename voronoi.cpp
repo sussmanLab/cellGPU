@@ -84,7 +84,7 @@ int main(int argc, char*argv[])
     //set appropriate CPU and GPU flags
     if(!initializeGPU)
         sim->setCPUOperation(true);
-    sim->setReproducible(true);
+    sim->setReproducible(reproducible);
     //initialize parameters
 
     char dataname[256];
@@ -118,11 +118,6 @@ int main(int argc, char*argv[])
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
     cout << spv->reportq() << endl;
-    if(initializeGPU)
-        cudaProfilerStart();
-
-    if(initializeGPU)
-        cudaProfilerStop();
 
     ncdat.WriteState(SPV);
 
