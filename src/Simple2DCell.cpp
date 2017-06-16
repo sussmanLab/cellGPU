@@ -40,8 +40,8 @@ void Simple2DCell::setCellPreferences(vector<Dscalar2> &APPref)
     };
 
 /*!
-Resize the box so that every cell has, on average, area = 1, and place cells via a simple,
-reproducible RNG
+Resize the box so that every cell has, on average, area = 1, and place cells via either a simple,
+reproducible RNG or a non-reproducible RNG
 */
 void Simple2DCell::setCellPositionsRandomly()
     {
