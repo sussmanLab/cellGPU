@@ -242,8 +242,6 @@ void SPVTension2D::computeSPVSimpleTensionForceCPU(int i)
     //start calculating forces
     Dscalar2 forceSum;
     forceSum.x=0.0;forceSum.y=0.0;
-    Dscalar KA = 1.0;
-    Dscalar KP = 1.0;
 
     Dscalar Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
     Dscalar Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
@@ -499,8 +497,6 @@ void SPVTension2D::computeSPVTensionForceCPU(int i)
     //start calculating forces
     Dscalar2 forceSum;
     forceSum.x=0.0;forceSum.y=0.0;
-    Dscalar KA = 1.0;
-    Dscalar KP = 1.0;
 
     Dscalar Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
     Dscalar Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
