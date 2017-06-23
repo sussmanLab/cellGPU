@@ -98,9 +98,8 @@ int main(int argc, char*argv[])
         sim->setEquationOfMotion(bd,spv);
     sim->setIntegrationTimestep(dt);
     sim->setSortPeriod(initSteps/10);
-    if(!initializeGPU)
-        sim->setCPUOperation(true);
-    sim->setReproducible(true);
+    sim->setCPUOperation(!initializeGPU);
+    sim->setReproducible(reproducible);
     //initialize parameters
 
     BD->setT(v0*v0/2.0*Dr);

@@ -109,8 +109,7 @@ int main(int argc, char*argv[])
         if(initSteps > 0)
             sim->setSortPeriod(initSteps/10);
         //set appropriate CPU and GPU flags
-        if(!initializeGPU)
-            sim->setCPUOperation(true);
+        sim->setCPUOperation(!initializeGPU);
 
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
         ncdat.WriteState(SPV);
@@ -143,8 +142,7 @@ int main(int argc, char*argv[])
         if(initSteps > 0)
             sim->setSortPeriod(initSteps/10);
         //set appropriate CPU and GPU flags
-        if(!initializeGPU)
-            sim->setCPUOperation(true);
+        sim->setCPUOperation(!initializeGPU);
 
         AVMDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
         ncdat.WriteState(AVM);

@@ -73,6 +73,9 @@ class simpleEquationOfMotion
         //! virtual function to allow the model to be a derived class
         virtual void set2DModel(shared_ptr<Simple2DModel> _model){};
 
+        //!The seed used by the random number generator, when non-reproducible dynamics have been set
+        int RNGSeed;
+
     protected:
         //!Should the simulation be reproducible (v/v the random numbers generated)?
         bool Reproducible;

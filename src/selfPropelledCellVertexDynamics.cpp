@@ -38,6 +38,7 @@ void selfPropelledCellVertexDynamics::initializeGPURNGs(int globalSeed, int offs
         {
         clock_t t1=clock();
         globalseed = (int)t1 % 100000;
+        RNGSeed = globalseed;
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
     gpu_initialize_RNG(d_curandRNGs.data,Ncells,offset,globalseed);
