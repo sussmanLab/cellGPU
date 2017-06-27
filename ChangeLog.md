@@ -4,6 +4,7 @@
 
 * system-wide refactoring into simulation components
 * added simple Brownian dynamics equation of motion
+* added a (somewhat specialized) calculation of the voronoi model dynamical matrix
 
 ### version 0.6
 

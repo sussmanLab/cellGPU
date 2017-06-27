@@ -22,6 +22,10 @@ off-lattice cell models with active dynamics
 * DelaunayLoc -- Calculates candidate 1-rings of particles by finding an enclosing polygon of nearby points
 and finding all points in the circumcircle of the point and any two consecutive vertices of that polygon.
 
+* DatabaseNetCDF -- A NetCDF 4.x interface used to store simulation trajectories compactly
+
+* eigenMatrixInterface -- a very simple interface to the Eigen package; used to diagonalize the dynamical matrix 
+
 ### Cellular models
 
 * DelaunayMD -- A core engine that operates as described below in ''Basic idea.'' Can move particles

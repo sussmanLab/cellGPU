@@ -44,9 +44,14 @@ with Fig. 1 of Bi et al. (Phys. Rev. X 6, 021011 (2016)), which is the cannonica
 
 The fourth program, Minimize.out, shows how to use the included FIRE minimizer to do simple energy minimization.
 
+The fifth program, DynamicalMatrix.out, shows how to use the Eigen interface to compute the dynamical matrix of
+Voronoi systems (with quadratic perimeter terms) and extract the eigenvalues/eignevectors. This code is rather
+specialized, and not as general as one would ultimately like to see.
+
 # Mac OS X Instructions
 
-The following details were contributed by Gonca Erdemci-Tandogan (https://goncaerdemci.wordpress.com/). It does not include how to get Eigen, but it is a header-only library
+The following instructions for compiling cellGPU on Mac OSX  were contributed by Gonca Erdemci-Tandogan (https://goncaerdemci.wordpress.com/).
+It does not include how to get Eigen (for the dynamical matrix diagonalization), but that is a header-only library.
 
 Everything is most conveniently done using homebrew, the installation of which can be followed from https://brew.sh
 
