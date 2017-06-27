@@ -82,8 +82,7 @@ int main(int argc, char*argv[])
     sim->setIntegrationTimestep(dt);
     sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
-    if(!initializeGPU)
-        sim->setCPUOperation(true);
+    sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);
     //initialize parameters
 

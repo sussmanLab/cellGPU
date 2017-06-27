@@ -36,11 +36,15 @@ void brownianParticleDynamics::initializeGPURNGs(int globalSeed, int offset)
         {
         clock_t t1=clock();
         globalseed = (int)t1 % 100000;
+        RNGSeed = globalseed;
         printf("initializing curand RNG with seed %i\n",globalseed);
         };
     gpu_initialize_RNG(d_curandRNGs.data,Ndof,offset,globalseed);
     };
 
+/*!
+When spatial sorting is performed, re-index the array of cuda RNGs.
+*/
 void brownianParticleDynamics::spatialSorting(const vector<int> &reIndexer)
     {
     reIndexing = cellModel->returnItt();

@@ -27,7 +27,7 @@ SPV2D::SPV2D(int n, bool reprod)
 */
 SPV2D::SPV2D(int n,Dscalar A0, Dscalar P0,bool reprod)
     {
-    printf("Initializing %i cells with random positions in a square box... \n",n);
+    printf("Initializing %i cells with random positions in a square box...\n ",n);
     Reproducible = reprod;
     Initialize(n);
     setCellPreferencesUniform(A0,P0);

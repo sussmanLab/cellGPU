@@ -136,6 +136,13 @@ static void HandleError(cudaError_t err, const char *file, int line)
         }
     }
 
+//!A utility function for checking if a file exists
+inline bool fileExists(const std::string& name)
+    {
+    ifstream f(name.c_str());
+    return f.good();
+    }
+
 //A macro to wrap cuda calls
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
 //spot-checking of code for debugging
