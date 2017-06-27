@@ -32,6 +32,16 @@ void Simulation::setConfiguration(ForcePtr _config)
 /*!
 \post the cell configuration and e.o.m. timestep is set to the input value
 */
+void Simulation::setCurrentTime(Dscalar _cTime)
+    {
+    Time = _cTime;
+    auto cellConf = cellConfiguration.lock();
+    cellConf->setTime(Time);
+    };
+
+/*!
+\post the cell configuration and e.o.m. timestep is set to the input value
+*/
 void Simulation::setIntegrationTimestep(Dscalar dt)
     {
     integrationTimestep = dt;

@@ -136,8 +136,6 @@ class SPV2D : public DelaunayMD
 
     //public member variables
     public:
-        //! Read from a database what the time of the simulation when saved was
-        Dscalar SimTime;
         //!"exclusions" zero out the force on a cell...the external force needed to do this is stored in external_forces
         GPUArray<Dscalar2> external_forces;
         //!An array containing the indices of excluded particles

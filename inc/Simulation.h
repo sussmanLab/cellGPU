@@ -59,6 +59,8 @@ class Simulation : public enable_shared_from_this<Simulation>
         void setSortPeriod(int sp){sortPeriod = sp;};
 
         //!reset the simulation clock
+        virtual void setCurrentTime(Dscalar _cTime);
+        //!reset the simulation clock counter
         virtual void setCurrentTimestep(int _cTime){integerTimestep =_cTime;};
         //! An integer that keeps track of how often performTimestep has been called
         int integerTimestep;
