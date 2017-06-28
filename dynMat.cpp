@@ -13,9 +13,8 @@
 #include "eigenMatrixInterface.h"
 
 /*!
-This file compiles to produce an executable that can be used to reproduce the timing information
-in the main cellGPU paper. It sets up a simulation that takes control of a voronoi model and a simple
-model of active motility
+This file compiles to produce an executable that demonstrates a simple example of using the Eigen
+interface to diagonalize a dynamical matrix.
 */
 
 //! A function of convenience for setting FIRE parameters
@@ -33,165 +32,6 @@ void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, Dscalar deltaT, Dsc
     emin->setForceCutoff(forceCutoff);
     };
 
-
-Dscalar getIPR(vector<Dscalar> evec)
-    {
-    Dscalar w2 = 0.0;
-    Dscalar w4 = 0.0;
-    int n = evec.size();
-    for (int i = 0; i < n; ++i)
-        {
-        Dscalar val = evec[i]*evec[i];
-        w2 += val;
-        w4 += val*val;
-        };
-    return w4/w2;
-    };
-
-
-void incrementalMinimizationKA(int N, Dscalar finalP, Dscalar finalKA, Dscalar KAStep, Dscalar dt, Dscalar thresh, int iSteps, int tSteps)
-    {
-    Dscalar KA = 0.0;
-    bool reproducible = true;
-    ForcePtr spv = make_shared<SPV2D>(N,1.0,finalP,reproducible);
-    shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
-
-    EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
-    shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
-
-    spv->setCellPreferencesUniform(1.0,finalP);
-    spv->setModuliUniform(KA,1.0);
-    printf("initializing with KA = %f\t p_0 = %f\n",KA,finalP);
-
-    SimulationPtr sim = make_shared<Simulation>();
-    sim->setConfiguration(spv);
-    sim->setEquationOfMotion(fireMinimizer,spv);
-    sim->setCPUOperation(true);
-    sim->setReproducible(reproducible);
-    //initialize parameters
-    Dscalar astart, adec, tdec, tinc; int nmin;
-    nmin = 5;
-    astart = .1;
-    adec= 0.99;
-    tinc = 1.1;
-    tdec = 0.5;
-    setFIREParameters(FIREMIN,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
-    Dscalar mf;
-    int curMaxIterations = tSteps;
-    for (Dscalar kCur = KA; kCur < finalKA; kCur += KAStep)
-        {
-        Dscalar initMaxForce = 0.0;
-        spv->setModuliUniform(kCur,1.0);
-        SPV->computeGeometryCPU();
-        SPV->computeForces();
-        initMaxForce = spv->getMaxForce();
-        for (int ii = 0; ii < iSteps; ++ii)
-            {
-            FIREMIN->setMaximumIterations(curMaxIterations);
-            sim->performTimestep();
-            SPV->computeGeometryCPU();
-            SPV->computeForces();
-            mf = spv->getMaxForce();
-            printf("initMaxForce = %g\tmaxForce = %g\t energy/cell = %g\t KA = %f\n",initMaxForce,mf,spv->quadraticEnergy()/(Dscalar)N,kCur);
-            curMaxIterations += tSteps;
-            if (mf < thresh)
-                    break;
-            };
-        Dscalar meanQ = spv->reportq();
-        Dscalar varQ = spv->reportVarq();
-        Dscalar2 variances = spv->reportVarAP();
-        printf("current KA = %f\t Cell <q> = %f\t Var(p) = %g\n",kCur,meanQ,variances.y);
-    
-        char dataname[256];
-        sprintf(dataname,"../../data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",N,finalP,kCur);
-        if(ifstream(dataname))
-            {
-            SPVDatabaseNetCDF ncdat(N,dataname,NcFile::Write);
-            if (mf < thresh)
-                ncdat.WriteState(SPV);
-            }
-        else
-            {
-            SPVDatabaseNetCDF ncdat(N,dataname,NcFile::Replace);
-            if (mf < thresh)
-                ncdat.WriteState(SPV);
-            };
-        };
-    };
-
-
-
-void incrementalMinimization(int N, Dscalar initialP, Dscalar finalP, Dscalar pStep, Dscalar dt, Dscalar thresh, int iSteps, int tSteps)
-    {
-    Dscalar KA = 0.0;
-    bool reproducible = true;
-    ForcePtr spv = make_shared<SPV2D>(N,1.0,initialP,reproducible);
-    shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
-
-    EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
-    shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
-
-    spv->setCellPreferencesUniform(1.0,initialP);
-    spv->setModuliUniform(KA,1.0);
-    printf("initializing with KA = %f\t p_0 = %f\n",KA,initialP);
-
-    SimulationPtr sim = make_shared<Simulation>();
-    sim->setConfiguration(spv);
-    sim->setEquationOfMotion(fireMinimizer,spv);
-    sim->setCPUOperation(true);
-    sim->setReproducible(reproducible);
-    //initialize parameters
-    Dscalar astart, adec, tdec, tinc; int nmin;
-    nmin = 5;
-    astart = .1;
-    adec= 0.99;
-    tinc = 1.1;
-    tdec = 0.5;
-    setFIREParameters(FIREMIN,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
-    Dscalar mf;
-    int curMaxIterations = tSteps;
-    for (Dscalar pCur = initialP; pCur < finalP; pCur += pStep)
-        {
-        Dscalar initMaxForce = 0.0;
-        spv->setCellPreferencesUniform(KA,pCur);
-        SPV->computeGeometryCPU();
-        SPV->computeForces();
-        initMaxForce = spv->getMaxForce();
-        for (int ii = 0; ii < iSteps; ++ii)
-            {
-            FIREMIN->setMaximumIterations(curMaxIterations);
-            sim->performTimestep();
-            SPV->computeGeometryCPU();
-            SPV->computeForces();
-            mf = spv->getMaxForce();
-            printf("initMaxForce = %g\tmaxForce = %g\t energy/cell = %g\n",initMaxForce,mf,spv->quadraticEnergy()/(Dscalar)N);
-            curMaxIterations += tSteps;
-            if (mf < thresh)
-                    break;
-            };
-        Dscalar meanQ = spv->reportq();
-        Dscalar varQ = spv->reportVarq();
-        Dscalar2 variances = spv->reportVarAP();
-        printf("current p0 = %f\t Cell <q> = %f\t Var(p) = %g\n",pCur,meanQ,variances.y);
-    
-        char dataname[256];
-        sprintf(dataname,"../../data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",N,pCur,KA);
-        if(ifstream(dataname))
-            {
-            SPVDatabaseNetCDF ncdat(N,dataname,NcFile::Write);
-            if (mf < thresh)
-                ncdat.WriteState(SPV);
-            }
-        else
-            {
-            SPVDatabaseNetCDF ncdat(N,dataname,NcFile::Replace);
-            if (mf < thresh)
-                ncdat.WriteState(SPV);
-            };
-
-
-        };
-    };
 
 int main(int argc, char*argv[])
 {
@@ -241,23 +81,7 @@ int main(int argc, char*argv[])
                        abort();
         };
 
-    if (program_switch == -20)
-        {
-        Dscalar kStep = v0;
-        incrementalMinimizationKA(numpts, p0, 1.0, kStep, dt ,thresh, initSteps,tSteps);
-        return 0;
-        };
 
-    if (program_switch == -10)
-        {
-        Dscalar pStep = v0;
-        incrementalMinimization(numpts, p0, pf,pStep, dt ,thresh, initSteps,tSteps);
-        return 0;
-        };
-
-    std::cout << std::fixed;
-    std::cout << std::setprecision(9);
-    std::cout.setf( std::ios::fixed, std:: ios::floatfield ); 
     clock_t t1,t2;
     bool reproducible = false;
     bool initializeGPU = true;
@@ -270,7 +94,6 @@ int main(int argc, char*argv[])
     else
         initializeGPU = false;
 
-    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
 
     ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
     shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
@@ -285,29 +108,18 @@ int main(int argc, char*argv[])
 
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
-//    sim->setEquationOfMotion(spp,spv);
-//    sim->setIntegrationTimestep(dt);
-    //sim->setSortPeriod(initSteps/10);
-    //set appropriate CPU and GPU flags
-
-    char dataname[256];
-    sprintf(dataname,"../DOS_N%i_p%.3f_KA%.1f.txt",numpts,p0,KA);
-
-//    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-//    ncdat.WriteState(SPV);
-
     sim->setEquationOfMotion(fireMinimizer,spv);
     if(!initializeGPU)
         sim->setCPUOperation(true);
-    sim->setReproducible(true);
-    //initialize parameters
+    sim->setReproducible(reproducible);
+
+    //initialize FIR parameters
     Dscalar astart, adec, tdec, tinc; int nmin;
     nmin = 5;
     astart = .1;
     adec= 0.99;
     tinc = 1.1;
     tdec = 0.5;
-//    tinc = tdec = 1.;
     setFIREParameters(FIREMIN,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
     t1=clock();
 
@@ -361,75 +173,10 @@ if(program_switch ==5)
     printf("Finished with initialization\n");
     //cout << "current q = " << spv.reportq() << endl;
     spv->reportMeanCellForce(false);
-
-//save a database
-if (program_switch == -1)
-    {
-
-    sprintf(dataname,"/hdd2/data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",numpts,p0,KA);
-    sprintf(dataname,"../../data/Voronoi/States/database_N%i_p0%.3f_KA%.3f.nc",numpts,p0,KA);
-    if(ifstream(dataname))
-        {
-        SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Write);
-        if (mf < thresh)
-            ncdat.WriteState(SPV);
-        }
-    else
-        {
-        SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-        if (mf < thresh)
-            ncdat.WriteState(SPV);
-
-        };
-
-    return 0;
-    };
-
-if(program_switch ==2)
-    {
-    Dscalar mp = spv->reportMeanP();
-    Dscalar2 variances = spv->reportVarAP();
-    printf("var(A) = %f\t Var(p) = %g\n",variances.x,variances.y);
-    sprintf(dataname,"../shapeData_N%i.txt",numpts);
-    ofstream outfile;
-    outfile.open(dataname,std::ios_base::app);
-    outfile <<scientific << p0 <<"\t" << KA <<"\t" << mp << "\t";
-    outfile << variances.x << "\t" <<variances.y << "\t";
-    outfile << mf << "\n" ;
-    return 0;
-    };
-
-if (program_switch ==1)
-    {
-    sprintf(dataname,"../qData_N%i.txt",numpts);
-    ofstream outfile;
-    outfile.open(dataname,std::ios_base::app);
-    outfile << p0 <<"\t" << meanQ << "\t" << varQ  <<"\n";
-    return 0;
-    };
-
     if (mf > thresh) return 0;
 
-//    ncdat.ReadState(SPV,0,true);
-//    ncdat.WriteState(SPV);
-    if(initializeGPU)
-        cudaDeviceReset();
-
+    //build the dynamical matrix
     SPV->computeGeometryCPU();
-    Dscalar2 ans;
-
-   /*
-    EigMat D(4);
-    D.placeElementSymmetric(0,0,1.);
-    D.placeElementSymmetric(1,1,2.);
-    D.placeElementSymmetric(2,2,4.);
-    D.placeElementSymmetric(3,3,5.);
-    D.placeElementSymmetric(0,2,3.);
-    D.SASolve();
-    for (int ee = 0; ee < 4; ++ee)
-        printf("%f\t",D.eigenvalues[ee]);
-    cout <<endl;
-*/
     vector<int2> rowCols;
     vector<Dscalar> entries;
     SPV->getDynMatEntries(rowCols,entries,1.0,1.0);
@@ -447,10 +194,11 @@ if (program_switch ==1)
     for (int ee = 0; ee < 40; ++ee)
         {
         D.getEvec(ee,eigenv);
-        printf("lambda = %f\t IPR = %f\n",D.eigenvalues[ee],getIPR(eigenv));
+        printf("lambda = %f\t \n",D.eigenvalues[ee]);
         };
     cout <<endl;
 
+    //compare with a numerical derivative
     GPUArray<Dscalar2> disp,dispneg;
     disp.resize(numpts);
     dispneg.resize(numpts);
@@ -484,51 +232,5 @@ if (program_switch ==1)
     printf("differences: %f\t %f\n",E1-E0,E2-E0);
     printf("der = %f\n",(E1+E2-2.0*E0)/(mag*mag));
 
-if (mf > thresh) return 0;
-if (program_switch ==0 || program_switch == 2)
-    {
-    ofstream outfile;
-    sprintf(dataname,"../DOS_N%i_p%.3f_KA%.1f.txt",numpts,p0,KA);
-    outfile.open(dataname,std::ios_base::app);
-        for (int ee = 0; ee < 2*numpts-1; ++ee)
-            {
-            Dscalar temp = D.eigenvalues[ee];
-            if (temp > 0)
-                temp = sqrt(temp);
-            else
-                temp = 0.;
-            outfile << temp <<"\n";
-            };
-
-    //unstressed version?
-    vector<int2> rowColsU;
-    vector<Dscalar> entriesU;
-    SPV->getDynMatEntries(rowColsU,entriesU,1.0,0.0);
-    EigMat DU(2*numpts);
-    for (int ii = 0; ii < rowColsU.size(); ++ii)
-        {
-        int2 ij = rowColsU[ii];
-        DU.placeElementSymmetric(ij.x,ij.y,entriesU[ii]);
-        };
-
-    DU.SASolve();
-    for (int ee = 0; ee < 40; ++ee)
-        printf("%f\t",DU.eigenvalues[ee]);
-    cout <<endl;
-    
-    char datanameU[256];
-    sprintf(datanameU,"../DOS_unstressed_N%i_p%.3f_KA%.1f.txt",numpts,p0,KA);
-    ofstream outfileU;
-    outfileU.open(datanameU,std::ios_base::app);
-    for (int ee = 0; ee < 2*numpts-1; ++ee)
-        {
-        Dscalar temp = DU.eigenvalues[ee];
-        if (temp > 0)
-            temp = sqrt(temp);
-        else
-            temp = 0.;
-        outfileU << temp <<"\n";
-        };
-    };
     return 0;
 };
