@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "cellListGPU.cuh"
-#include "spvTension2d.cuh"
+#include "voronoiTension2d.cuh"
 
 #include "indexer.h"
 #include "gpubox.h"
@@ -12,7 +12,7 @@
 #include <iostream>
 #include <stdio.h>
 #include "Matrix.h"
-/*! \file spvTension2d.cu */
+/*! \file voronoiTension2d.cu */
 
 /*!
 \file A file defining some global kernels for use in the spv2d Tension class
@@ -24,7 +24,7 @@
 */
 
 //!the force on a particle is decomposable into the force contribution from each of its voronoi vertices...calculate those sets of forces with an additional tension term between cells of different type
-__global__ void gpu_spvTension_force_sets_kernel(const Dscalar2* __restrict__ d_points,
+__global__ void gpu_VoronoiTension_force_sets_kernel(const Dscalar2* __restrict__ d_points,
                                           const Dscalar2* __restrict__ d_AP,
                                           const Dscalar2* __restrict__ d_APpref,
                                           const int2* __restrict__ d_delSets,
@@ -196,7 +196,7 @@ __global__ void gpu_spvTension_force_sets_kernel(const Dscalar2* __restrict__ d_
     };
 
 //!the force on a particle is decomposable into the force contribution from each of its voronoi vertices...calculate those sets of forces with an additional tension term between cells of different type
-__global__ void gpu_spvSimpleTension_force_sets_kernel(const Dscalar2* __restrict__ d_points,
+__global__ void gpu_VoronoiSimpleTension_force_sets_kernel(const Dscalar2* __restrict__ d_points,
                                           const Dscalar2* __restrict__ d_AP,
                                           const Dscalar2* __restrict__ d_APpref,
                                           const int2* __restrict__ d_delSets,
@@ -364,7 +364,7 @@ __global__ void gpu_spvSimpleTension_force_sets_kernel(const Dscalar2* __restric
 
 
 //!Call the kernel to compute force sets with a generic matrix of surface tensions between types
-bool gpu_spvTension_force_sets(Dscalar2 *d_points,
+bool gpu_VoronoiTension_force_sets(Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
                     int2   *d_delSets,
@@ -387,7 +387,7 @@ bool gpu_spvTension_force_sets(Dscalar2 *d_points,
     if (NeighIdxNum < 128) block_size = 32;
     unsigned int nblocks  = NeighIdxNum/block_size + 1;
 
-    gpu_spvTension_force_sets_kernel<<<nblocks,block_size>>>(
+    gpu_VoronoiTension_force_sets_kernel<<<nblocks,block_size>>>(
                                                 d_points,
                                                 d_AP,
                                                 d_APpref,
@@ -411,7 +411,7 @@ bool gpu_spvTension_force_sets(Dscalar2 *d_points,
     };
 
 //!Call the kernel to compute force sets with additional (uniform) tension terms
-bool gpu_spvSimpleTension_force_sets(Dscalar2 *d_points,
+bool gpu_VoronoiSimpleTension_force_sets(Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
                     int2   *d_delSets,
@@ -433,7 +433,7 @@ bool gpu_spvSimpleTension_force_sets(Dscalar2 *d_points,
     if (NeighIdxNum < 128) block_size = 32;
     unsigned int nblocks  = NeighIdxNum/block_size + 1;
 
-    gpu_spvSimpleTension_force_sets_kernel<<<nblocks,block_size>>>(
+    gpu_VoronoiSimpleTension_force_sets_kernel<<<nblocks,block_size>>>(
                                                 d_points,
                                                 d_AP,
                                                 d_APpref,

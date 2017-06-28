@@ -1,5 +1,5 @@
-#ifndef __SPV2D_CUH__
-#define __SPV2D_CUH__
+#ifndef __Voronoi2D_CUH__
+#define __Voronoi2D_CUH__
 
 #include "std_include.h"
 #include <cuda_runtime.h>
@@ -8,12 +8,12 @@
 
 /*!
  \file
-A file providing an interface to the relevant cuda calls for the SPV2D class
+A file providing an interface to the relevant cuda calls for the Voronoi2D class
 */
 
 /** @defgroup spvKernels SPV Kernels
  * @{
- * \brief CUDA kernels and callers for the SPV2D class
+ * \brief CUDA kernels and callers for the Voronoi2D class
  */
 
 //!compute the area and perimeter of all Voronoi cells, and save the voronoi vertices

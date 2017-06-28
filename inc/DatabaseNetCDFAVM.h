@@ -3,7 +3,7 @@
 
 #include "std_include.h"
 #include "avm2d.h"
-#include "spv2d.h"
+#include "voronoi2d.h"
 #include "DatabaseNetCDF.h"
 #include <netcdfcpp.h>
 #include <string>

@@ -1,5 +1,5 @@
-#ifndef SPV_H
-#define SPV_H
+#ifndef Voronoi2d_H
+#define Voronoi2d_H
 
 #include "std_include.h"
 
@@ -10,26 +10,26 @@
 #include "Matrix.h"
 #include "functions.h"
 #include "DelaunayMD.h"
-#include "spv2d.cuh"
+#include "voronoi2d.cuh"
 
-/*! \file spv2d.h */
-//!Implement the 2D SPV model, with and without some extra bells and whistles, using kernels in \ref spvKernels
+/*! \file voronoi2d.h */
+//!Implement a 2D Voronoi model, with and without some extra bells and whistles, using kernels in \ref spvKernels
 /*!
- *A child class of DelaunayMD, this implements the SPV model in 2D. This involves mostly calculating
-  the forces in the SPV model and then moving cells appropriately. Optimizing these procedures for
+ *A child class of DelaunayMD, this implements a Voronoi model in 2D. This involves mostly calculating
+  the forces in the Voronoi model. Optimizing these procedures for
   hybrid CPU/GPU-based computation involves declaring and maintaining several related auxiliary
   data structures that capture different features of the local topology and local geoemetry for each
   cell.
  */
-class SPV2D : public DelaunayMD
+class Voronoi2D : public DelaunayMD
     {
     public:
         //!initialize with random positions in a square box
-        SPV2D(int n,bool reprod = false);
+        Voronoi2D(int n,bool reprod = false);
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        SPV2D(int n, Dscalar A0, Dscalar P0,bool reprod = false);
+        Voronoi2D(int n, Dscalar A0, Dscalar P0,bool reprod = false);
         //!Blank constructor
-        SPV2D(){};
+        Voronoi2D(){};
 
         //!Initialize DelaunayMD, set random orientations for cell directors, prepare data structures
         void Initialize(int n);
@@ -61,13 +61,13 @@ class SPV2D : public DelaunayMD
         //!Compute cell geometry on the CPU
         void computeGeometryCPU();
         //!Compute the net force on particle i on the CPU
-        virtual void computeSPVForceCPU(int i);
+        virtual void computeVoronoiForceCPU(int i);
 
         //GPU functions
         //!call gpu_compute_geometry kernel caller
         void computeGeometryGPU();
         //!call gpu_force_sets kernel caller
-        virtual void computeSPVForceSetsGPU();
+        virtual void computeVoronoiForceSetsGPU();
         //! call gpu_sum_force_sets kernel caller
         void sumForceSets();
         //!call gpu_sum_force_sets_with_exclusions kernel caller

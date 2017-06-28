@@ -2,7 +2,7 @@
 #define DATABASE_SPV_H
 
 #include "std_include.h"
-#include "spv2d.h"
+#include "voronoi2d.h"
 #include "DatabaseNetCDF.h"
 #include <netcdfcpp.h>
 #include <string>
@@ -18,7 +18,7 @@ and the shape index parameter for each vertex
 class SPVDatabaseNetCDF : public BaseDatabaseNetCDF
 {
 private:
-    typedef shared_ptr<SPV2D> STATE;
+    typedef shared_ptr<Voronoi2D> STATE;
     int Nv; //!< number of vertices in delaunay triangulation
     NcDim *recDim, *NvDim, *dofDim, *boxDim, *unitDim; //!< NcDims we'll use
     NcVar *posVar, *typeVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var,*exVar; //!<NcVars we'll use

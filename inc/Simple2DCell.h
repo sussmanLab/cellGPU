@@ -133,7 +133,7 @@ class Simple2DCell : public Simple2DModel
         Please note that "type" is not meaningful unless it is used by child classes. That is, things
         like area/perimeter preferences, or motility, or whatever are neither set nor accessed by
         cell type, but rather by cell index! Thus, this is just an additional data structure that
-        can be useful. For instance, the SPVTension2D classes uses the integers of cellType to
+        can be useful. For instance, the VoronoiTension2D classes uses the integers of cellType to
         determine when to apply an additional line tension between cells.
         */
         GPUArray<int> CellType;
@@ -185,7 +185,7 @@ class Simple2DCell : public Simple2DModel
         int vertexMax;
         //!3*Nvertices length array of the position of vertices around cells
         /*!
-        For both AVM and SPV, it may help to save the relative position of the vertices around a
+        For both AVM and Voronoi, it may help to save the relative position of the vertices around a
         cell, either for easy force computation or in the geometry routine, etc.
         voroCur.data[n_idx(nn,i)] gives the nth vertex, in CCW order, of cell i
         */

@@ -1,8 +1,8 @@
 #define ENABLE_CUDA
 
-#include "spvTension2d.h"
-#include "spvTension2d.cuh"
-/*! \file spvTension2d.cpp */
+#include "voronoiTension2d.h"
+#include "voronoiTension2d.cuh"
+/*! \file voronoiTension2d.cpp */
 
 
 /*!
@@ -19,7 +19,7 @@ gammas[n+2] = g_{1,1} (again, never used)
 ...
 gammas[n^2-1] = g_{n,n}
 */
-void SPVTension2D::setSurfaceTension(vector<Dscalar> gammas)
+void VoronoiTension2D::setSurfaceTension(vector<Dscalar> gammas)
     {
     simpleTension = false;
     //set the tension matrix to the right size, and the indexer
@@ -41,7 +41,7 @@ goes through the process of computing the forces on either the CPU or GPU, eithe
 exclusions, as determined by the flags. Assumes the geometry has NOT yet been computed.
 \post the geometry is computed, and force per cell is computed.
 */
-void SPVTension2D::computeForces()
+void VoronoiTension2D::computeForces()
     {
     if (GPUcompute)
         {
@@ -57,18 +57,18 @@ void SPVTension2D::computeForces()
             if (simpleTension)
                 {
                 for (int ii = 0; ii < Ncells; ++ii)
-                    computeSPVSimpleTensionForceCPU(ii);
+                    computeVoronoiSimpleTensionForceCPU(ii);
                 }
             else
                 {
                 for (int ii = 0; ii < Ncells; ++ii)
-                    computeSPVTensionForceCPU(ii);
+                    computeVoronoiTensionForceCPU(ii);
                 };
             }
         else
             {
             for (int ii = 0; ii < Ncells; ++ii)
-                computeSPVForceCPU(ii);
+                computeVoronoiForceCPU(ii);
             };
         };
     };
@@ -79,24 +79,24 @@ void SPVTension2D::computeForces()
 \post calculate the contribution to the net force on every particle from each of its voronoi vertices
 via a cuda call
 */
-void SPVTension2D::ComputeForceSetsGPU()
+void VoronoiTension2D::ComputeForceSetsGPU()
     {
         if(Tension)
             {
             if (simpleTension)
-                computeSPVSimpleTensionForceSetsGPU();
+                computeVoronoiSimpleTensionForceSetsGPU();
             else
-                computeSPVTensionForceSetsGPU();
+                computeVoronoiTensionForceSetsGPU();
             }
         else
-            computeSPVForceSetsGPU();
+            computeVoronoiForceSetsGPU();
     };
 
 /*!
 Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
 vertices
 */
-void SPVTension2D::computeSPVSimpleTensionForceSetsGPU()
+void VoronoiTension2D::computeVoronoiSimpleTensionForceSetsGPU()
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
@@ -109,7 +109,7 @@ void SPVTension2D::computeSPVSimpleTensionForceSetsGPU()
     ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::read);
     ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::read);
 
-    gpu_spvSimpleTension_force_sets(
+    gpu_VoronoiSimpleTension_force_sets(
                     d_p.data,
                     d_AP.data,
                     d_APpref.data,
@@ -130,7 +130,7 @@ void SPVTension2D::computeSPVSimpleTensionForceSetsGPU()
 Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
 vertices, using the general surface tension matrix
 */
-void SPVTension2D::computeSPVTensionForceSetsGPU()
+void VoronoiTension2D::computeVoronoiTensionForceSetsGPU()
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
@@ -145,7 +145,7 @@ void SPVTension2D::computeSPVTensionForceSetsGPU()
 
     ArrayHandle<Dscalar> d_tm(tensionMatrix,access_location::device,access_mode::read);
 
-    gpu_spvTension_force_sets(
+    gpu_VoronoiTension_force_sets(
                     d_p.data,
                     d_AP.data,
                     d_APpref.data,
@@ -166,7 +166,7 @@ void SPVTension2D::computeSPVTensionForceSetsGPU()
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
 \post the net force on cell i is computed
 */
-void SPVTension2D::computeSPVSimpleTensionForceCPU(int i)
+void VoronoiTension2D::computeVoronoiSimpleTensionForceCPU(int i)
     {
     Dscalar Pthreshold = THRESHOLD;
     //read in all the data we'll need
@@ -420,7 +420,7 @@ void SPVTension2D::computeSPVSimpleTensionForceCPU(int i)
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
 \post the net force on cell i is computed
 */
-void SPVTension2D::computeSPVTensionForceCPU(int i)
+void VoronoiTension2D::computeVoronoiTensionForceCPU(int i)
     {
     Dscalar Pthreshold = THRESHOLD;
     //read in all the data we'll need

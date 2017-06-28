@@ -6,7 +6,7 @@
 #define ENABLE_CUDA
 
 #include "Simulation.h"
-#include "spv2d.h"
+#include "voronoi2d.h"
 #include "selfPropelledParticleDynamics.h"
 #include "EnergyMinimizerFIRE2D.h"
 #include "DatabaseNetCDFSPV.h"
@@ -95,8 +95,8 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
 
-    ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
-    shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
+    ForcePtr spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
+    shared_ptr<Voronoi2D> SPV = dynamic_pointer_cast<Voronoi2D>(spv);
 
     EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
     shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
@@ -113,7 +113,7 @@ int main(int argc, char*argv[])
         sim->setCPUOperation(true);
     sim->setReproducible(reproducible);
 
-    //initialize FIR parameters
+    //initialize FIRE parameters
     Dscalar astart, adec, tdec, tinc; int nmin;
     nmin = 5;
     astart = .1;

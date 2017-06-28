@@ -1,24 +1,24 @@
-#ifndef __SPVTENSION2D_CUH__
-#define __SPVTENSION2D_CUH__
+#ifndef __VoronoiTENSION2D_CUH__
+#define __VoronoiTENSION2D_CUH__
 
 #include "std_include.h"
 #include <cuda_runtime.h>
 #include "indexer.h"
 #include "gpubox.h"
-#include "spv2d.cuh"
+#include "voronoi2d.cuh"
 
 /*!
  \file
-A file providing an interface to the relevant cuda calls for the SPV2D class
+A file providing an interface to the relevant cuda calls for the Voronoi2D class
 */
 
 /** @defgroup spvKernels SPV Kernels
  * @{
- * \brief CUDA kernels and callers for the SPV2D class
+ * \brief CUDA kernels and callers for the Voronoi2D class
  */
 
 //!Compute the contribution to the net force on vertex i from each of i's voronoi vertices with general tensions
-bool gpu_spvTension_force_sets(
+bool gpu_VoronoiTension_force_sets(
                     Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,
@@ -39,7 +39,7 @@ bool gpu_spvTension_force_sets(
                     );
 
 //!Compute the contribution to the net force on vertex i from each of i's voronoi vertices
-bool gpu_spvSimpleTension_force_sets(
+bool gpu_VoronoiSimpleTension_force_sets(
                     Dscalar2 *d_points,
                     Dscalar2 *d_AP,
                     Dscalar2 *d_APpref,

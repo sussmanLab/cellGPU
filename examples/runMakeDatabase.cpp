@@ -6,7 +6,7 @@
 
 #define ENABLE_CUDA
 
-#include "spv2d.h"
+#include "voronoi2d.h"
 #include "Simulation.h"
 #include "selfPropelledParticleDynamics.h"
 #include "brownianParticleDynamics.h"
@@ -14,7 +14,7 @@
 
 /*!
 Provides an example of using the NetCDF database class to write snapshots of a simulation of the 2D
-SPV model. Note that netCDF database functionality is currently only partially implemented for the
+Voronoi model. Note that netCDF database functionality is currently only partially implemented for the
 AVM, and some refactoring is in the works. In particular, netCDF will be clunky when the cell number
 changes
 */
@@ -83,8 +83,8 @@ int main(int argc, char*argv[])
     EOMPtr bd = make_shared<brownianParticleDynamics>(numpts);
     shared_ptr<brownianParticleDynamics> BD = dynamic_pointer_cast<brownianParticleDynamics>(bd);
 
-    ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
-    shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
+    ForcePtr spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
+    shared_ptr<Voronoi2D> SPV = dynamic_pointer_cast<Voronoi2D>(spv);
 
 
     spv->setCellPreferencesUniform(1.0,p0);

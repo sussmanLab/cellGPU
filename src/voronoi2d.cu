@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "cellListGPU.cuh"
-#include "spv2d.cuh"
+#include "voronoi2d.cuh"
 
 #include "indexer.h"
 #include "gpubox.h"

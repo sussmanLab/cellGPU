@@ -102,7 +102,7 @@ HOSTDEVICE Dscalar TriangleArea(const Dscalar2 &p1, const Dscalar2 &p2)
     return abs(0.5*(p1.x*p2.y-p1.y*p2.x));
     };
 
-//!Calculate matrix of derivatives needed in the 2D SPV model
+//!Calculate matrix of derivatives needed in the 2D Voronoi model
 /*!
 This is the change in a voronoi vertex given a change of a Delaunay vertex at the origin,
 given that rij and rik tell you where the other two Delaunay vertices are.

@@ -2,7 +2,7 @@
 
 #include "avm2d.h"
 #include "avm2d.cuh"
-#include "spv2d.h"
+#include "voronoi2d.h"
 /*! \file avm2d.cpp */
 
 /*!
@@ -11,7 +11,7 @@
 \param P0 set uniform preferred perimeter for all cells
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
 \param runSPVToInitialize the default constructor has the cells start as a Voronoi tesselation of
-a random point set. Set this flag to true to relax this initial configuration via the SPV2D class
+a random point set. Set this flag to true to relax this initial configuration via the Voronoi2D class
 \post Initialize(n,runSPVToInitialize) is called, setCellPreferencesUniform(A0,P0), and
 setModuliUniform(1.0,1.0)
 */
@@ -73,7 +73,7 @@ void AVM2D::Initialize(int n,bool spvInitialize)
 
 /*!
 A function of convenience.... initialize cell positions and vertices by constructing the Delaunay
-triangulation of the current cell positions. If you want something more regular, run the SPV mode for a few
+triangulation of the current cell positions. If you want something more regular, run the Voronoi mode for a few
 timesteps to smooth out the random point set first.
 \param spvInitialize only use if the initial cell positions are to be random, and you want to make the points more uniform
 \post After this is called, all topology data structures are initialized
@@ -81,12 +81,12 @@ timesteps to smooth out the random point set first.
 void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
     {
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
-    //use the SPV class to relax the initial configuration just a bit?
+    //use the Voronoi class to relax the initial configuration just a bit?
     if(spvInitialize)
         {
         EOMPtr spp = make_shared<selfPropelledParticleDynamics>(Ncells);
 
-        ForcePtr spv = make_shared<SPV2D>(Ncells,1.0,3.8,Reproducible);
+        ForcePtr spv = make_shared<Voronoi2D>(Ncells,1.0,3.8,Reproducible);
         spv->setCellPreferencesUniform(1.0,3.8);
         spv->setv0Dr(.1,1.0);
 
@@ -322,7 +322,7 @@ void AVM2D::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
     };
 
 /*!
-Very similar to the function in spv2d.cpp, but optimized since we already have some data structures
+Very similar to the function in Voronoi2d.cpp, but optimized since we already have some data structures
 (the vertices)...compute the area and perimeter of the cells
 */
 void AVM2D::computeGeometryCPU()
@@ -744,7 +744,7 @@ void AVM2D::getCellPositionsCPU()
     };
 
 /*!
-Very similar to the function in spv2d.cpp, but optimized since we already have some data structures (the vertices)
+Very similar to the function in Voronoi2d.cpp, but optimized since we already have some data structures (the vertices)
 */
 void AVM2D::computeGeometryGPU()
     {

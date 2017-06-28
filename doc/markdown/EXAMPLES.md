@@ -1,7 +1,7 @@
 # Code snippets {#code}
 
 These minimal samples show how to run default-initialized simulations. Please see the provided .cpp
-files in the main directory for more samples, or consult the documentation for more advanced usage.
+files in the main directory and examples directory for more samples, or consult the documentation for more advanced usage.
 
 # activeVertex.cpp
 
@@ -23,3 +23,9 @@ Provides an example of using the FIRE minimizer to minimize either a 2D SPV or A
 
 Provides an example of using the NetCDF database class to write snapshots of a simulation of the 2D
 SPV model, using either active cell or overdamped Brownian dynamics
+
+# dynMat.cpp
+
+Provides an example of computing the dynamical matrix of a minimized voronoi model and using the
+Eigen interface to diagonalize it.
+

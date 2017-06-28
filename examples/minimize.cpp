@@ -6,7 +6,7 @@
 #define ENABLE_CUDA
 
 #include "Simulation.h"
-#include "spv2d.h"
+#include "voronoi2d.h"
 #include "selfPropelledParticleDynamics.h"
 #include "selfPropelledCellVertexDynamics.h"
 #include "avm2d.h"
@@ -96,8 +96,8 @@ int main(int argc, char*argv[])
 
     if(program_switch == 0)
         {
-        ForcePtr spv = make_shared<SPV2D>(numpts,1.0,4.0,reproducible);
-        shared_ptr<SPV2D> SPV = dynamic_pointer_cast<SPV2D>(spv);
+        ForcePtr spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
+        shared_ptr<Voronoi2D> SPV = dynamic_pointer_cast<Voronoi2D>(spv);
 
         EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
         shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);

@@ -1,25 +1,25 @@
-#ifndef SPVTENSION2D_H
-#define SPVTENSION2D_H
+#ifndef VoronoiTENSION2D_H
+#define VoronoiTENSION2D_H
 
 #include "std_include.h"
-#include "spv2d.h"
+#include "voronoi2d.h"
 
-/*! \file spv2dTension.h */
-//!Add line tension terms between different "types" of cells in the 2D SPV model using kernels in \ref spvKernels
+/*! \file voronoiTension2d.h */
+//!Add line tension terms between different "types" of cells in the 2D Voronoi model using kernels in \ref spvKernels
 /*!
-A child class of SPV2D, this implements an SPV model in 2D that can include tension terms between
+A child class of Voronoi2D, this implements an Voronoi model in 2D that can include tension terms between
 different types of cells. Different routines are called depending on whether multiple different
 cell-cell surface tension values are needed. This specialization exists because on the GPU using the
 more generic routine has many more costly memory look-ups, so if it isn't needed the simpler algorithm
 should be used.
  */
-class SPVTension2D : public SPV2D
+class VoronoiTension2D : public Voronoi2D
     {
     public:
         //!initialize with random positions in a square box
-        SPVTension2D(int n,bool reprod = false) : SPV2D(n,reprod){gamma = 0.0; Tension = false;simpleTension = true;};
+        VoronoiTension2D(int n,bool reprod = false) : Voronoi2D(n,reprod){gamma = 0.0; Tension = false;simpleTension = true;};
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        SPVTension2D(int n, Dscalar A0, Dscalar P0,bool reprod = false) : SPV2D(n,A0,P0,reprod){gamma = 0;Tension = false;simpleTension = true;};
+        VoronoiTension2D(int n, Dscalar A0, Dscalar P0,bool reprod = false) : Voronoi2D(n,A0,P0,reprod){gamma = 0;Tension = false;simpleTension = true;};
 
         //!compute the geometry and get the forces
         virtual void computeForces();
@@ -28,14 +28,14 @@ class SPVTension2D : public SPV2D
         virtual void ComputeForceSetsGPU();
 
         //!Compute the net force on particle i on the CPU with only a single tension value
-        virtual void computeSPVSimpleTensionForceCPU(int i);
+        virtual void computeVoronoiSimpleTensionForceCPU(int i);
 
         //!call gpu_force_sets kernel caller
-        virtual void computeSPVSimpleTensionForceSetsGPU();
+        virtual void computeVoronoiSimpleTensionForceSetsGPU();
         //!Compute the net force on particle i on the CPU with multiple tension values
-        virtual void computeSPVTensionForceCPU(int i);
+        virtual void computeVoronoiTensionForceCPU(int i);
         //!call gpu_force_sets kernel caller
-        virtual void computeSPVTensionForceSetsGPU();
+        virtual void computeVoronoiTensionForceSetsGPU();
 
         //!Use surface tension
         void setUseSurfaceTension(bool use_tension){Tension = use_tension;};
