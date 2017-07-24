@@ -1,3 +1,5 @@
+#This makefile has crazy-lloking paths and includes, reflecting the different operating systems and computers regulating used by the developer. For your system you can definitely, definitely simplify this. Currently, this will auto-compile all cpp files in the main directory, and make objects for all cpp and cu files in the src directory
+
 #standard places to find cuda files
 CUDA_INC = /usr/local/cuda/includes
 CUDA_LIB = /usr/local/cuda/lib64
@@ -25,35 +27,21 @@ CFLAGS += $(COMMONFLAGS) -frounding-math
 CUOBJ_DIR=obj/cuobj
 OBJ_DIR=obj
 SRC_DIR=src
-#target rules
-all:build
+BIN_DIR=.
 
-float: CXXFLAGS += -DSCALARFLOAT
-float: NVCCFLAGS += -DSCALARFLOAT
-float: build
+.SECONDARY:
 
-debug: CXXFLAGS += -g -DCUDATHREADSYNC
-debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
-debug: build
+PROGS := $(wildcard *.cpp)
+PROG_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.main.o,$(PROGS))
+PROG_MAINS := $(patsubst %.cpp,$(BIN_DIR)/%.out,$(PROGS))
 
-PROGS= spvGPU.out avmGPU.out
 
-build: $(PROGS)
+CPP_FILES := $(wildcard src/*.cpp)
+CLASS_OBJS = $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(CPP_FILES))
+CU_FILES := $(wildcard src/*.cu)
+CUOBJS = $(patsubst src/%.cu,$(CUOBJ_DIR)/%.cu.o,$(CU_FILES))
 
-PROG_OBJS=obj/voronoi.o obj/activeVertex.o
 
-CLASS_OBJS= obj/DelaunayLoc.o obj/Delaunay1.o obj/DelaunayCGAL.o obj/cellListGPU.o obj/DelaunayMD.o obj/hilbert_curve.o obj/EnergyMinimizerFIRE2D.o
-CLASS_OBJS+=obj/Simple2DCell.o obj/Simple2DActiveCell.o
-CLASS_OBJS+=obj/selfPropelledParticleDynamics.o obj/selfPropelledCellVertexDynamics.o obj/brownianParticleDynamics.o
-CLASS_OBJS+=obj/voronoi2d.o obj/avm2d.o obj/voronoiTension2d.o
-CLASS_OBJS+=obj/eigenMatrixInterface.o
-CLASS_OBJS+=obj/Simulation.o
-
-CUOBJS= obj/cuobj/cellListGPU.cu.o obj/cuobj/DelaunayMD.cu.o
-CUOBJS+=obj/cuobj/Simple2DCell.cu.o
-CUOBJS+=obj/cuobj/EnergyMinimizerFIRE2D.cu.o
-CUOBJS+=obj/cuobj/simpleEquationOfMotion.cu.o obj/cuobj/selfPropelledParticleDynamics.cu.o obj/cuobj/selfPropelledCellVertexDynamics.cu.o obj/cuobj/brownianParticleDynamics.cu.o
-CUOBJS+=obj/cuobj/voronoi2d.cu.o obj/cuobj/avm2d.cu.o obj/cuobj/voronoiTension2d.cu.o
 #cuda objects
 $(CUOBJ_DIR)/%.cu.o: $(SRC_DIR)/%.cu
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA)  -o $@ -c $<
@@ -63,23 +51,25 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) $(LIB_CGAL) -o $@ -c $<
 
 #program objects
-$(OBJ_DIR)/%.o: %.cpp
+$(OBJ_DIR)/%.main.o: %.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) $(LIB_CGAL) -o $@ -c $<
 
-
-###
 #Programs
-##
-
-avmGPU.out: obj/activeVertex.o $(CLASS_OBJS) $(CUOBJS)
-	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
-spvGPU.out: obj/voronoi.o $(CLASS_OBJS) $(CUOBJS)
+%.out: $(OBJ_DIR)/%.main.o $(CLASS_OBJS) $(CUOBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
+#target rules
 
-run: build
-	./spvGPU.out
-	./avmGPU.out
-clean:
-	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) spvGPU.out avmGPU.out
+all:build
 
+float: CXXFLAGS += -DSCALARFLOAT
+float: NVCCFLAGS += -DSCALARFLOAT
+float: build
+
+debug: CXXFLAGS += -g -DCUDATHREADSYNC
+debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
+debug: build
+build:$(PROG_MAINS)
+
+clean: 
+	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) $(PROG_OBJS) $(PROG_MAINS)
