@@ -9,6 +9,7 @@ match up well with the existing code base.
 
 The developers are actively thinking about or interested in adding the following features. If you
 are interested in contributing to any of these development branches please contact the lead developer!
+Please also see the public gitlab cellGPU page for more detailed issues
 
 ## Self-propelled Voronoi branch
 

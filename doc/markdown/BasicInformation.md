@@ -9,7 +9,7 @@ https://arxiv.org/abs/1702.02939
 ### General data structures and analysis classes
 
 * Simulation -- a class that takes shared pointers to things like the data structures, cell models,
-equations of motion, etc., below. This allows for centralized control of very flexible, run-time
+equations of motion, etc.. This allows for centralized control of very flexible, run-time
 changes to simulations.
 
 * Simple2DCell -- a class that defines flat data structures for some of the most common features of
@@ -36,6 +36,8 @@ where the topology changes via a simple rule for T1 transitions
 
 ### Equations of motion
 
+* updater -- a base class (of which the e.o.m.'s below are examples) describing a class that can or will
+change a configuration in some way
 * simpleEquationOfMotion -- a base class implementing the following idea: given various data from a
 model, for instance the forces on the degrees of freedom, calculate the displacements that would
 integrate the equations of motion by one time step.

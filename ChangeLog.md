@@ -2,7 +2,11 @@
 
 ### Changes in progress
 
-* system-wide refactoring into simulation components
+....
+
+### version 0.6.1
+
+* system-wide refactoring into simulation components: updaters, configurations, pieces, and a Simulation to tie them together
 * added simple Brownian dynamics equation of motion
 * added a (somewhat specialized) calculation of the voronoi model dynamical matrix
 
@@ -21,7 +25,7 @@ common interface for MD
 * Refactor class structure... Simple2DCell --> Simple2DActiveCell --> AVM2D and Simple2DActiveCell
 --> DelaunayMD --> SPV2D
 
-### version 0.4
+### cellGPU version 0.4
 
 * The AVM2D class implements a simple active vertex model
 * numerous bug fixes
@@ -32,12 +36,12 @@ common interface for MD
 * SPV2D class inherits from DelaunayMD; implements the 2D self-propelled voronoi model
 * references to Triangle are removed; CGAL becomes the default triangulation library
 
-### version 0.2
+### DelGPU version 0.2
 
 * "DelGPU" implements the DelaunayCheck class to assess the validity of a proposed triangulation on
 either the CPU or GPU; DelaunayMD provides a simple interface to an MD-like protocol
 
-### version 0.1
+### VoroGuppy version 0.1
 
 * "VoroGuppy" has a CPU implementation of Chen and Gotsman's  localized Delaunay triangulation,
 comparisons with Shewchuck's Triangle program and a Bowyer-Watson implementation.
