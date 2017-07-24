@@ -3,6 +3,7 @@
 
 #include "Simple2DCell.h"
 #include "simpleEquationOfMotion.h"
+#include "updater.h"
 #include "gpubox.h"
 #include "cellListGPU.h"
 
@@ -21,7 +22,6 @@ class Simulation : public enable_shared_from_this<Simulation>
         Simulation();
         //!pass in an equation of motion to run
         void setEquationOfMotion(EOMPtr _eom,ForcePtr _config);
-
         //!Pass in a reference to the configuration
         void setConfiguration(ForcePtr _config);
 
@@ -38,6 +38,15 @@ class Simulation : public enable_shared_from_this<Simulation>
         WeakEOMPtr equationOfMotion;
         //!The configuration of cells
         WeakForcePtr cellConfiguration;
+        //! A vector of updaters that the simulation will loop through
+        vector<WeakUpdaterPtr> updaters;
+
+        //!Add an updater
+        void addUpdater(UpdaterPtr _upd){updaters.push_back(_upd);};
+
+        //!Clear out the vector of updaters
+        void clearUpdaters(){updaters.clear();};
+
         //!The domain of the simulation
         BoxPtr Box;
         //!Pass in a reference to the box

@@ -1,12 +1,11 @@
 #ifndef simpleEquationOfMotion_H
 #define simpleEquationOfMotion_H
 
-#include "std_include.h"
-#include "gpuarray.h"
 #include "curand.h"
 #include "curand_kernel.h"
-#include "Simple2DModel.h"
 #include "simpleEquationOfMotion.cuh"
+#include "gpuarray.h"
+#include "updater.h"
 
 /*! \file simpleEquationOfMotion.h */
 //!A base class for implementing simple equations of motion
@@ -26,12 +25,14 @@ C->enforceTopology() takes care of any business the model that T implements need
 positions of the underlying degrees of freedom have been updated
 
 */
-class simpleEquationOfMotion
+class simpleEquationOfMotion : public updater
     {
     public:
         //!base constructor sets default time step size
         simpleEquationOfMotion()
             {
+            Period = 1;
+            Phase = 0;
             deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;
             mt19937 Gener(rand());
             mt19937 GenerRd(rd());
@@ -41,8 +42,6 @@ class simpleEquationOfMotion
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion(){};
 
-        //!allow for spatial sorting to be called if necessary...
-        virtual void spatialSorting(){};
         //!allow for whatever GPU RNG initialization is needed
         virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0){};
 
@@ -56,25 +55,15 @@ class simpleEquationOfMotion
         int getNdof(){return Ndof;};
         //!Set the number of degrees of freedom of the equation of motion
         void setNdof(int _n){Ndof = _n;};
+        
         //!Set whether the integration of the equations of motion should always use the same random numbers
         void setReproducible(bool rep){Reproducible = rep;};
-
-        //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
-        virtual void setGPU(){GPUcompute = true;};
-
-        //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
-        virtual void setCPU(){GPUcompute = false;};
-
         //!Set the GPU initialization to true
         void initializeGPU(bool initGPU){initializeGPURNG = initGPU;};
-
-        //! pointer to a Simple2DModel
-        shared_ptr<Simple2DModel> model;
-        //! virtual function to allow the model to be a derived class
-        virtual void set2DModel(shared_ptr<Simple2DModel> _model){};
-
         //!The seed used by the random number generator, when non-reproducible dynamics have been set
         int RNGSeed;
+        //! performUpdate just maps to integrateEquationsOfMotion
+        virtual void performUpdate(){integrateEquationsOfMotion();};
 
     protected:
         //!Should the simulation be reproducible (v/v the random numbers generated)?
@@ -93,8 +82,6 @@ class simpleEquationOfMotion
         int Timestep;
         //!The time stepsize of the simulation
         Dscalar deltaT;
-        //!whether the equation of motion does its work on the GPU or not
-        bool GPUcompute;
         //!a vector of the re-indexing information
         vector<int> reIndexing;
 

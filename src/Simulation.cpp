@@ -13,12 +13,14 @@ sortPeriod(-1)
     };
 
 /*!
-Set a pointer to the equation of motion, and give the equation of motion a reference to this
+Set a pointer to the equation of motion, and give the equation of motion a reference to the
+model... this function will be refactored eventually now that EOM are just updaters
 */
 void Simulation::setEquationOfMotion(EOMPtr _eom, ForcePtr _config)
     {
     equationOfMotion = _eom;
     _eom->set2DModel(_config);
+    updaters.push_back(equationOfMotion);
     };
 
 /*!
@@ -115,14 +117,25 @@ void Simulation::performTimestep()
     {
     integerTimestep += 1;
     Time += integrationTimestep;
-    auto eom = equationOfMotion.lock();
-    eom->integrateEquationsOfMotion();
+    
+    //perform any updates, one of which should probably be an EOM
+    for (int u = 0; u < updaters.size(); ++u)
+        {
+        auto upd = updaters[u].lock();
+        upd->Update(integerTimestep);
+        };
+
+    //spatially sort as necessary
     auto cellConf = cellConfiguration.lock();
     //check if spatial sorting needs to occur
     if (sortPeriod > 0 && integerTimestep % sortPeriod == 0)
         {
         cellConf->spatialSorting();
-        eom->spatialSorting();
+        for (int u = 0; u < updaters.size(); ++u)
+            {
+            auto upd = updaters[u].lock();
+            upd->spatialSorting();
+            };
         };
     cellConf->setTime(Time);
     };
