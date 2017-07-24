@@ -7,9 +7,9 @@
 /*! \file updater.h */
 //!A base class for implementing simple updaters
 /*!
-In cellGPU an updater is some non-equation-of-motion object that can update something about the
-underlying state of the system. An example might be an updater that periodically subtracts off
-any center-of-mass motion of a system as it evolves. A simulation will call all updaters in a loop,
+In cellGPU an updater is some class object that can update something about the
+underlying state of the system. An example might be an equation of motion, or an updater that periodically subtracts off
+any center-of-mass motion of a system as it evolves, etc.. A simulation will call all updaters in a loop,
 e.g. for(each updater i in list) updater[i].Update(Timestep)
 To facilitate this structure, but acknowledge that any given updater might only need to be called
 occasionally, the Update function is passed a timestep, and each updaters has a period that should be set.
