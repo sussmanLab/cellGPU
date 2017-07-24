@@ -35,9 +35,6 @@ class Simple2DCell : public Simple2DModel
         //!copy the models current set of forces to the variable
         virtual void getForces(GPUArray<Dscalar2> &forces){};
 
-        //!default to returning forces on cells
-        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
-
         //!move the degrees of freedom
         virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements){};
 
@@ -71,6 +68,16 @@ class Simple2DCell : public Simple2DModel
 
         //!return the base "itt" re-indexing vector
         virtual vector<int> & returnItt(){return itt;};
+
+        //GPUArray returners...
+        //!Return a reference to forces on cells
+        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
+        //!Return a reference to moduli
+        virtual GPUArray<Dscalar2> & returnModuli(){return Moduli;};
+        //!Return a reference to AreaPeri array
+        virtual GPUArray<Dscalar2> & returnAreaPeri(){return AreaPeri;};
+        //!Return a reference to AreaPeriPreferences
+        virtual GPUArray<Dscalar2> & returnAreaPeriPreferences(){return AreaPeriPreferences;};
 
     //protected functions
     protected:
