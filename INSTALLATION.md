@@ -69,11 +69,11 @@ brew install homebrew/science/netcdf --with-cxx-compat
 
 2. brew cask install cuda
 
-3a. After cuda is installed, run "which nvcc". If this returns empty, you must export the path... 
+3. After cuda is installed, run "which nvcc". If this returns empty, you must export the path... 
 
-3b. vim $HOME/.bashrc
+3. vim $HOME/.bashrc
 
-3c. Add the following lines to the .bashrc and .bash_profile files:
+3. Add the following lines to the .bashrc and .bash_profile files:
     * export PATH=/Developer/NVIDIA/CUDA-8.0/bin${PATH:+:${PATH}}
     * export DYLD_LIBRARY_PATH=/Developer/NVIDIA/CUDA-8.0/lib\${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}
 
@@ -92,5 +92,7 @@ CUDA: https://developer.nvidia.com/cuda-downloads
 CGAL: http://www.cgal.org/download.html
 
 netCDF: http://www.unidata.ucar.edu/downloads/netcdf/index.jsp (be sure to get the C++ release, not the C release)
+
+Eigen: http://eigen.tuxfamily.org/index.php?title=Main_Page
 
 doxygen: http://www.stack.nl/~dimitri/doxygen/download.html

@@ -7,7 +7,8 @@ and on a two-dimensional dynamical version of the vertex model. CellGPU grew out
 (please see the contributing page of the documentation, which is maintained at
 https://dmsussman.gitlab.io/cellGPUdocumentation
 for information on upcoming code refactoring and new planned features!). The paper describing this
-code in more detail can currently be found on the arXiv: https://arxiv.org/abs/1702.02939
+code in more detail can currently be found on the arXiv: https://arxiv.org/abs/1702.02939, or in print:
+http://www.sciencedirect.com/science/article/pii/S0010465517301832
 
 Information on installing the project and contributing to it is contained in the relevant
 markdown files in the base directory and in the doc/markdown directory. Documentation of the
