@@ -25,6 +25,8 @@ CXXFLAGS += -w -frounding-math
 CFLAGS += $(COMMONFLAGS) -frounding-math
 
 CUOBJ_DIR=obj/cuobj
+MODULES = databases models updaters utility
+INCLUDES += -I./inc/databases -I./inc/models -I./inc/updaters -I./inc/utility
 OBJ_DIR=obj
 SRC_DIR=src
 BIN_DIR=.
@@ -36,19 +38,21 @@ PROG_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.main.o,$(PROGS))
 PROG_MAINS := $(patsubst %.cpp,$(BIN_DIR)/%.out,$(PROGS))
 
 
-CPP_FILES := $(wildcard src/*.cpp)
+CPP_FILES := $(wildcard src/*/*.cpp)
+CPP_FILES += $(wildcard src/*.cpp)
+CU_FILES := $(wildcard src/*/*.cu)
+CU_FILES += $(wildcard src/*.cu)
 
-CLASS_OBJS := $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(CPP_FILES))
-CU_FILES := $(wildcard src/*.cu)
-CUOBJS := $(patsubst src/%.cu,$(CUOBJ_DIR)/%.cu.o,$(CU_FILES))
+CLASS_OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(CPP_FILES))
+CU_OBJS := $(patsubst $(SRC_DIR)/%.cu,$(OBJ_DIR)/%.cu.o,$(CU_FILES))
 
 
 #cuda objects
-$(CUOBJ_DIR)/%.cu.o: $(SRC_DIR)/%.cu
+$(OBJ_DIR)/%.cu.o : $(SRC_DIR)/%.cu 
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA)  -o $@ -c $<
 
 #cpp class objects
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) $(LIB_CGAL) -o $@ -c $<
 
 #program objects
@@ -56,7 +60,7 @@ $(OBJ_DIR)/%.main.o: %.cpp
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_NETCDF) $(LIB_CGAL) -o $@ -c $<
 
 #Programs
-%.out: $(OBJ_DIR)/%.main.o $(CLASS_OBJS) $(CUOBJS)
+%.out: $(OBJ_DIR)/%.main.o $(CLASS_OBJS) $(CU_OBJS)
 	$(NVCC) $(NVCCFLAGS) $(INCLUDES) $(LIB_CUDA) $(LIB_CGAL) $(LIB_NETCDF) -o $@ $+
 
 #target rules
@@ -70,7 +74,9 @@ float: build
 debug: CXXFLAGS += -g -DCUDATHREADSYNC
 debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
 debug: build
-build:$(PROG_MAINS)
+build: $(CLASS_OBJS) $(CU_OBJS) $(PROG_MAINS)  $(PROGS)
 
 clean: 
-	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CUOBJS) $(PROG_OBJS) $(PROG_MAINS)
+	rm -f $(PROG_OBJS) $(CLASS_OBJS) $(CU_OBJS) $(PROG_OBJS) $(PROG_MAINS)
+
+print-%  : ; @echo $* = $($*)
