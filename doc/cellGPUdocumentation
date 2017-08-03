@@ -743,7 +743,9 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ./markdown ../src ../inc
+INPUT                  = ./markdown ../src ../inc 
+INPUT += ../inc/databases ../inc/models ../inc/updaters ../inc/utility
+INPUT += ../src/databases ../src/models ../src/updaters ../src/utility
 INPUT += ../README.md
 INPUT += ../ChangeLog.md
 INPUT += ../LICENSE.md

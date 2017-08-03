@@ -67,9 +67,11 @@ brew install homebrew/science/netcdf --with-cxx-compat
 
 ## CUDA
 
-Note: homebrew-cask may not always support CUDA; you can always download the tools from https://developer.nvidia.com/cuda-downloads
+Note: homebrew-cask drivers makes this easy, but if it doesn't work you can always download CUDA from https://developer.nvidia.com/cuda-downloads
 
 1. ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null ; brew install caskroom/cask/brew-cask 2> /dev/null
+
+2. brew tap caskroom/drivers
 
 2. brew cask install cuda
 
