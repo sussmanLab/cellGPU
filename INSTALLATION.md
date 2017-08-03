@@ -63,7 +63,11 @@ brew install cgal
 
 brew install homebrew/science/netcdf --with-cxx-compat
 
+(note that you may not need the "--with-cxx-compat" flag, depending on your OS version, compiler tool chain, etc.)
+
 ## CUDA
+
+Note: homebrew-cask may not always support CUDA; you can always download the tools from https://developer.nvidia.com/cuda-downloads
 
 1. ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null ; brew install caskroom/cask/brew-cask 2> /dev/null
 
