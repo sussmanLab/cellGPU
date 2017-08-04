@@ -6,6 +6,7 @@
 #include "simpleEquationOfMotion.cuh"
 #include "gpuarray.h"
 #include "updater.h"
+#include "noiseSource.h"
 
 /*! \file simpleEquationOfMotion.h */
 //!A base class for implementing simple equations of motion
@@ -33,17 +34,10 @@ class simpleEquationOfMotion : public updater
             {
             Period = 1;
             Phase = 0;
-            deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;
-            mt19937 Gener(rand());
-            mt19937 GenerRd(rd());
-            gen = Gener;
-            genrd=GenerRd;
+            deltaT = 0.01; GPUcompute =true;Timestep = 0;
             };
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion(){};
-
-        //!allow for whatever GPU RNG initialization is needed
-        virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0){};
 
         //!get the number of timesteps run
         int getTimestep(){return Timestep;};
@@ -55,27 +49,23 @@ class simpleEquationOfMotion : public updater
         int getNdof(){return Ndof;};
         //!Set the number of degrees of freedom of the equation of motion
         void setNdof(int _n){Ndof = _n;};
-        
+
         //!Set whether the integration of the equations of motion should always use the same random numbers
-        void setReproducible(bool rep){Reproducible = rep;};
+        void setReproducible(bool rep)
+            {
+            noise.setReproducible(rep);
+            if (GPUcompute)
+                noise.initializeGPURNGs(1337,0);
+            };
+
         //!Set the GPU initialization to true
-        void initializeGPU(bool initGPU){initializeGPURNG = initGPU;};
-        //!The seed used by the random number generator, when non-reproducible dynamics have been set
-        int RNGSeed;
+//        void initializeGPU(bool initGPU){initializeGPURNG = initGPU;};
         //! performUpdate just maps to integrateEquationsOfMotion
         virtual void performUpdate(){integrateEquationsOfMotion();};
 
     protected:
-        //!Should the simulation be reproducible (v/v the random numbers generated)?
-        bool Reproducible;
-        //!an initializer for non-reproducible random number generation on the cpu
-        random_device rd;
-        //!A reproducible Mersenne Twister
-        mt19937 gen;
-        //!A non-reproducible Mersenne Twister
-        mt19937 genrd;
-        //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
-        bool initializeGPURNG;
+        //! A source of noise for the equation of motion
+        noiseSource noise;
         //!The number of degrees of freedom the equations of motion need to know about
         int Ndof;
         //! Count the number of integration timesteps

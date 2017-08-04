@@ -85,8 +85,6 @@ void Simulation::setReproducible(bool reproducible)
         eom->setReproducible(true);
     else
         eom->setReproducible(false);
-    if (USE_GPU)
-        eom -> initializeGPURNGs(1337,0);
     };
 
 /*!

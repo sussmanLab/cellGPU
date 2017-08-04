@@ -21,8 +21,6 @@ class selfPropelledCellVertexDynamics : public selfPropelledParticleDynamics
         virtual void integrateEquationsOfMotionCPU();
         //!call the GPU routine to integrate the e.o.m.
         virtual void integrateEquationsOfMotionGPU();
-        //!allow for whatever RNG initialization is needed
-        virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0);
 
         //! In the mixed cell-vertex model, the equations of motion need to know the number of cells
         int Ncells;

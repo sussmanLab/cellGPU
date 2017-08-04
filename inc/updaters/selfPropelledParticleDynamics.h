@@ -14,7 +14,7 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
     {
     public:
         //!base constructor sets the default time step size
-        selfPropelledParticleDynamics(){deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;};
+        selfPropelledParticleDynamics(){deltaT = 0.01; GPUcompute =true;Timestep = 0;};
 
         //!additionally set the number of particles andinitialize things
         selfPropelledParticleDynamics(int N);
@@ -31,8 +31,6 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         //!Set the number of degrees of freedom of the equation of motion
         void setMu(Dscalar _mu){mu=_mu;};
 
-        //!allow for whatever RNG initialization is needed
-        virtual void initializeGPURNGs(int globalSeed=1337, int tempSeed=0);
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
         virtual void spatialSorting();
         //!set the active model
@@ -43,8 +41,5 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         shared_ptr<Simple2DActiveCell> activeModel;
         //!The value of the inverse friction constant
         Dscalar mu;
-        //!An array of random-number-generators for use on the GPU branch of the code
-        GPUArray<curandState> RNGs;
-
     };
 #endif

@@ -15,7 +15,7 @@ class brownianParticleDynamics : public simpleEquationOfMotion
     {
     public:
         //!base constructor sets the default time step size
-        brownianParticleDynamics(){deltaT = 0.01; GPUcompute =true;Timestep = 0;Reproducible = false;};
+        brownianParticleDynamics(){deltaT = 0.01; GPUcompute =true;Timestep = 0;};
         //!additionally set the number of particles and initialize things
         brownianParticleDynamics(int N);
 
@@ -38,8 +38,6 @@ class brownianParticleDynamics : public simpleEquationOfMotion
         //! virtual function to allow the model to be a derived class
         virtual void set2DModel(shared_ptr<Simple2DModel> _model);
 
-        //!allow for whatever RNG initialization is needed
-        virtual void initializeGPURNGs(int globalSeed=0, int tempSeed=0);
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
         virtual void spatialSorting(const vector<int> &reIndexer);
 
@@ -50,7 +48,5 @@ class brownianParticleDynamics : public simpleEquationOfMotion
         Dscalar Temperature;
         //!The value of the inverse friction constant
         Dscalar mu;
-        //!An array random-number-generators for use on the GPU branch of the code
-        GPUArray<curandState> RNGs;
     };
 #endif

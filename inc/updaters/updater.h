@@ -39,6 +39,9 @@ class updater
 
         //!allow for spatial sorting to be called if necessary...
         virtual void spatialSorting(){};
+
+        //!Allow for a reproducibility call to be made
+        virtual void setReproducible(bool rep){};
     
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};
