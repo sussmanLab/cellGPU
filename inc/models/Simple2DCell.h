@@ -6,6 +6,7 @@
 #include "indexer.h"
 #include "gpubox.h"
 #include "HilbertSort.h"
+#include "noiseSource.h"
 
 /*! \file Simple2DCell.h */
 //! Implement data structures and functions common to many off-lattice models of cells in 2D
@@ -146,7 +147,7 @@ class Simple2DCell : public Simple2DModel
         GPUArray<int> CellType;
         //!A indexer for turning a pair of cells into a 1-D index
         Index2D cellTypeIndexer;
-        
+
         //!The current energy of the system; only updated when an explicit energy calculation is called (i.e. not by default each timestep)
         Dscalar Energy;
     //protected member variables

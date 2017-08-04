@@ -1,3 +1,6 @@
+#define ENABLE_CUDA
+#define NVCC
+
 #include "noiseSource.h"
 
 /*! \file noiseSource.cpp */

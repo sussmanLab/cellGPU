@@ -59,32 +59,38 @@ void Simulation::setIntegrationTimestep(Dscalar dt)
 void Simulation::setCPUOperation(bool setcpu)
     {
     auto cellConf = cellConfiguration.lock();
-    auto eom = equationOfMotion.lock();
     if (setcpu)
         {
         cellConf->setCPU();
-        eom->setCPU();
         USE_GPU = false;
         }
     else
         {
         cellConf->setGPU();
-        eom->setGPU();
         USE_GPU = true;
+        };
+
+    for (int u = 0; u < updaters.size(); ++u)
+        {
+        auto upd = updaters[u].lock();
+        if (setcpu)
+            upd->setCPU();
+        else
+            upd->setGPU();
         };
     };
 
 /*!
-\pre the equation of motion already knows if the GPU will be used
-\post the dynamics are set to be reproducible if the boolean is true, otherwise the RNG is initialized
+\pre the updaters already know if the GPU will be used
+\post the updaters are set to be reproducible if the boolean is true, otherwise the RNG is initialized
 */
 void Simulation::setReproducible(bool reproducible)
     {
-    auto eom = equationOfMotion.lock();
-    if (reproducible)
-        eom->setReproducible(true);
-    else
-        eom->setReproducible(false);
+    for (int u = 0; u < updaters.size(); ++u)
+        {
+        auto upd = updaters[u].lock();
+        upd->setReproducible(reproducible);
+        };
     };
 
 /*!
@@ -115,7 +121,7 @@ void Simulation::performTimestep()
     {
     integerTimestep += 1;
     Time += integrationTimestep;
-    
+
     //perform any updates, one of which should probably be an EOM
     for (int u = 0; u < updaters.size(); ++u)
         {

@@ -8,7 +8,6 @@
 #include "Simulation.h"
 #include "voronoi2d.h"
 #include "selfPropelledParticleDynamics.h"
-#include "DatabaseNetCDFSPV.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -88,8 +87,6 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"../test.nc");
-    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-    ncdat.WriteState(SPV);
 
 
     printf("starting initialization\n");
@@ -109,7 +106,6 @@ int main(int argc, char*argv[])
         if(ii%100 ==0)
             {
             printf("timestep %i\n",ii);
-            ncdat.WriteState(SPV);
             };
         sim->performTimestep();
         };
@@ -118,10 +114,7 @@ int main(int argc, char*argv[])
     cout << "timestep ~ " << steptime << " per frame; " << endl;
     cout << spv->reportq() << endl;
 
-    ncdat.WriteState(SPV);
 
-    ncdat.ReadState(SPV,0,true);
-    ncdat.WriteState(SPV);
     if(initializeGPU)
         cudaDeviceReset();
 
