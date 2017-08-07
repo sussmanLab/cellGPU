@@ -92,7 +92,7 @@ int main(int argc, char*argv[])
     sim->setConfiguration(avm);
     sim->setEquationOfMotion(spp,avm);
     sim->setIntegrationTimestep(dt);
-    sim->setSortPeriod(initSteps/10);
+//    sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
     sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);
@@ -124,8 +124,20 @@ int main(int argc, char*argv[])
     t2=clock();
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
 
-    avm->reportMeanVertexForce();
+    //avm->reportMeanVertexForce();
     cout << avm->reportq() << endl;
+
+    //For debugging...output the force on every vertex
+    if(program_switch <-5)
+        {
+        ncdat.WriteState(AVMparams);
+        avm->computeForces();
+        ArrayHandle<Dscalar2> vf(avm->vertexForces);
+        for (int ii = 0; ii < Nvert; ++ii)
+            {
+            cout << vf.data[ii].x  << "  "<< vf.data[ii].y << endl;
+            };
+        };
 
     if(initializeGPU)
         cudaDeviceReset();
