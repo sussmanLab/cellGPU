@@ -84,9 +84,9 @@ int main(int argc, char*argv[])
     avm->setCellPreferencesUniform(1.0,p0);
     avm->setv0Dr(v0,1.0);
 
-    shared_ptr<AVM2D> AVMparams = dynamic_pointer_cast<AVM2D>(avm);
-    AVMparams->setT1Threshold(0.04);
-    
+    shared_ptr<AVM2D> AVM = dynamic_pointer_cast<AVM2D>(avm);
+    AVM->setT1Threshold(0.04);
+
 
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(avm);
@@ -108,10 +108,10 @@ int main(int argc, char*argv[])
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {
             cout << timestep << endl;
-            ncdat.WriteState(AVMparams);
+            ncdat.WriteState(AVM);
             };
         };
-
+    AVM->reportMeanVertexForce(true);
     t1=clock();
     if(initializeGPU)
         cudaProfilerStart();
@@ -130,7 +130,7 @@ int main(int argc, char*argv[])
     //For debugging...output the force on every vertex
     if(program_switch <-5)
         {
-        ncdat.WriteState(AVMparams);
+        ncdat.WriteState(AVM);
         avm->computeForces();
         ArrayHandle<Dscalar2> vf(avm->vertexForces);
         for (int ii = 0; ii < Nvert; ++ii)
@@ -141,10 +141,6 @@ int main(int argc, char*argv[])
 
     if(initializeGPU)
         cudaDeviceReset();
-
-ofstream outfile;
-outfile.open("../timingAVM.txt",std::ios_base::app);
-outfile << numpts <<"\t" << (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << "\n";
 
     return 0;
     };

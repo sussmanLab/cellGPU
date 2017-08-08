@@ -41,9 +41,11 @@ Assign cell directors via a simple, reproducible RNG
 void Simple2DActiveCell::setCellDirectorsRandomly()
     {
     cellDirectors.resize(Ncells);
+    noiseSource noise;
+    noise.Reproducible = Reproducible;
     ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
-        h_cd.data[ii] = 2.0*PI/(Dscalar)(RAND_MAX)* (Dscalar)(rand()%RAND_MAX);
+        h_cd.data[ii] =noise.getRealUniform(0.0,2.0*PI);
     };
 
 /*!

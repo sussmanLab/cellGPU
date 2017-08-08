@@ -2,13 +2,13 @@
 
 ### Changes in progress
 
-....
+* Implement cell division in both vertex and Voronoi models
 
 ### version 0.6.1
 
 * system-wide refactoring into simulation components: updaters, configurations, pieces, and a Simulation to tie them together
 * added simple Brownian dynamics equation of motion
-* added a (somewhat specialized) calculation of the voronoi model dynamical matrix
+* added a (somewhat specialized) calculation of the quadratic voronoi model dynamical matrix
 
 ### version 0.6
 
@@ -22,8 +22,7 @@ common interface for MD
 
 ### version 0.5
 
-* Refactor class structure... Simple2DCell --> Simple2DActiveCell --> AVM2D and Simple2DActiveCell
---> DelaunayMD --> SPV2D
+* First major restructuring of class structure...
 
 ### cellGPU version 0.4
 
@@ -43,5 +42,5 @@ either the CPU or GPU; DelaunayMD provides a simple interface to an MD-like prot
 
 ### VoroGuppy version 0.1
 
-* "VoroGuppy" has a CPU implementation of Chen and Gotsman's  localized Delaunay triangulation,
+* "VoroGuppy" has a CPU implementation of Chen and Gotsman's localized Delaunay triangulation,
 comparisons with Shewchuck's Triangle program and a Bowyer-Watson implementation.

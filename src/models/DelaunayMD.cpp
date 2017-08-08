@@ -655,39 +655,3 @@ void DelaunayMD::writeTriangulation(ofstream &outfile)
     for (int ii = 0; ii < Ncells ; ++ii)
         outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
     };
-
-//"repel" calculates the displacement due to a harmonic soft repulsion between neighbors. Mostly for testing purposes, but it could be expanded to full functionality later
-void DelaunayMD::repel(GPUArray<Dscalar2> &disp,Dscalar eps)
-    {
-    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> dd(disp,access_location::host,access_mode::overwrite);
-    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::read);
-    Dscalar2 ftot;ftot.x=0.0;ftot.y=0.0;
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Dscalar2 dtot;dtot.x=0.0;dtot.y=0.0;
-        Dscalar2 posi = p.data[ii];
-        int imax = neighnum.data[ii];
-        for (int nn = 0; nn < imax; ++nn)
-            {
-            int idxpos = n_idx(nn,ii);
-            Dscalar2 posj = p.data[ns.data[idxpos]];
-            Dscalar2 d;
-            Box.minDist(posi,posj,d);
-
-            Dscalar norm = sqrt(d.x*d.x+d.y*d.y);
-            if (norm < 1)
-                {
-                dtot.x-=2*eps*d.x*(1.0-1.0/norm);
-                dtot.y-=2*eps*d.y*(1.0-1.0/norm);
-                };
-            };
-        int randmax = 1000000;
-        Dscalar xrand = eps*0.1*(-0.5+1.0/(Dscalar)randmax* (Dscalar)(rand()%randmax));
-        Dscalar yrand = eps*0.1*(-0.5+1.0/(Dscalar)randmax* (Dscalar)(rand()%randmax));
-        dd.data[ii]=dtot;
-        ftot.x+=dtot.x+xrand;
-        ftot.y+=dtot.y+yrand;
-        };
-    };

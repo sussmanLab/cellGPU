@@ -57,9 +57,6 @@ class DelaunayMD : public Simple2DActiveCell
         //!update the NieghIdxs data structure
         void updateNeighIdxs();
 
-        //!A very hacky and wrong soft-sphere repulsion between neighbors... strictly for testing purposes
-        void repel(GPUArray<Dscalar2> &disp,Dscalar eps);
-
     //protected functions
     protected:
         //!construct the global periodic triangulation point-by-point using non-CGAL methods

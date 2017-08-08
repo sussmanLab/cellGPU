@@ -51,6 +51,9 @@ class Simple2DCell : public Simple2DModel
         //!Set random cell positions, and set the periodic box to a square with average cell area=1
         void setCellPositionsRandomly();
 
+        //!allow for cell division, according to a vector of model-dependent parameters
+        virtual void cellDivision(vector<int> &parameters){};
+
         //!Set cell positions according to a user-specified vector
         void setCellPositions(vector<Dscalar2> newCellPositions);
         //!Set vertex positions according to a user-specified vector
@@ -258,7 +261,7 @@ class Simple2DCell : public Simple2DModel
         //!Report the current average force on each cell
         void reportMeanCellForce(bool verbose);
         //!Report the current average force per vertex...should be close to zero
-        void reportMeanVertexForce()
+        void reportMeanVertexForce(bool verbose = false)
                 {
                 ArrayHandle<Dscalar2> f(vertexForces,access_location::host,access_mode::read);
                 Dscalar fx= 0.0;
@@ -267,6 +270,8 @@ class Simple2DCell : public Simple2DModel
                     {
                     fx += f.data[i].x;
                     fy += f.data[i].y;
+                    if (verbose)
+                        printf("vertex %i force = (%g,%g)\n",i,f.data[i].x,f.data[i].y);
                     };
                 printf("mean force = (%g,%g)\n",fx/Nvertices, fy/Nvertices);
                 };
