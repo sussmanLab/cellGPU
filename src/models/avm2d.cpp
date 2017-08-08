@@ -63,12 +63,6 @@ void AVM2D::Initialize(int n,bool spvInitialize)
     growCellVertexListAssist.resize(1);
     ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);
     h_grow.data[0]=0;
-
-    //initialize the vectors passed to the e.o.m.s
-    IntArrayInfo.push_back(vertexCellNeighbors);
-    DscalarArrayInfo.push_back(cellDirectors);
-    Dscalar2ArrayInfo.push_back(vertexForces);
-    Dscalar2ArrayInfo.push_back(Motility);
     };
 
 /*!
