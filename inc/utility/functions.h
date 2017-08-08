@@ -194,9 +194,9 @@ HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, 
 
     //compute the area of the triangle to know if it is positive (convex cell) or not
 //    Dscalar TriAreaTimes2 = -vnext.x*vlast.y+vcur.y*(vnext.x-vlast.x)+vcur.x*(vlast.y-vnext.x)+vlast.x+vnext.y;
-    Dscalar TriAreaTimes2 = dlast.x*dnext.y - dlast.y*dnext.x;
-    dEdv.x = 2.0*(computeSignNoCast(TriAreaTimes2)*Adiff*dAdv.x + Pdiff*dPdv.x);
-    dEdv.y = 2.0*(computeSignNoCast(TriAreaTimes2)*Adiff*dAdv.y + Pdiff*dPdv.y);
+//    Dscalar TriAreaTimes2 = dlast.x*dnext.y - dlast.y*dnext.x;
+    dEdv.x = 2.0*(Adiff*dAdv.x + Pdiff*dPdv.x);
+    dEdv.y = 2.0*(Adiff*dAdv.y + Pdiff*dPdv.y);
     }
 
 //!Calculate which quadrant the point (x,y) is in

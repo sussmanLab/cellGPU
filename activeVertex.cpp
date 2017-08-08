@@ -111,6 +111,7 @@ int main(int argc, char*argv[])
             ncdat.WriteState(AVMparams);
             };
         };
+    avm->reportMeanVertexForce();
 
     t1=clock();
     if(initializeGPU)
@@ -132,10 +133,65 @@ int main(int argc, char*argv[])
         {
         ncdat.WriteState(AVMparams);
         avm->computeForces();
+        Dscalar Ei = avm->quadraticEnergy();
         ArrayHandle<Dscalar2> vf(avm->vertexForces);
+        Dscalar delX = 0.00000001;
+        Dscalar2 zero; zero.x=0.0;zero.y=0.0;
+        Dscalar2 dx; dx.x=delX; dx.y = 0.0;
+        Dscalar2 mdx; mdx.x=-delX; mdx.y = 0.0;
+        Dscalar2 dy; dy.x=0.0; dy.y = delX;
+        Dscalar2 mdy; mdy.y=-delX; mdy.x = 0.0;
         for (int ii = 0; ii < Nvert; ++ii)
             {
-            cout << vf.data[ii].x  << "  "<< vf.data[ii].y << endl;
+            GPUArray<Dscalar2> disps;
+            disps.resize(Nvert);
+            {
+            ArrayHandle<Dscalar2> hd(disps);
+            for (int ii = 0; ii < Nvert; ++ii) hd.data[ii]=zero;
+            };
+                {
+                ArrayHandle<Dscalar2> hd(disps);
+                hd.data[ii]=dx;
+                }
+            avm->moveDegreesOfFreedom(disps);
+            AVMparams->computeGeometryCPU();
+            Dscalar fxNumerical=(Ei-avm->quadraticEnergy())/delX;
+                {
+                ArrayHandle<Dscalar2> hd(disps);
+                hd.data[ii]=mdx;
+                }
+            avm->moveDegreesOfFreedom(disps);
+            AVMparams->computeGeometryCPU();
+            Dscalar fxdiff = fxNumerical - vf.data[ii].x;
+            if (abs(fxdiff) > 1e-5) 
+                printf("Fx error: %i\t %f \n",ii,fxdiff);
+            //cout << fxNumerical <<"   " << vf.data[ii].x  << "  "<< vf.data[ii].y << endl;
+            };
+        for (int ii = 0; ii < Nvert; ++ii)
+            {
+            GPUArray<Dscalar2> disps;
+            disps.resize(Nvert);
+            {
+            ArrayHandle<Dscalar2> hd(disps);
+            for (int ii = 0; ii < Nvert; ++ii) hd.data[ii]=zero;
+            };
+                {
+                ArrayHandle<Dscalar2> hd(disps);
+                hd.data[ii]=dy;
+                }
+            avm->moveDegreesOfFreedom(disps);
+            AVMparams->computeGeometryCPU();
+            Dscalar fyNumerical=(Ei-avm->quadraticEnergy())/delX;
+                {
+                ArrayHandle<Dscalar2> hd(disps);
+                hd.data[ii]=mdy;
+                }
+            avm->moveDegreesOfFreedom(disps);
+            AVMparams->computeGeometryCPU();
+            Dscalar fydiff = fyNumerical - vf.data[ii].y;
+            if (abs(fydiff) > 1e-6) 
+                printf("Fy error: %i\t %g \n",ii,fydiff);
+            //cout << fxNumerical <<"   " << vf.data[ii].x  << "  "<< vf.data[ii].y << endl;
             };
         };
 
