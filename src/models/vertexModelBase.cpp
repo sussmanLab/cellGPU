@@ -180,4 +180,123 @@ indices of the vertices being targeted
 */
 void vertexModelBase::cellDivision(vector<int> &parameters)
     {
+    int cellIdx = parameters[0];
+    if(cellIdx >= Ncells)
+        {
+        printf("\nError in cell division. File %s at line %d\n",__FILE__,__LINE__);
+        throw std::exception();
+        };
+
+    int v1 = parameters[1];
+    int v2 = parameters[2];
+
+    Dscalar2 cellPos;
+    Dscalar2 newV1Pos,newV2Pos;
+    int v1idx, v2idx, v1NextIdx, v2NextIdx;
+    int newV1CellNeighbor, newV2CellNeighbor;
+
+    {//scope for array handles
+    ArrayHandle<Dscalar2> vP(vertexPositions);
+    ArrayHandle<int> cellVertNum(cellVertexNum);
+    ArrayHandle<int> cv(cellVertices);
+    ArrayHandle<int> vcn(vertexCellNeighbors);
+
+    int neighs = cellVertNum.data[cellIdx];
+    if(v1 >= neighs || v2 >=neighs)
+        {
+        printf("\nError in cell division. File %s at line %d\n",__FILE__,__LINE__);
+        throw std::exception();
+        };
+
+    v1idx = cv.data[n_idx(v1,cellIdx)];
+    v2idx = cv.data[n_idx(v2,cellIdx)];
+    if (v1idx < neighs - 1)
+        v1NextIdx = cv.data[n_idx(v1+1,cellIdx)];
+    else
+        v1NextIdx = cv.data[n_idx(0,cellIdx)];
+    if (v2idx < neighs - 1)
+        v2NextIdx = cv.data[n_idx(v2+1,cellIdx)];
+    else
+        v2NextIdx = cv.data[n_idx(0,cellIdx)];
+
+    //find the positions of the new vertices
+    Dscalar2 disp;
+    Box.minDist(vP.data[v1NextIdx],vP.data[v1idx],disp);
+    disp.x = 0.5*disp.x;
+    disp.y = 0.5*disp.y;
+    newV1Pos = vP.data[v1idx] + disp;
+    Box.putInBoxReal(newV1Pos);
+    Box.minDist(vP.data[v2NextIdx],vP.data[v2idx],disp);
+    disp.x = 0.5*disp.x;
+    disp.y = 0.5*disp.y;
+    newV2Pos = vP.data[v2idx] + disp;
+    Box.putInBoxReal(newV2Pos);
+
+    //find the third cell neighbor of the new vertices
+    int ans = -1;
+    for (int vi = 3*v1idx; vi < 3*v1idx+3; ++vi)
+        for (int vj = 3*v1NextIdx; vj < 3*v1NextIdx+3; ++vj)
+            {
+            int c1 = vcn.data[vi];
+            int c2 = vcn.data[vj];
+            if ((c1 == c2) &&(c1 != cellIdx))
+                ans = c1;
+            };
+    if (ans >=0)
+        newV1CellNeighbor = ans;
+    else
+        {
+        printf("\nError in cell division. File %s at line %d\n",__FILE__,__LINE__);
+        throw std::exception();
+        };
+
+    ans = -1;
+    for (int vi = 3*v2idx; vi < 3*v2idx+3; ++vi)
+        for (int vj = 3*v2NextIdx; vj < 3*v2NextIdx+3; ++vj)
+            {
+            int c1 = vcn.data[vi];
+            int c2 = vcn.data[vj];
+            if ((c1 == c2) &&(c1 != cellIdx))
+                ans = c1;
+            };
+    if (ans >=0)
+        newV2CellNeighbor = ans;
+    else
+        {
+        printf("\nError in cell division. File %s at line %d\n",__FILE__,__LINE__);
+        throw std::exception();
+        };
+
+
+    }
+
+    Ncells += 1;
+    Nvertices += 2;
+
+
+
+    /*
+    vertexPositions[nv]; //need to add new positions
+    vertexForces[nv]; //just change length
+    displacements[nv]; //just change length
+
+    vertexEdgeFlips[3nv]; //init to zero
+    vertexEdgeFlipsCurrent[3nv]; // init to zero
+    vertexForceSets[3nv]; //init to zero
+    vertexNeighbors[3nv]; //initialize to the neighbors
+    vertexCellNeighbors[3nv]; //initialize and reset correctly
+
+    voroCur[3nv]; //just change length
+    voroLastNext[3nv]; //just change length
+
+    cellVertexNum[Ncells]; //compute for new and affected cells
+    //has vertexMax changed?
+    n_idx = Index2D(vertexMax,Ncells);
+    cellVertices[Ncells*vertexMax]; //need to update correctly
+
+    AreaPeri[Ncells]; // ccompute geom will be called after, so just change length
+    //MODULI if they are implemented in Simple2DCell.h
+
+     */
+
     };
