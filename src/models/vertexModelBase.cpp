@@ -194,6 +194,7 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     Dscalar2 newV1Pos,newV2Pos;
     int v1idx, v2idx, v1NextIdx, v2NextIdx;
     int newV1CellNeighbor, newV2CellNeighbor;
+    bool increaseVertexMax = false;
 
     {//scope for array handles
     ArrayHandle<Dscalar2> vP(vertexPositions);
@@ -267,8 +268,11 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
         throw std::exception();
         };
 
-
-    }
+    if(cellVertNum.data[newV1CellNeighbor] + 1 >=vertexMax)
+        increaseVertexMax = true;
+    if(cellVertNum.data[newV2CellNeighbor] + 1 >=vertexMax)
+        increaseVertexMax = true;
+    }//end scope of old array handles... new vertices and cells identified
 
     Ncells += 1;
     Nvertices += 2;
