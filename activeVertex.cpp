@@ -111,7 +111,7 @@ int main(int argc, char*argv[])
             ncdat.WriteState(AVM);
             };
         };
-    AVM->reportMeanVertexForce(true);
+//    AVM->reportMeanVertexForce(true);
     t1=clock();
     if(initializeGPU)
         cudaProfilerStart();
@@ -153,14 +153,14 @@ int main(int argc, char*argv[])
                 hd.data[ii]=dx;
                 }
             avm->moveDegreesOfFreedom(disps);
-            AVMparams->computeGeometryCPU();
+            AVM->computeGeometryCPU();
             Dscalar fxNumerical=(Ei-avm->quadraticEnergy())/delX;
                 {
                 ArrayHandle<Dscalar2> hd(disps);
                 hd.data[ii]=mdx;
                 }
             avm->moveDegreesOfFreedom(disps);
-            AVMparams->computeGeometryCPU();
+            AVM->computeGeometryCPU();
             Dscalar fxdiff = fxNumerical - vf.data[ii].x;
             if (abs(fxdiff) > 1e-5) 
                 printf("Fx error: %i\t %f \n",ii,fxdiff);
@@ -179,14 +179,14 @@ int main(int argc, char*argv[])
                 hd.data[ii]=dy;
                 }
             avm->moveDegreesOfFreedom(disps);
-            AVMparams->computeGeometryCPU();
+            AVM->computeGeometryCPU();
             Dscalar fyNumerical=(Ei-avm->quadraticEnergy())/delX;
                 {
                 ArrayHandle<Dscalar2> hd(disps);
                 hd.data[ii]=mdy;
                 }
             avm->moveDegreesOfFreedom(disps);
-            AVMparams->computeGeometryCPU();
+            AVM->computeGeometryCPU();
             Dscalar fydiff = fyNumerical - vf.data[ii].y;
             if (abs(fydiff) > 1e-6) 
                 printf("Fy error: %i\t %g \n",ii,fydiff);
