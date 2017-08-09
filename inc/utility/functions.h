@@ -60,6 +60,36 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
 
     };
 
+//!grow a GPUArray, leaving the current elements the same but with extra capacity at the end of the array
+template<typename T>
+inline __attribute__((always_inline)) void growGPUArray(GPUArray<T> &data, int extraElements)
+    {
+    int n = data.getNumElements();
+    GPUArray<T> newData;
+    newData.resize(n+extraElements);
+    {//scope for array handles
+    ArrayHandle<T> h(data,access_location::host,access_mode::readwrite);
+    ArrayHandle<T> hnew(newData,access_location::host,access_mode::overwrite);
+    for (int i = 0; i < n; ++i)
+        hnew.data[i] = h.data[i];
+    };
+    //no need to resize?
+    data.swap(newData);
+    };
+
+//!fill the first data.size() elements of a GPU array with elements of the data vector
+template<typename T>
+inline __attribute__((always_inline)) void fillGPUArrayWithVector(vector<T> &data, GPUArray<T> &copydata)
+    {
+    int Narray = copydata.getNumElements();
+    int Nvector = data.size();
+    if (Nvector > Narray)
+        copydata.resize(Nvector);
+    ArrayHandle<T> handle(copydata,access_location::host,access_mode::overwrite);
+    for (int i = 0; i < Nvector; ++i)
+        handle.data[i] = data[i];
+    };
+
 //!copy a GPUarray to a vector
 template<typename T>
 inline __attribute__((always_inline)) void copyGPUArrayData(GPUArray<T> &data, vector<T> &copydata)

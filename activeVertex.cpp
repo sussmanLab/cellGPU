@@ -25,10 +25,10 @@ int main(int argc, char*argv[])
     int tSteps = 5;
     int initSteps = 0;
 
-    Dscalar dt = 0.1;
-    Dscalar p0 = 4.0;
+    Dscalar dt = 0.01;
+    Dscalar p0 = 3.84;
     Dscalar a0 = 1.0;
-    Dscalar v0 = 0.1;
+    Dscalar v0 = 0.01;
     Dscalar Dr = 1.0;
     Dscalar gamma = 0.0;
 

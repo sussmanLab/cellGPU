@@ -225,7 +225,7 @@ This simple version of cell division will take a cell and two specified vertices
 clockwise from each of the two vertices will gain a new vertex in the middle of those edges. A new cell is formed by connecting those two new vertices together.
 The vector of "parameters" here should be three integers:
 parameters[0] = the index of the cell to undergo a division event
-parameters[1] = the first vertex to gain a new (clockwise) vertex neighbor. 
+parameters[1] = the first vertex to gain a new (clockwise) vertex neighbor.
 parameters[2] = the second .....
 The two vertex numbers should be between 0 and celLVertexNum[parameters[0]], respectively, NOT the
 indices of the vertices being targeted
@@ -240,8 +240,8 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
         throw std::exception();
         };
 
-    int v1 = parameters[1];
-    int v2 = parameters[2];
+    int v1 = min(parameters[1],parameters[2]);
+    int v2 = max(parameters[1],parameters[2]);
 
     Dscalar2 cellPos;
     Dscalar2 newV1Pos,newV2Pos;
@@ -329,43 +329,58 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     //update cell and vertex number; have access to both new and old indexer if vertexMax changes
     Index2D n_idxOld(vertexMax,Ncells);
     if (increaseVertexMax)
+        {
+        printf("vm adjust\n");
         vertexMax += 2;
+        };
     Ncells += 1;
     Nvertices += 2;
     n_idx = Index2D(vertexMax,Ncells);
 
+    //additions to the spatial sorting vectors...
+    itt.push_back(Ncells-1);
+    tti.push_back(Ncells-1);
+    tagToIdx.push_back(Ncells-1);
+    idxToTag.push_back(Ncells-1);
+    ittVertex.push_back(Nvertices-2); ittVertex.push_back(Nvertices-1);
+    ttiVertex.push_back(Nvertices-2); ttiVertex.push_back(Nvertices-1);
+    tagToIdxVertex.push_back(Nvertices-2); tagToIdxVertex.push_back(Nvertices-1);
+    idxToTagVertex.push_back(Nvertices-2); idxToTagVertex.push_back(Nvertices-1);
+
     //GPUArrays that just need their length changed
     vertexForces.resize(Nvertices);
     displacements.resize(Nvertices);
-    initializeEdgeFlipLists();
+    initializeEdgeFlipLists(); //function call takes care of EdgeFlips and EdgeFlipsCurrent
     vertexForceSets.resize(3*Nvertices);
     voroCur.resize(3*Nvertices);
     voroLastNext.resize(3*Nvertices);
     AreaPeri.resize(Ncells);
 
-    //get temporary copies of all of the arrays
-    vector<Dscalar2> vertexPositionsVec;
-    vector<int> vertexNeighborsVec, vertexCellNeighborsVec;
-    vector<int>  cellVertexNumVec, cellVerticesVec;
-    vector<Dscalar2> AreaPeriPreferencesVec,MotilityVec;
-    //MODULI if they are implemented in Simple2DCell.h
-
-    copyGPUArrayData(vertexPositions,vertexPositionsVec);
-    copyGPUArrayData(vertexNeighbors,vertexNeighborsVec);
-    copyGPUArrayData(vertexCellNeighbors,vertexCellNeighborsVec);
-    copyGPUArrayData(cellVertexNum,cellVertexNumVec);
+    //use the copy and grow mechanism where we need to actually set values
+    growGPUArray(vertexPositions,2); //(nv)
+    growGPUArray(vertexNeighbors,6); //(3*nv)
+    growGPUArray(vertexCellNeighbors,6); //(3*nv)
+    growGPUArray(cellVertexNum,1); //(nc)
+    growGPUArray(AreaPeriPreferences,1); //(nc)
+    growGPUArray(Motility,1); //(nc)
+    //ADD MODULI if they are implemented in Simple2DCell.h
+    //the index cellVertices array needs more care...
+    vector<int>  cellVerticesVec;
     copyGPUArrayData(cellVertices,cellVerticesVec);
-    copyGPUArrayData(AreaPeriPreferences,AreaPeriPreferencesVec);
-    copyGPUArrayData(Motility,MotilityVec);
 
+    //first, let's take care of the trivial things
+        {//arrayhandle scope
+        ArrayHandle<Dscalar2> h_mot(Motility); h_mot.data[Ncells-1] = h_mot.data[cellIdx];
+        ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
+        ArrayHandle<Dscalar2> h_vp(vertexPositions);
+        h_vp.data[Nvertices-2] = newV1Pos; 
+        h_vp.data[Nvertices-1] = newV2Pos; 
+        }
     /*
-    vertexPositions[nv]; //need to add new positions
-    vertexNeighbors[3nv]; //initialize to the neighbors
+    vertexNeighbors[3nv]; //initialize to the neighbors and reset correctly
     vertexCellNeighbors[3nv]; //initialize and reset correctly
 
     cellVertexNum[Ncells]; //compute for new and affected cells
-    AreaPeriPref[Ncells]; // compute geom will be called after, so just change length
-    motility(Ncells];
 
     cellVertices[Ncells*vertexMax]; //need to update correctly
     */
