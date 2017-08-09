@@ -188,57 +188,6 @@ void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
    };
 
 /*!
- Initialize the auxilliary edge flip data structures to zero
- */
-void AVM2D::initializeEdgeFlipLists()
-    {
-    vertexEdgeFlips.resize(3*Nvertices);
-    vertexEdgeFlipsCurrent.resize(3*Nvertices);
-    ArrayHandle<int> h_vflip(vertexEdgeFlips,access_location::host,access_mode::overwrite);
-    ArrayHandle<int> h_vflipc(vertexEdgeFlipsCurrent,access_location::host,access_mode::overwrite);
-    for (int i = 0; i < 3*Nvertices; ++i)
-        {
-        h_vflip.data[i]=0;
-        h_vflipc.data[i]=0;
-        }
-
-    finishedFlippingEdges.resize(1);
-    ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::overwrite);
-    h_ffe.data[0]=0;
-    };
-
-/*!
-when a T1 transition increases the maximum number of vertices around any cell in the system,
-call this function first to copy over the cellVertices structure into a larger array
- */
-void AVM2D::growCellVerticesList(int newVertexMax)
-    {
-    cout << "maximum number of vertices per cell grew from " <<vertexMax << " to " << newVertexMax << endl;
-    vertexMax = newVertexMax+1;
-    Index2D old_idx = n_idx;
-    n_idx = Index2D(vertexMax,Ncells);
-
-    GPUArray<int> newCellVertices;
-    newCellVertices.resize(vertexMax*Ncells);
-    {//scope for array handles
-    ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n_old(cellVertices,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(newCellVertices,access_location::host,access_mode::readwrite);
-
-    for(int cell = 0; cell < Ncells; ++cell)
-        {
-        int neighs = h_nn.data[cell];
-        for (int n = 0; n < neighs; ++n)
-            {
-            h_n.data[n_idx(n,cell)] = h_n_old.data[old_idx(n,cell)];
-            };
-        };
-    };//scope for array handles
-    cellVertices.resize(vertexMax*Ncells);
-    cellVertices.swap(newCellVertices);
-    };
-
-/*!
  *When sortPeriod < 0 this routine does not get called
  \post vertices are re-ordered according to a Hilbert sorting scheme, cells are reordered according
  to what vertices they are near, and all data structures are updated
