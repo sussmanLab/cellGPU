@@ -5,11 +5,18 @@
 #include "Simple2DActiveCell.h"
 #include "functions.h"
 
+/*! \file vertexModelBase.h */
+//!A class that can calculate many geometric and topological features common to vertex models
+/*!
+This class captures many energy-functional-independent features common to 2D vertex models of cells.
+It can compute geometric features of cells, such as their area and perimeter; it knows that in vertex
+models the degrees of freedom are the vertices (for returning the right vector of forces, moving
+d.o.f. around, etc.); and it is where a geometric form of cell division is implemented.
+ */
+
 class vertexModelBase : public Simple2DActiveCell
     {
     public:
-
-        //virtual functions that need to be implemented
         //!In vertex models the number of degrees of freedom is the number of vertices
         virtual int getNumberOfDegreesOfFreedom(){return Nvertices;};
 
