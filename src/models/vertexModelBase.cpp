@@ -381,8 +381,8 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
         ArrayHandle<Dscalar2> h_mot(Motility); h_mot.data[Ncells-1] = h_mot.data[cellIdx];
         ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
         ArrayHandle<Dscalar2> h_vp(vertexPositions);
-        h_vp.data[Nvertices-2] = newV1Pos; 
-        h_vp.data[Nvertices-1] = newV2Pos; 
+        h_vp.data[Nvertices-2] = newV1Pos;
+        h_vp.data[Nvertices-1] = newV2Pos;
         }
 
     //the vertex-vertex neighbors
@@ -412,7 +412,7 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
 
     //for computing vertex-cell neighbors and cellVertices, recall that combinedVertices is a list:
     //v0, v1.. newvertex 1... newvertex2 ... v_old_last_vertex
-    //for convenience, rotate this so that it is newvertex1 ... newvertex2, (other vertices), and 
+    //for convenience, rotate this so that it is newvertex1 ... newvertex2, (other vertices), and
     //create another vector that is newvertex2...newvertex1, (other vertices)
     for (int i = 0; i < neighs+2; ++i) cout << combinedVertices[i] << ",  ";
     cout << endl;
@@ -445,7 +445,7 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
                 if(h_vcn.data[3*combinedVertices[i]+vv] == cellIdx)
                     h_vcn.data[3*combinedVertices[i]+vv] = Ncells-1;
         };
-    
+
     // finally, reset the vertices associated with every cell
         {//arrayHandle scope
         ArrayHandle<int> cv(cellVertices);

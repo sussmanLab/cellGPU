@@ -1,15 +1,15 @@
 #define ENABLE_CUDA
 
 #include "cuda_runtime.h"
-#include "DelaunayMD.h"
-#include "DelaunayMD.cuh"
+#include "voronoiModelBase.h"
+#include "voronoiModelBase.cuh"
 
-/*! \file DelaunayMD.cpp */
+/*! \file voronoiModelBase.cpp */
 
 /*!
 A simple constructor that sets many of the class member variables to zero
 */
-DelaunayMD::DelaunayMD() :
+voronoiModelBase::voronoiModelBase() :
     cellsize(1.25), timestep(0),repPerFrame(0.0),skippedFrames(0),
     neighMax(0),neighMaxChange(false),GlobalFixes(0),globalOnly(true)
     {
@@ -22,7 +22,7 @@ DelaunayMD::DelaunayMD() :
  * a function that takes care of the initialization of the class.
  * \param n the number of cells to initialize
  */
-void DelaunayMD::initializeDelMD(int n)
+void voronoiModelBase::initializeDelMD(int n)
     {
     GPUcompute = true;
 
@@ -68,7 +68,7 @@ The GPU moves the location of points in the GPU memory... this gets a local copy
 by the DelaunayLoc class
 \post the DelaunayLoc class has the updated set of cell positions, and its cell list is initialized
 */
-void DelaunayMD::resetDelLocPoints()
+void voronoiModelBase::resetDelLocPoints()
     {
     ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
     delLoc.setPoints(h_points,Ncells);
@@ -78,7 +78,7 @@ void DelaunayMD::resetDelLocPoints()
 /*!
 \post the cell list is updated according to the current cell positions
 */
-void DelaunayMD::updateCellList()
+void voronoiModelBase::updateCellList()
     {
 
     if(GPUcompute)
@@ -112,7 +112,7 @@ Displace cells on the CPU
 \param displacements a vector of Dscalar2 specifying how much to move every cell
 \post the cells are displaced according to the input vector, and then put back in the main unit cell.
 */
-void DelaunayMD::movePointsCPU(GPUArray<Dscalar2> &displacements)
+void voronoiModelBase::movePointsCPU(GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_d(displacements,access_location::host,access_mode::read);
@@ -129,7 +129,7 @@ Displace cells on the GPU
 \param displacements a vector of Dscalar2 specifying how much to move every cell
 \post the cells are displaced according to the input vector, and then put back in the main unit cell.
 */
-void DelaunayMD::movePoints(GPUArray<Dscalar2> &displacements)
+void voronoiModelBase::movePoints(GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::readwrite);
@@ -147,7 +147,7 @@ Displace cells on either the GPU or CPU, according to the flag
 \param displacements a vector of Dscalar2 specifying how much to move every cell
 \post the cells are displaced according to the input vector, and then put back in the main unit cell.
 */
-void DelaunayMD::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
+void voronoiModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
     {
     if (GPUcompute)
         movePoints(displacements);
@@ -159,7 +159,7 @@ void DelaunayMD::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
 The DelaunayLoc and DelaunayNP classes are invoked to performed to determine the Delaunay
 triangulation of the entire periodic domain.
 */
-void DelaunayMD::fullTriangulation(bool verbose)
+void voronoiModelBase::fullTriangulation(bool verbose)
     {
     GlobalFixes +=1;
     completeRetriangulationPerformed = 1;
@@ -234,7 +234,7 @@ square periodic domain this method is, obviously, better than the version writte
 should be the default option. In addition to performing a triangulation, the function also automatically
 calls updateNeighIdxs and getCircumcenterIndices/
 */
-void DelaunayMD::globalTriangulationCGAL(bool verbose)
+void voronoiModelBase::globalTriangulationCGAL(bool verbose)
     {
     GlobalFixes +=1;
     completeRetriangulationPerformed = 1;
@@ -310,7 +310,7 @@ void DelaunayMD::globalTriangulationCGAL(bool verbose)
 \post the NeighIdx data structure is updated, which helps cut down on the number of inactive
 threads in the force set computation function
 */
-void DelaunayMD::updateNeighIdxs()
+void voronoiModelBase::updateNeighIdxs()
     {
     ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int2> h_nidx(NeighIdxs,access_location::host,access_mode::overwrite);
@@ -333,7 +333,7 @@ Converts the neighbor list data structure into a list of the three particle indi
 all of the circumcenters in the triangulation. Keeping this version of the topology on the GPU
 allows for fast testing of what points need to be retriangulated.
 */
-void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
+void voronoiModelBase::getCircumcenterIndices(bool secondtime, bool verbose)
     {
     ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::read);
@@ -382,7 +382,7 @@ void DelaunayMD::getCircumcenterIndices(bool secondtime, bool verbose)
 Given a list of particle indices that need to be repaired, call CGAL to figure out their neighbors
 and then update the relevant data structures.
 */
-void DelaunayMD::repairTriangulation(vector<int> &fixlist)
+void voronoiModelBase::repairTriangulation(vector<int> &fixlist)
     {
     int fixes = fixlist.size();
     repPerFrame += ((Dscalar) fixes/(Dscalar)Ncells);
@@ -467,7 +467,7 @@ triangulation from the last time step is still valid?). Note that because gpu_te
 circumcircle come back non-empty?" for the cpu) this function is always an implicit cuda
 synchronization event. At least until non-default streams are added to the code.
 */
-void DelaunayMD::testTriangulation()
+void voronoiModelBase::testTriangulation()
     {
     //first, update the cell list, and set the cc test to 0
     updateCellList();
@@ -509,7 +509,7 @@ relatively poor performance of the 1-ring calculation in DelaunayLoc, it is some
 to just re-triangulate the entire point set with CGAL. At the moment that is the default
 behavior of the cpu branch.
 */
-void DelaunayMD::testTriangulationCPU()
+void voronoiModelBase::testTriangulationCPU()
     {
     ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::readwrite);
     h_actf.data[0]=0;
@@ -552,7 +552,7 @@ This function calls the relevant testing and repairing functions, and increments
 by one. Note that the call to testTriangulation will always synchronize the gpu (via a memcpy of
 the "anyCircumcenterTestFailed" variable)
 */
-void DelaunayMD::testAndRepairTriangulation(bool verb)
+void voronoiModelBase::testAndRepairTriangulation(bool verb)
     {
     timestep +=1;
 
@@ -618,7 +618,7 @@ void DelaunayMD::testAndRepairTriangulation(bool verb)
     };
 
 //read a triangulation from a text file...used only for testing purposes. Any other use should call the Database class (see inc/Database.h")
-void DelaunayMD::readTriangulation(ifstream &infile)
+void voronoiModelBase::readTriangulation(ifstream &infile)
     {
     string line;
     getline(infile,line);
@@ -648,10 +648,230 @@ void DelaunayMD::readTriangulation(ifstream &infile)
     };
 
 //similarly, write a text file with particle positions. This is often called when an exception is thrown
-void DelaunayMD::writeTriangulation(ofstream &outfile)
+void voronoiModelBase::writeTriangulation(ofstream &outfile)
     {
     ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
     outfile << Ncells <<endl;
     for (int ii = 0; ii < Ncells ; ++ii)
         outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
     };
+
+/*!
+\pre Topology is up-to-date on the CPU
+\post geometry and voronoi neighbor locations are computed for the current configuration
+*/
+void voronoiModelBase::computeGeometryCPU()
+    {
+    //read in all the data we'll need
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+
+    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::overwrite);
+
+    for (int i = 0; i < Ncells; ++i)
+        {
+        //get Delaunay neighbors of the cell
+        int neigh = h_nn.data[i];
+        vector<int> ns(neigh);
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            ns[nn]=h_n.data[n_idx(nn,i)];
+            };
+
+        //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
+        vector<Dscalar2> voro(neigh);
+        Dscalar2 circumcent;
+        Dscalar2 nnextp,nlastp;
+        Dscalar2 pi = h_p.data[i];
+        Dscalar2 rij, rik;
+
+        nlastp = h_p.data[ns[ns.size()-1]];
+        Box.minDist(nlastp,pi,rij);
+        for (int nn = 0; nn < neigh;++nn)
+            {
+            nnextp = h_p.data[ns[nn]];
+            Box.minDist(nnextp,pi,rik);
+            Circumcenter(rij,rik,circumcent);
+            voro[nn] = circumcent;
+            rij=rik;
+            int id = n_idx(nn,i);
+            h_v.data[id] = voro[nn];
+            };
+
+        Dscalar2 vlast,vnext;
+        //compute Area and perimeter
+        Dscalar Varea = 0.0;
+        Dscalar Vperi = 0.0;
+        vlast = voro[neigh-1];
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            vnext=voro[nn];
+            Varea += TriangleArea(vlast,vnext);
+            Dscalar dx = vlast.x-vnext.x;
+            Dscalar dy = vlast.y-vnext.y;
+            Vperi += sqrt(dx*dx+dy*dy);
+            vlast=vnext;
+            };
+        h_AP.data[i].x = Varea;
+        h_AP.data[i].y = Vperi;
+        };
+    };
+
+/*!
+\pre The topology of the Delaunay triangulation is up-to-date on the GPU
+\post calculate all cell areas, perimenters, and voronoi neighbors
+*/
+void voronoiModelBase::computeGeometryGPU()
+    {
+    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
+    ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_n(cellNeighbors,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::overwrite);
+    ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::overwrite);
+
+    gpu_compute_voronoi_geometry(
+                        d_p.data,
+                        d_AP.data,
+                        d_nn.data,
+                        d_n.data,
+                        d_vc.data,
+                        d_vln.data,
+                        Ncells, n_idx,Box);
+    };
+
+/*!
+As the code is modified, all GPUArrays whose size depend on neighMax should be added to this function
+\post voroCur,voroLastNext, delSets, delOther, and forceSets grow to size neighMax*Ncells
+*/
+void voronoiModelBase::resetLists()
+    {
+    voroCur.resize(neighMax*Ncells);
+    voroLastNext.resize(neighMax*Ncells);
+    delSets.resize(neighMax*Ncells);
+    delOther.resize(neighMax*Ncells);
+    forceSets.resize(neighMax*Ncells);
+    };
+
+/*!
+\param i the cell in question
+\post the delSet and delOther data structure for cell i is updated. Recall that
+delSet.data[n_idx(nn,i)] is an int2; the x and y parts store the index of the previous and next
+Delaunay neighbor, ordered CCW. delOther contains the mutual neighbor of delSet.data[n_idx(nn,i)].y
+and delSet.data[n_idx(nn,i)].z that isn't cell i
+*/
+bool voronoiModelBase::getDelSets(int i)
+    {
+    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int2> ds(delSets,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> dother(delOther,access_location::host,access_mode::readwrite);
+
+    int iNeighs = neighnum.data[i];
+    int nm2,nm1,n1,n2;
+    nm2 = ns.data[n_idx(iNeighs-3,i)];
+    nm1 = ns.data[n_idx(iNeighs-2,i)];
+    n1 = ns.data[n_idx(iNeighs-1,i)];
+
+    for (int nn = 0; nn < iNeighs; ++nn)
+        {
+        n2 = ns.data[n_idx(nn,i)];
+        int nextNeighs = neighnum.data[n1];
+        for (int nn2 = 0; nn2 < nextNeighs; ++nn2)
+            {
+            int testPoint = ns.data[n_idx(nn2,n1)];
+            if(testPoint == nm1)
+                {
+                dother.data[n_idx(nn,i)] = ns.data[n_idx((nn2+1)%nextNeighs,n1)];
+                break;
+                };
+            };
+        ds.data[n_idx(nn,i)].x= nm1;
+        ds.data[n_idx(nn,i)].y= n1;
+
+        //is "delOther" a copy of i or either of the delSet points? if so, the local topology is inconsistent
+        if(nm1 == dother.data[n_idx(nn,i)] || n1 == dother.data[n_idx(nn,i)] || i == dother.data[n_idx(nn,i)])
+            return false;
+
+        nm2=nm1;
+        nm1=n1;
+        n1=n2;
+
+        };
+    return true;
+    };
+
+
+/*!
+Calls updateNeighIdxs and then getDelSets(i) for all cells i
+*/
+void voronoiModelBase::allDelSets()
+    {
+    updateNeighIdxs();
+    for (int ii = 0; ii < Ncells; ++ii)
+        getDelSets(ii);
+    };
+
+
+/*!
+Trigger a cell division event, which involves some laborious re-indexing of various data structures.
+This simple version of cell division will take a cell and two specified vertices. The edges emanating
+clockwise from each of the two vertices will gain a new vertex in the middle of those edges. A new cell is formed by connecting those two new vertices together.
+The vector of "parameters" here should be a single integer:
+parameters[0] = the index of the cell to undergo a division event
+\post This function is meant to be called before the start of a new timestep. It should be immediately followed by a computeGeometry call
+*/
+void voronoiModelBase::cellDivision(vector<int> &parameters)
+    {
+    Ncells += 1;
+
+    //additions to the spatial sorting vectors...
+    itt.push_back(Ncells-1);
+    tti.push_back(Ncells-1);
+    tagToIdx.push_back(Ncells-1);
+    idxToTag.push_back(Ncells-1);
+
+
+
+    /* the initialization routine gives hints
+    displacements.resize(n);
+    cellForces.resize(n);
+    external_forces.resize(n);
+    exclusions.resize(n);
+    AreaPeri.resize(n);
+    CellType.resize(n);
+
+    cellDirectors.resize(n);
+    circumcenters.resize(2*(Ncells+10));
+
+    NeighIdxs.resize(6*(Ncells+10));
+    cellPositions.resize(Ncells);
+    repair.resize(Ncells);
+    setCellPositionsRandomly();
+    //initialize spatial sorting, but do not sort by default
+    initializeCellSorting();
+    //cell list initialization
+    celllist.setNp(Ncells);
+    celllist.setBox(Box);
+    celllist.setGridSize(cellsize);
+    //DelaunayLoc initialization
+    resetDelLocPoints();
+    //make a full triangulation
+    completeRetriangulationPerformed = 1;
+    cellNeighborNum.resize(Ncells);
+    globalTriangulationCGAL();
+    //initialize the anyCircumcenterTestFailed structure
+    anyCircumcenterTestFailed.resize(1);
+    ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::overwrite);
+    h_actf.data[0]=0;
+    */
+    //resetLists() will take care of voroCur, voroLastNext, delSets, delOther, and forceSets
+    //the allDelSets() should be called
+
+
+    growGPUArray(Motility,1); //(nc)
+
+    };
+

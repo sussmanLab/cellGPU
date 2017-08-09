@@ -16,19 +16,6 @@ A file providing an interface to the relevant cuda calls for the Voronoi2D class
  * \brief CUDA kernels and callers for the Voronoi2D class
  */
 
-//!compute the area and perimeter of all Voronoi cells, and save the voronoi vertices
-bool gpu_compute_geometry(
-                    Dscalar2 *d_points,
-                    Dscalar2 *d_AP,
-                    int    *d_nn,
-                    int    *d_n,
-                    Dscalar2 *d_vc,
-                    Dscalar4 *d_vln,
-                    int    N,
-                    Index2D &n_idx,
-                    gpubox &Box
-                    );
-
 //!Compute the contribution to the net force on vertex i from each of i's voronoi vertices
 bool gpu_force_sets(
                     Dscalar2 *d_points,

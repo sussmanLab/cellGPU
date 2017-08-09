@@ -9,19 +9,19 @@
 
 #include "Matrix.h"
 #include "functions.h"
-#include "DelaunayMD.h"
+#include "voronoiModelBase.h"
 #include "voronoi2d.cuh"
 
 /*! \file voronoi2d.h */
 //!Implement a 2D Voronoi model, with and without some extra bells and whistles, using kernels in \ref spvKernels
 /*!
- *A child class of DelaunayMD, this implements a Voronoi model in 2D. This involves mostly calculating
+ *A child class of voronoiModelBase, this implements a Voronoi model in 2D. This involves mostly calculating
   the forces in the Voronoi model. Optimizing these procedures for
   hybrid CPU/GPU-based computation involves declaring and maintaining several related auxiliary
   data structures that capture different features of the local topology and local geoemetry for each
   cell.
  */
-class Voronoi2D : public DelaunayMD
+class Voronoi2D : public voronoiModelBase
     {
     public:
         //!initialize with random positions in a square box
@@ -31,14 +31,8 @@ class Voronoi2D : public DelaunayMD
         //!Blank constructor
         Voronoi2D(){};
 
-        //!Initialize DelaunayMD, set random orientations for cell directors, prepare data structures
+        //!Initialize voronoiModelBase, set random orientations for cell directors, prepare data structures
         void Initialize(int n);
-
-        //!return the forces
-        virtual void getForces(GPUArray<Dscalar2> &forces){forces = cellForces;};
-
-        //!return a reference to the GPUArray of the current forces
-        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
 
         //!compute the geometry and get the forces
         virtual void computeForces();
@@ -58,14 +52,10 @@ class Voronoi2D : public DelaunayMD
         void SumForcesGPU();
 
         //CPU functions
-        //!Compute cell geometry on the CPU
-        void computeGeometryCPU();
         //!Compute the net force on particle i on the CPU
         virtual void computeVoronoiForceCPU(int i);
 
         //GPU functions
-        //!call gpu_compute_geometry kernel caller
-        void computeGeometryGPU();
         //!call gpu_force_sets kernel caller
         virtual void computeVoronoiForceSetsGPU();
         //! call gpu_sum_force_sets kernel caller
@@ -81,14 +71,6 @@ class Voronoi2D : public DelaunayMD
 
     //protected functions
     protected:
-        //! call getDelSets for all particles
-        void allDelSets();
-
-        //! Maintain the delSets and delOther data structure for particle i
-        //! If it returns false there was a problem and a global re-triangulation is triggered.
-        bool getDelSets(int i);
-        //!resize all neighMax-related arrays
-        void resetLists();
         //!sort points along a Hilbert curve for data locality
         void spatialSorting();
 
@@ -116,31 +98,8 @@ class Voronoi2D : public DelaunayMD
         //!Save tuples for half of the dynamical matrix
         virtual void getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress = 1.0, Dscalar stress = 1.0);
 
-    //protected member variables
-    protected:
-        //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
-        bool particleExclusions;
-
-        //!delSet.data[n_idx(nn,i)] are the previous and next consecutive delaunay neighbors
-        /*! These are orientationally ordered, of point i (for use in computing forces on GPU)
-        */
-        GPUArray<int2> delSets;
-        //!delOther.data[n_idx(nn,i)] contains the index of the "other" delaunay neighbor.
-        /*!
-        i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
-        */
-        GPUArray<int> delOther;
-
-        //!In GPU mode, interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
-        GPUArray<Dscalar2> forceSets;
-
     //public member variables
     public:
-        //!"exclusions" zero out the force on a cell...the external force needed to do this is stored in external_forces
-        GPUArray<Dscalar2> external_forces;
-        //!An array containing the indices of excluded particles
-        GPUArray<int> exclusions;
-
         //!Some function-timing-related scalars
         Dscalar triangletiming, forcetiming;
     //be friends with the associated Database class so it can access data to store or read

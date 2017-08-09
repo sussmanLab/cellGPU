@@ -1,5 +1,5 @@
-#ifndef DELAUNAYMD_H
-#define DELAUNAYMD_H
+#ifndef voronoiModelBase_H
+#define voronoiModelBase_H
 
 #include "std_include.h"
 #include "Simple2DActiveCell.h"
@@ -7,22 +7,22 @@
 #include "cellListGPU.h"
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
-#include "DelaunayMD.cuh"
+#include "voronoiModelBase.cuh"
 
 
-/*! \file DelaunayMD.h */
-//! Perform and test triangulations in an MD setting, using kernels in \ref DelaunayMDKernels
+/*! \file voronoiModelBase.h */
+//! Perform and test triangulations in an MD setting, using kernels in \ref voronoiModelBaseKernels
 /*!
- * DelaunayMD is a core engine class, capable of taking a set of points
+ * voronoiModelBase is a core engine class, capable of taking a set of points
  * in a periodic domain, performing Delaunay triangulations on them, testing whether
  * those triangulations are valid on either the CPU or GPU, and locally repair
  * invalid triangulations on the CPU.
  */
-class DelaunayMD : public Simple2DActiveCell
+class voronoiModelBase : public Simple2DActiveCell
     {
     public:
         //!The constructor!
-        DelaunayMD();
+        voronoiModelBase();
         //!A default initialization scheme
         void initializeDelMD(int n);
         //!Enforce CPU-only operation.
@@ -39,11 +39,23 @@ class DelaunayMD : public Simple2DActiveCell
         void readTriangulation(ifstream &infile);
 
         //virtual functions that need to be implemented
-        //!In delaunay-like models the number of degrees of freedom is the number of cells
+        //!In voronoi models the number of degrees of freedom is the number of cells
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 
         //!moveDegrees of Freedom calls either the move points or move points CPU routines
         virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements);
+        //!return the forces
+        virtual void getForces(GPUArray<Dscalar2> &forces){forces = cellForces;};
+        //!return a reference to the GPUArray of the current forces
+        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
+
+        //!Compute cell geometry on the CPU
+        void computeGeometryCPU();
+        //!call gpu_compute_geometry kernel caller
+        void computeGeometryGPU();
+
+        //!Divide cell...vector should be the cell index i
+        virtual void cellDivision(vector<int> &parameters);
 
         //!move particles on the GPU
         void movePoints(GPUArray<Dscalar2> &displacements);
@@ -52,7 +64,7 @@ class DelaunayMD : public Simple2DActiveCell
         //!Transfer particle data from the GPU to the CPU for use by delLoc
         void resetDelLocPoints();
 
-        //!Update the cell list structure after particles have moves
+        //!Update the cell list structure after particles have moved
         void updateCellList();
         //!update the NieghIdxs data structure
         void updateNeighIdxs();
@@ -75,6 +87,14 @@ class DelaunayMD : public Simple2DActiveCell
         void repairTriangulation(vector<int> &fixlist);
         //!A workhorse function that calls the appropriate topology testing and repairing routines
         void testAndRepairTriangulation(bool verb = false);
+        //! call getDelSets for all particles
+        void allDelSets();
+
+        //! Maintain the delSets and delOther data structure for particle i
+        //! If it returns false there was a problem and a global re-triangulation is triggered.
+        bool getDelSets(int i);
+        //!resize all neighMax-related arrays
+        void resetLists();
 
     //public member variables
     public:
@@ -87,6 +107,11 @@ class DelaunayMD : public Simple2DActiveCell
         int skippedFrames;
         //!How often were global re-triangulations performed?
         int GlobalFixes;
+        //!"exclusions" zero out the force on a cell...the external force needed to do this is stored in external_forces
+        GPUArray<Dscalar2> external_forces;
+        //!An array containing the indices of excluded particles
+        GPUArray<int> exclusions;
+
 
     protected:
         cellListGPU celllist;        //!<The associated cell list structure
@@ -129,6 +154,21 @@ class DelaunayMD : public Simple2DActiveCell
         bool globalOnly;
         //!Count the number of times that testAndRepair has been called, separately from the derived class' time
         int timestep;
+        //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
+        bool particleExclusions;
+
+        //!delSet.data[n_idx(nn,i)] are the previous and next consecutive delaunay neighbors
+        /*! These are orientationally ordered, of point i (for use in computing forces on GPU)
+        */
+        GPUArray<int2> delSets;
+        //!delOther.data[n_idx(nn,i)] contains the index of the "other" delaunay neighbor.
+        /*!
+        i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
+        */
+        GPUArray<int> delOther;
+
+        //!In GPU mode, interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
+        GPUArray<Dscalar2> forceSets;
     };
 
 #endif
