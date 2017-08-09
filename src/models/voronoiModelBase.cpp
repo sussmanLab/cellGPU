@@ -872,6 +872,6 @@ void voronoiModelBase::cellDivision(vector<int> &parameters)
 
 
     growGPUArray(Motility,1); //(nc)
-
+    growGPUArray(cellDirectors,1);
     };
 

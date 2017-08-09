@@ -371,6 +371,7 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     growGPUArray(cellVertexNum,1); //(nc)
     growGPUArray(AreaPeriPreferences,1); //(nc)
     growGPUArray(Motility,1); //(nc)
+    growGPUArray(cellDirectors,1);
     //ADD MODULI if they are implemented in Simple2DCell.h
     //the index cellVertices array needs more care...
     vector<int>  cellVerticesVec;
@@ -380,6 +381,9 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
         {//arrayhandle scope
         ArrayHandle<Dscalar2> h_mot(Motility); h_mot.data[Ncells-1] = h_mot.data[cellIdx];
         ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
+        noiseSource noise;
+        noise.Reproducible = Reproducible;
+        ArrayHandle<Dscalar> h_cd(cellDirectors); h_cd.data[Ncells-1] = noise.getRealUniform(0.,2*PI);
         ArrayHandle<Dscalar2> h_vp(vertexPositions);
         h_vp.data[Nvertices-2] = newV1Pos;
         h_vp.data[Nvertices-1] = newV2Pos;

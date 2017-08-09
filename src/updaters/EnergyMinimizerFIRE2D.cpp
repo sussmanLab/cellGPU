@@ -267,7 +267,9 @@ void EnergyMinimizerFIRE::fireStepCPU()
  */
 void EnergyMinimizerFIRE::minimize()
     {
-    //initialized the forces?
+    if (N != State->getNumberOfDegreesOfFreedom())
+        initializeFromModel();
+    //initialize the forces?
     State->computeForces();
     State->getForces(force);
     forceMax = 110.0;

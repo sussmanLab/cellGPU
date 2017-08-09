@@ -43,6 +43,12 @@ Advances self-propelled dynamics with random noise in the director by one time s
 void selfPropelledParticleDynamics::integrateEquationsOfMotion()
     {
     Timestep += 1;
+    if (activeModel->getNumberOfDegreesOfFreedom() != Ndof)
+        {
+        Ndof = activeModel->getNumberOfDegreesOfFreedom();
+        displacements.resize(Ndof);
+        noise.initialize(Ndof);
+        };
     if(GPUcompute)
         {
         integrateEquationsOfMotionGPU();

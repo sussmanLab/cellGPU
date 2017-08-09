@@ -28,6 +28,13 @@ Advances self-propelled dynamics with random noise in the director by one time s
 void selfPropelledCellVertexDynamics::integrateEquationsOfMotion()
     {
     Timestep += 1;
+    if (activeModel->getNumberOfDegreesOfFreedom() != Nvertices)
+        {
+        Nvertices = activeModel->getNumberOfDegreesOfFreedom();
+        displacements.resize(Nvertices);
+        Ncells = Nvertices / 2;
+        noise.initialize(Ncells);
+        };
     if(GPUcompute)
         {
         integrateEquationsOfMotionGPU();
