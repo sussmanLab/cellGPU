@@ -111,6 +111,11 @@ int main(int argc, char*argv[])
             ncdat.WriteState(AVM);
             };
         };
+    vector<int> cdtest(3); cdtest[0]=10; cdtest[1] = 0; cdtest[2] = 2;
+    DEBUGCODEHELPER;
+    avm->cellDivision(cdtest);
+    AVM->computeGeometryCPU();
+
 //    AVM->reportMeanVertexForce(true);
     t1=clock();
     if(initializeGPU)

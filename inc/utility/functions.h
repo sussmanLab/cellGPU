@@ -3,6 +3,7 @@
 
 #include "std_include.h"
 #include "Matrix.h"
+#include "gpuarray.h"
 
 #ifdef NVCC
 /*!
@@ -57,6 +58,16 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
     xc.x = x3.x + denominator * Det2x2(amcnorm2,amcy,bmcnorm2,bmcy);
     xc.y = x3.y + denominator * Det2x2(amcx,amcnorm2,bmcx,bmcnorm2);
 
+    };
+
+//!copy a GPUarray to a vector
+template<typename T>
+inline __attribute__((always_inline)) void copyGPUArrayData(GPUArray<T> &data, vector<T> &copydata)
+    {
+    int n = data.getNumElements();
+    ArrayHandle<T> handle(data,access_location::host,access_mode::read);
+    copydata.resize(n);
+    for (int i = 0; i < n; ++i) copydata[i] = handle.data[i];
     };
 
 //!Get the circumcenter and radius, given one of the points on the circumcircle is the origin...

@@ -168,6 +168,58 @@ void vertexModelBase::getCellPositionsGPU()
     };
 
 /*!
+ Initialize the auxilliary edge flip data structures to zero
+ */
+void vertexModelBase::initializeEdgeFlipLists()
+    {
+    vertexEdgeFlips.resize(3*Nvertices);
+    vertexEdgeFlipsCurrent.resize(3*Nvertices);
+    ArrayHandle<int> h_vflip(vertexEdgeFlips,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> h_vflipc(vertexEdgeFlipsCurrent,access_location::host,access_mode::overwrite);
+    for (int i = 0; i < 3*Nvertices; ++i)
+        {
+        h_vflip.data[i]=0;
+        h_vflipc.data[i]=0;
+        }
+
+    finishedFlippingEdges.resize(1);
+    ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::overwrite);
+    h_ffe.data[0]=0;
+    };
+
+/*!
+when a transition increases the maximum number of vertices around any cell in the system,
+call this function first to copy over the cellVertices structure into a larger array
+ */
+void vertexModelBase::growCellVerticesList(int newVertexMax)
+    {
+    cout << "maximum number of vertices per cell grew from " <<vertexMax << " to " << newVertexMax << endl;
+    vertexMax = newVertexMax+1;
+    Index2D old_idx = n_idx;
+    n_idx = Index2D(vertexMax,Ncells);
+
+    GPUArray<int> newCellVertices;
+    newCellVertices.resize(vertexMax*Ncells);
+    {//scope for array handles
+    ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n_old(cellVertices,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(newCellVertices,access_location::host,access_mode::readwrite);
+
+    for(int cell = 0; cell < Ncells; ++cell)
+        {
+        int neighs = h_nn.data[cell];
+        for (int n = 0; n < neighs; ++n)
+            {
+            h_n.data[n_idx(n,cell)] = h_n_old.data[old_idx(n,cell)];
+            };
+        };
+    };//scope for array handles
+    cellVertices.resize(vertexMax*Ncells);
+    cellVertices.swap(newCellVertices);
+    };
+
+
+/*!
 Trigger a cell division event, which involves some laborious re-indexing of various data structures.
 This simple version of cell division will take a cell and two specified vertices. The edges emanating
 clockwise from each of the two vertices will gain a new vertex in the middle of those edges. A new cell is formed by connecting those two new vertices together.
@@ -177,6 +229,7 @@ parameters[1] = the first vertex to gain a new (clockwise) vertex neighbor.
 parameters[2] = the second .....
 The two vertex numbers should be between 0 and celLVertexNum[parameters[0]], respectively, NOT the
 indices of the vertices being targeted
+\post This function is meant to be called before the start of a new timestep. It should be immediately followed by a computeGeometry call
 */
 void vertexModelBase::cellDivision(vector<int> &parameters)
     {
@@ -195,7 +248,6 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     int v1idx, v2idx, v1NextIdx, v2NextIdx;
     int newV1CellNeighbor, newV2CellNeighbor;
     bool increaseVertexMax = false;
-
     {//scope for array handles
     ArrayHandle<Dscalar2> vP(vertexPositions);
     ArrayHandle<int> cellVertNum(cellVertexNum);
@@ -211,11 +263,11 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
 
     v1idx = cv.data[n_idx(v1,cellIdx)];
     v2idx = cv.data[n_idx(v2,cellIdx)];
-    if (v1idx < neighs - 1)
+    if (v1 < neighs - 1)
         v1NextIdx = cv.data[n_idx(v1+1,cellIdx)];
     else
         v1NextIdx = cv.data[n_idx(0,cellIdx)];
-    if (v2idx < neighs - 1)
+    if (v2 < neighs - 1)
         v2NextIdx = cv.data[n_idx(v2+1,cellIdx)];
     else
         v2NextIdx = cv.data[n_idx(0,cellIdx)];
@@ -274,33 +326,47 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
         increaseVertexMax = true;
     }//end scope of old array handles... new vertices and cells identified
 
+    //update cell and vertex number; have access to both new and old indexer if vertexMax changes
+    Index2D n_idxOld(vertexMax,Ncells);
+    if (increaseVertexMax)
+        vertexMax += 2;
     Ncells += 1;
     Nvertices += 2;
+    n_idx = Index2D(vertexMax,Ncells);
 
+    //GPUArrays that just need their length changed
+    vertexForces.resize(Nvertices);
+    displacements.resize(Nvertices);
+    initializeEdgeFlipLists();
+    vertexForceSets.resize(3*Nvertices);
+    voroCur.resize(3*Nvertices);
+    voroLastNext.resize(3*Nvertices);
+    AreaPeri.resize(Ncells);
 
+    //get temporary copies of all of the arrays
+    vector<Dscalar2> vertexPositionsVec;
+    vector<int> vertexNeighborsVec, vertexCellNeighborsVec;
+    vector<int>  cellVertexNumVec, cellVerticesVec;
+    vector<Dscalar2> AreaPeriPreferencesVec,MotilityVec;
+    //MODULI if they are implemented in Simple2DCell.h
+
+    copyGPUArrayData(vertexPositions,vertexPositionsVec);
+    copyGPUArrayData(vertexNeighbors,vertexNeighborsVec);
+    copyGPUArrayData(vertexCellNeighbors,vertexCellNeighborsVec);
+    copyGPUArrayData(cellVertexNum,cellVertexNumVec);
+    copyGPUArrayData(cellVertices,cellVerticesVec);
+    copyGPUArrayData(AreaPeriPreferences,AreaPeriPreferencesVec);
+    copyGPUArrayData(Motility,MotilityVec);
 
     /*
     vertexPositions[nv]; //need to add new positions
-    vertexForces[nv]; //just change length
-    displacements[nv]; //just change length
-
-    vertexEdgeFlips[3nv]; //init to zero
-    vertexEdgeFlipsCurrent[3nv]; // init to zero
-    vertexForceSets[3nv]; //init to zero
     vertexNeighbors[3nv]; //initialize to the neighbors
     vertexCellNeighbors[3nv]; //initialize and reset correctly
 
-    voroCur[3nv]; //just change length
-    voroLastNext[3nv]; //just change length
-
     cellVertexNum[Ncells]; //compute for new and affected cells
-    //has vertexMax changed?
-    n_idx = Index2D(vertexMax,Ncells);
+    AreaPeriPref[Ncells]; // compute geom will be called after, so just change length
+    motility(Ncells];
+
     cellVertices[Ncells*vertexMax]; //need to update correctly
-
-    AreaPeri[Ncells]; // ccompute geom will be called after, so just change length
-    //MODULI if they are implemented in Simple2DCell.h
-
-     */
-
+    */
     };

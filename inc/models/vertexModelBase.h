@@ -59,6 +59,16 @@ class vertexModelBase : public Simple2DActiveCell
         GPUArray<Dscalar2> vertexForceSets;
 
     protected:
+        //!if the maximum number of vertices per cell increases, grow the cellVertices list
+        void growCellVerticesList(int newVertexMax);
+
+        //!Initialize the data structures for edge flipping...should also be called if Nvertices changes
+        void initializeEdgeFlipLists();
+        //! data structure to help with cell-vertex list
+        GPUArray<int> growCellVertexListAssist;
+
+        //! data structure to help with not simultaneously trying to flip nearby edges
+        GPUArray<int> finishedFlippingEdges;
 
     //reporting functions
     public:

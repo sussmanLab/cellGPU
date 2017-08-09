@@ -63,27 +63,15 @@ class AVM2D : public vertexModelBase
         //!perform the edge flips found in the previous step
         void flipEdgesGPU();
 
-        //!if the maximum number of vertices per cell increases, grow the cellVertices list
-        void growCellVerticesList(int newVertexMax);
-
         //utility functions
         //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
         void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
-        //!Initialize the data structures for edge flipping...should also be called if Nvertices changes
-        void initializeEdgeFlipLists();
 
     //public member variables...most of these should eventually be protected
     public:
         //!A threshold defining the edge length below which a T1 transition will occur
         Dscalar T1Threshold;
 
-    //protected variables
-    protected:
-        //! data structure to help with cell-vertex list
-        GPUArray<int> growCellVertexListAssist;
-
-        //! data structure to help with not simultaneously trying to flip nearby edges
-        GPUArray<int> finishedFlippingEdges;
 
     //be friends with the associated Database class so it can access data to store or read
     friend class AVMDatabaseNetCDF;
