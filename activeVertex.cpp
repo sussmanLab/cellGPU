@@ -74,8 +74,11 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"../test.nc");
+    char dataname2[256];
+    sprintf(dataname2,"../test2.nc");
     int Nvert = 2*numpts;
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
+    AVMDatabaseNetCDF ncdat2(Nvert+2,dataname2,NcFile::Replace);
 
     bool runSPV = false;
 
@@ -111,8 +114,7 @@ int main(int argc, char*argv[])
             ncdat.WriteState(AVM);
             };
         };
-    vector<int> cdtest(3); cdtest[0]=10; cdtest[1] = 0; cdtest[2] = 2;
-    DEBUGCODEHELPER;
+    vector<int> cdtest(3); cdtest[0]=10; cdtest[1] = 0; cdtest[2] = 3;
     avm->cellDivision(cdtest);
     AVM->computeGeometryCPU();
 
@@ -123,6 +125,11 @@ int main(int argc, char*argv[])
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
         sim->performTimestep();
+        if(program_switch <0 && timestep%((int)(1/dt))==0)
+            {
+            cout << timestep << endl;
+            ncdat2.WriteState(AVM);
+            };
         };
     if(initializeGPU)
         cudaProfilerStop();

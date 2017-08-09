@@ -248,13 +248,21 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     int v1idx, v2idx, v1NextIdx, v2NextIdx;
     int newV1CellNeighbor, newV2CellNeighbor;
     bool increaseVertexMax = false;
+    int neighs;
+    vector<int> combinedVertices;
     {//scope for array handles
     ArrayHandle<Dscalar2> vP(vertexPositions);
     ArrayHandle<int> cellVertNum(cellVertexNum);
     ArrayHandle<int> cv(cellVertices);
     ArrayHandle<int> vcn(vertexCellNeighbors);
+    neighs = cellVertNum.data[cellIdx];
 
-    int neighs = cellVertNum.data[cellIdx];
+    combinedVertices.reserve(neighs+2);
+    for (int i = 0; i < neighs; ++i)
+        combinedVertices.push_back(cv.data[n_idx(i,cellIdx)]);
+    combinedVertices.insert(combinedVertices.begin()+1+v1,Nvertices);
+    combinedVertices.insert(combinedVertices.begin()+2+v2,Nvertices+1);
+
     if(v1 >= neighs || v2 >=neighs)
         {
         printf("\nError in cell division. File %s at line %d\n",__FILE__,__LINE__);
@@ -367,7 +375,7 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     //the index cellVertices array needs more care...
     vector<int>  cellVerticesVec;
     copyGPUArrayData(cellVertices,cellVerticesVec);
-
+    cellVertices.resize(vertexMax*Ncells);
     //first, let's take care of the trivial things
         {//arrayhandle scope
         ArrayHandle<Dscalar2> h_mot(Motility); h_mot.data[Ncells-1] = h_mot.data[cellIdx];
@@ -376,12 +384,84 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
         h_vp.data[Nvertices-2] = newV1Pos; 
         h_vp.data[Nvertices-1] = newV2Pos; 
         }
-    /*
-    vertexNeighbors[3nv]; //initialize to the neighbors and reset correctly
-    vertexCellNeighbors[3nv]; //initialize and reset correctly
 
-    cellVertexNum[Ncells]; //compute for new and affected cells
+    //the vertex-vertex neighbors
+        {//arrayHandle scope
+        ArrayHandle<int> h_vv(vertexNeighbors);
+        //new v1
+        h_vv.data[3*(Nvertices-2)+0] = v1idx;
+        h_vv.data[3*(Nvertices-2)+1] = v1NextIdx;
+        h_vv.data[3*(Nvertices-2)+2] = Nvertices-1;
+        //new v2
+        h_vv.data[3*(Nvertices-1)+0] = Nvertices-2;
+        h_vv.data[3*(Nvertices-1)+1] = v2idx;
+        h_vv.data[3*(Nvertices-1)+2] = v2NextIdx;
+        //v1idx
+        for (int ii = 3*v1idx; ii < 3*(v1idx+1); ++ii)
+            if (h_vv.data[ii] == v1NextIdx) h_vv.data[ii] = Nvertices-2;
+        //v1NextIdx
+        for (int ii = 3*v1NextIdx; ii < 3*(v1NextIdx+1); ++ii)
+            if (h_vv.data[ii] == v1idx) h_vv.data[ii] = Nvertices-2;
+        //v2idx
+        for (int ii = 3*v2idx; ii < 3*(v2idx+1); ++ii)
+            if (h_vv.data[ii] == v2NextIdx) h_vv.data[ii] = Nvertices-1;
+        //v2NextIdx
+        for (int ii = 3*v2NextIdx; ii < 3*(v2NextIdx+1); ++ii)
+            if (h_vv.data[ii] == v2idx) h_vv.data[ii] = Nvertices-1;
+        };
 
-    cellVertices[Ncells*vertexMax]; //need to update correctly
-    */
+    //for computing vertex-cell neighbors and cellVertices, recall that combinedVertices is a list:
+    //v0, v1.. newvertex 1... newvertex2 ... v_old_last_vertex
+    //for convenience, rotate this so that it is newvertex1 ... newvertex2, (other vertices), and 
+    //create another vector that is newvertex2...newvertex1, (other vertices)
+    for (int i = 0; i < neighs+2; ++i) cout << combinedVertices[i] << ",  ";
+    cout << endl;
+    vector<int> cv2=combinedVertices;
+    rotate(cv2.begin(), cv2.begin()+v2+2, cv2.end());
+    rotate(combinedVertices.begin(), combinedVertices.begin()+v1+1, combinedVertices.end());
+    int nVertNewCell = (v2 - v1) +2;
+    int nVertCellI = neighs+2-(v2-v1);
+    for (int i = 0; i < nVertNewCell; ++i) cout << combinedVertices[i] << ",  ";
+    cout << endl;
+    for (int i = 0; i < nVertCellI; ++i) cout << cv2[i] << ",  ";
+    cout << endl;
+        {//arrayHandle scope
+        ArrayHandle<int> h_cvn(cellVertexNum);
+        h_cvn.data[Ncells-1] = nVertNewCell;
+        h_cvn.data[cellIdx] = nVertCellI;
+
+        ArrayHandle<int> h_vcn(vertexCellNeighbors);
+        //new v1
+        h_vcn.data[3*(Nvertices-2)+0] = cellIdx;
+        h_vcn.data[3*(Nvertices-2)+1] = newV1CellNeighbor;
+        h_vcn.data[3*(Nvertices-2)+2] = Ncells-1;
+        //new v2
+        h_vcn.data[3*(Nvertices-1)+0] = cellIdx;
+        h_vcn.data[3*(Nvertices-1)+1] = Ncells-1;
+        h_vcn.data[3*(Nvertices-1)+2] = newV2CellNeighbor;
+        //vertices in between newV1 and newV2 don't neighbor the divided cell any more
+        for (int i = 1; i < nVertNewCell-1; ++i)
+            for (int vv = 0; vv < 3; ++vv)
+                if(h_vcn.data[3*combinedVertices[i]+vv] == cellIdx)
+                    h_vcn.data[3*combinedVertices[i]+vv] = Ncells-1;
+        };
+    
+    // finally, reset the vertices associated with every cell
+        {//arrayHandle scope
+        ArrayHandle<int> cv(cellVertices);
+        ArrayHandle<int> h_cvn(cellVertexNum);
+        //first, copy over the old cells with any new indexing
+        for (int cell = 0; cell < Ncells -1; ++cell)
+            {
+            int ns = h_cvn.data[cell];
+            for (int vv = 0; vv < ns; ++vv)
+                cv.data[n_idx(vv,cell)] = cellVerticesVec[n_idxOld(vv,cell)];
+            };
+        //correct cellIdx's vertices
+        for (int vv = 0; vv < nVertCellI; ++vv)
+            cv.data[n_idx(vv,cellIdx)] = cv2[vv];
+        //add the vertices to the new cell
+        for (int vv = 0; vv < nVertNewCell; ++vv)
+            cv.data[n_idx(vv,Ncells-1)] = combinedVertices[vv];
+        };
     };
