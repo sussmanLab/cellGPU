@@ -5,6 +5,7 @@
 #define ENABLE_CUDA
 
 #include "avm2d.h"
+#include "noiseSource.h"
 #include "voronoi2d.h"
 #include "selfPropelledCellVertexDynamics.h"
 #include "brownianParticleDynamics.h"
@@ -70,9 +71,9 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     char dataname[256];
-    sprintf(dataname,"../test.nc");
-    char dataname2[256];
-    sprintf(dataname2,"../test2.nc");
+    sprintf(dataname,"../test1.nc");
+    noiseSource noise;
+    noise.Reproducible = reproducible;
 
     //program_switch >= 0 --> thermal voronoi model
     if(program_switch >=0)
@@ -85,7 +86,6 @@ int main(int argc, char*argv[])
         {
         int Nvert = 2*numpts;
         AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
-        AVMDatabaseNetCDF ncdat2(Nvert+2,dataname2,NcFile::Replace);
         bool runSPV = false;
 
         EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
@@ -123,15 +123,27 @@ int main(int argc, char*argv[])
         avm->cellDivision(cdtest);
 
         t1=clock();
-
+        int Nvertices = avm->getNumberOfDegreesOfFreedom();
+        int Ncells = Nvertices/2;
+        int fileidx=2;
         for (int timestep = 0; timestep < tSteps; ++timestep)
             {
             sim->performTimestep();
-            if(program_switch <-2 && timestep%((int)(1/dt))==0)
+            if(program_switch <=-1 && timestep%((int)(10/dt))==0)
+                {
+                cdtest[0] = noise.getInt(0,Ncells);
                 avm->cellDivision(cdtest);
-            if(program_switch == -2 && timestep%((int)(1/dt))==0)
+
+                Nvertices = avm->getNumberOfDegreesOfFreedom();
+                Ncells = Nvertices/2;
+                };
+            if(program_switch == -2 && timestep%((int)(10/dt))==0)
                 {
                 cout << timestep << endl;
+                char dataname2[256];
+                sprintf(dataname2,"../test%i.nc",fileidx);
+                fileidx +=1;
+                AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
                 ncdat2.WriteState(AVM);
                 };
             };
