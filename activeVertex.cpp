@@ -114,8 +114,6 @@ int main(int argc, char*argv[])
             ncdat.WriteState(AVM);
             };
         };
-    vector<int> cdtest(3); cdtest[0]=10; cdtest[1] = 0; cdtest[2] = 3;
-    avm->cellDivision(cdtest);
 
     t1=clock();
 
