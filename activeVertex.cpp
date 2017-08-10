@@ -114,11 +114,14 @@ int main(int argc, char*argv[])
             ncdat.WriteState(AVM);
             };
         };
+    avm->computeForces();
+    AVM->reportMeanVertexForce(false);
     vector<int> cdtest(3); cdtest[0]=10; cdtest[1] = 0; cdtest[2] = 3;
     avm->cellDivision(cdtest);
-    AVM->computeGeometryCPU();
+//    AVM->computeGeometryCPU();
+    avm->computeForces();
 
-//    AVM->reportMeanVertexForce(true);
+    AVM->reportMeanVertexForce(false);
     t1=clock();
     if(initializeGPU)
         cudaProfilerStart();
@@ -137,7 +140,7 @@ int main(int argc, char*argv[])
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
 
     //avm->reportMeanVertexForce();
-    cout << avm->reportq() << endl;
+    cout << "Mean q = " << avm->reportq() << endl;
 
     //For debugging...output the force on every vertex
     if(program_switch <-5)

@@ -338,7 +338,7 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     Index2D n_idxOld(vertexMax,Ncells);
     if (increaseVertexMax)
         {
-        printf("vm adjust\n");
+        printf("vertexMax has increased due to cell division\n");
         vertexMax += 2;
         };
     Ncells += 1;
@@ -436,13 +436,13 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
 
         ArrayHandle<int> h_vcn(vertexCellNeighbors);
         //new v1
-        h_vcn.data[3*(Nvertices-2)+0] = cellIdx;
-        h_vcn.data[3*(Nvertices-2)+1] = newV1CellNeighbor;
-        h_vcn.data[3*(Nvertices-2)+2] = Ncells-1;
+        h_vcn.data[3*(Nvertices-2)+0] = newV1CellNeighbor;
+        h_vcn.data[3*(Nvertices-2)+1] = Ncells-1;
+        h_vcn.data[3*(Nvertices-2)+2] = cellIdx;
         //new v2
-        h_vcn.data[3*(Nvertices-1)+0] = cellIdx;
-        h_vcn.data[3*(Nvertices-1)+1] = Ncells-1;
-        h_vcn.data[3*(Nvertices-1)+2] = newV2CellNeighbor;
+        h_vcn.data[3*(Nvertices-1)+0] = newV2CellNeighbor;
+        h_vcn.data[3*(Nvertices-1)+1] = cellIdx;
+        h_vcn.data[3*(Nvertices-1)+2] = Ncells-1;
         //vertices in between newV1 and newV2 don't neighbor the divided cell any more
         for (int i = 1; i < nVertNewCell-1; ++i)
             for (int vv = 0; vv < 3; ++vv)
@@ -467,5 +467,36 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
         //add the vertices to the new cell
         for (int vv = 0; vv < nVertNewCell; ++vv)
             cv.data[n_idx(vv,Ncells-1)] = combinedVertices[vv];
+
+        //insert the vertices into newV1CellNeighbor and newV2CellNeighbor
+        vector<int> cn1, cn2;
+        int cn1Size = h_cvn.data[newV1CellNeighbor];
+        int cn2Size = h_cvn.data[newV2CellNeighbor];
+        cn1.reserve(cn1Size+1);
+        cn2.reserve(cn2Size+1);
+        for (int i = 0; i < cn1Size; ++i)
+            {
+            int curVertex = cv.data[n_idx(i,newV1CellNeighbor)];
+            cn1.push_back(curVertex);
+            if(curVertex == v1NextIdx)
+                cn1.push_back(Nvertices-2);
+            };
+        for (int i = 0; i < cn2Size; ++i)
+            {
+            int curVertex = cv.data[n_idx(i,newV2CellNeighbor)];
+            cn2.push_back(curVertex);
+            if(curVertex == v2NextIdx)
+                cn2.push_back(Nvertices-1);
+            };
+
+        //correct newV1CellNeighbor's vertices
+        for (int vv = 0; vv < cn1Size+1; ++vv)
+            cv.data[n_idx(vv,newV1CellNeighbor)] = cn1[vv];
+        //correct newV2CellNeighbor's vertices
+        for (int vv = 0; vv < cn2Size+1; ++vv)
+            cv.data[n_idx(vv,newV2CellNeighbor)] = cn2[vv];
+        //correct the number of vertex neighbors of the cells
+        h_cvn.data[newV1CellNeighbor] = cn1Size+1;
+        h_cvn.data[newV2CellNeighbor] = cn2Size+1;
         };
     };

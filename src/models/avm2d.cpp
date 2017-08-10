@@ -266,9 +266,22 @@ void AVM2D::computeForcesCPU()
         //computeForceSetAVM is defined in inc/functions.h
         computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
 
+
         h_fs.data[fsidx].x = dEdv.x;
         h_fs.data[fsidx].y = dEdv.y;
         };
+if(Nvertices > 400)
+    {
+    printf("vorocur:%f\t%f\t%f\t%f\t%f\t%f\n",h_vc.data[400*3].x,h_vc.data[400*3+1].x,h_vc.data[400*3+2].x,h_vc.data[401*3].x,h_vc.data[401*3+1].x,h_vc.data[401*3+2].x);
+    };
+if(Nvertices > 400)
+    {
+    printf("voroLN:%f\t%f\t%f\t%f\t%f\t%f\n",h_vln.data[400*3].x,h_vln.data[400*3+1].x,h_vln.data[400*3+2].x,h_vln.data[401*3].x,h_vln.data[401*3+1].x,h_vln.data[401*3+2].x);
+    };
+if(Nvertices > 400)
+    {
+    printf("forces: %f\t%f\t%f\t%f\t%f\t%f\n",h_fs.data[400*3].x,h_fs.data[400*3+1].x,h_fs.data[400*3+2].x,h_fs.data[401*3].x,h_fs.data[401*3+1].x,h_fs.data[401*3+2].x);
+    };
 
     //now sum these up to get the force on each vertex
     for (int v = 0; v < Nvertices; ++v)
