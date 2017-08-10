@@ -114,17 +114,11 @@ int main(int argc, char*argv[])
             ncdat.WriteState(AVM);
             };
         };
-    avm->computeForces();
-    AVM->reportMeanVertexForce(false);
     vector<int> cdtest(3); cdtest[0]=10; cdtest[1] = 0; cdtest[2] = 3;
     avm->cellDivision(cdtest);
-//    AVM->computeGeometryCPU();
-    avm->computeForces();
 
-    AVM->reportMeanVertexForce(false);
     t1=clock();
-    if(initializeGPU)
-        cudaProfilerStart();
+
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
         sim->performTimestep();
@@ -134,80 +128,13 @@ int main(int argc, char*argv[])
             ncdat2.WriteState(AVM);
             };
         };
-    if(initializeGPU)
-        cudaProfilerStop();
+
     t2=clock();
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
 
-    //avm->reportMeanVertexForce();
+    avm->reportMeanVertexForce();
     cout << "Mean q = " << avm->reportq() << endl;
 
-    //For debugging...output the force on every vertex
-    if(program_switch <-5)
-        {
-        ncdat.WriteState(AVM);
-        avm->computeForces();
-        Dscalar Ei = avm->quadraticEnergy();
-        ArrayHandle<Dscalar2> vf(avm->vertexForces);
-        Dscalar delX = 0.00000001;
-        Dscalar2 zero; zero.x=0.0;zero.y=0.0;
-        Dscalar2 dx; dx.x=delX; dx.y = 0.0;
-        Dscalar2 mdx; mdx.x=-delX; mdx.y = 0.0;
-        Dscalar2 dy; dy.x=0.0; dy.y = delX;
-        Dscalar2 mdy; mdy.y=-delX; mdy.x = 0.0;
-        for (int ii = 0; ii < Nvert; ++ii)
-            {
-            GPUArray<Dscalar2> disps;
-            disps.resize(Nvert);
-            {
-            ArrayHandle<Dscalar2> hd(disps);
-            for (int ii = 0; ii < Nvert; ++ii) hd.data[ii]=zero;
-            };
-                {
-                ArrayHandle<Dscalar2> hd(disps);
-                hd.data[ii]=dx;
-                }
-            avm->moveDegreesOfFreedom(disps);
-            AVM->computeGeometryCPU();
-            Dscalar fxNumerical=(Ei-avm->quadraticEnergy())/delX;
-                {
-                ArrayHandle<Dscalar2> hd(disps);
-                hd.data[ii]=mdx;
-                }
-            avm->moveDegreesOfFreedom(disps);
-            AVM->computeGeometryCPU();
-            Dscalar fxdiff = fxNumerical - vf.data[ii].x;
-            if (abs(fxdiff) > 1e-5) 
-                printf("Fx error: %i\t %f \n",ii,fxdiff);
-            //cout << fxNumerical <<"   " << vf.data[ii].x  << "  "<< vf.data[ii].y << endl;
-            };
-        for (int ii = 0; ii < Nvert; ++ii)
-            {
-            GPUArray<Dscalar2> disps;
-            disps.resize(Nvert);
-            {
-            ArrayHandle<Dscalar2> hd(disps);
-            for (int ii = 0; ii < Nvert; ++ii) hd.data[ii]=zero;
-            };
-                {
-                ArrayHandle<Dscalar2> hd(disps);
-                hd.data[ii]=dy;
-                }
-            avm->moveDegreesOfFreedom(disps);
-            AVM->computeGeometryCPU();
-            Dscalar fyNumerical=(Ei-avm->quadraticEnergy())/delX;
-                {
-                ArrayHandle<Dscalar2> hd(disps);
-                hd.data[ii]=mdy;
-                }
-            avm->moveDegreesOfFreedom(disps);
-            AVM->computeGeometryCPU();
-            Dscalar fydiff = fyNumerical - vf.data[ii].y;
-            if (abs(fydiff) > 1e-6) 
-                printf("Fy error: %i\t %g \n",ii,fydiff);
-            //cout << fxNumerical <<"   " << vf.data[ii].x  << "  "<< vf.data[ii].y << endl;
-            };
-        };
 
     if(initializeGPU)
         cudaDeviceReset();

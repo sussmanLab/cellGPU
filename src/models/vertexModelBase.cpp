@@ -418,17 +418,11 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     //v0, v1.. newvertex 1... newvertex2 ... v_old_last_vertex
     //for convenience, rotate this so that it is newvertex1 ... newvertex2, (other vertices), and
     //create another vector that is newvertex2...newvertex1, (other vertices)
-    for (int i = 0; i < neighs+2; ++i) cout << combinedVertices[i] << ",  ";
-    cout << endl;
     vector<int> cv2=combinedVertices;
     rotate(cv2.begin(), cv2.begin()+v2+2, cv2.end());
     rotate(combinedVertices.begin(), combinedVertices.begin()+v1+1, combinedVertices.end());
     int nVertNewCell = (v2 - v1) +2;
     int nVertCellI = neighs+2-(v2-v1);
-    for (int i = 0; i < nVertNewCell; ++i) cout << combinedVertices[i] << ",  ";
-    cout << endl;
-    for (int i = 0; i < nVertCellI; ++i) cout << cv2[i] << ",  ";
-    cout << endl;
         {//arrayHandle scope
         ArrayHandle<int> h_cvn(cellVertexNum);
         h_cvn.data[Ncells-1] = nVertNewCell;
