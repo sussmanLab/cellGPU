@@ -371,8 +371,10 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     growGPUArray(cellVertexNum,1); //(nc)
     growGPUArray(AreaPeriPreferences,1); //(nc)
     growGPUArray(Motility,1); //(nc)
+    growGPUArray(Moduli,1);
+    growGPUArray(CellType,1);
     growGPUArray(cellDirectors,1);
-    //ADD MODULI if they are implemented in Simple2DCell.h
+    growGPUArray(cellPositions,1);
     //the index cellVertices array needs more care...
     vector<int>  cellVerticesVec;
     copyGPUArrayData(cellVertices,cellVerticesVec);
