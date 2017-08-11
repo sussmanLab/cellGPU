@@ -817,39 +817,102 @@ void voronoiModelBase::allDelSets()
 
 /*!
 Trigger a cell division event, which involves some laborious re-indexing of various data structures.
-This simple version of cell division will take a cell and two specified vertices. The edges emanating
-clockwise from each of the two vertices will gain a new vertex in the middle of those edges. A new cell is formed by connecting those two new vertices together.
-The vector of "parameters" here should be a single integer:
 parameters[0] = the index of the cell to undergo a division event
+dParams[0] = an angle, theta
+dParams[1] = a fraction of maximum separation of the new cell positions along the axis of the cell specified by theta
 \post This function is meant to be called before the start of a new timestep. It should be immediately followed by a computeGeometry call
 */
-void voronoiModelBase::cellDivision(vector<int> &parameters)
+void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams)
     {
-    Ncells += 1;
+    int cellIdx = parameters[0];
+    Dscalar theta = dParams[0];
+    Dscalar separationFraction = dParams[1];
 
-    //additions to the spatial sorting vectors...
-    itt.push_back(Ncells-1);
-    tti.push_back(Ncells-1);
-    tagToIdx.push_back(Ncells-1);
-    idxToTag.push_back(Ncells-1);
+    //First let's get the geometry of the cell in a convenient reference frame
+    //computeGeometry has not yet been called, so need to find the voro positions
+    vector<Dscalar2> voro;
+    voro.reserve(10);
+    int neigh;
+    Dscalar2 initialCellPosition;
+    {//arrayHandle scope
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    initialCellPosition = h_p.data[cellIdx];
+    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    neigh = h_nn.data[cellIdx];
+    vector<int> ns(neigh);
+    for (int nn = 0; nn < neigh; ++nn)
+            ns[nn]=h_n.data[n_idx(nn,cellIdx)];
+    Dscalar2 circumcent;
+    Dscalar2 nnextp,nlastp;
+    Dscalar2 pi = h_p.data[cellIdx];
+    Dscalar2 rij, rik;
+    nlastp = h_p.data[ns[ns.size()-1]];
+    Box.minDist(nlastp,pi,rij);
+    for (int nn = 0; nn < neigh;++nn)
+        {
+        nnextp = h_p.data[ns[nn]];
+        Box.minDist(nnextp,pi,rik);
+        Circumcenter(rij,rik,circumcent);
+        voro.push_back(circumcent);
+        rij=rik;
+        }
+    };//arrayHandle scope
+
+    //find where the line emanating from the polygons intersects the edges
+    Dscalar2 c,v1,v2,Int1,Int2;
+    bool firstIntFound = false;
+    v1 = voro[neigh-1];
+    Dscalar2 ray; ray.x = Cos(theta); ray.y = Sin(theta);
+    c.x = - Sin(theta);
+    c.y = Cos(theta);
+    Dscalar2 p; p.x =0.0; p.y=0.;
+    for (int nn = 0; nn < neigh; ++nn)
+        {
+        v2=voro[nn];
+        Dscalar2 a; a.x = p.x-v2.x; a.y = p.y-v2.y;
+        Dscalar2 b; b.x = v1.x - v2.x; b.y = v1.y-v2.y;
+        Dscalar t2 = -1.;
+        if (dot(b,c) != 0)
+            t2 = dot(a,c)/dot(b,c);
+        if (t2 >= 0. && t2 <= 1.0)
+            {
+            if (firstIntFound)
+                {
+                Int2 = v2+t2*(v1-v2);
+                }
+            else
+                {
+                Int1 = v2+t2*(v1-v2);
+                firstIntFound = true;
+                };
+            };
+
+        v1=v2;
+        };
+    Dscalar maxSeparation = max(norm(p-Int1),norm(p-Int2));
+    Dscalar2 newCellPos1 = initialCellPosition + separationFraction*maxSeparation*ray;
+    Dscalar2 newCellPos2 = initialCellPosition - separationFraction*maxSeparation*ray;
+    Box.putInBoxReal(newCellPos1);
+    Box.putInBoxReal(newCellPos2);
+
+    printf("((%f,%f), (%f,%f), (%f,%f))\n",initialCellPosition.x,initialCellPosition.y,newCellPos1.x,newCellPos1.y,newCellPos2.x,newCellPos2.y);
+
+    //This call updates many of the base data structres, but (among other things) does not actually
+    //set the new cell position
+    Simple2DActiveCell::cellDivision(parameters);
 
 
-
-    /* the initialization routine gives hints
+    /* the initialization routine gives hints of things that need to be updated here
     displacements.resize(n);
     cellForces.resize(n);
     external_forces.resize(n);
     exclusions.resize(n);
-    AreaPeri.resize(n);
-    CellType.resize(n);
 
-    cellDirectors.resize(n);
     circumcenters.resize(2*(Ncells+10));
 
     NeighIdxs.resize(6*(Ncells+10));
-    cellPositions.resize(Ncells);
     repair.resize(Ncells);
-    setCellPositionsRandomly();
     //initialize spatial sorting, but do not sort by default
     initializeCellSorting();
     //cell list initialization
@@ -869,9 +932,4 @@ void voronoiModelBase::cellDivision(vector<int> &parameters)
     */
     //resetLists() will take care of voroCur, voroLastNext, delSets, delOther, and forceSets
     //the allDelSets() should be called
-
-
-    growGPUArray(Motility,1); //(nc)
-    growGPUArray(cellDirectors,1);
     };
-

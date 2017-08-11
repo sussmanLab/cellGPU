@@ -54,8 +54,8 @@ class voronoiModelBase : public Simple2DActiveCell
         //!call gpu_compute_geometry kernel caller
         void computeGeometryGPU();
 
-        //!Divide cell...vector should be the cell index i
-        virtual void cellDivision(vector<int> &parameters);
+        //!allow for cell division, according to a vector of model-dependent parameters
+        virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams);
 
         //!move particles on the GPU
         void movePoints(GPUArray<Dscalar2> &displacements);

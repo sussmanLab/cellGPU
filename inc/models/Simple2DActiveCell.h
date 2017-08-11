@@ -35,7 +35,7 @@ class Simple2DActiveCell : public Simple2DCell
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
-        virtual void cellDivision(vector<int> &parameters);
+        virtual void cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams = {});
 
     //protected functions
     protected:

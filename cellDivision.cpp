@@ -78,7 +78,71 @@ int main(int argc, char*argv[])
     //program_switch >= 0 --> thermal voronoi model
     if(program_switch >=0)
         {
+        SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+        EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+        ForcePtr spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
+        shared_ptr<Voronoi2D> SPV = dynamic_pointer_cast<Voronoi2D>(spv);
 
+        spv->setCellPreferencesUniform(1.0,p0);
+        spv->setv0Dr(v0,1.0);
+
+        SimulationPtr sim = make_shared<Simulation>();
+        sim->setConfiguration(spv);
+        sim->setEquationOfMotion(spp,spv);
+        sim->setIntegrationTimestep(dt);
+        sim->setSortPeriod(initSteps/10);
+        //set appropriate CPU and GPU flags
+        sim->setCPUOperation(!initializeGPU);
+        sim->setReproducible(reproducible);
+
+
+        for (int timestep = 0; timestep < initSteps+1; ++timestep)
+            {
+            sim->performTimestep();
+            if(program_switch > 2 && timestep%((int)(1/dt))==0)
+                {
+                cout << timestep << endl;
+                ncdat.WriteState(SPV);
+                };
+            };
+
+        vector<int> cdtest(1); cdtest[0]=10;
+        vector<Dscalar> dParams(2); dParams[0] = 3.0*PI/4.0-.1; dParams[1] = 0.5;
+        spv->cellDivision(cdtest,dParams);
+
+        t1=clock();
+        int Ncells = spv->getNumberOfDegreesOfFreedom();
+        /*
+        int fileidx=2;
+        for (int timestep = 0; timestep < tSteps; ++timestep)
+            {
+            sim->performTimestep();
+            if(program_switch <=-1 && timestep%((int)(10/dt))==0)
+                {
+                cdtest[0] = noise.getInt(0,Ncells);
+                avm->cellDivision(cdtest);
+
+                Nvertices = avm->getNumberOfDegreesOfFreedom();
+                Ncells = Nvertices/2;
+                };
+            if(program_switch == -2 && timestep%((int)(10/dt))==0)
+                {
+                cout << timestep << endl;
+                char dataname2[256];
+                sprintf(dataname2,"../test%i.nc",fileidx);
+                fileidx +=1;
+                AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
+                ncdat2.WriteState(AVM);
+                };
+            };
+
+        t2=clock();
+        cout << "final number of vertices = " <<AVM->getNumberOfDegreesOfFreedom() << endl;
+        cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
+
+        avm->reportMeanVertexForce();
+        cout << "Mean q = " << avm->reportq() << endl;
+        */
         };
 
     //program_switch < 0 --> self-propelled vertex model

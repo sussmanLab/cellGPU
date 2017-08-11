@@ -39,7 +39,7 @@ class vertexModelBase : public Simple2DActiveCell
         void getCellPositionsGPU();
 
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
-        virtual void cellDivision(vector<int> &parameters);
+        virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams = {});
 
         /*!
         if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting vertex i and vertex

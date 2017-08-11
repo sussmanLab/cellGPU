@@ -229,9 +229,10 @@ parameters[1] = the first vertex to gain a new (clockwise) vertex neighbor.
 parameters[2] = the second .....
 The two vertex numbers should be between 0 and celLVertexNum[parameters[0]], respectively, NOT the
 indices of the vertices being targeted
+Note that dParams does nothing
 \post This function is meant to be called before the start of a new timestep. It should be immediately followed by a computeGeometry call
 */
-void vertexModelBase::cellDivision(vector<int> &parameters)
+void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams)
     {
     //This function will first do some analysis to identify the cells and vertices involved
     //it will then call base class' cellDivision routine, and then update all needed data structures
@@ -347,7 +348,7 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     //The Simple2DActiveCell routine will update Motility and cellDirectors,
     // it in turn calls the Simple2DCell routine, which grows its data structures and increment Ncells by one
     Simple2DActiveCell::cellDivision(parameters);
-    
+
     Nvertices += 2;
 
     //additions to the spatial sorting vectors...

@@ -645,8 +645,10 @@ This function supports cellDivisions, updating data structures in Simple2DCell
 This function will 
 and assign the new cell
 (the last element of those arrays) the values of the cell given by parameters[0]
+Note that dParams does nothing by default, but allows more general virtual functions to be defined
+downstream (used in the Voronoi branch)
  */
-void Simple2DCell::cellDivision(vector<int> &parameters)
+void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams)
     {
     Ncells += 1;
     n_idx = Index2D(vertexMax,Ncells);

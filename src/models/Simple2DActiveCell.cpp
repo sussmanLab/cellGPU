@@ -85,10 +85,11 @@ void Simple2DActiveCell::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &d
 /*!
 This function supports cellDivisions, updating data structures in Simple2DActiveCell
 This function will first call Simple2DCell's routine, and then
-grow the cellDirectors and Motility arrays, and assign the new cell
+grows the cellDirectors and Motility arrays, and assign the new cell
 (the last element of those arrays) the values of the cell given by parameters[0]
+Note that dParams does nothing
  */
-void Simple2DActiveCell::cellDivision(vector<int> &parameters)
+void Simple2DActiveCell::cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams)
     {
     //The Simple2DCell routine will increment Ncells by one, and then update other data structures
     Simple2DCell::cellDivision(parameters);
