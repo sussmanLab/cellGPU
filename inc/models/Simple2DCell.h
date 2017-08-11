@@ -2,11 +2,11 @@
 #define SIMPLE2DCELL_H
 
 #include "Simple2DModel.h"
-#include "simpleEquationOfMotion.h"
 #include "indexer.h"
 #include "gpubox.h"
 #include "HilbertSort.h"
 #include "noiseSource.h"
+#include "functions.h"
 
 /*! \file Simple2DCell.h */
 //! Implement data structures and functions common to many off-lattice models of cells in 2D
@@ -52,7 +52,7 @@ class Simple2DCell : public Simple2DModel
         void setCellPositionsRandomly();
 
         //!allow for cell division, according to a vector of model-dependent parameters
-        virtual void cellDivision(vector<int> &parameters){};
+        virtual void cellDivision(vector<int> &parameters);
 
         //!Set cell positions according to a user-specified vector
         void setCellPositions(vector<Dscalar2> newCellPositions);
@@ -163,6 +163,8 @@ class Simple2DCell : public Simple2DModel
 
         //! A flag that determines whether the GPU RNG is the same every time.
         bool Reproducible;
+        //! A source of noise for random cell initialization
+        noiseSource noise;
         //!the area modulus
         Dscalar KA;
         //!The perimeter modulus
@@ -224,16 +226,6 @@ class Simple2DCell : public Simple2DModel
         vector<int> tagToIdxVertex;
         //!A temporary structure that inverse tagToIdx
         vector<int> idxToTagVertex;
-
-        //utility data structures for interfacing with equations of motion
-        //! a vector of Dscalars to be passed to the equation of motion
-        vector<Dscalar> DscalarInfo;
-        //! a vector of GPUArray of ints to be passed to the equation of motion
-        vector<GPUArray<int> > IntArrayInfo;
-        //! a vector of GPUArray of Dscalars to be passed to the equation of motion
-        vector<GPUArray<Dscalar> > DscalarArrayInfo;
-        //! a vector of GPUArray of Dscalar2s to be passed to the equation of motion
-        vector<GPUArray<Dscalar2> > Dscalar2ArrayInfo;
 
         //!An array of displacements used only for the equations of motion
         GPUArray<Dscalar2> displacements;

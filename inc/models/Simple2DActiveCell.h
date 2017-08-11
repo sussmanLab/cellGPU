@@ -34,6 +34,9 @@ class Simple2DActiveCell : public Simple2DCell
         //!get the number of degrees of freedom, defaulting to the number of cells
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 
+        //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
+        virtual void cellDivision(vector<int> &parameters);
+
     //protected functions
     protected:
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity

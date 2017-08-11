@@ -47,7 +47,6 @@ void Simple2DCell::setCellPositionsRandomly()
     {
     Dscalar boxsize = sqrt((Dscalar)Ncells);
     Box.setSquare(boxsize,boxsize);
-    noiseSource noise;
     noise.Reproducible = Reproducible;
 
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::overwrite);
@@ -639,4 +638,38 @@ Dscalar2 Simple2DCell::reportVarAP()
     var.y = var.y /(Dscalar)Ncells;
 
     return var;
+    };
+
+/*!
+This function supports cellDivisions, updating data structures in Simple2DCell
+This function will 
+and assign the new cell
+(the last element of those arrays) the values of the cell given by parameters[0]
+ */
+void Simple2DCell::cellDivision(vector<int> &parameters)
+    {
+    Ncells += 1;
+    n_idx = Index2D(vertexMax,Ncells);
+    int cellIdx = parameters[0];
+
+    //additions to the spatial sorting vectors...
+    itt.push_back(Ncells-1);
+    tti.push_back(Ncells-1);
+    tagToIdx.push_back(Ncells-1);
+    idxToTag.push_back(Ncells-1);
+
+    //AreaPeri will have its values updated in a geometry routine... just change the length
+    AreaPeri.resize(Ncells);
+
+    //use the copy and grow mechanism where we need to actually set values
+    growGPUArray(AreaPeriPreferences,1); //(nc)
+    growGPUArray(Moduli,1);
+    growGPUArray(CellType,1);
+    growGPUArray(cellPositions,1);
+    
+        {//arrayhandle scope
+        ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
+        ArrayHandle<Dscalar2> h_Mod(Moduli); h_Mod.data[Ncells-1] = h_Mod.data[cellIdx];
+        ArrayHandle<int> h_ct(CellType); h_ct.data[Ncells-1] = h_ct.data[cellIdx];
+        };
     };

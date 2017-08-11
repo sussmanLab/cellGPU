@@ -41,7 +41,6 @@ Assign cell directors via a simple, reproducible RNG
 void Simple2DActiveCell::setCellDirectorsRandomly()
     {
     cellDirectors.resize(Ncells);
-    noiseSource noise;
     noise.Reproducible = Reproducible;
     ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
@@ -80,5 +79,25 @@ void Simple2DActiveCell::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &d
         {
         h_mot.data[ii].x = v0s[ii];
         h_mot.data[ii].y = drs[ii];
+        };
+    };
+
+/*!
+This function supports cellDivisions, updating data structures in Simple2DActiveCell
+This function will first call Simple2DCell's routine, and then
+grow the cellDirectors and Motility arrays, and assign the new cell
+(the last element of those arrays) the values of the cell given by parameters[0]
+ */
+void Simple2DActiveCell::cellDivision(vector<int> &parameters)
+    {
+    //The Simple2DCell routine will increment Ncells by one, and then update other data structures
+    Simple2DCell::cellDivision(parameters);
+    int cellIdx = parameters[0];
+    growGPUArray(cellDirectors,1);
+    growGPUArray(Motility,1);
+    noise.Reproducible = Reproducible;
+        {//arrayhandle scope
+        ArrayHandle<Dscalar2> h_mot(Motility); h_mot.data[Ncells-1] = h_mot.data[cellIdx];
+        ArrayHandle<Dscalar> h_cd(cellDirectors); h_cd.data[Ncells-1] = noise.getRealUniform(0.,2*PI);
         };
     };

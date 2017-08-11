@@ -3,7 +3,6 @@
 
 #include "std_include.h"
 #include "Simple2DActiveCell.h"
-#include "functions.h"
 
 /*! \file vertexModelBase.h */
 //!A class that can calculate many geometric and topological features common to vertex models

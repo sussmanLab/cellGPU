@@ -233,6 +233,8 @@ indices of the vertices being targeted
 */
 void vertexModelBase::cellDivision(vector<int> &parameters)
     {
+    //This function will first do some analysis to identify the cells and vertices involved
+    //it will then call base class' cellDivision routine, and then update all needed data structures
     int cellIdx = parameters[0];
     if(cellIdx >= Ncells)
         {
@@ -341,15 +343,14 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
         printf("vertexMax has increased due to cell division\n");
         vertexMax += 2;
         };
-    Ncells += 1;
+
+    //The Simple2DActiveCell routine will update Motility and cellDirectors,
+    // it in turn calls the Simple2DCell routine, which grows its data structures and increment Ncells by one
+    Simple2DActiveCell::cellDivision(parameters);
+    
     Nvertices += 2;
-    n_idx = Index2D(vertexMax,Ncells);
 
     //additions to the spatial sorting vectors...
-    itt.push_back(Ncells-1);
-    tti.push_back(Ncells-1);
-    tagToIdx.push_back(Ncells-1);
-    idxToTag.push_back(Ncells-1);
     ittVertex.push_back(Nvertices-2); ittVertex.push_back(Nvertices-1);
     ttiVertex.push_back(Nvertices-2); ttiVertex.push_back(Nvertices-1);
     tagToIdxVertex.push_back(Nvertices-2); tagToIdxVertex.push_back(Nvertices-1);
@@ -362,30 +363,18 @@ void vertexModelBase::cellDivision(vector<int> &parameters)
     vertexForceSets.resize(3*Nvertices);
     voroCur.resize(3*Nvertices);
     voroLastNext.resize(3*Nvertices);
-    AreaPeri.resize(Ncells);
 
     //use the copy and grow mechanism where we need to actually set values
     growGPUArray(vertexPositions,2); //(nv)
     growGPUArray(vertexNeighbors,6); //(3*nv)
     growGPUArray(vertexCellNeighbors,6); //(3*nv)
     growGPUArray(cellVertexNum,1); //(nc)
-    growGPUArray(AreaPeriPreferences,1); //(nc)
-    growGPUArray(Motility,1); //(nc)
-    growGPUArray(Moduli,1);
-    growGPUArray(CellType,1);
-    growGPUArray(cellDirectors,1);
-    growGPUArray(cellPositions,1);
     //the index cellVertices array needs more care...
     vector<int>  cellVerticesVec;
     copyGPUArrayData(cellVertices,cellVerticesVec);
     cellVertices.resize(vertexMax*Ncells);
-    //first, let's take care of the trivial things
+    //first, let's take care of the vertex positions
         {//arrayhandle scope
-        ArrayHandle<Dscalar2> h_mot(Motility); h_mot.data[Ncells-1] = h_mot.data[cellIdx];
-        ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
-        noiseSource noise;
-        noise.Reproducible = Reproducible;
-        ArrayHandle<Dscalar> h_cd(cellDirectors); h_cd.data[Ncells-1] = noise.getRealUniform(0.,2*PI);
         ArrayHandle<Dscalar2> h_vp(vertexPositions);
         h_vp.data[Nvertices-2] = newV1Pos;
         h_vp.data[Nvertices-1] = newV2Pos;
