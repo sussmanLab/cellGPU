@@ -268,7 +268,7 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
         neighMax = nmax+1;
 
     n_idx = Index2D(neighMax,Ncells);
-    if(neighMax != oldNmax)
+    if(cellNeighbors.getNumElements() != Ncells*neighMax)
         {
         cellNeighbors.resize(neighMax*Ncells);
         neighMaxChange = true;
@@ -896,40 +896,33 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     Box.putInBoxReal(newCellPos1);
     Box.putInBoxReal(newCellPos2);
 
-    printf("((%f,%f), (%f,%f), (%f,%f))\n",initialCellPosition.x,initialCellPosition.y,newCellPos1.x,newCellPos1.y,newCellPos2.x,newCellPos2.y);
+    
+    //for debugging
+//    printf("in cellDivision routine: ((%f,%f), (%f,%f), (%f,%f))\n",initialCellPosition.x,initialCellPosition.y,newCellPos1.x,newCellPos1.y,newCellPos2.x,newCellPos2.y);
 
     //This call updates many of the base data structres, but (among other things) does not actually
     //set the new cell position
     Simple2DActiveCell::cellDivision(parameters);
+    {
+    ArrayHandle<Dscalar2> cp(cellPositions);
+    cp.data[cellIdx] = newCellPos1;
+    cp.data[Ncells-1] = newCellPos2;
+    }
 
-
-    /* the initialization routine gives hints of things that need to be updated here
-    displacements.resize(n);
-    cellForces.resize(n);
-    external_forces.resize(n);
-    exclusions.resize(n);
-
-    circumcenters.resize(2*(Ncells+10));
-
+    //Simple resizing operations
+    displacements.resize(Ncells);
+    cellForces.resize(Ncells);
+    external_forces.resize(Ncells);
+    exclusions.resize(Ncells);
     NeighIdxs.resize(6*(Ncells+10));
+    circumcenters.resize(2*(Ncells+10));
     repair.resize(Ncells);
-    //initialize spatial sorting, but do not sort by default
-    initializeCellSorting();
-    //cell list initialization
+
     celllist.setNp(Ncells);
-    celllist.setBox(Box);
-    celllist.setGridSize(cellsize);
-    //DelaunayLoc initialization
     resetDelLocPoints();
-    //make a full triangulation
-    completeRetriangulationPerformed = 1;
     cellNeighborNum.resize(Ncells);
+    //brute force fix of triangulation
     globalTriangulationCGAL();
-    //initialize the anyCircumcenterTestFailed structure
-    anyCircumcenterTestFailed.resize(1);
-    ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::overwrite);
-    h_actf.data[0]=0;
-    */
-    //resetLists() will take care of voroCur, voroLastNext, delSets, delOther, and forceSets
-    //the allDelSets() should be called
+    resetLists();
+    allDelSets();
     };

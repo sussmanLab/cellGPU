@@ -6,7 +6,7 @@
 
 #include "avm2d.h"
 #include "noiseSource.h"
-#include "voronoi2d.h"
+#include "voronoiTension2d.h"
 #include "selfPropelledCellVertexDynamics.h"
 #include "brownianParticleDynamics.h"
 #include "DatabaseNetCDFAVM.h"
@@ -28,7 +28,7 @@ int main(int argc, char*argv[])
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.01;
     Dscalar Dr = 1.0;
-    Dscalar gamma = 0.0;
+    Dscalar gamma = 0.05;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:d:")) != -1)
@@ -80,8 +80,18 @@ int main(int argc, char*argv[])
         {
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
         EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
-        ForcePtr spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
-        shared_ptr<Voronoi2D> SPV = dynamic_pointer_cast<Voronoi2D>(spv);
+        ForcePtr spv = make_shared<VoronoiTension2D>(numpts,1.0,4.0,reproducible);
+        shared_ptr<VoronoiTension2D> SPV = dynamic_pointer_cast<VoronoiTension2D>(spv);
+
+        vector<int> types(numpts);
+        for (int ii = 0; ii < numpts; ++ii) 
+            if (ii < numpts/2)
+                types[ii]=0;
+            else
+                types[ii]=1;
+        SPV->setCellType(types);
+        SPV->setSurfaceTension(gamma);
+        SPV->setUseSurfaceTension(true);
 
         spv->setCellPreferencesUniform(1.0,p0);
         spv->setv0Dr(v0,1.0);
@@ -99,7 +109,7 @@ int main(int argc, char*argv[])
         for (int timestep = 0; timestep < initSteps+1; ++timestep)
             {
             sim->performTimestep();
-            if(program_switch > 2 && timestep%((int)(1/dt))==0)
+            if(program_switch == 2 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
                 ncdat.WriteState(SPV);
@@ -108,41 +118,39 @@ int main(int argc, char*argv[])
 
         vector<int> cdtest(1); cdtest[0]=10;
         vector<Dscalar> dParams(2); dParams[0] = 3.0*PI/4.0-.1; dParams[1] = 0.5;
-        spv->cellDivision(cdtest,dParams);
+        int Ncells = spv->getNumberOfDegreesOfFreedom();
 
         t1=clock();
-        int Ncells = spv->getNumberOfDegreesOfFreedom();
-        /*
         int fileidx=2;
         for (int timestep = 0; timestep < tSteps; ++timestep)
             {
             sim->performTimestep();
-            if(program_switch <=-1 && timestep%((int)(10/dt))==0)
+            if(program_switch >0 && timestep%((int)(10/dt))==0)
                 {
                 cdtest[0] = noise.getInt(0,Ncells);
-                avm->cellDivision(cdtest);
-
-                Nvertices = avm->getNumberOfDegreesOfFreedom();
-                Ncells = Nvertices/2;
+                dParams[0] = noise.getRealUniform(0,PI);
+                spv->cellDivision(cdtest,dParams);
+                Ncells = spv->getNumberOfDegreesOfFreedom();
+                Dscalar meanA = numpts / (Dscalar) Ncells;
+                Dscalar scaledP0 = p0 * sqrt(meanA); 
+                spv->setCellPreferencesUniform(1.0,scaledP0);
+                printf("Ncells = %i\t <A> = %f \t p0 = %f\n",Ncells,meanA,scaledP0);
                 };
-            if(program_switch == -2 && timestep%((int)(10/dt))==0)
+            if(program_switch == 2 && timestep%((int)(10/dt))==0)
                 {
                 cout << timestep << endl;
                 char dataname2[256];
                 sprintf(dataname2,"../test%i.nc",fileidx);
                 fileidx +=1;
-                AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
-                ncdat2.WriteState(AVM);
+                SPVDatabaseNetCDF ncdat2(spv->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
+                ncdat2.WriteState(SPV);
+
                 };
             };
 
         t2=clock();
-        cout << "final number of vertices = " <<AVM->getNumberOfDegreesOfFreedom() << endl;
         cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
 
-        avm->reportMeanVertexForce();
-        cout << "Mean q = " << avm->reportq() << endl;
-        */
         };
 
     //program_switch < 0 --> self-propelled vertex model
