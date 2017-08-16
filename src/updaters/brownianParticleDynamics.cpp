@@ -44,6 +44,12 @@ Advances brownian dynamics by one time step
 void brownianParticleDynamics::integrateEquationsOfMotion()
     {
     Timestep += 1;
+    if (cellModel->getNumberOfDegreesOfFreedom() != Ndof)
+        {
+        Ndof = cellModel->getNumberOfDegreesOfFreedom();
+        displacements.resize(Ndof);
+        noise.initialize(Ndof);
+        };
     if(GPUcompute)
         {
         integrateEquationsOfMotionGPU();

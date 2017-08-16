@@ -5,6 +5,7 @@
 #include "functions.h"
 #include "gpuarray.h"
 #include "Simple2DCell.h"
+#include "simpleEquationOfMotion.h"
 
 
 /*! \file EnergyMinimizerFIRE2D.h */

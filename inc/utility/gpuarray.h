@@ -423,7 +423,6 @@ template<class T> T* GPUArray<T>::acquire(const access_location::Enum location, 
         else
             {
             throw std::runtime_error("Error acquiring data5");
-            return NULL;
             }
         }
 #ifdef ENABLE_CUDA
@@ -473,14 +472,12 @@ template<class T> T* GPUArray<T>::acquire(const access_location::Enum location, 
         else
             {
             throw std::runtime_error("Error acquiring data2");
-            return NULL;
             }
         }
 #endif
     else
         {
         throw std::runtime_error("Error acquiring data1");
-        return NULL;
         }
     }
 

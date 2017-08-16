@@ -14,22 +14,10 @@
 A file providing an interface to the relevant cuda calls for the AVM2D class
 */
 
-/** @defgroup avmKernels AVM Kernels
+/** @defgroup vmKernels vertex model Kernels
  * @{
- * \brief CUDA kernels and callers for the AVM2D class
+ * \brief CUDA kernels and callers for 2D vertex models
  */
-
-bool gpu_avm_geometry(
-                    Dscalar2 *d_vertexPositions,
-                    int      *d_cellVertexNum,
-                    int      *d_cellVertices,
-                    int      *d_vertexCellNeighbors,
-                    Dscalar2 *d_voroCur,
-                    Dscalar4  *d_voroLastNext,
-                    Dscalar2 *d_AreaPeri,
-                    int      N,
-                    Index2D  &n_idx,
-                    gpubox   &Box);
 
 bool gpu_avm_force_sets(
                     int      *d_vertexCellNeighbors,
@@ -45,12 +33,6 @@ bool gpu_avm_sum_force_sets(
                     Dscalar2 *d_vertexForceSets,
                     Dscalar2 *d_vertexForces,
                     int      Nvertices);
-
-bool gpu_avm_displace(
-                    Dscalar2 *d_vertexPositions,
-                    Dscalar2 *d_vertexDisplacements,
-                    gpubox &Box,
-                    int Nvertices);
 
 bool gpu_avm_test_edges_for_T1(
                     Dscalar2 *d_vertexPositions,
@@ -80,15 +62,6 @@ bool gpu_avm_flip_edges(
                     Index2D  &n_idx,
                     int      Nvertices,
                     int      Ncells);
-
-bool gpu_avm_get_cell_positions(
-                    Dscalar2 *d_cellPositions,
-                    Dscalar2 *d_vertexPositions,
-                    int      *d_cellVertexNum,
-                    int      *d_cellVertices,
-                    int      N,
-                    Index2D  &n_idx,
-                    gpubox   &Box);
 
 /** @} */ //end of group declaration
 #endif

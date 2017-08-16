@@ -129,7 +129,7 @@ void gpubox::invTrans(const Dscalar2 p1, Dscalar2 &pans)
     };
 
 void gpubox::putInBoxReal(Dscalar2 &p1)
-    {//assume real space entries. Moves p1 by disp, and puts it back in box
+    {//assume real space entries. Puts it back in box
     Dscalar2 vP;
     invTrans(p1,vP);
     putInBox(vP);
