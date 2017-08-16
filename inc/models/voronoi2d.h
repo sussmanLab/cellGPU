@@ -37,12 +37,6 @@ class Voronoi2D : public voronoiModelBase
         //!compute the geometry and get the forces
         virtual void computeForces();
 
-        //!update/enforce the topology
-        virtual void enforceTopology();
-
-        //!Declare which particles are to be excluded (exes[i]!=0)
-        void setExclusions(vector<int> &exes);
-
         //cell-dynamics related functions...these call functions in the next section
         //in general, these functions are the common calls, and test flags to know whether to call specific versions of specialty functions
 
@@ -63,17 +57,10 @@ class Voronoi2D : public voronoiModelBase
         //!call gpu_sum_force_sets_with_exclusions kernel caller
         void sumForceSetsWithExclusions();
 
-
         //!Report various cell infor for testing and debugging
         void reportCellInfo();
         //!Report information about net forces...
         void reportForces(bool verbose);
-
-    //protected functions
-    protected:
-        //!sort points along a Hilbert curve for data locality
-        void spatialSorting();
-
 
     public:
         //Various partial derivatives related to calculating the dynamical matrix

@@ -12,7 +12,10 @@
 #include "DatabaseNetCDFAVM.h"
 #include "DatabaseNetCDFSPV.h"
 /*!
-This file demonstrates simulations in the vertex or voronoi models in which a cell divides
+This file demonstrates simulations in the vertex or voronoi models in which a cell divides.
+The vertex model version (accessed by using a negative "-z" option on the command line) does cell
+division in a homogenous, simple vertex model setting. The voronoi model version ("-z" >=0) uses a
+two-type model with a very weak tension between the (otherwise identical) cell types.
 */
 int main(int argc, char*argv[])
 {
@@ -127,10 +130,11 @@ int main(int argc, char*argv[])
             sim->performTimestep();
             if(program_switch >0 && timestep%((int)(10/dt))==0)
                 {
-                cdtest[0] = noise.getInt(0,Ncells);
+                cdtest[0] = noise.getInt(0,Ncells-1);
                 dParams[0] = noise.getRealUniform(0,PI);
                 spv->cellDivision(cdtest,dParams);
                 Ncells = spv->getNumberOfDegreesOfFreedom();
+                //suppose, for instance, you want to keep p_0/sqrt(<A>) constant...
                 Dscalar meanA = numpts / (Dscalar) Ncells;
                 Dscalar scaledP0 = p0 * sqrt(meanA); 
                 spv->setCellPreferencesUniform(1.0,scaledP0);

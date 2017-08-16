@@ -38,6 +38,12 @@ class voronoiModelBase : public Simple2DActiveCell
         //!read positions from text file...for debugging
         void readTriangulation(ifstream &infile);
 
+        //!update/enforce the topology
+        virtual void enforceTopology();
+
+        //!Declare which particles are to be excluded (exes[i]!=0)
+        void setExclusions(vector<int> &exes);
+
         //virtual functions that need to be implemented
         //!In voronoi models the number of degrees of freedom is the number of cells
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
@@ -71,6 +77,9 @@ class voronoiModelBase : public Simple2DActiveCell
 
     //protected functions
     protected:
+        //!sort points along a Hilbert curve for data locality
+        void spatialSorting();
+
         //!construct the global periodic triangulation point-by-point using non-CGAL methods
         void fullTriangulation(bool verbose = false);
         //!Globally construct the triangulation via CGAL

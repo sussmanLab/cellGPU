@@ -76,6 +76,30 @@ void voronoiModelBase::resetDelLocPoints()
     };
 
 /*!
+\param exes a list of per-particle indications of whether a particle should be excluded (exes[i] !=0) or not/
+*/
+void voronoiModelBase::setExclusions(vector<int> &exes)
+    {
+    particleExclusions=true;
+    external_forces.resize(Ncells);
+    exclusions.resize(Ncells);
+    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_ex(exclusions,access_location::host,access_mode::overwrite);
+
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        h_ex.data[ii] = 0;
+        if( exes[ii] != 0)
+            {
+            //set v0 to zero and Dr to zero
+            h_mot.data[ii].x = 0.0;
+            h_mot.data[ii].y = 0.0;
+            h_ex.data[ii] = 1;
+            };
+        };
+    };
+
+/*!
 \post the cell list is updated according to the current cell positions
 */
 void voronoiModelBase::updateCellList()
@@ -617,6 +641,81 @@ void voronoiModelBase::testAndRepairTriangulation(bool verb)
         skippedFrames+=1;
     };
 
+/*!
+When sortPeriod < 0, this routine does not get called
+\post call Simple2DActiveCell's underlying Hilbert sort scheme, and re-index voronoiModelBase's extra arrays
+*/
+void voronoiModelBase::spatialSorting()
+    {
+    spatiallySortCellsAndCellActivity();
+    //reTriangulate with the new ordering
+    globalTriangulationCGAL();
+    //get new DelSets and DelOthers
+    resetLists();
+    allDelSets();
+
+    //re-index all cell information arrays
+    reIndexCellArray(exclusions);
+    };
+
+/*!
+goes through the process of testing and repairing the topology on either the CPU or GPU
+\post and topological changes needed by cell motion are detected and repaired
+*/
+void voronoiModelBase::enforceTopology()
+    {
+    if (GPUcompute)
+        {
+        testAndRepairTriangulation();
+        ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::read);
+        if(h_actf.data[0] == 1)
+            {
+            //maintain the auxilliary lists for computing forces
+            if(completeRetriangulationPerformed || neighMaxChange)
+                {
+                if(neighMaxChange)
+                    {
+                    resetLists();
+                    neighMaxChange = false;
+                    };
+                allDelSets();
+                }
+            else
+                {
+                bool localFail = false;
+                for (int jj = 0;jj < NeedsFixing.size(); ++jj)
+                    if(!getDelSets(NeedsFixing[jj]))
+                        localFail=true;
+                if (localFail)
+                    {
+                    cout << "Local triangulation failed to return a consistent set of topological information..." << endl;
+                    cout << "Now attempting a global re-triangulation to save the day." << endl;
+                    globalTriangulationCGAL();
+                    //get new DelSets and DelOthers
+                    resetLists();
+                    allDelSets();
+                    };
+                };
+
+            };
+        //pre-copy some data back to device; this will overlap with some CPU time
+        //...these are the arrays that are used by force_sets but not geometry, and should be switched to Async
+        ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
+        ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
+        ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
+        }
+    else
+        {
+        testAndRepairTriangulation();
+        if(neighMaxChange)
+            {
+            if(neighMaxChange)
+                resetLists();
+            neighMaxChange = false;
+            allDelSets();
+            };
+        };
+    };
 //read a triangulation from a text file...used only for testing purposes. Any other use should call the Database class (see inc/Database.h")
 void voronoiModelBase::readTriangulation(ifstream &infile)
     {
@@ -817,10 +916,16 @@ void voronoiModelBase::allDelSets()
 
 /*!
 Trigger a cell division event, which involves some laborious re-indexing of various data structures.
+This function is meant to be called before the start of a new timestep. It should be immediately followed by a computeGeometry call.
+The idea of the division is that a targeted cell will divide normal to an axis specified by the
+angle, theta, passed to the function. The final state cell positions are placed along the axis at a
+distance away from the initial cell position set by a multiplicative factor (<1) of the in-routine determined
+maximum distance in the cell along that axis.
 parameters[0] = the index of the cell to undergo a division event
 dParams[0] = an angle, theta
 dParams[1] = a fraction of maximum separation of the new cell positions along the axis of the cell specified by theta
-\post This function is meant to be called before the start of a new timestep. It should be immediately followed by a computeGeometry call
+\post the new cell is the final indexed entry of the various data structures (e.g.,
+cellPositions[new number of cells - 1])
 */
 void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams)
     {

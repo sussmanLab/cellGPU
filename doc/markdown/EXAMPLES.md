@@ -24,6 +24,10 @@ Provides an example of using the FIRE minimizer to minimize either a 2D SPV or A
 Provides an example of using the NetCDF database class to write snapshots of a simulation of the 2D
 SPV model, using either active cell or overdamped Brownian dynamics
 
+# cellDivision.cpp
+
+Provides a simple example of both vertex and voronoi models with cell division activated
+
 # dynMat.cpp
 
 Provides an example of computing the dynamical matrix of a minimized voronoi model and using the
