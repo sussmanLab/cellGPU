@@ -916,7 +916,10 @@ void voronoiModelBase::allDelSets()
 
 /*!
 Trigger a cell division event, which involves some laborious re-indexing of various data structures.
-This function is meant to be called before the start of a new timestep. It should be immediately followed by a computeGeometry call.
+This version uses a heavy-handed approach, hitting the cell positions with a full, global retriangulation
+(rather than just updating the targeted cell and its neighbor with the local topology repair routines).
+If a simulation is needed where the cell division rate is very rapid, this should be improved.
+
 The idea of the division is that a targeted cell will divide normal to an axis specified by the
 angle, theta, passed to the function. The final state cell positions are placed along the axis at a
 distance away from the initial cell position set by a multiplicative factor (<1) of the in-routine determined
@@ -924,6 +927,8 @@ maximum distance in the cell along that axis.
 parameters[0] = the index of the cell to undergo a division event
 dParams[0] = an angle, theta
 dParams[1] = a fraction of maximum separation of the new cell positions along the axis of the cell specified by theta
+
+This function is meant to be called before the start of a new timestep. It should be immediately followed by a computeGeometry call.
 \post the new cell is the final indexed entry of the various data structures (e.g.,
 cellPositions[new number of cells - 1])
 */
