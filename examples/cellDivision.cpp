@@ -15,7 +15,8 @@
 This file demonstrates simulations in the vertex or voronoi models in which a cell divides.
 The vertex model version (accessed by using a negative "-z" option on the command line) does cell
 division in a homogenous, simple vertex model setting. The voronoi model version ("-z" >=0) uses a
-two-type model with a very weak tension between the (otherwise identical) cell types.
+two-type model with a very weak tension between the (otherwise identical) cell types. In both cases,
+cells are chosen to divide at random.
 */
 int main(int argc, char*argv[])
 {
@@ -123,12 +124,21 @@ int main(int argc, char*argv[])
         vector<Dscalar> dParams(2); dParams[0] = 3.0*PI/4.0-.1; dParams[1] = 0.5;
         int Ncells = spv->getNumberOfDegreesOfFreedom();
 
+        char dataname2[256];
+        int divisionTime = 20;
+        int fmax = tSteps/((int) divisionTime/dt);
+        printf("fmax = %i\n",fmax);
+        for (int fileidx = 2; fileidx < 2+fmax; ++fileidx)
+            {
+            sprintf(dataname2,"../test%i.nc",fileidx);
+            SPVDatabaseNetCDF ncdat2(spv->getNumberOfDegreesOfFreedom()+fileidx-1,dataname2,NcFile::Replace);
+            };
         t1=clock();
-        int fileidx=2;
+        int fileidx=1;
         for (int timestep = 0; timestep < tSteps; ++timestep)
             {
             sim->performTimestep();
-            if(program_switch >0 && timestep%((int)(10/dt))==0)
+            if(program_switch >0 && timestep%((int)(divisionTime/dt))==0)
                 {
                 cdtest[0] = noise.getInt(0,Ncells-1);
                 dParams[0] = noise.getRealUniform(0,PI);
@@ -139,14 +149,13 @@ int main(int argc, char*argv[])
                 Dscalar scaledP0 = p0 * sqrt(meanA); 
                 spv->setCellPreferencesUniform(1.0,scaledP0);
                 printf("Ncells = %i\t <A> = %f \t p0 = %f\n",Ncells,meanA,scaledP0);
+                fileidx +=1;
                 };
             if(program_switch == 2 && timestep%((int)(10/dt))==0)
                 {
                 cout << timestep << endl;
-                char dataname2[256];
                 sprintf(dataname2,"../test%i.nc",fileidx);
-                fileidx +=1;
-                SPVDatabaseNetCDF ncdat2(spv->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
+                SPVDatabaseNetCDF ncdat2(spv->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Write);
                 ncdat2.WriteState(SPV);
 
                 };
