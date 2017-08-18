@@ -2,7 +2,7 @@
 
 If you use cellGPU for a publication or project, please site the main cellGPU paper:
 
-(1) "cellGPU: massively parallel simulations of dynamic vertex models" https://arxiv.org/abs/1702.02939
+(1) "cellGPU: massively parallel simulations of dynamic vertex models" Daniel M. Sussman; Computer Physics Communications, volume 219, pages 400-406, (2017)
 
 Additional citation to consider:
 

@@ -13,16 +13,16 @@ reproduce the timing information in the cellGPU paper.
 
 # voronoi.cpp
 
-The same thing, but for running the 2D SPV model
+The same thing, but for running the 2D Voronoi model
 
 # minimize.cpp
 
-Provides an example of using the FIRE minimizer to minimize either a 2D SPV or AVM system.
+Provides an example of using the FIRE minimizer to minimize either a 2D Voronoi or AVM system.
 
 # runMakeDatabase.cpp
 
 Provides an example of using the NetCDF database class to write snapshots of a simulation of the 2D
-SPV model, using either active cell or overdamped Brownian dynamics
+Voronoi model, using either active cell or overdamped Brownian dynamics
 
 # cellDivision.cpp
 

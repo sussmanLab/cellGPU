@@ -919,7 +919,6 @@ Trigger a cell division event, which involves some laborious re-indexing of vari
 This version uses a heavy-handed approach, hitting the cell positions with a full, global retriangulation
 (rather than just updating the targeted cell and its neighbor with the local topology repair routines).
 If a simulation is needed where the cell division rate is very rapid, this should be improved.
-
 The idea of the division is that a targeted cell will divide normal to an axis specified by the
 angle, theta, passed to the function. The final state cell positions are placed along the axis at a
 distance away from the initial cell position set by a multiplicative factor (<1) of the in-routine determined

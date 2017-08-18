@@ -51,7 +51,7 @@ application with a different version of Burkardt's LGPL source code. As such Cel
 under a non-(L)GPL license. Credit for this library, of course, goes to John Burkardt:
 https://people.sc.fsu.edu/~jburkardt/cpp_src/hilbert_curve/hilbert_curve.html
 
-(3) eigenMatrixInterface.h/.cpp interface with, indeed, the Eigen library. Eigen is Free Software,
+(3) eigenMatrixInterface.h/.cpp interfaces with, indeed, the Eigen library. Eigen is Free Software,
 available from eigen.tuxfamily.org/. It is licensed under the MPL2. See https://www.mozilla.org/en-US/MPL/2.0/ for more details.
 
 (4) Finally, the cellGPU logo was made by using the ``Lincoln Experiments'' project,

@@ -30,7 +30,7 @@ and finding all points in the circumcircle of the point and any two consecutive 
 
 * DelaunayMD -- A core engine that operates as described below in ''Basic idea.'' Can move particles
 and update their underlying Delaunay triangulation
-* SPV2D -- A child class of DelaunayMD that calculates forces according to the 2D SPV model.
+* Voronoi2D -- A child class of DelaunayMD that calculates forces according to the 2D Voronoi model.
 * AVM2D -- A child of Simple2DActiveCell that calculates forces for a simple 2D ("active") vertex model
 where the topology changes via a simple rule for T1 transitions
 
@@ -50,7 +50,7 @@ Gaussian noise, simulating an overdamped langevin equation at some temperature
 * EnergyMinimizerFIRE -- provides an interface to a FIRE minimizer that is modeled on the simpleEquationOfMotion
 class.
 
-## Basic idea of SPV hybrid operation
+## Basic idea of Voronoi model hybrid operation
 
 The following describes the basic operation of the DelaunayMD class
 * (1) CPU STEP: If necessary (ie. after initialization, or after a timestep where a lot of neighbors
@@ -71,7 +71,7 @@ the cycle of (2)-(5) can repeat.
 ## Basic idea of AVM GPU-only operation
 
 The following describes the basic operation of the active-vertex model class included. It is much
-simpler than the SPV branch!
+simpler than the Voronoi branch!
 * (1) CPU STEP: Initialize a domain of cells in some way. Currently a CGAL triangulation of a random
 point set is used.
 * (2) GPU STEP: Compute the geometry of the cells, taking into account possible self-intersections

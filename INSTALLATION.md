@@ -12,13 +12,13 @@ CUDA-8.0. The code has been tested with CUDA versions as early as 6.5, and uses 
 3.5 devices and higher. It ought to work on lower compute capability devices; compile without the
 "-arch=sm_35" flag to run on them.
 
-The SPV branch uses the CGAL library; this dependency can be removed, if necessary, by monkeying
+The Voronoi model branch uses the CGAL library; this dependency can be removed, if necessary, by monkeying
 with the code to run "fullTriangulation()" rather than "globalTriangulationCGAL()" in the relevant
 spots. This is highly discouraged, and the code may be much less stable as a result. In any event,
 CGAL-4.9 was used, which in turn requires up to date versions of the gmp and mpfr libraries.
 The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.
 
-The database class uses the netCDF-4 C++  library (tested on version 4.1.3).The dependency on netCDF
+The default database class uses the netCDF-4 C++  library (tested on version 4.1.3).The dependency on netCDF
 can be removed by (1) not including any "Database" class, and (2) commenting out everything after the
 = sign in the LIB_NETCDF entry of the makefile
 
@@ -26,27 +26,11 @@ The calculation of the dynamical matrix makes use of Eigen3.3.3
 
 Documentation is maintained via doxygen, but is not required for compilation of the executables.
 
-The makefile system is scheduled to be replaced, and will soon change to require cmake.
-
 # Sample programs
 
-The included makefile compiles four programs: avmGPU, spvGPU, spvMSD, and Minimize.out. The first two generate timing
-information, and the "Timing.sh" script shows an example of how to quickly call these programs for a
+This repository comes with sample main cpp files that can be compiled into executables in both the root directory
+and in examples/. Please see the [examples](@ref code) documentation for details on each.
 range of parameters.
-
-The third program, spvMSD, uses netCDF to save positional data (log spaced) for a simulation
-of monodisperse cells in the SPV model (as compiled the .nc file will be saved to the current directory).
-The file also contains a command line argument that allows for the system to be run under Brownian dynamics
-rather than as a non-equilibrium active matter model. In any event, analyzing the saved positional data, for
-instance by computing the mean squared displacement, can be used to confirm the correct operation of the
-program. The included "Msd.sh" script will generate some data that can be analyzed and directly compared
-with Fig. 1 of Bi et al. (Phys. Rev. X 6, 021011 (2016)), which is the cannonical reference for the SPV model.
-
-The fourth program, Minimize.out, shows how to use the included FIRE minimizer to do simple energy minimization.
-
-The fifth program, DynamicalMatrix.out, shows how to use the Eigen interface to compute the dynamical matrix of
-Voronoi systems (with quadratic perimeter terms) and extract the eigenvalues/eignevectors. This code is rather
-specialized, and not as general as one would ultimately like to see.
 
 # Mac OS X Instructions
 

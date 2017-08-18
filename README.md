@@ -12,7 +12,7 @@ http://www.sciencedirect.com/science/article/pii/S0010465517301832
 
 Information on installing the project and contributing to it is contained in the relevant
 markdown files in the base directory and in the doc/markdown directory. Documentation of the
-code is maintained via Doxygen, and all of the links in this readme function only in the Doxygen
+code is maintained via Doxygen, and all of the links in this readme only function in the Doxygen
 documentation (link above, or compile it by going to the "/doc" directory and typing "doxygen Doxyfile"
 
 A very rough outline of some of the main classes and the basic operating flow of the primary branches

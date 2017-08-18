@@ -2,6 +2,10 @@
 
 ### Changes in progress
 
+*
+
+### version 0.6.2
+
 * Implement cell division in both vertex and Voronoi models
 * Major bug fix in "quadratic" vertex model force computations
 
