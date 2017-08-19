@@ -70,6 +70,9 @@ class Simple2DCell : public Simple2DModel
         //!An uncomfortable function to allow the user to set vertex topology "by hand"
         void setVertexTopologyFromCells(vector< vector<int> > cellVertexIndices);
 
+        //!return the gpubox
+        virtual gpubox & returnBox(){return Box;};
+
         //!return the base "itt" re-indexing vector
         virtual vector<int> & returnItt(){return itt;};
 
@@ -147,12 +150,17 @@ class Simple2DCell : public Simple2DModel
         can be useful. For instance, the VoronoiTension2D classes uses the integers of cellType to
         determine when to apply an additional line tension between cells.
         */
-        GPUArray<int> CellType;
+        GPUArray<int> cellType;
         //!A indexer for turning a pair of cells into a 1-D index
         Index2D cellTypeIndexer;
 
         //!The current energy of the system; only updated when an explicit energy calculation is called (i.e. not by default each timestep)
         Dscalar Energy;
+        //!To write consistent files...the cell that started the simulation as index i has current index tagToIdx[i]
+        vector<int> tagToIdx;
+        //!To write consistent files...the vertex that started the simulation as index i has current index tagToIdx[i]
+        vector<int> tagToIdxVertex;
+
     //protected member variables
     protected:
         //!the box defining the periodic domain
@@ -214,16 +222,12 @@ class Simple2DCell : public Simple2DModel
         vector<int> itt;
         //!A temporary structure that inverts itt
         vector<int> tti;
-        //!To write consistent files...the cell that started the simulation as index i has current index tagToIdx[i]
-        vector<int> tagToIdx;
         //!A temporary structure that inverse tagToIdx
         vector<int> idxToTag;
         //!A map between vertex index and the spatially sorted version.
         vector<int> ittVertex;
         //!A temporary structure that inverts itt
         vector<int> ttiVertex;
-        //!To write consistent files...the vertex that started the simulation as index i has current index tagToIdx[i]
-        vector<int> tagToIdxVertex;
         //!A temporary structure that inverse tagToIdx
         vector<int> idxToTagVertex;
 
@@ -232,9 +236,6 @@ class Simple2DCell : public Simple2DModel
 
     //reporting functions
     public:
-        //!Get a copy of the particle positions
-        void getPoints(GPUArray<Dscalar2> &ps){ps = cellPositions;};
-
         //!Get the maximum force on a cell
         Dscalar getMaxForce()
             {

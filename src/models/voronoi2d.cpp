@@ -55,7 +55,7 @@ void Voronoi2D::Initialize(int n)
     cellForces.resize(n);
     external_forces.resize(n);
     AreaPeri.resize(n);
-    CellType.resize(n);
+    cellType.resize(n);
 
     cellDirectors.resize(n);
     displacements.resize(n);
@@ -196,7 +196,7 @@ void Voronoi2D::computeVoronoiForceCPU(int i)
     //read in all the data we'll need
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::read);
+    ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::read);

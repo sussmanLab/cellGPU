@@ -11,6 +11,7 @@
 #include "brownianParticleDynamics.h"
 #include "DatabaseNetCDFAVM.h"
 #include "DatabaseNetCDFSPV.h"
+#include "DatabaseTextVoronoi.h"
 /*!
 This file demonstrates simulations in the vertex or voronoi models in which a cell divides.
 The vertex model version (accessed by using a negative "-z" option on the command line) does cell
@@ -79,10 +80,10 @@ int main(int argc, char*argv[])
     noiseSource noise;
     noise.Reproducible = reproducible;
 
-    //program_switch >= 0 --> thermal voronoi model
+    //program_switch >= 0 --> self-propelled voronoi model
     if(program_switch >=0)
         {
-        SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+        DatabaseTextVoronoi db1("../test1.txt",0);
         EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
         ForcePtr spv = make_shared<VoronoiTension2D>(numpts,1.0,4.0,reproducible);
         shared_ptr<VoronoiTension2D> SPV = dynamic_pointer_cast<VoronoiTension2D>(spv);
@@ -116,7 +117,7 @@ int main(int argc, char*argv[])
             if(program_switch == 2 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
-                ncdat.WriteState(SPV);
+                db1.WriteState(SPV);
                 };
             };
 
@@ -126,13 +127,6 @@ int main(int argc, char*argv[])
 
         char dataname2[256];
         int divisionTime = 20;
-        int fmax = tSteps/((int) divisionTime/dt);
-        printf("fmax = %i\n",fmax);
-        for (int fileidx = 2; fileidx < 2+fmax; ++fileidx)
-            {
-            sprintf(dataname2,"../test%i.nc",fileidx);
-            SPVDatabaseNetCDF ncdat2(spv->getNumberOfDegreesOfFreedom()+fileidx-1,dataname2,NcFile::Replace);
-            };
         t1=clock();
         int fileidx=1;
         for (int timestep = 0; timestep < tSteps; ++timestep)
@@ -149,15 +143,11 @@ int main(int argc, char*argv[])
                 Dscalar scaledP0 = p0 * sqrt(meanA); 
                 spv->setCellPreferencesUniform(1.0,scaledP0);
                 printf("Ncells = %i\t <A> = %f \t p0 = %f\n",Ncells,meanA,scaledP0);
-                fileidx +=1;
                 };
             if(program_switch == 2 && timestep%((int)(10/dt))==0)
                 {
                 cout << timestep << endl;
-                sprintf(dataname2,"../test%i.nc",fileidx);
-                SPVDatabaseNetCDF ncdat2(spv->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Write);
-                ncdat2.WriteState(SPV);
-
+                db1.WriteState(SPV);
                 };
             };
 

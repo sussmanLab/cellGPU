@@ -109,8 +109,8 @@ void Simple2DCell::setModuliUniform(Dscalar newKA, Dscalar newKP)
  */
 void Simple2DCell::setCellTypeUniform(int i)
     {
-    CellType.resize(Ncells);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    cellType.resize(Ncells);
+    ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_ct.data[ii] = i;
@@ -123,8 +123,8 @@ void Simple2DCell::setCellTypeUniform(int i)
  */
 void Simple2DCell::setCellType(vector<int> &types)
     {
-    CellType.resize(Ncells);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::overwrite);
+    cellType.resize(Ncells);
+    ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_ct.data[ii] = types[ii];
@@ -376,7 +376,7 @@ void Simple2DCell::spatiallySortCells()
     reIndexCellArray(cellPositions);
     reIndexCellArray(Moduli);
     reIndexCellArray(AreaPeriPreferences);
-    reIndexCellArray(CellType);
+    reIndexCellArray(cellType);
     };
 
 /*!
@@ -476,7 +476,7 @@ void Simple2DCell::spatiallySortVertices()
     //Start with everything that can be done with just the cell indexing
     reIndexCellArray(Moduli);
     reIndexCellArray(AreaPeriPreferences);
-    reIndexCellArray(CellType);
+    reIndexCellArray(cellType);
     reIndexCellArray(cellVertexNum);
     //Now the rest
     for (int vv = 0; vv < Nvertices; ++vv)
@@ -666,12 +666,12 @@ void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<Dsca
     //use the copy and grow mechanism where we need to actually set values
     growGPUArray(AreaPeriPreferences,1); //(nc)
     growGPUArray(Moduli,1);
-    growGPUArray(CellType,1);
+    growGPUArray(cellType,1);
     growGPUArray(cellPositions,1);
     
         {//arrayhandle scope
         ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
         ArrayHandle<Dscalar2> h_Mod(Moduli); h_Mod.data[Ncells-1] = h_Mod.data[cellIdx];
-        ArrayHandle<int> h_ct(CellType); h_ct.data[Ncells-1] = h_ct.data[cellIdx];
+        ArrayHandle<int> h_ct(cellType); h_ct.data[Ncells-1] = h_ct.data[cellIdx];
         };
     };

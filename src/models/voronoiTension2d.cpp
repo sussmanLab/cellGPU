@@ -105,7 +105,7 @@ void VoronoiTension2D::computeVoronoiSimpleTensionForceSetsGPU()
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
     ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
-    ArrayHandle<int> d_ct(CellType,access_location::device,access_mode::read);
+    ArrayHandle<int> d_ct(cellType,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::read);
     ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::read);
 
@@ -139,7 +139,7 @@ void VoronoiTension2D::computeVoronoiTensionForceSetsGPU()
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
     ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
-    ArrayHandle<int> d_ct(CellType,access_location::device,access_mode::read);
+    ArrayHandle<int> d_ct(cellType,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::read);
     ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::read);
 
@@ -172,7 +172,7 @@ void VoronoiTension2D::computeVoronoiSimpleTensionForceCPU(int i)
     //read in all the data we'll need
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::read);
+    ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::read);
@@ -426,7 +426,7 @@ void VoronoiTension2D::computeVoronoiTensionForceCPU(int i)
     //read in all the data we'll need
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_ct(CellType,access_location::host,access_mode::read);
+    ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::read);
