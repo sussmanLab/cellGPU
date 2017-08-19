@@ -2,7 +2,7 @@
 
 ### Changes in progress
 
-*
+* 
 
 ### version 0.6.2
 
@@ -17,7 +17,7 @@
 
 ### version 0.6
 
-* refactored code to implement simpleEquationOfMotion and child classes.
+* started refactoring class structures... beginning with equations of motion
 
 ### version 0.5.1
 
