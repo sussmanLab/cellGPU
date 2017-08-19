@@ -1,8 +1,8 @@
 #ifndef dbTextVoronoi_h
 #define dbTextVoronoi_h
 
-#include "baseDatabase.h"
-/*! \file databaseTextVoronoi.h */
+#include "BaseDatabase.h"
+/*! \file DatabaseTextVoronoi.h */
 //! A simple text-based output for voronoi models...only supports sequential writing of frames
 
 /*!
