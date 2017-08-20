@@ -69,8 +69,7 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
-    ForcePtr spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
-    shared_ptr<Voronoi2D> SPV = dynamic_pointer_cast<Voronoi2D>(spv);
+    shared_ptr<Voronoi2D> spv  = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
 
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setv0Dr(v0,1.0);

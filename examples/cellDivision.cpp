@@ -85,8 +85,7 @@ int main(int argc, char*argv[])
         {
         DatabaseTextVoronoi db1("../test1.txt",0);
         EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
-        ForcePtr spv = make_shared<VoronoiTension2D>(numpts,1.0,4.0,reproducible);
-        shared_ptr<VoronoiTension2D> SPV = dynamic_pointer_cast<VoronoiTension2D>(spv);
+        shared_ptr<VoronoiTension2D> spv = make_shared<VoronoiTension2D>(numpts,1.0,4.0,reproducible);
 
         vector<int> types(numpts);
         for (int ii = 0; ii < numpts; ++ii) 
@@ -94,9 +93,9 @@ int main(int argc, char*argv[])
                 types[ii]=0;
             else
                 types[ii]=1;
-        SPV->setCellType(types);
-        SPV->setSurfaceTension(gamma);
-        SPV->setUseSurfaceTension(true);
+        spv->setCellType(types);
+        spv->setSurfaceTension(gamma);
+        spv->setUseSurfaceTension(true);
 
         spv->setCellPreferencesUniform(1.0,p0);
         spv->setv0Dr(v0,1.0);
@@ -117,7 +116,7 @@ int main(int argc, char*argv[])
             if(program_switch == 2 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
-                db1.WriteState(SPV);
+                db1.WriteState(spv);
                 };
             };
 
@@ -147,7 +146,7 @@ int main(int argc, char*argv[])
             if(program_switch == 2 && timestep%((int)(10/dt))==0)
                 {
                 cout << timestep << endl;
-                db1.WriteState(SPV);
+                db1.WriteState(spv);
                 };
             };
 
@@ -164,12 +163,11 @@ int main(int argc, char*argv[])
         bool runSPV = false;
 
         EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
-        ForcePtr avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible,runSPV);
+        shared_ptr<AVM2D> avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible,runSPV);
         avm->setCellPreferencesUniform(1.0,p0);
         avm->setv0Dr(v0,1.0);
 
-        shared_ptr<AVM2D> AVM = dynamic_pointer_cast<AVM2D>(avm);
-        AVM->setT1Threshold(0.04);
+        avm->setT1Threshold(0.04);
 
         SimulationPtr sim = make_shared<Simulation>();
         sim->setConfiguration(avm);
@@ -191,7 +189,7 @@ int main(int argc, char*argv[])
             if(program_switch < -1 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
-                ncdat.WriteState(AVM);
+                ncdat.WriteState(avm);
                 };
             };
         vector<int> cdtest(3); cdtest[0]=10; cdtest[1] = 0; cdtest[2] = 2;
@@ -219,12 +217,12 @@ int main(int argc, char*argv[])
                 sprintf(dataname2,"../test%i.nc",fileidx);
                 fileidx +=1;
                 AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
-                ncdat2.WriteState(AVM);
+                ncdat2.WriteState(avm);
                 };
             };
 
         t2=clock();
-        cout << "final number of vertices = " <<AVM->getNumberOfDegreesOfFreedom() << endl;
+        cout << "final number of vertices = " <<avm->getNumberOfDegreesOfFreedom() << endl;
         cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
 
         avm->reportMeanVertexForce();

@@ -74,21 +74,17 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"../test.nc");
-    char dataname2[256];
-    sprintf(dataname2,"../test2.nc");
     int Nvert = 2*numpts;
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
-    AVMDatabaseNetCDF ncdat2(Nvert+2,dataname2,NcFile::Replace);
 
     bool runSPV = false;
 
     EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
-    ForcePtr avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible,runSPV);
+    shared_ptr<AVM2D> avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible,runSPV);
     avm->setCellPreferencesUniform(1.0,p0);
     avm->setv0Dr(v0,1.0);
 
-    shared_ptr<AVM2D> AVM = dynamic_pointer_cast<AVM2D>(avm);
-    AVM->setT1Threshold(0.04);
+    avm->setT1Threshold(0.04);
 
 
     SimulationPtr sim = make_shared<Simulation>();
@@ -111,7 +107,7 @@ int main(int argc, char*argv[])
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {
             cout << timestep << endl;
-            ncdat.WriteState(AVM);
+            ncdat.WriteState(avm);
             };
         };
 
@@ -123,7 +119,7 @@ int main(int argc, char*argv[])
         if(program_switch <0 && timestep%((int)(1/dt))==0)
             {
             cout << timestep << endl;
-            ncdat2.WriteState(AVM);
+            ncdat.WriteState(avm);
             };
         };
 

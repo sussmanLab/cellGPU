@@ -80,11 +80,9 @@ int main(int argc, char*argv[])
     SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace,false);
 
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
-    EOMPtr bd = make_shared<brownianParticleDynamics>(numpts);
-    shared_ptr<brownianParticleDynamics> BD = dynamic_pointer_cast<brownianParticleDynamics>(bd);
+    shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(numpts);
 
-    ForcePtr spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
-    shared_ptr<Voronoi2D> SPV = dynamic_pointer_cast<Voronoi2D>(spv);
+    shared_ptr<Voronoi2D> spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
 
 
     spv->setCellPreferencesUniform(1.0,p0);
@@ -102,7 +100,7 @@ int main(int argc, char*argv[])
     sim->setReproducible(reproducible);
     //initialize parameters
 
-    BD->setT(v0*v0/2.0*Dr);
+    bd->setT(v0*v0/2.0*Dr);
 
     //initialize
     for(int ii = 0; ii < initSteps; ++ii)
@@ -122,7 +120,7 @@ int main(int argc, char*argv[])
         if(ii == nextSave)
             {
             printf(" step %i\n",ii);
-            ncdat.WriteState(SPV);
+            ncdat.WriteState(spv);
             nextSave = (int)round(pow(pow(10.0,0.05),logSaveIdx));
             while(nextSave == ii)
                 {
@@ -134,7 +132,7 @@ int main(int argc, char*argv[])
         sim->performTimestep();
         };
     t2=clock();
-    ncdat.WriteState(SPV);
+    ncdat.WriteState(spv);
 
 
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;

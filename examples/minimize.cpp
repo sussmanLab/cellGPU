@@ -78,8 +78,8 @@ int main(int argc, char*argv[])
             default:
                        abort();
         };
-    clock_t t1,t2;
 
+    clock_t t1,t2;
     bool reproducible = true;
     bool initializeGPU = true;
     if (USE_GPU >= 0)
@@ -96,11 +96,9 @@ int main(int argc, char*argv[])
 
     if(program_switch == 0)
         {
-        ForcePtr spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
-        shared_ptr<Voronoi2D> SPV = dynamic_pointer_cast<Voronoi2D>(spv);
+        shared_ptr<Voronoi2D> spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
 
-        EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
-        shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
+        shared_ptr<EnergyMinimizerFIRE> fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
 
         spv->setCellPreferencesUniform(1.0,p0);
         spv->setModuliUniform(KA,1.0);
@@ -116,25 +114,23 @@ int main(int argc, char*argv[])
         sim->setCPUOperation(!initializeGPU);
 
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-        ncdat.WriteState(SPV);
+        ncdat.WriteState(spv);
 
         for (int i = 0; i <tSteps;++i)
             {
-            setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
-            FIREMIN->setMaximumIterations(50*(i+1));
+            setFIREParameters(fireMinimizer,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
+            fireMinimizer->setMaximumIterations(50*(i+1));
             sim->performTimestep();
-            ncdat.WriteState(SPV);
+            ncdat.WriteState(spv);
             };
         printf("minimized value of q = %f\n",spv->reportq());
-        ncdat.WriteState(SPV);
+        ncdat.WriteState(spv);
         };
     if(program_switch == 1)
         {
-        ForcePtr avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible);
-        shared_ptr<AVM2D> AVM = dynamic_pointer_cast<AVM2D>(avm);
+        shared_ptr<AVM2D> avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible);
 
-        EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(avm);
-        shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
+        shared_ptr<EnergyMinimizerFIRE> fireMinimizer = make_shared<EnergyMinimizerFIRE>(avm);
 
         avm->setCellPreferencesUniform(1.0,p0);
         avm->setModuliUniform(KA,1.0);
@@ -150,25 +146,25 @@ int main(int argc, char*argv[])
         sim->setCPUOperation(!initializeGPU);
 
         AVMDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-        ncdat.WriteState(AVM);
+        ncdat.WriteState(avm);
         Dscalar mf;
 
         for (int i = 0; i <initSteps;++i)
             {
-            setFIREParameters(FIREMIN,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
-            FIREMIN->setMaximumIterations(tSteps*(i+1));
+            setFIREParameters(fireMinimizer,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
+            fireMinimizer->setMaximumIterations(tSteps*(i+1));
             sim->performTimestep();
-            mf = FIREMIN->getMaxForce();
+            mf = fireMinimizer->getMaxForce();
             if (mf < 1e-12)
                     break;
-            ncdat.WriteState(AVM);
+            ncdat.WriteState(avm);
             };
         printf("minimized value of q = %f\n",avm->reportq());
         Dscalar meanQ = avm->reportq();
         Dscalar varQ = avm->reportVarq();
         Dscalar2 variances = avm->reportVarAP();
         printf("current KA = %f\t Cell <q> = %f\t Var(p) = %g\n",KA,meanQ,variances.y);
-        ncdat.WriteState(AVM);
+        ncdat.WriteState(avm);
         };
     if(initializeGPU)
         cudaDeviceReset();

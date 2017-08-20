@@ -81,9 +81,8 @@ int main(int argc, char*argv[])
                        abort();
         };
 
-
     clock_t t1,t2;
-    bool reproducible = false;
+    bool reproducible = true;
     bool initializeGPU = true;
     if (USE_GPU >= 0)
         {
@@ -95,11 +94,9 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
 
-    ForcePtr spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
-    shared_ptr<Voronoi2D> SPV = dynamic_pointer_cast<Voronoi2D>(spv);
+    shared_ptr<Voronoi2D> spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
 
-    EOMPtr fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
-    shared_ptr<EnergyMinimizerFIRE> FIREMIN = dynamic_pointer_cast<EnergyMinimizerFIRE>(fireMinimizer);
+    shared_ptr<EnergyMinimizerFIRE> fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
 
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setModuliUniform(KA,1.0);
@@ -109,9 +106,7 @@ int main(int argc, char*argv[])
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
     sim->setEquationOfMotion(fireMinimizer,spv);
-    if(!initializeGPU)
-        sim->setCPUOperation(true);
-    sim->setReproducible(reproducible);
+    sim->setCPUOperation(!initializeGPU);
 
     //initialize FIRE parameters
     Dscalar astart, adec, tdec, tinc; int nmin;
@@ -120,7 +115,7 @@ int main(int argc, char*argv[])
     adec= 0.99;
     tinc = 1.1;
     tdec = 0.5;
-    setFIREParameters(FIREMIN,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
+    setFIREParameters(fireMinimizer,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
     t1=clock();
 
 if(program_switch ==5)
@@ -128,10 +123,10 @@ if(program_switch ==5)
     Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
         {
-        FIREMIN->setMaximumIterations((tSteps)*(1+ii));
+        fireMinimizer->setMaximumIterations((tSteps)*(1+ii));
         sim->performTimestep();
-        SPV->computeGeometryCPU();
-        SPV->computeForces();
+        spv->computeGeometryCPU();
+        spv->computeForces();
         mf = spv->getMaxForce();
         printf("maxForce = %g\t energy/cell = %g\n",mf,spv->quadraticEnergy()/(Dscalar)numpts);
         if (mf < thresh)
@@ -152,10 +147,10 @@ if(program_switch ==5)
     for (int ii = 0; ii < initSteps; ++ii)
         {
         if (ii > 0 && mf > 0.0001) return 0;
-        FIREMIN->setMaximumIterations((tSteps)*(1+ii));
+        fireMinimizer->setMaximumIterations((tSteps)*(1+ii));
         sim->performTimestep();
-        SPV->computeGeometryCPU();
-        SPV->computeForces();
+        spv->computeGeometryCPU();
+        spv->computeForces();
         mf = spv->getMaxForce();
         printf("maxForce = %g\n",mf);
         if (mf < thresh)
@@ -176,10 +171,10 @@ if(program_switch ==5)
     if (mf > thresh) return 0;
 
     //build the dynamical matrix
-    SPV->computeGeometryCPU();
+    spv->computeGeometryCPU();
     vector<int2> rowCols;
     vector<Dscalar> entries;
-    SPV->getDynMatEntries(rowCols,entries,1.0,1.0);
+    spv->getDynMatEntries(rowCols,entries,1.0,1.0);
     printf("Number of partial entries: %lu\n",rowCols.size());
     EigMat D(2*numpts);
     for (int ii = 0; ii < rowCols.size(); ++ii)
