@@ -89,7 +89,7 @@ int main(int argc, char*argv[])
 
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(avm);
-    sim->setEquationOfMotion(spp,avm);
+    sim->addUpdater(spp,avm);
     sim->setIntegrationTimestep(dt);
 //    sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags

@@ -105,7 +105,7 @@ int main(int argc, char*argv[])
 
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
-    sim->setEquationOfMotion(fireMinimizer,spv);
+    sim->addUpdater(fireMinimizer,spv);
     sim->setCPUOperation(!initializeGPU);
 
     //initialize FIRE parameters

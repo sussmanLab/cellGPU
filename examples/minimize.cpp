@@ -106,7 +106,7 @@ int main(int argc, char*argv[])
 
         SimulationPtr sim = make_shared<Simulation>();
         sim->setConfiguration(spv);
-        sim->setEquationOfMotion(fireMinimizer,spv);
+        sim->addUpdater(fireMinimizer,spv);
         sim->setIntegrationTimestep(dt);
         if(initSteps > 0)
             sim->setSortPeriod(initSteps/10);
@@ -138,7 +138,7 @@ int main(int argc, char*argv[])
 
         SimulationPtr sim = make_shared<Simulation>();
         sim->setConfiguration(avm);
-        sim->setEquationOfMotion(fireMinimizer,avm);
+        sim->addUpdater(fireMinimizer,avm);
         sim->setIntegrationTimestep(dt);
         if(initSteps > 0)
             sim->setSortPeriod(initSteps/10);

@@ -13,14 +13,13 @@ sortPeriod(-1)
     };
 
 /*!
-Set a pointer to the equation of motion, and give the equation of motion a reference to the
-model... this function will be refactored eventually now that EOM are just updaters
+Add a pointer to the list of updaters, and give that updater a reference to the
+model...
 */
-void Simulation::setEquationOfMotion(EOMPtr _eom, ForcePtr _config)
+void Simulation::addUpdater(UpdaterPtr _upd, ForcePtr _config)
     {
-    equationOfMotion = _eom;
-    _eom->set2DModel(_config);
-    updaters.push_back(equationOfMotion);
+    _upd->set2DModel(_config);
+    updaters.push_back(_upd);
     };
 
 /*!
@@ -48,9 +47,12 @@ void Simulation::setIntegrationTimestep(Dscalar dt)
     {
     integrationTimestep = dt;
     auto cellConf = cellConfiguration.lock();
-    auto eom = equationOfMotion.lock();
     cellConf->setDeltaT(dt);
-    eom->setDeltaT(dt);
+    for (int u = 0; u < updaters.size(); ++u)
+        {
+        auto upd = updaters[u].lock();
+        upd->setDeltaT(dt);
+        };
     };
 
 /*!

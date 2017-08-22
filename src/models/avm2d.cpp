@@ -86,7 +86,7 @@ void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
 
         SimulationPtr sim = make_shared<Simulation>();
         sim->setConfiguration(spv);
-        sim->setEquationOfMotion(spp,spv);
+        sim->addUpdater(spp,spv);
         sim->setIntegrationTimestep(0.1);
         sim->setCPUOperation(true);
         spp->setDeltaT(0.1);

@@ -41,7 +41,7 @@ class updater
 
         //!Allow for a reproducibility call to be made
         virtual void setReproducible(bool rep){};
-    
+
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};
 
@@ -52,7 +52,9 @@ class updater
         //!Set the number of degrees of freedom of the equation of motion
         void setNdof(int _n){Ndof = _n;};
 
-    
+        //!allow all updaters to potentially implement an internal time scale
+        virtual void setDeltaT(Dscalar dt){};
+
     protected:
         //!The period of the updater... the updater will work every Period timesteps
         int Period;

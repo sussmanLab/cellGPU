@@ -11,17 +11,15 @@
 
 //! A class that ties together all the parts of a simulation
 /*!
-Simulation objects should have a configuration set, and then an equation of motion. In addition to
+Simulation objects should have a configuration set, and then at least one updater (such as an equation of motion). In addition to
 being a centralized object controlling the progression of a simulation of cell models, the Simulation
-class provides some interfaces to cell configuration and equation of motion parameter setters.
+class provides some interfaces to cell configuration and updater parameter setters.
 */
 class Simulation : public enable_shared_from_this<Simulation>
     {
     public:
         //!Initialize all the shared pointers, etc.
         Simulation();
-        //!pass in an equation of motion to run
-        void setEquationOfMotion(EOMPtr _eom,ForcePtr _config);
         //!Pass in a reference to the configuration
         void setConfiguration(ForcePtr _config);
 
@@ -29,13 +27,11 @@ class Simulation : public enable_shared_from_this<Simulation>
         void computeForces(GPUArray<Dscalar2> &forces);
         //!Call the configuration to move particles around
         void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements);
-        //!Call the equation of motion to advance one time step
+        //!Call every updater to advance one time step
         void performTimestep();
 
         //!return a shared pointer to this Simulation
         shared_ptr<Simulation> getPointer(){ return shared_from_this();};
-        //!The equation of motion to run
-        WeakEOMPtr equationOfMotion;
         //!The configuration of cells
         WeakForcePtr cellConfiguration;
         //! A vector of updaters that the simulation will loop through
@@ -43,6 +39,8 @@ class Simulation : public enable_shared_from_this<Simulation>
 
         //!Add an updater
         void addUpdater(UpdaterPtr _upd){updaters.push_back(_upd);};
+        //!Add an updater with a reference to a configuration
+        void addUpdater(UpdaterPtr _upd, ForcePtr _config);
 
         //!Clear out the vector of updaters
         void clearUpdaters(){updaters.clear();};

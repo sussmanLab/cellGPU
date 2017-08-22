@@ -88,7 +88,7 @@ int main(int argc, char*argv[])
         shared_ptr<VoronoiTension2D> spv = make_shared<VoronoiTension2D>(numpts,1.0,4.0,reproducible);
 
         vector<int> types(numpts);
-        for (int ii = 0; ii < numpts; ++ii) 
+        for (int ii = 0; ii < numpts; ++ii)
             if (ii < numpts/2)
                 types[ii]=0;
             else
@@ -102,7 +102,7 @@ int main(int argc, char*argv[])
 
         SimulationPtr sim = make_shared<Simulation>();
         sim->setConfiguration(spv);
-        sim->setEquationOfMotion(spp,spv);
+        sim->addUpdater(spp,spv);
         sim->setIntegrationTimestep(dt);
         sim->setSortPeriod(initSteps/10);
         //set appropriate CPU and GPU flags
@@ -139,7 +139,7 @@ int main(int argc, char*argv[])
                 Ncells = spv->getNumberOfDegreesOfFreedom();
                 //suppose, for instance, you want to keep p_0/sqrt(<A>) constant...
                 Dscalar meanA = numpts / (Dscalar) Ncells;
-                Dscalar scaledP0 = p0 * sqrt(meanA); 
+                Dscalar scaledP0 = p0 * sqrt(meanA);
                 spv->setCellPreferencesUniform(1.0,scaledP0);
                 printf("Ncells = %i\t <A> = %f \t p0 = %f\n",Ncells,meanA,scaledP0);
                 };
@@ -171,7 +171,7 @@ int main(int argc, char*argv[])
 
         SimulationPtr sim = make_shared<Simulation>();
         sim->setConfiguration(avm);
-        sim->setEquationOfMotion(spp,avm);
+        sim->addUpdater(spp,avm);
         sim->setIntegrationTimestep(dt);
         sim->setSortPeriod(initSteps/10);
         //set appropriate CPU and GPU flags
@@ -228,7 +228,6 @@ int main(int argc, char*argv[])
         avm->reportMeanVertexForce();
         cout << "Mean q = " << avm->reportq() << endl;
         };
-
 
     if(initializeGPU)
         cudaDeviceReset();

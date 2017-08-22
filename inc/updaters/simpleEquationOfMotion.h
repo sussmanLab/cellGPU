@@ -43,7 +43,7 @@ class simpleEquationOfMotion : public updaterWithNoise
         //!get the current simulation time
         Dscalar getTime(){return (Dscalar)Timestep * deltaT;};
         //!Set the simulation time stepsize
-        void setDeltaT(Dscalar dt){deltaT = dt;};
+        virtual void setDeltaT(Dscalar dt){deltaT = dt;};
         //! performUpdate just maps to integrateEquationsOfMotion
         virtual void performUpdate(){integrateEquationsOfMotion();};
 

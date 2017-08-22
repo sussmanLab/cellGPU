@@ -91,9 +91,9 @@ int main(int argc, char*argv[])
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
     if(program_switch == 0)
-        sim->setEquationOfMotion(spp,spv);
+        sim->addUpdater(spp,spv);
     else
-        sim->setEquationOfMotion(bd,spv);
+        sim->addUpdater(bd,spv);
     sim->setIntegrationTimestep(dt);
     sim->setSortPeriod(initSteps/10);
     sim->setCPUOperation(!initializeGPU);
