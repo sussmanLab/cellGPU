@@ -206,6 +206,7 @@ void SPVDatabaseNetCDF::ReadState(STATE t, int rec,bool geometry)
         t->resetDelLocPoints();
         t->updateCellList();
         t->globalTriangulationCGAL();
+        t->resetLists();
         if(t->GPUcompute)
             t->computeGeometryGPU();
         else
