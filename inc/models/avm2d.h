@@ -37,6 +37,9 @@ class AVM2D : public vertexModelBase
         //!compute the geometry and get the forces
         virtual void computeForces();
 
+        //!compute the quadratic energy functional
+        virtual Dscalar computeEnergy();
+
         //!update/enforce the topology
         virtual void enforceTopology();
 

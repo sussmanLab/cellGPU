@@ -33,6 +33,9 @@ class Simple2DCell : public Simple2DModel
         //!do everything necessary to compute forces in the current model
         virtual void computeForces(){};
 
+        //!do everything necessary to compute the energy for the current model
+        virtual Dscalar computeEnergy(){Energy = 0.0; return 0.0;};
+
         //!copy the models current set of forces to the variable
         virtual void getForces(GPUArray<Dscalar2> &forces){};
 
@@ -292,9 +295,6 @@ class Simple2DCell : public Simple2DModel
 
         //! Report the mean value of the perimeter
         Dscalar reportMeanP();
-
-        //!Return the quadratic energy functional
-        virtual Dscalar quadraticEnergy();
 
         //temporary stuff for testing as I refactor
         virtual void setDeltaT(Dscalar dt) = 0;

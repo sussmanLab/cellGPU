@@ -128,7 +128,7 @@ if(program_switch ==5)
         spv->computeGeometryCPU();
         spv->computeForces();
         mf = spv->getMaxForce();
-        printf("maxForce = %g\t energy/cell = %g\n",mf,spv->quadraticEnergy()/(Dscalar)numpts);
+        printf("maxForce = %g\t energy/cell = %g\n",mf,spv->computeEnergy()/(Dscalar)numpts);
         if (mf < thresh)
             break;
         };
@@ -211,19 +211,19 @@ if(program_switch ==5)
         };
     };
 
-    Dscalar E0 = spv->quadraticEnergy();
-    printf("initial energy = %g\n",spv->quadraticEnergy());
+    Dscalar E0 = spv->computeEnergy();
+    printf("initial energy = %g\n",spv->computeEnergy());
     spv->computeForces();
-    printf("initial energy = %g\n",spv->quadraticEnergy());
+    printf("initial energy = %g\n",spv->computeEnergy());
     spv->moveDegreesOfFreedom(disp);
     spv->computeForces();
-    Dscalar E1 = spv->quadraticEnergy();
-    printf("positive delta energy = %g\n",spv->quadraticEnergy());
+    Dscalar E1 = spv->computeEnergy();
+    printf("positive delta energy = %g\n",spv->computeEnergy());
     spv->moveDegreesOfFreedom(dispneg);
     spv->moveDegreesOfFreedom(dispneg);
     spv->computeForces();
-    Dscalar E2 = spv->quadraticEnergy();
-    printf("negative delta energy = %g\n",spv->quadraticEnergy());
+    Dscalar E2 = spv->computeEnergy();
+    printf("negative delta energy = %g\n",spv->computeEnergy());
     printf("differences: %f\t %f\n",E1-E0,E2-E0);
     printf("der = %f\n",(E1+E2-2.0*E0)/(mag*mag));
 

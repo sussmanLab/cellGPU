@@ -199,6 +199,24 @@ void AVM2D::spatialSorting()
     };
 
 /*!
+Returns the quadratic energy functional:
+E = \sum_{cells} K_A(A_i-A_i,0)^2 + K_P(P_i-P_i,0)^2
+*/
+Dscalar AVM2D::computeEnergy()
+    {
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences,access_location::host,access_mode::read);
+    Energy = 0.0;
+    for (int nn = 0; nn  < Ncells; ++nn)
+        {
+        Energy += KA * (h_AP.data[nn].x-h_APP.data[nn].x)*(h_AP.data[nn].x-h_APP.data[nn].x);
+        Energy += KP * (h_AP.data[nn].y-h_APP.data[nn].y)*(h_AP.data[nn].y-h_APP.data[nn].y);
+        };
+
+    return Energy;
+    };
+
+/*!
 compute the geometry and the forces and the vertices, on either the GPU or CPU as determined by
 flags
 */

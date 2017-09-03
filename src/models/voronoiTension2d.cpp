@@ -93,6 +93,69 @@ void VoronoiTension2D::ComputeForceSetsGPU()
     };
 
 /*!
+Returns the quadratic energy functional:
+E = \sum_{cells} K_A(A_i-A_i,0)^2 + K_P(P_i-P_i,0)^2 + \sum_{[i]\neq[j]} \gamma_{[i][j]}l_{ij}
+*/
+Dscalar VoronoiTension2D::computeEnergy()
+    {
+    //first, compute the area and perimeter pieces...which are easy
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences,access_location::host,access_mode::read);
+    Energy = 0.0;
+    for (int nn = 0; nn  < Ncells; ++nn)
+        {
+        Energy += KA * (h_AP.data[nn].x-h_APP.data[nn].x)*(h_AP.data[nn].x-h_APP.data[nn].x);
+        Energy += KP * (h_AP.data[nn].y-h_APP.data[nn].y)*(h_AP.data[nn].y-h_APP.data[nn].y);
+        };
+
+    //now, the potential line tension terms
+    ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::read);
+
+    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> h_tm(tensionMatrix,access_location::host,access_mode::read);
+    for (int cell = 0; cell < Ncells; ++cell)
+        {
+        //get the Delaunay neighbors of the cell
+        int neigh = h_nn.data[cell];
+        vector<int> ns(neigh);
+        vector<Dscalar2> voro(neigh);
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            ns[nn] = h_n.data[n_idx(nn,cell)];
+            voro[nn] = h_v.data[n_idx(nn,cell)];
+            };
+
+        Dscalar2 vlast, vnext,vcur;
+        Dscalar2 dlast, dnext;
+        vlast = voro[neigh-1];
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            vcur = voro[nn];
+            vnext = voro[(nn+1)%neigh];
+            int baseNeigh = ns[nn];
+            int typeI = h_ct.data[cell];
+            int typeK = h_ct.data[baseNeigh];
+            //if the cell types are different, calculate everything once
+            if (typeI != typeK && cell < baseNeigh)
+                {
+                dnext.x = vcur.x-vnext.x;
+                dnext.y = vcur.y-vnext.y;
+                Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+                if (simpleTension)
+                    Energy += dnnorm*gamma;
+                else
+                    Energy += dnnorm*h_tm.data[cellTypeIndexer(typeK,typeI)];
+                };
+            vlast=vcur;
+            };
+        };
+    return Energy;
+    };
+
+
+/*!
 Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
 vertices
 */

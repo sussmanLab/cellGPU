@@ -104,7 +104,7 @@ int main(int argc, char*argv[])
 
         if(ii%100 ==0)
             {
-            printf("timestep %i\n",ii);
+            printf("timestep %i\t\t energy %f \n",ii,spv->computeEnergy());
             };
         sim->performTimestep();
         };

@@ -37,6 +37,9 @@ class Voronoi2D : public voronoiModelBase
         //!compute the geometry and get the forces
         virtual void computeForces();
 
+        //!compute the quadratic energy functional
+        virtual Dscalar computeEnergy();
+
         //cell-dynamics related functions...these call functions in the next section
         //in general, these functions are the common calls, and test flags to know whether to call specific versions of specialty functions
 

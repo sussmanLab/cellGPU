@@ -23,6 +23,9 @@ class VoronoiTension2D : public Voronoi2D
 
         //!compute the geometry and get the forces
         virtual void computeForces();
+        
+        //!compute the quadratic energy functional
+        virtual Dscalar computeEnergy();
 
         //!Compute force sets on the GPU
         virtual void ComputeForceSetsGPU();
