@@ -1,7 +1,7 @@
 *.swp
 *.o
+*.gch
 *.out
-tensions.cpp
 *_store
 callgrind*
 *.dsym

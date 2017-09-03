@@ -24,6 +24,10 @@ Provides an example of using the FIRE minimizer to minimize either a 2D Voronoi 
 Provides an example of using the NetCDF database class to write snapshots of a simulation of the 2D
 Voronoi model, using either active cell or overdamped Brownian dynamics
 
+# tensions.cpp
+
+Provides a simple example of adding line tension terms to a Voronoi model
+
 # cellDivision.cpp
 
 Provides a simple example of both vertex and voronoi models with cell division activated
