@@ -68,7 +68,7 @@ int main(int argc, char*argv[])
     //define an equation of motion object...here for self-propelled cells
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
     //define a voronoi configuration with a quadratic energy functional
-    shared_ptr<Voronoi2D> spv  = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
+    shared_ptr<v2d> spv  = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
 
     //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
     spv->setCellPreferencesUniform(1.0,p0);
