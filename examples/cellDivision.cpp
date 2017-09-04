@@ -21,6 +21,8 @@ cells are chosen to divide at random.
 */
 int main(int argc, char*argv[])
 {
+    //as in the examples in the main directory, there are a bunch of default parameters that
+    //can be changed from the command line
     int numpts = 200;
     int USE_GPU = 0;
     int USE_TENSION = 0;
@@ -35,6 +37,8 @@ int main(int argc, char*argv[])
     Dscalar Dr = 1.0;
     Dscalar gamma = 0.05;
 
+    //program_switch plays an awkward role in this example of both selecting vertex vs Voronoi model,
+    //and also determining whether to save output files... read below for details
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:d:")) != -1)
         switch(c)
@@ -77,16 +81,22 @@ int main(int argc, char*argv[])
 
     char dataname[256];
     sprintf(dataname,"../test1.nc");
+
+    //noiseSources are random number generators used within the code... here we'll randomly select
+    //cells to divide
     noiseSource noise;
     noise.Reproducible = reproducible;
 
     //program_switch >= 0 --> self-propelled voronoi model
     if(program_switch >=0)
         {
+        //netCDF databases require the same number of cells in every frame... the text databases lift that limitation, so are useful here
         DatabaseTextVoronoi db1("../test1.txt",0);
         EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
         shared_ptr<VoronoiTension2D> spv = make_shared<VoronoiTension2D>(numpts,1.0,4.0,reproducible);
 
+        //for variety, we'll have cell division between two types of cells, with some applied surface tension between the types
+        //...this section does the usual business of setting up the simulation
         vector<int> types(numpts);
         for (int ii = 0; ii < numpts; ++ii)
             if (ii < numpts/2)
@@ -105,11 +115,11 @@ int main(int argc, char*argv[])
         sim->addUpdater(spp,spv);
         sim->setIntegrationTimestep(dt);
         sim->setSortPeriod(initSteps/10);
-        //set appropriate CPU and GPU flags
         sim->setCPUOperation(!initializeGPU);
         sim->setReproducible(reproducible);
 
-
+        //perform some initialization timesteps
+        //if program_switch = 2, save output file every so often
         for (int timestep = 0; timestep < initSteps+1; ++timestep)
             {
             sim->performTimestep();
@@ -120,14 +130,16 @@ int main(int argc, char*argv[])
                 };
             };
 
+        //to have a Voronoi model division, one needs to pass in various parameters.
+        //the integer vector (of length 1) indicates the cell to divide
+        //the Dscalar vector (of length 2) parameterizes the geometry of the cell division... see voronoiModelBase for details
         vector<int> cdtest(1); cdtest[0]=10;
         vector<Dscalar> dParams(2); dParams[0] = 3.0*PI/4.0-.1; dParams[1] = 0.5;
         int Ncells = spv->getNumberOfDegreesOfFreedom();
 
-        char dataname2[256];
+        //in this example, divide a cell every 20 tau
         int divisionTime = 20;
         t1=clock();
-        int fileidx=1;
         for (int timestep = 0; timestep < tSteps; ++timestep)
             {
             sim->performTimestep();
@@ -158,7 +170,9 @@ int main(int argc, char*argv[])
     //program_switch < 0 --> self-propelled vertex model
     if(program_switch <0)
         {
+        //...this section does the usual business of setting up the simulation
         int Nvert = 2*numpts;
+        //here we'll demonstrate the more awkward task of using a sequence of netCDF databases to record what's going on
         AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
         bool runSPV = false;
 
@@ -166,7 +180,6 @@ int main(int argc, char*argv[])
         shared_ptr<AVM2D> avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible,runSPV);
         avm->setCellPreferencesUniform(1.0,p0);
         avm->setv0Dr(v0,1.0);
-
         avm->setT1Threshold(0.04);
 
         SimulationPtr sim = make_shared<Simulation>();
@@ -174,24 +187,22 @@ int main(int argc, char*argv[])
         sim->addUpdater(spp,avm);
         sim->setIntegrationTimestep(dt);
         sim->setSortPeriod(initSteps/10);
-        //set appropriate CPU and GPU flags
         sim->setCPUOperation(!initializeGPU);
         sim->setReproducible(reproducible);
+        //initial time steps
         for (int timestep = 0; timestep < initSteps+1; ++timestep)
             {
             sim->performTimestep();
-            if(timestep%((int)(1/dt))==0)
-                {
-        //        cout << timestep << endl;
-        //        avm.reportAP();
-        //        avm.reportMeanVertexForce();
-                };
             if(program_switch < -1 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
                 ncdat.WriteState(avm);
                 };
             };
+
+        //in the vertex model cell division, an integer vector (of length 3) is used.
+        //the first indicates the cell to divide, and the next two indicate the vertices at the CCW
+        //start of the edge to get new vertices. See vertexModelBase for details
         vector<int> cdtest(3); cdtest[0]=10; cdtest[1] = 0; cdtest[2] = 2;
         avm->cellDivision(cdtest);
 
@@ -199,10 +210,11 @@ int main(int argc, char*argv[])
         int Nvertices = avm->getNumberOfDegreesOfFreedom();
         int Ncells = Nvertices/2;
         int fileidx=2;
+        int divisionTime = 10;
         for (int timestep = 0; timestep < tSteps; ++timestep)
             {
             sim->performTimestep();
-            if(program_switch <=-1 && timestep%((int)(10/dt))==0)
+            if(program_switch <=-1 && timestep%((int)(divisionTime/dt))==0)
                 {
                 cdtest[0] = noise.getInt(0,Ncells);
                 avm->cellDivision(cdtest);
@@ -224,13 +236,11 @@ int main(int argc, char*argv[])
         t2=clock();
         cout << "final number of vertices = " <<avm->getNumberOfDegreesOfFreedom() << endl;
         cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
-
         avm->reportMeanVertexForce();
         cout << "Mean q = " << avm->reportq() << endl;
         };
 
     if(initializeGPU)
         cudaDeviceReset();
-
     return 0;
     };

@@ -1,5 +1,4 @@
 #include "std_include.h"
-
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
@@ -35,9 +34,10 @@ void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, Dscalar deltaT, Dsc
 
 int main(int argc, char*argv[])
 {
+    //as in the examples in the main directory, there are a bunch of default parameters that
+    //can be changed from the command line
     int numpts = 200;
     int USE_GPU = 0;
-    int USE_TENSION = 0;
     int c;
     int tSteps = 5;
     int initSteps = 0;
@@ -47,10 +47,10 @@ int main(int argc, char*argv[])
     Dscalar pf = 4.0;
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.1;
-    Dscalar gamma = 0.0;
     Dscalar KA = 1.0;
     Dscalar thresh = 1e-12;
-    
+
+    //This example is a bit more ragged than the others, and program_switch has been abused for testing features that have not been cleaned up yet
     int program_switch = 0;
     while((c=getopt(argc,argv,"k:n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:q:")) != -1)
         switch(c)
@@ -58,12 +58,10 @@ int main(int argc, char*argv[])
             case 'n': numpts = atoi(optarg); break;
             case 't': tSteps = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
-            case 'x': USE_TENSION = atoi(optarg); break;
             case 'i': initSteps = atoi(optarg); break;
             case 'z': program_switch = atoi(optarg); break;
             case 'e': dt = atof(optarg); break;
             case 'k': KA = atof(optarg); break;
-            case 's': gamma = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'q': pf = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
@@ -93,14 +91,13 @@ int main(int argc, char*argv[])
     else
         initializeGPU = false;
 
-
+    //the voronoi model set up is just as before
     shared_ptr<Voronoi2D> spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
-
+    //..and instead of a self-propelled cell equation of motion, we use a FIRE minimizer
     shared_ptr<EnergyMinimizerFIRE> fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
 
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setModuliUniform(KA,1.0);
-    spv->setv0Dr(v0,1.0);
     printf("initializing with KA = %f\t p_0 = %f\n",KA,p0);
 
     SimulationPtr sim = make_shared<Simulation>();
@@ -108,7 +105,7 @@ int main(int argc, char*argv[])
     sim->addUpdater(fireMinimizer,spv);
     sim->setCPUOperation(!initializeGPU);
 
-    //initialize FIRE parameters
+    //initialize FIRE parameters...these parameters are pretty standard for many MD settings, and shouldn't need too much adjustment
     Dscalar astart, adec, tdec, tinc; int nmin;
     nmin = 5;
     astart = .1;
@@ -118,31 +115,33 @@ int main(int argc, char*argv[])
     setFIREParameters(fireMinimizer,dt,astart,50*dt,tinc,tdec,adec,nmin,thresh);
     t1=clock();
 
-if(program_switch ==5)
-    {
-    Dscalar mf;
-    for (int ii = 0; ii < initSteps; ++ii)
+    //test minimization simply
+    if(program_switch ==5)
         {
-        fireMinimizer->setMaximumIterations((tSteps)*(1+ii));
-        sim->performTimestep();
-        spv->computeGeometryCPU();
-        spv->computeForces();
-        mf = spv->getMaxForce();
-        printf("maxForce = %g\t energy/cell = %g\n",mf,spv->computeEnergy()/(Dscalar)numpts);
-        if (mf < thresh)
-            break;
+        Dscalar mf;
+        for (int ii = 0; ii < initSteps; ++ii)
+            {
+            fireMinimizer->setMaximumIterations((tSteps)*(1+ii));
+            sim->performTimestep();
+            spv->computeGeometryCPU();
+            spv->computeForces();
+            mf = spv->getMaxForce();
+            printf("maxForce = %g\t energy/cell = %g\n",mf,spv->computeEnergy()/(Dscalar)numpts);
+            if (mf < thresh)
+                break;
+            };
+
+        t2=clock();
+        Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC;
+        cout << "minimization was ~ " << steptime << endl;
+        Dscalar meanQ, varQ;
+        meanQ = spv->reportq();
+        varQ = spv->reportVarq();
+        printf("Cell <q> = %f\t Var(q) = %g\n",meanQ,varQ);
+        return 0;
         };
 
-    t2=clock();
-    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC;
-    cout << "minimization was ~ " << steptime << endl;
-    Dscalar meanQ, varQ;
-    meanQ = spv->reportq();
-    varQ = spv->reportVarq();
-    printf("Cell <q> = %f\t Var(q) = %g\n",meanQ,varQ);
-    return 0;
-    };
-
+    //minimize to tolerance
     Dscalar mf;
     for (int ii = 0; ii < initSteps; ++ii)
         {

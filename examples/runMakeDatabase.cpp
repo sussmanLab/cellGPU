@@ -22,7 +22,6 @@ int main(int argc, char*argv[])
 {
     int numpts = 200;
     int USE_GPU = 0;
-    int USE_TENSION = 0;
     int c;
     int tSteps = 5;
     int initSteps = 0;
@@ -32,7 +31,6 @@ int main(int argc, char*argv[])
     Dscalar p0 = 4.0;
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.1;
-    Dscalar gamma = 0.0;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:d:s:r:a:i:v:b:x:y:z:p:t:e:d:")) != -1)
@@ -41,12 +39,10 @@ int main(int argc, char*argv[])
             case 'n': numpts = atoi(optarg); break;
             case 't': tSteps = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
-            case 'x': USE_TENSION = atoi(optarg); break;
             case 'i': initSteps = atoi(optarg); break;
             case 'z': program_switch = atoi(optarg); break;
             case 'e': dt = atof(optarg); break;
             case 'd': Dr = atof(optarg); break;
-            case 's': gamma = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
             case 'v': v0 = atof(optarg); break;
@@ -133,7 +129,6 @@ int main(int argc, char*argv[])
         };
     t2=clock();
     ncdat.WriteState(spv);
-
 
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;

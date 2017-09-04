@@ -37,9 +37,10 @@ void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, Dscalar deltaT, Dsc
 
 int main(int argc, char*argv[])
 {
+    //as in the examples in the main directory, there are a bunch of default parameters that
+    //can be changed from the command line
     int numpts = 200;
     int USE_GPU = 0;
-    int USE_TENSION = 0;
     int c;
     int tSteps = 5;
     int initSteps = 0;
@@ -49,7 +50,6 @@ int main(int argc, char*argv[])
     Dscalar p0 = 4.0;
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.1;
-    Dscalar gamma = 0.0;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:k:")) != -1)
@@ -58,11 +58,9 @@ int main(int argc, char*argv[])
             case 'n': numpts = atoi(optarg); break;
             case 't': tSteps = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
-            case 'x': USE_TENSION = atoi(optarg); break;
             case 'i': initSteps = atoi(optarg); break;
             case 'z': program_switch = atoi(optarg); break;
             case 'e': dt = atof(optarg); break;
-            case 's': gamma = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'k': KA = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
@@ -94,8 +92,10 @@ int main(int argc, char*argv[])
     char dataname[256];
     sprintf(dataname,"../test.nc");
 
+    //program_switch == 0 --> voronoi model
     if(program_switch == 0)
         {
+        //initialize parameters and set up simulation
         shared_ptr<Voronoi2D> spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
 
         shared_ptr<EnergyMinimizerFIRE> fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
@@ -110,7 +110,6 @@ int main(int argc, char*argv[])
         sim->setIntegrationTimestep(dt);
         if(initSteps > 0)
             sim->setSortPeriod(initSteps/10);
-        //set appropriate CPU and GPU flags
         sim->setCPUOperation(!initializeGPU);
 
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
@@ -118,7 +117,9 @@ int main(int argc, char*argv[])
 
         for (int i = 0; i <tSteps;++i)
             {
+            //these fire parameters are reasonably standard...
             setFIREParameters(fireMinimizer,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
+            //...but incrementing by "50" timesteps here may be *very* short. May require many such loops to be well-minimized
             fireMinimizer->setMaximumIterations(50*(i+1));
             sim->performTimestep();
             ncdat.WriteState(spv);
@@ -126,6 +127,8 @@ int main(int argc, char*argv[])
         printf("minimized value of q = %f\n",spv->reportq());
         ncdat.WriteState(spv);
         };
+
+    //program_switch == 1 --> vertex model
     if(program_switch == 1)
         {
         shared_ptr<AVM2D> avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible);

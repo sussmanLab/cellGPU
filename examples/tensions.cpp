@@ -76,9 +76,11 @@ int main(int argc, char*argv[])
     vector<int> types(numpts);
     for (int ii = 0; ii < numpts; ++ii) types[ii]=ii;
     spv->setCellType(types);
+    //"setSurfaceTension" with a single Dscalar just declares a single tension value to apply whenever cells of different type are in contact
     spv->setSurfaceTension(gamma);
     spv->setUseSurfaceTension(true);
 
+    //in contrast, setSurfaceTension with a vector allows an entire matrix of type-type interactions to be specified
     //vector<Dscalar> gams(numpts*numpts,gamma);
     //spv->setSurfaceTension(gams);
 
@@ -91,9 +93,6 @@ int main(int argc, char*argv[])
     sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);
     //initialize parameters
-
-    char dataname[256];
-
 
     printf("starting initialization\n");
     for(int ii = 0; ii < initSteps; ++ii)
