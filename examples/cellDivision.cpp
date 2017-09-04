@@ -4,9 +4,9 @@
 
 #define ENABLE_CUDA
 
-#include "avm2d.h"
+#include "vertexQuadraticEnergy.h"
 #include "noiseSource.h"
-#include "voronoiTension2d.h"
+#include "voronoiQuadraticEnergyWithTension.h"
 #include "selfPropelledCellVertexDynamics.h"
 #include "brownianParticleDynamics.h"
 #include "DatabaseNetCDFAVM.h"
@@ -93,7 +93,7 @@ int main(int argc, char*argv[])
         //netCDF databases require the same number of cells in every frame... the text databases lift that limitation, so are useful here
         DatabaseTextVoronoi db1("../test1.txt",0);
         EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
-        shared_ptr<VoronoiTension2D> spv = make_shared<VoronoiTension2D>(numpts,1.0,4.0,reproducible);
+        shared_ptr<VoronoiQuadraticEnergyWithTension> spv = make_shared<VoronoiQuadraticEnergyWithTension>(numpts,1.0,4.0,reproducible);
 
         //for variety, we'll have cell division between two types of cells, with some applied surface tension between the types
         //...this section does the usual business of setting up the simulation
@@ -177,7 +177,7 @@ int main(int argc, char*argv[])
         bool runSPV = false;
 
         EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
-        shared_ptr<AVM2D> avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible,runSPV);
+        shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible,runSPV);
         avm->setCellPreferencesUniform(1.0,p0);
         avm->setv0Dr(v0,1.0);
         avm->setT1Threshold(0.04);

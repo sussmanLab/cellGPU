@@ -1,5 +1,5 @@
-#ifndef AVM_H
-#define AVM_H
+#ifndef vertexQuadraticEnergy_H
+#define vertexQuadraticEnergy_H
 
 #include "std_include.h"
 #include "vertexModelBase.h"
@@ -7,7 +7,7 @@
 #include "selfPropelledParticleDynamics.h"
 #include "Simulation.h"
 
-/*! \file avm2d.h */
+/*! \file vertexQuadraticEnergy.h */
 //!Implement a 2D active vertex model, using kernels in \ref avmKernels
 /*!
 A class that implements a simple active vertex model in 2D. This involves calculating forces on
@@ -18,13 +18,13 @@ than a set threshold distance. All vertices are three-valent.
 This class is a child of the vertexModelBase class, which provides data structures like the positions of
 cells, vertex positions, indices of vertices around each cell, cells around each vertex, etc.
 */
-class AVM2D : public vertexModelBase
+class VertexQuadraticEnergy : public vertexModelBase
     {
     public:
         //! the constructor: initialize as a Delaunay configuration with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        AVM2D(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool runSPVToInitialize=false);
+        VertexQuadraticEnergy(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool runSPVToInitialize=false);
 
-        //!Initialize AVM2D, set random orientations for vertex directors, prepare data structures
+        //!Initialize VertexQuadraticEnergy, set random orientations for vertex directors, prepare data structures
         void Initialize(int n,bool spvInitialize = false);
 
         //!Set the length threshold for T1 transitions

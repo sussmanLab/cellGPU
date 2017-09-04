@@ -6,10 +6,10 @@
 #define ENABLE_CUDA
 
 #include "Simulation.h"
-#include "voronoi2d.h"
+#include "voronoiQuadraticEnergy.h"
 #include "selfPropelledParticleDynamics.h"
 #include "selfPropelledCellVertexDynamics.h"
-#include "avm2d.h"
+#include "vertexQuadraticEnergy.h"
 #include "DatabaseNetCDFSPV.h"
 #include "DatabaseNetCDFAVM.h"
 #include "EnergyMinimizerFIRE2D.h"
@@ -96,7 +96,7 @@ int main(int argc, char*argv[])
     if(program_switch == 0)
         {
         //initialize parameters and set up simulation
-        shared_ptr<Voronoi2D> spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
+        shared_ptr<VoronoiQuadraticEnergy> spv = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible);
 
         shared_ptr<EnergyMinimizerFIRE> fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
 
@@ -131,7 +131,7 @@ int main(int argc, char*argv[])
     //program_switch == 1 --> vertex model
     if(program_switch == 1)
         {
-        shared_ptr<AVM2D> avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible);
+        shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible);
 
         shared_ptr<EnergyMinimizerFIRE> fireMinimizer = make_shared<EnergyMinimizerFIRE>(avm);
 

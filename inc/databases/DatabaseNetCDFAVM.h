@@ -2,8 +2,8 @@
 #define DATABASE_AVM_H
 
 #include "std_include.h"
-#include "avm2d.h"
-#include "voronoi2d.h"
+#include "vertexQuadraticEnergy.h"
+#include "voronoiQuadraticEnergy.h"
 #include "DatabaseNetCDF.h"
 #include <netcdfcpp.h>
 #include <string>

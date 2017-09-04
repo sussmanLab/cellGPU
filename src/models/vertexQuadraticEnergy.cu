@@ -3,9 +3,9 @@
 
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
-#include "avm2d.cuh"
+#include "vertexQuadraticEnergy.cuh"
 
-/** \file avm2d.cu
+/** \file vertexQuadraticEnergy.cu
     * Defines kernel callers and kernels for GPU calculations of AVM parts
 */
 

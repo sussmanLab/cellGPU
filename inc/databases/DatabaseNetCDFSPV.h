@@ -2,7 +2,7 @@
 #define DATABASE_SPV_H
 
 #include "std_include.h"
-#include "voronoi2d.h"
+#include "voronoiQuadraticEnergy.h"
 #include "DatabaseNetCDF.h"
 #include <netcdfcpp.h>
 #include <string>

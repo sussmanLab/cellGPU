@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 #include "indexer.h"
 #include "gpubox.h"
-#include "voronoi2d.cuh"
+#include "voronoiQuadraticEnergy.cuh"
 
 /*!
  \file

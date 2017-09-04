@@ -1,8 +1,8 @@
 #define ENABLE_CUDA
 
-#include "voronoiTension2d.h"
-#include "voronoiTension2d.cuh"
-/*! \file voronoiTension2d.cpp */
+#include "voronoiQuadraticEnergyWithTension.h"
+#include "voronoiQuadraticEnergyWithTension.cuh"
+/*! \file voronoiQuadraticEnergyWithTension.cpp */
 
 
 /*!
@@ -19,7 +19,7 @@ gammas[n+2] = g_{1,1} (again, never used)
 ...
 gammas[n^2-1] = g_{n,n}
 */
-void VoronoiTension2D::setSurfaceTension(vector<Dscalar> gammas)
+void VoronoiQuadraticEnergyWithTension::setSurfaceTension(vector<Dscalar> gammas)
     {
     simpleTension = false;
     //set the tension matrix to the right size, and the indexer
@@ -41,7 +41,7 @@ goes through the process of computing the forces on either the CPU or GPU, eithe
 exclusions, as determined by the flags. Assumes the geometry has NOT yet been computed.
 \post the geometry is computed, and force per cell is computed.
 */
-void VoronoiTension2D::computeForces()
+void VoronoiQuadraticEnergyWithTension::computeForces()
     {
     if (GPUcompute)
         {
@@ -79,7 +79,7 @@ void VoronoiTension2D::computeForces()
 \post calculate the contribution to the net force on every particle from each of its voronoi vertices
 via a cuda call
 */
-void VoronoiTension2D::ComputeForceSetsGPU()
+void VoronoiQuadraticEnergyWithTension::ComputeForceSetsGPU()
     {
         if(Tension)
             {
@@ -96,7 +96,7 @@ void VoronoiTension2D::ComputeForceSetsGPU()
 Returns the quadratic energy functional:
 E = \sum_{cells} K_A(A_i-A_i,0)^2 + K_P(P_i-P_i,0)^2 + \sum_{[i]\neq[j]} \gamma_{[i][j]}l_{ij}
 */
-Dscalar VoronoiTension2D::computeEnergy()
+Dscalar VoronoiQuadraticEnergyWithTension::computeEnergy()
     {
     //first, compute the area and perimeter pieces...which are easy
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
@@ -159,7 +159,7 @@ Dscalar VoronoiTension2D::computeEnergy()
 Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
 vertices
 */
-void VoronoiTension2D::computeVoronoiSimpleTensionForceSetsGPU()
+void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceSetsGPU()
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
@@ -193,7 +193,7 @@ void VoronoiTension2D::computeVoronoiSimpleTensionForceSetsGPU()
 Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
 vertices, using the general surface tension matrix
 */
-void VoronoiTension2D::computeVoronoiTensionForceSetsGPU()
+void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceSetsGPU()
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
@@ -229,7 +229,7 @@ void VoronoiTension2D::computeVoronoiTensionForceSetsGPU()
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
 \post the net force on cell i is computed
 */
-void VoronoiTension2D::computeVoronoiSimpleTensionForceCPU(int i)
+void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceCPU(int i)
     {
     Dscalar Pthreshold = THRESHOLD;
     //read in all the data we'll need
@@ -483,7 +483,7 @@ void VoronoiTension2D::computeVoronoiSimpleTensionForceCPU(int i)
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
 \post the net force on cell i is computed
 */
-void VoronoiTension2D::computeVoronoiTensionForceCPU(int i)
+void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceCPU(int i)
     {
     Dscalar Pthreshold = THRESHOLD;
     //read in all the data we'll need

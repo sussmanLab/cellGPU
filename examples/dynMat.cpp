@@ -5,7 +5,7 @@
 #define ENABLE_CUDA
 
 #include "Simulation.h"
-#include "voronoi2d.h"
+#include "voronoiQuadraticEnergy.h"
 #include "selfPropelledParticleDynamics.h"
 #include "EnergyMinimizerFIRE2D.h"
 #include "DatabaseNetCDFSPV.h"
@@ -92,7 +92,7 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     //the voronoi model set up is just as before
-    shared_ptr<Voronoi2D> spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
+    shared_ptr<VoronoiQuadraticEnergy> spv = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible);
     //..and instead of a self-propelled cell equation of motion, we use a FIRE minimizer
     shared_ptr<EnergyMinimizerFIRE> fireMinimizer = make_shared<EnergyMinimizerFIRE>(spv);
 

@@ -1,9 +1,9 @@
 #define ENABLE_CUDA
 
-#include "avm2d.h"
-#include "avm2d.cuh"
-#include "voronoi2d.h"
-/*! \file avm2d.cpp */
+#include "vertexQuadraticEnergy.h"
+#include "vertexQuadraticEnergy.cuh"
+#include "voronoiQuadraticEnergy.h"
+/*! \file vertexQuadraticEnergy.cpp */
 
 /*!
 \param n number of CELLS to initialize
@@ -15,7 +15,7 @@ a random point set. Set this flag to true to relax this initial configuration vi
 \post Initialize(n,runSPVToInitialize) is called, setCellPreferencesUniform(A0,P0), and
 setModuliUniform(1.0,1.0)
 */
-AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool runSPVToInitialize) :
+VertexQuadraticEnergy::VertexQuadraticEnergy(int n,Dscalar A0, Dscalar P0,bool reprod,bool runSPVToInitialize) :
     T1Threshold(0.01)
     {
     printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
@@ -30,7 +30,7 @@ AVM2D::AVM2D(int n,Dscalar A0, Dscalar P0,bool reprod,bool runSPVToInitialize) :
 /*!
 Take care of all class initialization functions, this involves setting arrays to the right size, etc.
 */
-void AVM2D::Initialize(int n,bool spvInitialize)
+void VertexQuadraticEnergy::Initialize(int n,bool spvInitialize)
     {
     //set number of cells, and a square box
     Ncells=n;
@@ -72,7 +72,7 @@ timesteps to smooth out the random point set first.
 \param spvInitialize only use if the initial cell positions are to be random, and you want to make the points more uniform
 \post After this is called, all topology data structures are initialized
 */
-void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
+void VertexQuadraticEnergy::setCellsVoronoiTesselation(bool spvInitialize)
     {
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
     //use the Voronoi class to relax the initial configuration just a bit?
@@ -192,7 +192,7 @@ void AVM2D::setCellsVoronoiTesselation(bool spvInitialize)
  \post vertices are re-ordered according to a Hilbert sorting scheme, cells are reordered according
  to what vertices they are near, and all data structures are updated
  */
-void AVM2D::spatialSorting()
+void VertexQuadraticEnergy::spatialSorting()
     {
     //the avm class doesn't need to change any other unusual data structures at the moment
     spatiallySortVerticesAndCellActivity();
@@ -202,7 +202,7 @@ void AVM2D::spatialSorting()
 Returns the quadratic energy functional:
 E = \sum_{cells} K_A(A_i-A_i,0)^2 + K_P(P_i-P_i,0)^2
 */
-Dscalar AVM2D::computeEnergy()
+Dscalar VertexQuadraticEnergy::computeEnergy()
     {
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences,access_location::host,access_mode::read);
@@ -220,7 +220,7 @@ Dscalar AVM2D::computeEnergy()
 compute the geometry and the forces and the vertices, on either the GPU or CPU as determined by
 flags
 */
-void AVM2D::computeForces()
+void VertexQuadraticEnergy::computeForces()
     {
     //compute the current area and perimeter of every cell
     //use this information to compute the net force on the vertices
@@ -239,7 +239,7 @@ void AVM2D::computeForces()
 /*!
 enforce and update topology of vertex wiring on either the GPU or CPU
 */
-void AVM2D::enforceTopology()
+void VertexQuadraticEnergy::enforceTopology()
     {
     if(GPUcompute)
         {
@@ -257,7 +257,7 @@ void AVM2D::enforceTopology()
 /*!
 Use the data pre-computed in the geometry routine to rapidly compute the net force on each vertex
 */
-void AVM2D::computeForcesCPU()
+void VertexQuadraticEnergy::computeForcesCPU()
     {
     ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_vc(voroCur,access_location::host,access_mode::read);
@@ -307,7 +307,7 @@ A utility function for the CPU routine. Given two vertex indices representing an
 a T1 transition, return in the pass-by-reference variables a helpful representation of the cells in the T1
 and the vertices to be re-wired...see the comments in "testAndPerformT1TransitionsCPU" for what that representation is
 */
-void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 &vertexSet, bool &growList)
+void VertexQuadraticEnergy::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 &vertexSet, bool &growList)
     {
     int cell1,cell2,cell3,ctest;
     int vlast, vcur, vnext, cneigh;
@@ -431,7 +431,7 @@ void AVM2D::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cellSet, int4 
 Test whether a T1 needs to be performed on any edge by simply checking if the edge length is beneath a threshold.
 This function also performs the transition and maintains the auxiliary data structures
  */
-void AVM2D::testAndPerformT1TransitionsCPU()
+void VertexQuadraticEnergy::testAndPerformT1TransitionsCPU()
     {
     ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
@@ -589,7 +589,7 @@ void AVM2D::testAndPerformT1TransitionsCPU()
 /*!
 call kernels to (1) do force sets calculation, then (2) add them up
 */
-void AVM2D::computeForcesGPU()
+void VertexQuadraticEnergy::computeForcesGPU()
     {
     ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::read);
@@ -622,7 +622,7 @@ void AVM2D::computeForcesGPU()
 perform whatever check is desired for T1 transtions (here just a "is the edge too short")
 and detect whether the edge needs to grow. If so, grow it!
 */
-void AVM2D::testEdgesForT1GPU()
+void VertexQuadraticEnergy::testEdgesForT1GPU()
     {
         {//provide scope for array handles
         ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
@@ -659,7 +659,7 @@ void AVM2D::testEdgesForT1GPU()
   Iterate through the vertexEdgeFlips list, selecting at most one T1 transition per cell to be done
   on each iteration, until all necessary T1 events have bee performed.
  */
-void AVM2D::flipEdgesGPU()
+void VertexQuadraticEnergy::flipEdgesGPU()
     {
     bool keepFlipping = true;
     //By construction, this loop must always run at least twice...save one of the memory transfers
@@ -701,7 +701,7 @@ void AVM2D::flipEdgesGPU()
 /*!
 Because the cellVertexList might need to grow, it's convenient to break this into two parts
 */
-void AVM2D::testAndPerformT1TransitionsGPU()
+void VertexQuadraticEnergy::testAndPerformT1TransitionsGPU()
     {
     testEdgesForT1GPU();
     flipEdgesGPU();

@@ -6,7 +6,7 @@
 #define ENABLE_CUDA
 
 #include "Simulation.h"
-#include "voronoiTension2d.h"
+#include "voronoiQuadraticEnergyWithTension.h"
 #include "selfPropelledParticleDynamics.h"
 #include "DatabaseNetCDFSPV.h"
 
@@ -68,7 +68,7 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
-    shared_ptr<VoronoiTension2D> spv = make_shared<VoronoiTension2D>(numpts,1.0,4.0,reproducible);
+    shared_ptr<VoronoiQuadraticEnergyWithTension> spv = make_shared<VoronoiQuadraticEnergyWithTension>(numpts,1.0,4.0,reproducible);
 
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setv0Dr(v0,1.0);
@@ -105,6 +105,5 @@ int main(int argc, char*argv[])
 
     if(initializeGPU)
         cudaDeviceReset();
-
     return 0;
 };

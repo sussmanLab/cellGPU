@@ -4,7 +4,7 @@
 
 #define ENABLE_CUDA
 
-#include "avm2d.h"
+#include "vertexQuadraticEnergy.h"
 #include "selfPropelledCellVertexDynamics.h"
 #include "DatabaseNetCDFAVM.h"
 /*!
@@ -79,7 +79,7 @@ int main(int argc, char*argv[])
     //define an equation of motion object...here for self-propelled cells
     EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
     //define a vertex model configuration with a quadratic energy functional
-    shared_ptr<AVM2D> avm = make_shared<AVM2D>(numpts,1.0,4.0,reproducible,runSPV);
+    shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible,runSPV);
     //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
     avm->setCellPreferencesUniform(1.0,p0);
     //set the cell activity to have D_r = 1. and a given v_0

@@ -2,7 +2,7 @@
 
 #include "vertexModelBase.h"
 #include "vertexModelBase.cuh"
-#include "voronoi2d.h"
+#include "voronoiQuadraticEnergy.h"
 /*! \file vertexModelBase.cpp */
 
 /*!

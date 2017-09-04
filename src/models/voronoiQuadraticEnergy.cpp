@@ -1,16 +1,16 @@
 #define ENABLE_CUDA
 
-#include "voronoi2d.h"
-#include "voronoi2d.cuh"
+#include "voronoiQuadraticEnergy.h"
+#include "voronoiQuadraticEnergy.cuh"
 #include "cuda_profiler_api.h"
-/*! \file voronoi2d.cpp */
+/*! \file voronoiQuadraticEnergy.cpp */
 
 /*!
 \param n number of cells to initialize
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
 \post Initialize(n,initGPURNcellsG) is called, as is setCellPreferenceUniform(1.0,4.0)
 */
-Voronoi2D::Voronoi2D(int n, bool reprod)
+VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod)
     {
     printf("Initializing %i cells with random positions in a square box... \n",n);
     Reproducible = reprod;
@@ -25,7 +25,7 @@ Voronoi2D::Voronoi2D(int n, bool reprod)
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
 \post Initialize(n,initGPURNG) is called
 */
-Voronoi2D::Voronoi2D(int n,Dscalar A0, Dscalar P0,bool reprod)
+VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n,Dscalar A0, Dscalar P0,bool reprod)
     {
     printf("Initializing %i cells with random positions in a square box...\n ",n);
     Reproducible = reprod;
@@ -41,7 +41,7 @@ initialized (initializeDelMD(n) gets called), particle exclusions are turned off
 data structures for the topology are set
 */
 //take care of all class initialization functions
-void Voronoi2D::Initialize(int n)
+void VoronoiQuadraticEnergy::Initialize(int n)
     {
     Ncells=n;
     particleExclusions=false;
@@ -74,7 +74,7 @@ goes through the process of computing the forces on either the CPU or GPU, eithe
 exclusions, as determined by the flags. Assumes the geometry has NOT yet been computed.
 \post the geometry is computed, and force per cell is computed.
 */
-void Voronoi2D::computeForces()
+void VoronoiQuadraticEnergy::computeForces()
     {
     if (GPUcompute)
         {
@@ -96,7 +96,7 @@ void Voronoi2D::computeForces()
 \post calculate the contribution to the net force on every particle from each of its voronoi vertices
 via a cuda call
 */
-void Voronoi2D::ComputeForceSetsGPU()
+void VoronoiQuadraticEnergy::ComputeForceSetsGPU()
     {
         computeVoronoiForceSetsGPU();
     };
@@ -105,7 +105,7 @@ void Voronoi2D::ComputeForceSetsGPU()
 \pre forceSets are already computed
 \post call the right routine to add up forceSets to get the net force per cell
 */
-void Voronoi2D::SumForcesGPU()
+void VoronoiQuadraticEnergy::SumForcesGPU()
     {
     if(!particleExclusions)
         sumForceSets();
@@ -118,7 +118,7 @@ void Voronoi2D::SumForcesGPU()
 \pre forceSets are already computed,
 \post The forceSets are summed to get the net force per particle via a cuda call
 */
-void Voronoi2D::sumForceSets()
+void VoronoiQuadraticEnergy::sumForceSets()
     {
 
     ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
@@ -136,7 +136,7 @@ void Voronoi2D::sumForceSets()
 \pre forceSets are already computed, some particle exclusions have been defined.
 \post The forceSets are summed to get the net force per particle via a cuda call, respecting exclusions
 */
-void Voronoi2D::sumForceSetsWithExclusions()
+void VoronoiQuadraticEnergy::sumForceSetsWithExclusions()
     {
 
     ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
@@ -158,7 +158,7 @@ void Voronoi2D::sumForceSetsWithExclusions()
 Calculate the contributions to the net force on particle "i" from each of particle i's voronoi
 vertices
 */
-void Voronoi2D::computeVoronoiForceSetsGPU()
+void VoronoiQuadraticEnergy::computeVoronoiForceSetsGPU()
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
     ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
@@ -189,7 +189,7 @@ void Voronoi2D::computeVoronoiForceSetsGPU()
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
 \post the net force on cell i is computed
 */
-void Voronoi2D::computeVoronoiForceCPU(int i)
+void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
     {
     Dscalar Pthreshold = THRESHOLD;
 
@@ -406,7 +406,7 @@ void Voronoi2D::computeVoronoiForceCPU(int i)
 Returns the quadratic energy functional:
 E = \sum_{cells} K_A(A_i-A_i,0)^2 + K_P(P_i-P_i,0)^2
 */
-Dscalar Voronoi2D::computeEnergy()
+Dscalar VoronoiQuadraticEnergy::computeEnergy()
     {
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences,access_location::host,access_mode::read);
@@ -423,7 +423,7 @@ Dscalar Voronoi2D::computeEnergy()
 /*!
 a utility function...output some information assuming the system is uniform
 */
-void Voronoi2D::reportCellInfo()
+void VoronoiQuadraticEnergy::reportCellInfo()
     {
     printf("Ncells=%i\tv0=%f\tDr=%f\n",Ncells,v0,Dr);
     };
@@ -443,7 +443,7 @@ H_x/r_{i,y}r_{j,y}, H_y/r_{i,y}r_{j,y}  )
 NOTE: This function does not check that ri, rj, and rk actually share a voronoi vertex in the triangulation
 NOTE: This function assumes that rj and rk are w/r/t the position of ri, so ri = (0.,0.)
 */
-vector<Dscalar> Voronoi2D::d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj)
+vector<Dscalar> VoronoiQuadraticEnergy::d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj)
     {
     vector<Dscalar> answer(8);
     Dscalar hxr1xr2x, hyr1xr2x, hxr1yr2x,hyr1yr2x;
@@ -499,7 +499,7 @@ vector<Dscalar> Voronoi2D::d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj)
 Returns the derivative of the voronoi vertex shared by cells i, j , and k with respect to changing the position of cell i
 the (row, column) format specifies dH_{row}/dr_{i,column}
 */
-Matrix2x2 Voronoi2D::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)
+Matrix2x2 VoronoiQuadraticEnergy::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)
     {
     Matrix2x2 Id;
     Dscalar2 rij, rik, rjk;
@@ -534,7 +534,7 @@ Matrix2x2 Voronoi2D::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)
 \pre Requires that computeGeometry is current
 Returns the derivative of the area of cell i w/r/t the position of cell j
 */
-Dscalar2 Voronoi2D::dAidrj(int i, int j)
+Dscalar2 VoronoiQuadraticEnergy::dAidrj(int i, int j)
     {
     Dscalar2 answer;
     answer.x = 0.0; answer.y=0.0;
@@ -620,7 +620,7 @@ Dscalar2 Voronoi2D::dAidrj(int i, int j)
 \param j The index of cell j
 Returns the derivative of the perimeter of cell i w/r/t the position of cell j
 */
-Dscalar2 Voronoi2D::dPidrj(int i, int j)
+Dscalar2 VoronoiQuadraticEnergy::dPidrj(int i, int j)
     {
     Dscalar Pthreshold = THRESHOLD;
     Dscalar2 answer;
@@ -732,7 +732,7 @@ Dscalar2 Voronoi2D::dPidrj(int i, int j)
 \param rcs a vector of (row,col) locations
 \param vals a vector of the corresponding value of the dynamical matrix
 */
-void Voronoi2D::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress, Dscalar stress)
+void VoronoiQuadraticEnergy::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress, Dscalar stress)
     {
     printf("evaluating dynamical matrix\n");
     ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
@@ -851,7 +851,7 @@ void Voronoi2D::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscala
 \param dvpdr derivative of v_{i+1} w/r/t a cell position
 \param dvmdr derivative of v_{i-1} w/r/t a cell position
 */
-Matrix2x2 Voronoi2D::d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr)
+Matrix2x2 VoronoiQuadraticEnergy::d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr)
     {
     Matrix2x2 d2Advidrj;
     d2Advidrj.x11 =(-dvmdr.x21 + dvpdr.x21);
@@ -869,7 +869,7 @@ Matrix2x2 Voronoi2D::d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr)
 \param v position of v_{i}
 \param vp position of v_{i+1}
 */
-Matrix2x2 Voronoi2D::d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr,Matrix2x2 &dvpdr, Dscalar2 vm, Dscalar2 v, Dscalar2 vp)
+Matrix2x2 VoronoiQuadraticEnergy::d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr,Matrix2x2 &dvpdr, Dscalar2 vm, Dscalar2 v, Dscalar2 vp)
     {
     Dscalar2 dlast = v-vm;
     Dscalar2 dnext = vp-v;
@@ -904,7 +904,7 @@ x12 = d^2 / dr_{i,x} dr_{j,y}
 x21 = d^2 / dr_{i,y} dr_{j,x}
 x22 = d^2 / dr_{i,y} dr_{j,y}
 */
-Matrix2x2 Voronoi2D::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress, Dscalar stress)
+Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress, Dscalar stress)
     {
     Matrix2x2  answer;
     answer.x11 = 0.0; answer.x12=0.0; answer.x21=0.0;answer.x22=0.0;

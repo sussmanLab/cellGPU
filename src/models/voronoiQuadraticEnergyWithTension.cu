@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "cellListGPU.cuh"
-#include "voronoiTension2d.cuh"
+#include "voronoiQuadraticEnergyWithTension.cuh"
 
 #include "indexer.h"
 #include "gpubox.h"
@@ -12,7 +12,7 @@
 #include <iostream>
 #include <stdio.h>
 #include "Matrix.h"
-/*! \file voronoiTension2d.cu */
+/*! \file voronoiQuadraticEnergyWithTension.cu */
 
 /*!
 \file A file defining some global kernels for use in the spv2d Tension class

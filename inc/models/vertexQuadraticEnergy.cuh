@@ -1,17 +1,15 @@
-#ifndef __AVM2D_CUH__
-#define __AVM2D_CUH__
-
+#ifndef __vertexQuadraticEnergy_CUH__
+#define __vertexQuadraticEnergy_CUH__
 
 #include "std_include.h"
 #include <cuda_runtime.h>
-
 #include "functions.h"
 #include "indexer.h"
 #include "gpubox.h"
 
 /*!
  \file
-A file providing an interface to the relevant cuda calls for the AVM2D class
+A file providing an interface to the relevant cuda calls for the VertexQuadraticEnergy class
 */
 
 /** @defgroup vmKernels vertex model Kernels

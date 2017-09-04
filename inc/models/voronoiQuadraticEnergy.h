@@ -1,5 +1,5 @@
-#ifndef Voronoi2d_H
-#define Voronoi2d_H
+#ifndef VoronoiQuadraticEnergy_H
+#define VoronoiQuadraticEnergy_H
 
 #include "std_include.h"
 
@@ -10,9 +10,9 @@
 #include "Matrix.h"
 #include "functions.h"
 #include "voronoiModelBase.h"
-#include "voronoi2d.cuh"
+#include "voronoiQuadraticEnergy.cuh"
 
-/*! \file voronoi2d.h */
+/*! \file voronoiQuadraticEnergy.h */
 //!Implement a 2D Voronoi model, with and without some extra bells and whistles, using kernels in \ref spvKernels
 /*!
  *A child class of voronoiModelBase, this implements a Voronoi model in 2D. This involves mostly calculating
@@ -21,15 +21,15 @@
   data structures that capture different features of the local topology and local geoemetry for each
   cell.
  */
-class Voronoi2D : public voronoiModelBase
+class VoronoiQuadraticEnergy : public voronoiModelBase
     {
     public:
         //!initialize with random positions in a square box
-        Voronoi2D(int n,bool reprod = false);
+        VoronoiQuadraticEnergy(int n,bool reprod = false);
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        Voronoi2D(int n, Dscalar A0, Dscalar P0,bool reprod = false);
+        VoronoiQuadraticEnergy(int n, Dscalar A0, Dscalar P0,bool reprod = false);
         //!Blank constructor
-        Voronoi2D(){};
+        VoronoiQuadraticEnergy(){};
 
         //!Initialize voronoiModelBase, set random orientations for cell directors, prepare data structures
         void Initialize(int n);

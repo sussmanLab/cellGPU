@@ -1,25 +1,25 @@
-#ifndef VoronoiTENSION2D_H
-#define VoronoiTENSION2D_H
+#ifndef VoronoiQuadraticEnergyWithTension_H
+#define VoronoiQuadraticEnergyWithTension_H
 
 #include "std_include.h"
-#include "voronoi2d.h"
+#include "voronoiQuadraticEnergy.h"
 
-/*! \file voronoiTension2d.h */
+/*! \file voronoiQuadraticEnergyWithTension.h */
 //!Add line tension terms between different "types" of cells in the 2D Voronoi model using kernels in \ref spvKernels
 /*!
-A child class of Voronoi2D, this implements an Voronoi model in 2D that can include tension terms between
+A child class of VoronoiQuadraticEnergy, this implements an Voronoi model in 2D that can include tension terms between
 different types of cells. Different routines are called depending on whether multiple different
 cell-cell surface tension values are needed. This specialization exists because on the GPU using the
 more generic routine has many more costly memory look-ups, so if it isn't needed the simpler algorithm
 should be used.
  */
-class VoronoiTension2D : public Voronoi2D
+class VoronoiQuadraticEnergyWithTension : public VoronoiQuadraticEnergy
     {
     public:
         //!initialize with random positions in a square box
-        VoronoiTension2D(int n,bool reprod = false) : Voronoi2D(n,reprod){gamma = 0.0; Tension = false;simpleTension = true;};
+        VoronoiQuadraticEnergyWithTension(int n,bool reprod = false) : VoronoiQuadraticEnergy(n,reprod){gamma = 0.0; Tension = false;simpleTension = true;};
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        VoronoiTension2D(int n, Dscalar A0, Dscalar P0,bool reprod = false) : Voronoi2D(n,A0,P0,reprod){gamma = 0;Tension = false;simpleTension = true;};
+        VoronoiQuadraticEnergyWithTension(int n, Dscalar A0, Dscalar P0,bool reprod = false) : VoronoiQuadraticEnergy(n,A0,P0,reprod){gamma = 0;Tension = false;simpleTension = true;};
 
         //!compute the geometry and get the forces
         virtual void computeForces();
@@ -57,7 +57,6 @@ class VoronoiTension2D : public Voronoi2D
         bool simpleTension;
         //!A flattened 2d matrix describing the surface tension, \gamma_{i,j} for types i and j
         GPUArray<Dscalar> tensionMatrix;
-
 
     //be friends with the associated Database class so it can access data to store or read
     friend class SPVDatabaseNetCDF;

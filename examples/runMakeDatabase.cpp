@@ -6,7 +6,7 @@
 
 #define ENABLE_CUDA
 
-#include "voronoi2d.h"
+#include "voronoiQuadraticEnergy.h"
 #include "Simulation.h"
 #include "selfPropelledParticleDynamics.h"
 #include "brownianParticleDynamics.h"
@@ -78,8 +78,7 @@ int main(int argc, char*argv[])
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
     shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(numpts);
 
-    shared_ptr<Voronoi2D> spv = make_shared<Voronoi2D>(numpts,1.0,4.0,reproducible);
-
+    shared_ptr<VoronoiQuadraticEnergy> spv = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible);
 
     spv->setCellPreferencesUniform(1.0,p0);
     spv->setv0Dr(v0,Dr);
