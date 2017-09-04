@@ -22,17 +22,21 @@ off-lattice cell models with active dynamics
 * DelaunayLoc -- Calculates candidate 1-rings of particles by finding an enclosing polygon of nearby points
 and finding all points in the circumcircle of the point and any two consecutive vertices of that polygon.
 
+* DelaunayMD -- A core engine that operates as described below in ''Basic idea.'' Helps with
+the topology maintenance problem in Voronoi models
+
 * DatabaseNetCDF -- A NetCDF 4.x interface used to store simulation trajectories compactly
 
 * eigenMatrixInterface -- a very simple interface to the Eigen package; used to diagonalize the dynamical matrix 
 
 ### Cellular models
 
-* DelaunayMD -- A core engine that operates as described below in ''Basic idea.'' Can move particles
-and update their underlying Delaunay triangulation
-* Voronoi2D -- A child class of DelaunayMD that calculates forces according to the 2D Voronoi model.
-* AVM2D -- A child of Simple2DActiveCell that calculates forces for a simple 2D ("active") vertex model
-where the topology changes via a simple rule for T1 transitions
+* vertexModelBase -- a child of Simple2DActiveCell that serves as a base for... vertex models
+* VertexQuadraticEnergy -- A child of vertexModelBase...adds force and energy calculations for a quadratic energy functional
+* voronoiModelBase -- a child of Simple2DActiveCell that serves as a base for... voronoi models
+* VoronoiQuadraticEnergy -- A child of voronoiModelBase...adds force and energy calculations for a quadratic energy functional
+* VoronoiQuadraticEnergyWithTension -- Adds force and energy calculations for a quadratic energy
+functional, with additional line tension terms between different cell types
 
 ### Equations of motion
 

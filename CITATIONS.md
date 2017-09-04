@@ -4,7 +4,7 @@ If you use cellGPU for a publication or project, please site the main cellGPU pa
 
 (1) "cellGPU: massively parallel simulations of dynamic vertex models" Daniel M. Sussman; Computer Physics Communications, volume 219, pages 400-406, (2017)
 
-Additional citation to consider:
+Additional citation to consider, according to your taste on how expansive to be with your citing behavior:
 
 (2) Chen and Gotsman ''Localizing the delaunay triangulation and its parallel implementation,''
 [Transactions on Computational Science XX (M. L. Gavrilova, C.J.K. Tan, and B. Kalantari, eds.),Lecture Notes in Computer Science, vol. 8110, Springer Berlin Heidelberg, 2013, Extended abstract in ISVD 2012, pp. 24–31, pp. 39–55 (English)]

@@ -748,7 +748,7 @@ INPUT += ../inc/databases ../inc/models ../inc/updaters ../inc/utility
 INPUT += ../src/databases ../src/models ../src/updaters ../src/utility
 INPUT += ../README.md
 INPUT += ../ChangeLog.md
-INPUT += ../README.md
+INPUT += ../CITATIONS.md
 INPUT += ../LICENSE.md
 INPUT += ../INSTALLATION.md
 
