@@ -445,7 +445,7 @@ void VertexQuadraticEnergy::testAndPerformT1TransitionsCPU()
     //keep track of whether vertexMax needs to be increased
     int vMax = vertexMax;
     /*
-     IF v1 is above v2, the following is the convention (otherwise flip CW and CCW)
+     The following is the convention:
      cell i: contains both vertex 1 and vertex 2, in CW order
      cell j: contains only vertex 1
      cell k: contains both vertex 1 and vertex 2, in CCW order
