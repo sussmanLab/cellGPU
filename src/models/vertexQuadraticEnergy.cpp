@@ -422,8 +422,8 @@ void VertexQuadraticEnergy::getCellVertexSetForT1(int vertex1, int vertex2, int4
     vertexSet.w=vlast;
     vertexSet.z=vnext;
 
-    //Does the cell-vertex-neighbor data structure need to be bigger?
-    if(h_cvn.data[cellSet.x] == vertexMax || h_cvn.data[cellSet.z] == vertexMax)
+    //Does the cell-vertex-neighbor data structure need to be bigger...for safety check all cell-vertex numbers, even if it won't be incremented?
+    if(h_cvn.data[cellSet.x] == vertexMax || h_cvn.data[cellSet.y] == vertexMax || h_cvn.data[cellSet.z] == vertexMax || h_cvn.data[cellSet.w] == vertexMax)
         growList = true;
     };
 

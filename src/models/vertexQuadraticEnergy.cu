@@ -120,7 +120,7 @@ __global__ void avm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
 
 
             //test the number of neighbors of the cells connected to v1 and v2 to see if the
-            //cell list should grow this is kind of slow, and I wish I could optimize it away,
+            //cell list should grow. This is kind of slow, and I wish I could optimize it away,
             //or at least not test for it during every time step. The latter seems pretty doable.
             if(d_cellVertexNum[d_vertexCellNeighbors[3*vertex1]] == vertexMax)
                 d_grow[0] = 1;
