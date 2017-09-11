@@ -33,8 +33,8 @@ class vertexModelBase : public Simple2DActiveCell
         //!return the forces
         virtual void getForces(GPUArray<Dscalar2> &forces){forces = vertexForces;};
 
-        //!Initialize VertexQuadraticEnergy, set random orientations for vertex directors, prepare data structures
-        void Initialize(int n,bool spvInitialize = false);
+        //!Initialize vertexModelBase, set random orientations for vertex directors, prepare data structures
+        void initializeVertexModelBase(int n,bool spvInitialize = false);
 
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(bool spvInitialize = false);

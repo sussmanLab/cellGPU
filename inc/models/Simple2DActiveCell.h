@@ -17,7 +17,11 @@ class Simple2DActiveCell : public Simple2DCell
     {
     //public functions first
     public:
+        //!A simple constructor
         Simple2DActiveCell();
+
+        //! initialize class' data structures and set default values
+        void initializeSimple2DActiveCell(int n);
 
         //!Set the simulation time stepsize
         void setDeltaT(Dscalar dt){deltaT = dt;};

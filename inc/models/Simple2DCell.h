@@ -21,6 +21,9 @@ class Simple2DCell : public Simple2DModel
         //!initialize member variables to some defaults
         Simple2DCell();
 
+        //! initialize class' data structures and set default values
+        void initializeSimple2DCell(int n);
+        
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};
 
@@ -296,12 +299,12 @@ class Simple2DCell : public Simple2DModel
         //! Report the mean value of the perimeter
         Dscalar reportMeanP();
 
-        //temporary stuff for testing as I refactor
+        // virtual functions for interfacing with a Simulation
         virtual void setDeltaT(Dscalar dt) = 0;
         virtual void setCPU(bool a) = 0;
         virtual void setv0Dr(Dscalar a, Dscalar b) = 0;
     };
+
 typedef shared_ptr<Simple2DCell> ForcePtr;
 typedef weak_ptr<Simple2DCell> WeakForcePtr;
-
 #endif

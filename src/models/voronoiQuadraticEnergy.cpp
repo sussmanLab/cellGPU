@@ -8,13 +8,13 @@
 /*!
 \param n number of cells to initialize
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
-\post Initialize(n,initGPURNcellsG) is called, as is setCellPreferenceUniform(1.0,4.0)
+\post initializeVoronoiQuadraticEnergy(n,initGPURNcellsG) is called, as is setCellPreferenceUniform(1.0,4.0)
 */
 VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod)
     {
     printf("Initializing %i cells with random positions in a square box... \n",n);
     Reproducible = reprod;
-    Initialize(n);
+    initializeVoronoiQuadraticEnergy(n);
     setCellPreferencesUniform(1.0,4.0);
     };
 
@@ -23,50 +23,30 @@ VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod)
 \param A0 set uniform preferred area for all cells
 \param P0 set uniform preferred perimeter for all cells
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
-\post Initialize(n,initGPURNG) is called
+\post initializeVoronoiQuadraticEnergy(n,initGPURNG) is called
 */
 VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n,Dscalar A0, Dscalar P0,bool reprod)
     {
     printf("Initializing %i cells with random positions in a square box...\n ",n);
     Reproducible = reprod;
-    Initialize(n);
+    initializeVoronoiQuadraticEnergy(n);
     setCellPreferencesUniform(A0,P0);
+    setv0Dr(0.05,1.0);
     };
 
 /*!
 \param  n Number of cells to initialized
 \post all GPUArrays are set to the correct size, v0 is set to 0.05, Dr is set to 1.0, the
-Hilbert sorting period is set to -1 (i.e. off), the moduli are set to KA=KP=1.0, DelaunayMD is
-initialized (initializeDelMD(n) gets called), particle exclusions are turned off, and auxiliary
+Hilbert sorting period is set to -1 (i.e. off), the moduli are set to KA=KP=1.0, voronoiModelBase is
+initialized (initializeVoronoiModelBase(n) gets called), particle exclusions are turned off, and auxiliary
 data structures for the topology are set
 */
 //take care of all class initialization functions
-void VoronoiQuadraticEnergy::Initialize(int n)
+void VoronoiQuadraticEnergy::initializeVoronoiQuadraticEnergy(int n)
     {
-    Ncells=n;
-    particleExclusions=false;
+    initializeVoronoiModelBase(n);
     Timestep = 0;
-    triangletiming = 0.0; forcetiming = 0.0;
     setDeltaT(0.01);
-    initializeDelMD(n);
-    setModuliUniform(1.0,1.0);
-
-    setv0Dr(0.05,1.0);
-    cellForces.resize(n);
-    external_forces.resize(n);
-    AreaPeri.resize(n);
-    cellType.resize(n);
-
-    cellDirectors.resize(n);
-    displacements.resize(n);
-
-    vector<int> baseEx(n,0);
-    setExclusions(baseEx);
-    particleExclusions=false;
-
-    setCellDirectorsRandomly();
-    resetLists();
-    allDelSets();
     };
 
 /*!

@@ -8,9 +8,29 @@
 An extremely simple constructor that does nothing, but enforces default GPU operation
 */
 Simple2DCell::Simple2DCell() :
-    Ncells(0), Nvertices(0),GPUcompute(true)
+    Ncells(0), Nvertices(0),GPUcompute(true),Energy(-1.0)
     {
     };
+
+/*!
+Initialize the data structures to the size specified by n, and set default values.
+*/
+void Simple2DCell::initializeSimple2DCell(int n)
+    {
+    Ncells = n;
+    Nvertices = 2*Ncells;
+
+    //setting cell positions randomly also auto-generates a square box with L = sqrt(Ncells)
+    setCellPositionsRandomly();
+    AreaPeri.resize(Ncells);
+    cellForces.resize(Ncells);
+    setCellPreferencesUniform(1.0,3.8);
+    setModuliUniform(1.0,1.0);
+    setCellTypeUniform(0);
+
+    vertexForces.resize(Nvertices);
+    };
+
 /*!
 Generically believe that cells in 2D have a notion of a preferred area and perimeter
 */
@@ -45,6 +65,7 @@ reproducible RNG or a non-reproducible RNG
 */
 void Simple2DCell::setCellPositionsRandomly()
     {
+    cellPositions.resize(Ncells);
     Dscalar boxsize = sqrt((Dscalar)Ncells);
     Box.setSquare(boxsize,boxsize);
     noise.Reproducible = Reproducible;

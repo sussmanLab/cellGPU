@@ -22,23 +22,24 @@ voronoiModelBase::voronoiModelBase() :
  * a function that takes care of the initialization of the class.
  * \param n the number of cells to initialize
  */
-void voronoiModelBase::initializeDelMD(int n)
+void voronoiModelBase::initializeVoronoiModelBase(int n)
     {
-    GPUcompute = true;
-
-    //set particle number and box
+    //set particle number and call initializers
     Ncells = n;
-    Dscalar boxsize = sqrt((Dscalar)Ncells);
-    Box.setSquare(boxsize,boxsize);
+    initializeSimple2DActiveCell(Ncells);
 
     //set circumcenter array size
     circumcenters.resize(2*(Ncells+10));
     NeighIdxs.resize(6*(Ncells+10));
 
-    cellPositions.resize(Ncells);
     repair.resize(Ncells);
+    displacements.resize(Ncells);
 
-    setCellPositionsRandomly();
+    external_forces.resize(Ncells);
+    vector<int> baseEx(Ncells,0);
+    setExclusions(baseEx);
+    particleExclusions=false;
+
     //initialize spatial sorting, but do not sort by default
     initializeCellSorting();
 
@@ -48,14 +49,15 @@ void voronoiModelBase::initializeDelMD(int n)
     celllist.setGridSize(cellsize);
 
     //DelaunayLoc initialization
-    gpubox Bx(boxsize,boxsize);
-    delLoc.setBox(Bx);
+    delLoc.setBox(Box);
     resetDelLocPoints();
 
     //make a full triangulation
     completeRetriangulationPerformed = 1;
     cellNeighborNum.resize(Ncells);
     globalTriangulationCGAL();
+    resetLists();
+    allDelSets();
 
     //initialize the anyCircumcenterTestFailed structure
     anyCircumcenterTestFailed.resize(1);
@@ -126,9 +128,7 @@ void voronoiModelBase::updateCellList()
             };
         celllist.setParticles(psnew);
         celllist.compute();
-
         };
-
     };
 
 /*!

@@ -19,8 +19,7 @@ VertexQuadraticEnergy::VertexQuadraticEnergy(int n,Dscalar A0, Dscalar P0,bool r
     {
     printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
     Reproducible = reprod;
-    GPUcompute=true;
-    Initialize(n,runSPVToInitialize);
+    initializeVertexModelBase(n,runSPVToInitialize);
     setCellPreferencesUniform(A0,P0);
     };
 

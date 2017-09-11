@@ -26,7 +26,7 @@ class voronoiModelBase : public Simple2DActiveCell
         //!The constructor!
         voronoiModelBase();
         //!A default initialization scheme
-        void initializeDelMD(int n);
+        void initializeVoronoiModelBase(int n);
         //!Enforce CPU-only operation.
         /*!
         \param global defaults to true.

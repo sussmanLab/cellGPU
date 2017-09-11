@@ -23,8 +23,8 @@ class VoronoiQuadraticEnergy : public voronoiModelBase
         //!Blank constructor
         VoronoiQuadraticEnergy(){};
 
-        //!Initialize voronoiModelBase, set random orientations for cell directors, prepare data structures
-        void Initialize(int n);
+        //!Initialize voronoiQuadraticEnergy and call the initializer chain
+        void initializeVoronoiQuadraticEnergy(int n);
 
         //!compute the geometry and get the forces
         virtual void computeForces();
@@ -80,10 +80,6 @@ class VoronoiQuadraticEnergy : public voronoiModelBase
         //!Save tuples for half of the dynamical matrix
         virtual void getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress = 1.0, Dscalar stress = 1.0);
 
-    //public member variables
-    public:
-        //!Some function-timing-related scalars
-        Dscalar triangletiming, forcetiming;
     //be friends with the associated Database class so it can access data to store or read
     friend class SPVDatabaseNetCDF;
     };

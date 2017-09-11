@@ -14,6 +14,19 @@ Simple2DActiveCell::Simple2DActiveCell() :
     };
 
 /*!
+Initialize the data structures to the size specified by n, and set default values, and call
+Simple2DCell's initilization routine.
+*/
+void Simple2DActiveCell::initializeSimple2DActiveCell(int n)
+    {
+    Ncells = n;
+    initializeSimple2DCell(Ncells);
+    //The setting functions automatically resize their vectors
+    setv0Dr(0.0,1.0);
+    setCellDirectorsRandomly();
+    };
+
+/*!
 Calls the spatial vertex sorting routine in Simple2DCell, and re-indexes the arrays for the cell
 RNGS, as well as the cell motility and cellDirector arrays
 */

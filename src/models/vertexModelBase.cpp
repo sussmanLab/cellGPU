@@ -36,33 +36,23 @@ void vertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
 /*!
 Take care of all base class initialization functions, this involves setting arrays to the right size, etc.
 */
-void vertexModelBase::Initialize(int n,bool spvInitialize)
+void vertexModelBase::initializeVertexModelBase(int n,bool spvInitialize)
     {
-    //set number of cells, and a square box
+    //set number of cells, and call initializer chain
     Ncells=n;
-    cellPositions.resize(Ncells);
-    //put cells in box randomly
-    setCellPositionsRandomly();
+    initializeSimple2DActiveCell(Ncells);
     //derive the vertices from a voronoi tesselation
     setCellsVoronoiTesselation(spvInitialize);
-    setCellDirectorsRandomly();
 
-    Timestep = 0;
-    setDeltaT(0.01);
     setT1Threshold(0.01);
-
     //initializes per-cell lists
-    setModuliUniform(1.0,1.0);
-    setCellTypeUniform(0);
-    AreaPeri.resize(Ncells);
-    AreaPeriPreferences.resize(Ncells);
     initializeCellSorting();
 
     //initializes per-vertex lists
-    vertexForces.resize(Nvertices);
     displacements.resize(Nvertices);
     initializeVertexSorting();
     initializeEdgeFlipLists();
+
     //initialize per-triple-vertex lists
     vertexForceSets.resize(3*Nvertices);
     voroCur.resize(3*Nvertices);
