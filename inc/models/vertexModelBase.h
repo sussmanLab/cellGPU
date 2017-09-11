@@ -1,8 +1,10 @@
 #ifndef vertexModelBase_H
 #define vertexModelBase_H
 
-#include "std_include.h"
 #include "Simple2DActiveCell.h"
+//include spp dynamics for SPV-based initialization of configurations
+#include "selfPropelledParticleDynamics.h"
+#include "Simulation.h"
 
 /*! \file vertexModelBase.h */
 //!A class that can calculate many geometric and topological features common to vertex models
@@ -11,6 +13,12 @@ This class captures many energy-functional-independent features common to 2D ver
 It can compute geometric features of cells, such as their area and perimeter; it knows that in vertex
 models the degrees of freedom are the vertices (for returning the right vector of forces, moving
 d.o.f. around, etc.); and it is where a geometric form of cell division is implemented.
+
+Vertex models have to maintain the topology of the cell network by hand, so child classes need to
+implement not only an energy functional (and corresponding force law), but also rules for topological
+transitions. This base class will implement a very simple T1 transition scheme
+Only T1 transitions are currently implemented, and they occur whenever two vertices come closer
+than a set threshold distance. All vertices are three-valent.
  */
 
 class vertexModelBase : public Simple2DActiveCell
@@ -24,6 +32,12 @@ class vertexModelBase : public Simple2DActiveCell
 
         //!return the forces
         virtual void getForces(GPUArray<Dscalar2> &forces){forces = vertexForces;};
+
+        //!Initialize VertexQuadraticEnergy, set random orientations for vertex directors, prepare data structures
+        void Initialize(int n,bool spvInitialize = false);
+
+        //!Initialize cells to be a voronoi tesselation of a random point set
+        void setCellsVoronoiTesselation(bool spvInitialize = false);
 
         //!return a reference to the GPUArray of the current forces
         virtual GPUArray<Dscalar2> & returnForces(){return vertexForces;};
@@ -41,6 +55,20 @@ class vertexModelBase : public Simple2DActiveCell
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
         virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams = {});
 
+        //!Set the length threshold for T1 transitions
+        virtual void setT1Threshold(Dscalar t1t){T1Threshold = t1t;};
+
+        //!Simple test for T1 transitions (edge length less than threshold) on the CPU
+        void testAndPerformT1TransitionsCPU();
+        //!Simple test for T1 transitions (edge length less than threshold) on the GPU...calls the following functions
+        void testAndPerformT1TransitionsGPU();
+
+        //!spatially sort the *vertices* along a Hilbert curve for data locality
+        virtual void spatialSorting();
+
+        //!update/enforce the topology, performing simple T1 transitions
+        virtual void enforceTopology();
+
         /*!
         if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting vertex i and vertex
         vertexNeighbors[3*i+j] has been marked for a T1 transition
@@ -57,6 +85,12 @@ class vertexModelBase : public Simple2DActiveCell
         //!an array containing the three contributions to the force on each vertex
         GPUArray<Dscalar2> vertexForceSets;
 
+        //!A threshold defining the edge length below which a T1 transition will occur
+        Dscalar T1Threshold;
+        
+        //!Enforce CPU-only operation.
+        void setCPU(bool global = true){GPUcompute = false;};
+
     protected:
         //!if the maximum number of vertices per cell increases, grow the cellVertices list
         void growCellVerticesList(int newVertexMax);
@@ -65,6 +99,15 @@ class vertexModelBase : public Simple2DActiveCell
         void initializeEdgeFlipLists();
         //! data structure to help with cell-vertex list
         GPUArray<int> growCellVertexListAssist;
+
+        //!test the edges for a T1 event, and grow the cell-vertex list if necessary
+        void testEdgesForT1GPU();
+        //!perform the edge flips found in the previous step
+        void flipEdgesGPU();
+
+        //utility functions
+        //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
+        void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
 
         //! data structure to help with not simultaneously trying to flip nearby edges
         GPUArray<int> finishedFlippingEdges;

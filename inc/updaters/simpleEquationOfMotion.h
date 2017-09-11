@@ -1,8 +1,6 @@
 #ifndef simpleEquationOfMotion_H
 #define simpleEquationOfMotion_H
 
-#include "curand.h"
-#include "curand_kernel.h"
 #include "simpleEquationOfMotion.cuh"
 #include "gpuarray.h"
 #include "updaterWithNoise.h"

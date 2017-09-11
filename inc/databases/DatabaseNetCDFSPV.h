@@ -1,12 +1,8 @@
 #ifndef DATABASE_SPV_H
 #define DATABASE_SPV_H
 
-#include "std_include.h"
 #include "voronoiQuadraticEnergy.h"
 #include "DatabaseNetCDF.h"
-#include <netcdfcpp.h>
-#include <string>
-#include "vector_types.h"
 
 /*! \file DatabaseNetCDFSPV.h */
 //!Simple databse for reading/writing 2d spv states

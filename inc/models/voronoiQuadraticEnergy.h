@@ -1,14 +1,6 @@
 #ifndef VoronoiQuadraticEnergy_H
 #define VoronoiQuadraticEnergy_H
 
-#include "std_include.h"
-
-#include "cuda_runtime.h"
-#include "curand.h"
-#include "curand_kernel.h"
-
-#include "Matrix.h"
-#include "functions.h"
 #include "voronoiModelBase.h"
 #include "voronoiQuadraticEnergy.cuh"
 

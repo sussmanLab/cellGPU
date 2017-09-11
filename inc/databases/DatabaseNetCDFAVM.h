@@ -1,13 +1,9 @@
 #ifndef DATABASE_AVM_H
 #define DATABASE_AVM_H
 
-#include "std_include.h"
 #include "vertexQuadraticEnergy.h"
 #include "voronoiQuadraticEnergy.h"
 #include "DatabaseNetCDF.h"
-#include <netcdfcpp.h>
-#include <string>
-#include "vector_types.h"
 
 
 /*! \file DatabaseNetCDFAVM.h */

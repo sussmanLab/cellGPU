@@ -3,6 +3,8 @@
 
 #include "std_include.h"
 #include <cuda_runtime.h>
+#include "curand.h"
+#include "curand_kernel.h"
 
 /*!
  \file simpleEquationOfMotion.cuh

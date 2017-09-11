@@ -43,6 +43,34 @@ bool gpu_vm_displace(
                     gpubox &Box,
                     int Nvertices);
 
-/** @} */ //end of group declaration
+bool gpu_vm_test_edges_for_T1(
+                    Dscalar2 *d_vertexPositions,
+                    int      *d_vertexNeighbors,
+                    int      *d_vertexEdgeFlips,
+                    int      *d_vertexCellNeighbors,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
+                    gpubox   &Box,
+                    Dscalar  T1THRESHOLD,
+                    int      Nvertices,
+                    int      vertexMax,
+                    int      *d_grow,
+                    Index2D  &n_idx);
 
+bool gpu_vm_flip_edges(
+                    int      *d_vertexEdgeFlips,
+                    int      *d_vertexEdgeFlipsCurrent,
+                    Dscalar2 *d_vertexPositions,
+                    int      *d_vertexNeighbors,
+                    int      *d_vertexCellNeighbors,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
+                    int      *d_finishedFlippingEdges,
+                    Dscalar  T1Threshold,
+                    gpubox   &Box,
+                    Index2D  &n_idx,
+                    int      Nvertices,
+                    int      Ncells);
+
+/** @} */ //end of group declaration
 #endif

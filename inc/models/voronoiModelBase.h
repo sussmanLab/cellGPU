@@ -1,7 +1,6 @@
 #ifndef voronoiModelBase_H
 #define voronoiModelBase_H
 
-#include "std_include.h"
 #include "Simple2DActiveCell.h"
 #include "cellListGPU.cuh"
 #include "cellListGPU.h"
@@ -17,6 +16,9 @@
  * in a periodic domain, performing Delaunay triangulations on them, testing whether
  * those triangulations are valid on either the CPU or GPU, and locally repair
  * invalid triangulations on the CPU.
+
+ * Voronoi models have their topology taken care of by the underlying triangulation, and so child 
+   classes just need to implement an energy functions (and corresponding force law)
  */
 class voronoiModelBase : public Simple2DActiveCell
     {

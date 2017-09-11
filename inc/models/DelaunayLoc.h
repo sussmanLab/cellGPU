@@ -1,11 +1,10 @@
 #ifndef DELAUNAYLOC_H
 #define DELAUNAYLOC_H
 
-#include "std_include.h"
+#include "Delaunay1.h"
 #include "gpuarray.h"
 #include "gpubox.h"
 #include "cellListGPU.h"
-#include "Delaunay1.h"
 using namespace std;
 
 /*! \file DelaunayLoc.h */

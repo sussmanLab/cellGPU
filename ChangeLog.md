@@ -3,6 +3,7 @@
 ### Changes in progress
 
 * rationalize naming scheme of vertex and voronoi models
+* include tree cleaning
 
 ### version 0.6.2
 

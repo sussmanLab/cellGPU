@@ -1,7 +1,6 @@
 #ifndef ENERGYMINIMIZERFIRE_H
 #define ENERGYMINIMIZERFIRE_H
 
-#include "std_include.h"
 #include "functions.h"
 #include "gpuarray.h"
 #include "Simple2DCell.h"

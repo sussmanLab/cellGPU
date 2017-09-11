@@ -1,7 +1,6 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
-#include "std_include.h"
 #include <netcdfcpp.h>
 #include "BaseDatabase.h"
 

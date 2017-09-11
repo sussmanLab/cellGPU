@@ -1,7 +1,6 @@
 #ifndef VoronoiQuadraticEnergyWithTension_H
 #define VoronoiQuadraticEnergyWithTension_H
 
-#include "std_include.h"
 #include "voronoiQuadraticEnergy.h"
 
 /*! \file voronoiQuadraticEnergyWithTension.h */
