@@ -54,7 +54,7 @@ class DelaunayCGAL
         vector< vector<int> > allneighs; //!<The list of neighbors of every point in the periodic triangulation
 
         //! Given a vector of points (in the form of pair<PDT::Point p ,int index>), fill the allneighs structure with the neighbor list
-        void PeriodicTriangulation(vector<pair<Point,int> > &points,Dscalar size);
+        void PeriodicTriangulation(vector<pair<Point,int> > &points,Dscalar boxX, Dscalar boxY);
         //! given a similar vector of points, calculate the neighbors of the first point in a non-periodic domain.
         bool LocalTriangulation(const vector<pair<LPoint,int> > &points, vector<int> &neighs);
     };

@@ -49,15 +49,16 @@ bool DelaunayCGAL::LocalTriangulation(const vector<pair<LPoint,int> > &V, vector
 /*!
 Perform a periodic triangulation in a SQUARE domain
 \param V A complete set of the points to be triangulated along with their indices
-\param size the side length of the square periodic domain
+\param boxX the side length of the periodic domain in the x-direction
+\parame boxY the side length of the periodic domain in the y-direction
 
 After the routine is called, the class member allneighs will store a list of particle neighbors, each sorted in CW order
 */
-void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, Dscalar size)
+void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, Dscalar boxX, Dscalar boxY)
     {
     int vnum = V.size();
 
-    Iso_rectangle domain(0.0,0.0,size,size);
+    Iso_rectangle domain(0.0,0.0,boxX,boxY);
     PDT T(V.begin(),V.end(),domain);
 
     T.convert_to_1_sheeted_covering();
