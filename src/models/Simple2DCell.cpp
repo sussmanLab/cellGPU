@@ -10,6 +10,7 @@ An extremely simple constructor that does nothing, but enforces default GPU oper
 Simple2DCell::Simple2DCell() :
     Ncells(0), Nvertices(0),GPUcompute(true),Energy(-1.0)
     {
+    Box = make_shared<gpubox>();
     };
 
 /*!
