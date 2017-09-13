@@ -90,6 +90,5 @@ class DelaunayLoc
         vector<Dscalar2> DTringCGAL;//!<A vector of Delaunay neighbors that can be repeatedly re-written
         //!A cell list for speeding up the calculation of the candidate 1-ring
         cellListGPU cList;
-
     };
 #endif

@@ -18,7 +18,7 @@ class cellListGPU
     {
     public:
         //!Blank constructor
-        cellListGPU(){Nmax=0;};
+        cellListGPU(){Nmax=0;Box = make_shared<gpubox>();};
         //!construct with a given set of points
         cellListGPU(vector<Dscalar> &points);
         //! constructor with points, a box, and a size for the underlying grid
@@ -30,6 +30,8 @@ class cellListGPU
         void setParticles(const vector<Dscalar2> &points);
         //!Set the objects box object
         void setBox(gpubox &bx);
+        //!Set the BoxPtr to point to an existing one
+        void setBox(BoxPtr bx){Box=bx;};
         //!Set the number of particles to put in the buckets
         void setNp(int nn);
 
@@ -99,7 +101,7 @@ class cellListGPU
         //!An array containing the indices of particles in various cells. So, idx[cell_list_indexer(nn,bin)] gives the index of the nth particle in the bin "bin" of the cell list
         GPUArray<int> idxs;
 
-    private:
+    protected:
         //!first index is Nmax, second is whether to recompute
         GPUArray<int> assist;
         //!The number of particles to put in cells
@@ -115,7 +117,7 @@ class cellListGPU
         //! the maximum number of particles found in any bin
         int Nmax;
         //!The Box used to compute periodic distances
-        gpubox Box;
+        BoxPtr Box;
     };
 
 #endif

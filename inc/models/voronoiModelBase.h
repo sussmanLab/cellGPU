@@ -125,9 +125,10 @@ class voronoiModelBase : public Simple2DActiveCell
 
 
     protected:
-        cellListGPU celllist;        //!<The associated cell list structure
-        Dscalar cellsize;            //!<The size of the cell list's underlying grid
-
+        //!The associated cell list structure
+        cellListGPU celllist;        
+        //!The size of the cell list's underlying grid
+        Dscalar cellsize;            
         //!A 2dIndexer for computing where in the GPUArray to look for a given particles neighbors
         Index2D n_idx;
         //!An upper bound for the maximum number of neighbors that any cell has

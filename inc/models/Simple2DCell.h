@@ -79,7 +79,7 @@ class Simple2DCell : public Simple2DModel
         //!return the gpubox
         virtual gpubox & returnBox(){return *(Box);};
 
-        //!Pass in a reference to the box
+        //!This can be used, but should not normally be. This re-assigns the pointer
         void setBox(BoxPtr _box){Box = _box;};
 
         //!return the base "itt" re-indexing vector
@@ -170,11 +170,11 @@ class Simple2DCell : public Simple2DModel
         //!To write consistent files...the vertex that started the simulation as index i has current index tagToIdx[i]
         vector<int> tagToIdxVertex;
 
-    //protected member variables
-    protected:
         //!the box defining the periodic domain
         BoxPtr Box;
 
+    //protected member variables
+    protected:
         //!Compute aspects of the model on the GPU
         bool GPUcompute;
 

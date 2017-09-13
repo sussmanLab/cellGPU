@@ -45,7 +45,7 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
 
     //cell list initialization
     celllist.setNp(Ncells);
-    celllist.setBox(*(Box));
+    celllist.setBox(Box);
     celllist.setGridSize(cellsize);
 
     //DelaunayLoc initialization

@@ -94,7 +94,7 @@ void DelaunayLoc::initialize(Dscalar csize)
     {
     cellsize = csize;
     cList.setNp(nV);
-    cList.setBox((*Box));
+    cList.setBox(Box);
     cList.setGridSize(cellsize);
     cList.setParticles(pts);
     cList.compute();

@@ -24,13 +24,16 @@ void Simulation::addUpdater(UpdaterPtr _upd, ForcePtr _config)
 
 /*!
 Set a new Box for the simulation...
-DO NOT call this if the cell configuration is not already set
 */
 void Simulation::setBox(BoxPtr _box)
     {
-    Box = _box;
-    auto cellConf = cellConfiguration.lock();
-    cellConf->setBox(Box);
+        //here, instead, get the elements of the BoxPtr and set the contents of Box according to _box's elements... possibly propagate this change throughout
+    Dscalar b11,b12,b21,b22;
+    _box->getBoxDims(b11,b12,b21,b22);
+    if (_box->isBoxSquare())
+        Box->setSquare(b11,b22);
+    else
+        Box->setGeneral(b11,b12,b21,b22);
     };
 
 /*!
@@ -39,6 +42,7 @@ Set a pointer to the configuratione, and give the configurationa reference to th
 void Simulation::setConfiguration(ForcePtr _config)
     {
     cellConfiguration = _config;
+    Box = _config->Box;
     };
 
 /*!

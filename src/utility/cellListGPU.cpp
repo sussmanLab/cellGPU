@@ -18,7 +18,7 @@ cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
     {
     Nmax = 0;
     setParticles(points);
-    setBox(bx);
+    Box = make_shared<gpubox>();
     setGridSize(a);
     }
 
@@ -28,6 +28,7 @@ cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
 cellListGPU::cellListGPU(vector<Dscalar> &points)
     {
     Nmax = 0;
+    Box = make_shared<gpubox>();
     setParticles(points);
     }
 
@@ -84,9 +85,9 @@ void cellListGPU::setBox(gpubox &bx)
     Dscalar b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
     if (bx.isBoxSquare())
-        Box.setSquare(b11,b22);
+        Box->setSquare(b11,b22);
     else
-        Box.setGeneral(b11,b12,b21,b22);
+        Box->setGeneral(b11,b12,b21,b22);
     };
 
 /*!
@@ -96,7 +97,7 @@ This routine currently picks an even integer of cells, close to the desired size
 void cellListGPU::setGridSize(Dscalar a)
     {
     Dscalar b11,b12,b21,b22;
-    Box.getBoxDims(b11,b12,b21,b22);
+    Box->getBoxDims(b11,b12,b21,b22);
     xsize = (int)floor(b11/a);
     if(xsize%2==1) xsize +=1;
     ysize = (int)floor(b22/a);
@@ -365,7 +366,7 @@ void cellListGPU::computeGPU()
                           xsize,            //number of cells in x direction
                           ysize,            // ""     ""      "" y directions
                           boxsize,          //size of each grid cell
-                          Box,
+                          (*Box),
                           cell_indexer,
                           cell_list_indexer,
                           d_assist.data
@@ -432,7 +433,7 @@ void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
                           xsize,            //number of cells in x direction
                           ysize,            // ""     ""      "" y directions
                           boxsize,          //size of each grid cell
-                          Box,
+                          (*Box),
                           cell_indexer,
                           cell_list_indexer,
                           d_assist.data

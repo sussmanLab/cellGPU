@@ -47,7 +47,7 @@ class Simulation : public enable_shared_from_this<Simulation>
 
         //!The domain of the simulation
         BoxPtr Box;
-        //!Pass in a reference to the box
+        //!This changes the contents of the Box pointed to by Box to match that of _box
         void setBox(BoxPtr _box);
 
         //!A neighbor list assisting the simulation

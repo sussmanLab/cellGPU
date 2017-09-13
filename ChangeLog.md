@@ -2,6 +2,7 @@
 
 ### Changes in progress
 
+* BoxPtrs implemented...will eventually make different box shapes easier
 * rationalize naming scheme of vertex and voronoi models
 * include tree cleaning
 

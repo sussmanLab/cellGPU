@@ -12,6 +12,8 @@
 #include "DatabaseNetCDFAVM.h"
 #include "DatabaseNetCDFSPV.h"
 #include "DatabaseTextVoronoi.h"
+#include "gpubox.h"
+
 /*!
 This file demonstrates simulations in the vertex or voronoi models in which a cell divides.
 The vertex model version (accessed by using a negative "-z" option on the command line) does cell
@@ -150,6 +152,11 @@ int main(int argc, char*argv[])
                 spv->cellDivision(cdtest,dParams);
                 Ncells = spv->getNumberOfDegreesOfFreedom();
                 //suppose, for instance, you want to keep p_0/sqrt(<A>) constant...
+/*
+ //An alternative would be to use something like the following (untested code) to rescale the box size to keep <A> = 1
+BoxPtr newbox = make_shared<gpubox>(sqrt(Ncells),sqrt(Ncells));
+sim->setBox(newbox);
+*/
                 Dscalar meanA = numpts / (Dscalar) Ncells;
                 Dscalar scaledP0 = p0 * sqrt(meanA);
                 spv->setCellPreferencesUniform(1.0,scaledP0);
