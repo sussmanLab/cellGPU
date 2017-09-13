@@ -186,7 +186,7 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceSetsGPU(
                     KA,
                     KP,
                     gamma,
-                    NeighIdxNum,n_idx,Box);
+                    NeighIdxNum,n_idx,*(Box));
     };
 
 /*!
@@ -223,7 +223,7 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceSetsGPU()
                     cellTypeIndexer,
                     KA,
                     KP,
-                    NeighIdxNum,n_idx,Box);
+                    NeighIdxNum,n_idx,*(Box));
     };
 /*!
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
@@ -265,12 +265,12 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceCPU(int 
     Dscalar2 pi = h_p.data[i];
 
     nlastp = h_p.data[ns[ns.size()-1]];
-    Box.minDist(nlastp,pi,rij);
+    Box->minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
         int id = n_idx(nn,i);
         nnextp = h_p.data[ns[nn]];
-        Box.minDist(nnextp,pi,rik);
+        Box->minDist(nnextp,pi,rik);
         voro[nn] = h_v.data[id];
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
@@ -376,9 +376,9 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceCPU(int 
         Dscalar2 no1 = h_p.data[DT_other_idx];
 
         Dscalar2 r1,r2,r3;
-        Box.minDist(nl1,pi,r1);
-        Box.minDist(nn1,pi,r2);
-        Box.minDist(no1,pi,r3);
+        Box->minDist(nl1,pi,r1);
+        Box->minDist(nn1,pi,r2);
+        Box->minDist(no1,pi,r3);
 
         Circumcenter(r1,r2,r3,vother);
 
@@ -520,12 +520,12 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceCPU(int i)
     Dscalar2 pi = h_p.data[i];
 
     nlastp = h_p.data[ns[ns.size()-1]];
-    Box.minDist(nlastp,pi,rij);
+    Box->minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
         int id = n_idx(nn,i);
         nnextp = h_p.data[ns[nn]];
-        Box.minDist(nnextp,pi,rik);
+        Box->minDist(nnextp,pi,rik);
         voro[nn] = h_v.data[id];
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
@@ -636,9 +636,9 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceCPU(int i)
         Dscalar2 no1 = h_p.data[DT_other_idx];
 
         Dscalar2 r1,r2,r3;
-        Box.minDist(nl1,pi,r1);
-        Box.minDist(nn1,pi,r2);
-        Box.minDist(no1,pi,r3);
+        Box->minDist(nl1,pi,r1);
+        Box->minDist(nn1,pi,r2);
+        Box->minDist(no1,pi,r3);
 
         Circumcenter(r1,r2,r3,vother);
 

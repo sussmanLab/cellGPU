@@ -187,6 +187,7 @@ void gpubox::move(Dscalar2 &p1, const Dscalar2 &disp)
     putInBox(vP);
     Trans(vP,p1);
     };
+
 typedef shared_ptr<gpubox> BoxPtr;
 
 #undef HOSTDEVICE

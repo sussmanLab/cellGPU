@@ -45,11 +45,11 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
 
     //cell list initialization
     celllist.setNp(Ncells);
-    celllist.setBox(Box);
+    celllist.setBox(*(Box));
     celllist.setGridSize(cellsize);
 
     //DelaunayLoc initialization
-    delLoc.setBox(Box);
+    delLoc.setBox(*(Box));
     resetDelLocPoints();
 
     //make a full triangulation
@@ -144,7 +144,7 @@ void voronoiModelBase::movePointsCPU(GPUArray<Dscalar2> &displacements)
         {
         h_p.data[idx].x += h_d.data[idx].x;
         h_p.data[idx].y += h_d.data[idx].y;
-        Box.putInBoxReal(h_p.data[idx]);
+        Box->putInBoxReal(h_p.data[idx]);
         };
     };
 
@@ -157,7 +157,7 @@ void voronoiModelBase::movePoints(GPUArray<Dscalar2> &displacements)
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::readwrite);
-    gpu_move_degrees_of_freedom(d_p.data,d_d.data,Ncells,Box);
+    gpu_move_degrees_of_freedom(d_p.data,d_d.data,Ncells,*(Box));
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         {
@@ -270,7 +270,7 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
         Psnew[ii]=make_pair(Point(h_points.data[ii].x,h_points.data[ii].y),ii);
         };
     Dscalar b1,b2,b3,b4;
-    Box.getBoxDims(b1,b2,b3,b4);
+    Box->getBoxDims(b1,b2,b3,b4);
     if (b2 != 0 || b3 != 0 || b1 != b4)
         {
         printf("\nError: cannot call CGAL for a non-square box\n");
@@ -525,7 +525,7 @@ void voronoiModelBase::testTriangulation()
                            celllist.getXsize(),
                            celllist.getYsize(),
                            celllist.getBoxsize(),
-                           Box,
+                           *(Box),
                            celllist.cell_indexer,
                            celllist.cell_list_indexer,
                            d_actf.data
@@ -744,7 +744,7 @@ void voronoiModelBase::readTriangulation(ifstream &infile)
         else
             {
             p.data[ii].y=val;
-            Box.putInBoxReal(p.data[ii]);
+            Box->putInBoxReal(p.data[ii]);
             idx = 0;
             ii += 1;
             };
@@ -792,11 +792,11 @@ void voronoiModelBase::computeGeometryCPU()
         Dscalar2 rij, rik;
 
         nlastp = h_p.data[ns[ns.size()-1]];
-        Box.minDist(nlastp,pi,rij);
+        Box->minDist(nlastp,pi,rij);
         for (int nn = 0; nn < neigh;++nn)
             {
             nnextp = h_p.data[ns[nn]];
-            Box.minDist(nnextp,pi,rik);
+            Box->minDist(nnextp,pi,rik);
             Circumcenter(rij,rik,circumcent);
             voro[nn] = circumcent;
             rij=rik;
@@ -843,7 +843,7 @@ void voronoiModelBase::computeGeometryGPU()
                         d_n.data,
                         d_vc.data,
                         d_vln.data,
-                        Ncells, n_idx,Box);
+                        Ncells, n_idx,*(Box));
     };
 
 /*!
@@ -962,11 +962,11 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     Dscalar2 pi = h_p.data[cellIdx];
     Dscalar2 rij, rik;
     nlastp = h_p.data[ns[ns.size()-1]];
-    Box.minDist(nlastp,pi,rij);
+    Box->minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
         nnextp = h_p.data[ns[nn]];
-        Box.minDist(nnextp,pi,rik);
+        Box->minDist(nnextp,pi,rik);
         Circumcenter(rij,rik,circumcent);
         voro.push_back(circumcent);
         rij=rik;
@@ -1007,10 +1007,10 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     Dscalar maxSeparation = max(norm(p-Int1),norm(p-Int2));
     Dscalar2 newCellPos1 = initialCellPosition + separationFraction*maxSeparation*ray;
     Dscalar2 newCellPos2 = initialCellPosition - separationFraction*maxSeparation*ray;
-    Box.putInBoxReal(newCellPos1);
-    Box.putInBoxReal(newCellPos2);
+    Box->putInBoxReal(newCellPos1);
+    Box->putInBoxReal(newCellPos2);
 
-    
+
     //for debugging
 //    printf("in cellDivision routine: ((%f,%f), (%f,%f), (%f,%f))\n",initialCellPosition.x,initialCellPosition.y,newCellPos1.x,newCellPos1.y,newCellPos2.x,newCellPos2.y);
 

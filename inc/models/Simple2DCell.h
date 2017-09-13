@@ -23,7 +23,7 @@ class Simple2DCell : public Simple2DModel
 
         //! initialize class' data structures and set default values
         void initializeSimple2DCell(int n);
-        
+
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};
 
@@ -77,7 +77,7 @@ class Simple2DCell : public Simple2DModel
         void setVertexTopologyFromCells(vector< vector<int> > cellVertexIndices);
 
         //!return the gpubox
-        virtual gpubox & returnBox(){return Box;};
+        virtual gpubox & returnBox(){return *(Box);};
 
         //!return the base "itt" re-indexing vector
         virtual vector<int> & returnItt(){return itt;};
@@ -170,7 +170,7 @@ class Simple2DCell : public Simple2DModel
     //protected member variables
     protected:
         //!the box defining the periodic domain
-        gpubox Box;
+        BoxPtr Box;
 
         //!Compute aspects of the model on the GPU
         bool GPUcompute;

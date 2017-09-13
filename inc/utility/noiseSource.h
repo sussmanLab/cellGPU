@@ -23,7 +23,7 @@ class noiseSource
             {
             Reproducible = false;
             mt19937 Gener(rand());
-            mt19937 GenerRd(rd());
+            mt19937 GenerRd(rand());
             gen = Gener;
             genrd=GenerRd;
             }

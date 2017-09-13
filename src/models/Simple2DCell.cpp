@@ -67,7 +67,7 @@ void Simple2DCell::setCellPositionsRandomly()
     {
     cellPositions.resize(Ncells);
     Dscalar boxsize = sqrt((Dscalar)Ncells);
-    Box.setSquare(boxsize,boxsize);
+    Box->setSquare(boxsize,boxsize);
     noise.Reproducible = Reproducible;
 
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::overwrite);
@@ -366,7 +366,7 @@ void Simple2DCell::spatiallySortCells()
     {
     //itt and tti are the changes that happen in the current sort
     //idxToTag and tagToIdx relate the current indexes to the original ones
-    HilbertSorter hs(Box);
+    HilbertSorter hs(*(Box));
 
     vector<pair<int,int> > idxCellSorter(Ncells);
 
@@ -410,7 +410,7 @@ void Simple2DCell::spatiallySortVertices()
     {
     //ittVertex and ttiVertex are the changes that happen in the current sort
     //idxToTagVertex and tagToIdxVertex relate the current indexes to the original ones
-    HilbertSorter hs(Box);
+    HilbertSorter hs(*(Box));
 
     vector<pair<int,int> > idxSorterVertex(Nvertices);
 

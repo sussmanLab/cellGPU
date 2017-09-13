@@ -17,7 +17,7 @@ void vertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
         ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
         gpu_vm_displace(d_v.data,
                          d_disp.data,
-                         Box,
+                         *(Box),
                          Nvertices);
         }
     else
@@ -28,7 +28,7 @@ void vertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
             {
             h_v.data[i].x += h_disp.data[i].x;
             h_v.data[i].y += h_disp.data[i].y;
-            Box.putInBoxReal(h_v.data[i]);
+            Box->putInBoxReal(h_v.data[i]);
             };
         };
     };
@@ -122,7 +122,7 @@ void vertexModelBase::setCellsVoronoiTesselation(bool spvInitialize)
         Psnew[ii]=make_pair(Point(h_p.data[ii].x,h_p.data[ii].y),ii);
         };
     Dscalar b11,b12,b21,b22;
-    Box.getBoxDims(b11,b12,b21,b22);
+    Box->getBoxDims(b11,b12,b21,b22);
     Iso_rectangle domain(0.0,0.0,b11,b22);
     PDT T(Psnew.begin(),Psnew.end(),domain);
     T.convert_to_1_sheeted_covering();
@@ -240,7 +240,7 @@ void vertexModelBase::computeGeometryCPU()
         //compute the vertex position relative to the cell position
         vlast.x=0.;vlast.y=0.0;
         int vidx = h_n.data[n_idx(neighs-1,i)];
-        Box.minDist(h_v.data[vidx],cellPos,vcur);
+        Box->minDist(h_v.data[vidx],cellPos,vcur);
         for (int nn = 0; nn < neighs; ++nn)
             {
             //for easy force calculation, save the current, last, and next vertex position in the approprate spot.
@@ -250,7 +250,7 @@ void vertexModelBase::computeGeometryCPU()
                     forceSetIdx = 3*vidx+ff;
 
             vidx = h_n.data[n_idx(nn,i)];
-            Box.minDist(h_v.data[vidx],cellPos,vnext);
+            Box->minDist(h_v.data[vidx],cellPos,vnext);
 
             //contribution to cell's area is
             // 0.5* (vcur.x+vnext.x)*(vnext.y-vcur.y)
@@ -291,7 +291,7 @@ void vertexModelBase::computeGeometryGPU()
                     d_vc.data,
                     d_vln.data,
                     d_AP.data,
-                    Ncells,n_idx,Box);
+                    Ncells,n_idx,*(Box));
     };
 
 /*!
@@ -316,7 +316,7 @@ void vertexModelBase::getCellPositionsCPU()
         for (int n = 1; n < neighs; ++n)
             {
             int vidx = h_n.data[n_idx(n,cell)];
-            Box.minDist(h_v.data[vidx],baseVertex,vertex);
+            Box->minDist(h_v.data[vidx],baseVertex,vertex);
             pos.x += vertex.x;
             pos.y += vertex.y;
             };
@@ -324,7 +324,7 @@ void vertexModelBase::getCellPositionsCPU()
         pos.y /= neighs;
         pos.x += baseVertex.x;
         pos.y += baseVertex.y;
-        Box.putInBoxReal(pos);
+        Box->putInBoxReal(pos);
         h_p.data[cell] = pos;
         };
     };
@@ -345,7 +345,7 @@ void vertexModelBase::getCellPositionsGPU()
                                d_cv.data,
                                Ncells,
                                n_idx,
-                               Box);
+                               *(Box));
     };
 
 /*!
@@ -568,7 +568,7 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
             if(vertex1 < vertex2)
                 {
                 v2 = h_v.data[vertex2];
-                Box.minDist(v1,v2,edge);
+                Box->minDist(v1,v2,edge);
                 if(norm(edge) < T1Threshold)
                     {
                     bool growCellVertexList = false;
@@ -590,8 +590,8 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                     v1.y = midpoint.y+edge.x;
                     v2.x = midpoint.x+edge.y;
                     v2.y = midpoint.y-edge.x;
-                    Box.putInBoxReal(v1);
-                    Box.putInBoxReal(v2);
+                    Box->putInBoxReal(v1);
+                    Box->putInBoxReal(v2);
                     h_v.data[vertex1] = v1;
                     h_v.data[vertex2] = v2;
 
@@ -705,7 +705,7 @@ void vertexModelBase::testEdgesForT1GPU()
                               d_vcn.data,
                               d_cvn.data,
                               d_cv.data,
-                              Box,
+                              *(Box),
                               T1Threshold,
                               Nvertices,
                               vertexMax,
@@ -750,7 +750,7 @@ void vertexModelBase::flipEdgesGPU()
                                d_cv.data,
                                d_ffe.data,
                                T1Threshold,
-                               Box,
+                               *(Box),
                                n_idx,
                                Nvertices,
                                Ncells);
@@ -838,16 +838,16 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
 
     //find the positions of the new vertices
     Dscalar2 disp;
-    Box.minDist(vP.data[v1NextIdx],vP.data[v1idx],disp);
+    Box->minDist(vP.data[v1NextIdx],vP.data[v1idx],disp);
     disp.x = 0.5*disp.x;
     disp.y = 0.5*disp.y;
     newV1Pos = vP.data[v1idx] + disp;
-    Box.putInBoxReal(newV1Pos);
-    Box.minDist(vP.data[v2NextIdx],vP.data[v2idx],disp);
+    Box->putInBoxReal(newV1Pos);
+    Box->minDist(vP.data[v2NextIdx],vP.data[v2idx],disp);
     disp.x = 0.5*disp.x;
     disp.y = 0.5*disp.y;
     newV2Pos = vP.data[v2idx] + disp;
-    Box.putInBoxReal(newV2Pos);
+    Box->putInBoxReal(newV2Pos);
 
     //find the third cell neighbor of the new vertices
     int ans = -1;

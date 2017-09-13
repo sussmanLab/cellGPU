@@ -72,7 +72,7 @@ void SPVDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
 
     std::vector<Dscalar> boxdat(4,0.0);
     Dscalar x11,x12,x21,x22;
-    s->Box.getBoxDims(x11,x12,x21,x22);
+    s->Box->getBoxDims(x11,x12,x21,x22);
     boxdat[0]=x11;
     boxdat[1]=x12;
     boxdat[2]=x21;
@@ -151,7 +151,7 @@ void SPVDatabaseNetCDF::ReadState(STATE t, int rec,bool geometry)
     BoxMatrixVar-> set_cur(rec);
     std::vector<Dscalar> boxdata(4,0.0);
     BoxMatrixVar->get(&boxdata[0],1, boxDim->size());
-    t->Box.setGeneral(boxdata[0],boxdata[1],boxdata[2],boxdata[3]);
+    t->Box->setGeneral(boxdata[0],boxdata[1],boxdata[2],boxdata[3]);
 
     //get the positions
     posVar-> set_cur(rec);

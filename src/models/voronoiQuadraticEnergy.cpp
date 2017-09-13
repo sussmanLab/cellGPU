@@ -162,7 +162,7 @@ void VoronoiQuadraticEnergy::computeVoronoiForceSetsGPU()
                     d_nidx.data,
                     KA,
                     KP,
-                    NeighIdxNum,n_idx,Box);
+                    NeighIdxNum,n_idx,*(Box));
     };
 
 /*!
@@ -207,12 +207,12 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
     Dscalar2 pi = h_p.data[i];
 
     nlastp = h_p.data[ns[ns.size()-1]];
-    Box.minDist(nlastp,pi,rij);
+    Box->minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
         int id = n_idx(nn,i);
         nnextp = h_p.data[ns[nn]];
-        Box.minDist(nnextp,pi,rik);
+        Box->minDist(nnextp,pi,rik);
         voro[nn] = h_v.data[id];
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
@@ -305,9 +305,9 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         Dscalar2 no1 = h_p.data[DT_other_idx];
 
         Dscalar2 r1,r2,r3;
-        Box.minDist(nl1,pi,r1);
-        Box.minDist(nn1,pi,r2);
-        Box.minDist(no1,pi,r3);
+        Box->minDist(nl1,pi,r1);
+        Box->minDist(nn1,pi,r2);
+        Box->minDist(no1,pi,r3);
 
         Circumcenter(r1,r2,r3,vother);
 
@@ -483,8 +483,8 @@ Matrix2x2 VoronoiQuadraticEnergy::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)
     {
     Matrix2x2 Id;
     Dscalar2 rij, rik, rjk;
-    Box.minDist(rj,ri,rij);
-    Box.minDist(rk,ri,rik);
+    Box->minDist(rj,ri,rij);
+    Box->minDist(rk,ri,rik);
     rjk.x =rik.x-rij.x;
     rjk.y =rik.y-rij.y;
 
@@ -944,10 +944,10 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
             };
 
         Dscalar2 rB,rG;
-        Box.minDist(h_p.data[cellB],h_p.data[i],rB);
-        Box.minDist(h_p.data[cellG],h_p.data[i],rG);
+        Box->minDist(h_p.data[cellB],h_p.data[i],rB);
+        Box->minDist(h_p.data[cellG],h_p.data[i],rG);
         Dscalar2 rD;
-        Box.minDist(h_p.data[cellD],h_p.data[i],rD);
+        Box->minDist(h_p.data[cellD],h_p.data[i],rD);
         Dscalar2 vother;
         Circumcenter(rB,rG,rD,vother);
 

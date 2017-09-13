@@ -73,7 +73,7 @@ void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
 
     std::vector<Dscalar> boxdat(4,0.0);
     Dscalar x11,x12,x21,x22;
-    s->Box.getBoxDims(x11,x12,x21,x22);
+    s->Box->getBoxDims(x11,x12,x21,x22);
     boxdat[0]=x11;
     boxdat[1]=x12;
     boxdat[2]=x21;
