@@ -77,12 +77,13 @@ void DelaunayLoc::setPoints(vector<Dscalar2> &points)
 */
 void DelaunayLoc::setBox(gpubox &bx)
     {
+    Box = make_shared<gpubox>();
     Dscalar b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
     if (bx.isBoxSquare())
-        Box.setSquare(b11,b22);
+        Box->setSquare(b11,b22);
     else
-        Box.setGeneral(b11,b12,b21,b22);
+        Box->setGeneral(b11,b12,b21,b22);
     };
 /*!
 \param csize the size of the grid boxes to use for the internal cell list
@@ -93,7 +94,7 @@ void DelaunayLoc::initialize(Dscalar csize)
     {
     cellsize = csize;
     cList.setNp(nV);
-    cList.setBox(Box);
+    cList.setBox((*Box));
     cList.setGridSize(cellsize);
     cList.setParticles(pts);
     cList.compute();
@@ -139,7 +140,7 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
                 {
                 idx = h_idx.data[cList.cell_list_indexer(pp,cellneighs[cc])];
                 if (idx == i ) continue;
-                Box.minDist(pts[idx],v,disp);
+                Box->minDist(pts[idx],v,disp);
                 nrm = sqrt(disp.x*disp.x+disp.y*disp.y);
                 int q = Quadrant(disp.x,disp.y);
                 if(!found[q]||nrm < dists[q])
@@ -243,7 +244,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
             //exclude anything already in the ring (vertex and polygon)
             if (idx == i || idx == DTringIdx[1] || idx == DTringIdx[2] ||
                             idx == DTringIdx[3] || idx == DTringIdx[4]) continue;
-            Box.minDist(pts[idx],v,disp);
+            Box->minDist(pts[idx],v,disp);
             //how far is the point from the circumcircle's center?
             repeat = false;
             for (int qq = 0; qq < 4; ++qq)
@@ -251,7 +252,7 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
                 if (repeat) continue;
                 rr=rads[qq];
                 rr = rr*rr;
-                Box.minDist(disp,Q0[qq],tocenter);
+                Box->minDist(disp,Q0[qq],tocenter);
                 if(tocenter.x*tocenter.x+tocenter.y*tocenter.y<rr)
                     {
                     //the point is in at least one circumcircle...
@@ -355,7 +356,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
             if (repeat) continue;
             rr=rads[qq]*1.0001;
             rr = rr*rr;
-            Box.minDist(DTring[pp],Q0[qq],tocenter);
+            Box->minDist(DTring[pp],Q0[qq],tocenter);
             if(tocenter.x*tocenter.x+tocenter.y*tocenter.y<rr)
                 {
                 newRing.push_back(DTring[pp]);
@@ -530,8 +531,8 @@ bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool tim
         if (repeat) continue;
         int neigh2 = neighbors[nn];
         Dscalar2 pt1, pt2;
-        Box.minDist(pts[neigh1],v,pt1);
-        Box.minDist(pts[neigh2],v,pt2);
+        Box->minDist(pts[neigh1],v,pt1);
+        Box->minDist(pts[neigh2],v,pt2);
 
         Dscalar2 Q;
         Circumcircle(pt1,pt2,Q,radius);
@@ -552,9 +553,9 @@ bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool tim
                 if (repeat) continue;
 
                 int idx = h_idx.data[cList.cell_list_indexer(pp,cns[cc])];
-                Box.minDist(pts[idx],v,disp);
+                Box->minDist(pts[idx],v,disp);
                 //how far is the point from the circumcircle's center?
-                Box.minDist(disp,Q,tocenter);
+                Box->minDist(disp,Q,tocenter);
                 if(tocenter.x*tocenter.x+tocenter.y*tocenter.y<rad2)
                     {
                     //double check that it isn't one of the points in the nlist or i
@@ -590,8 +591,8 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
         int neigh2 = ccs[3*c+2];
         Dscalar2 v=pts[ii];
         Dscalar2 pt1,pt2;
-        Box.minDist(pts[neigh1],v,pt1);
-        Box.minDist(pts[neigh2],v,pt2);
+        Box->minDist(pts[neigh1],v,pt1);
+        Box->minDist(pts[neigh2],v,pt2);
 
         vector<int> cns;
         Dscalar radius;
@@ -618,9 +619,9 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
                 if (repeat) continue;
 
                 int idx = h_idx.data[cList.cell_list_indexer(pp,cns[cc])];
-                Box.minDist(pts[idx],v,disp);
+                Box->minDist(pts[idx],v,disp);
                 //how far is the point from the circumcircle's center?
-                Box.minDist(disp,Q,tocenter);
+                Box->minDist(disp,Q,tocenter);
                 if(tocenter.x*tocenter.x+tocenter.y*tocenter.y<rad2)
                     {
                     //double check that it isn't one of the points in the nlist or i

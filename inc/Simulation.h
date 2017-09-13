@@ -48,7 +48,7 @@ class Simulation : public enable_shared_from_this<Simulation>
         //!The domain of the simulation
         BoxPtr Box;
         //!Pass in a reference to the box
-        void setBox(BoxPtr _box){Box = _box;};
+        void setBox(BoxPtr _box);
 
         //!A neighbor list assisting the simulation
         cellListGPU *cellList;;

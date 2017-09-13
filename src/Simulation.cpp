@@ -23,6 +23,17 @@ void Simulation::addUpdater(UpdaterPtr _upd, ForcePtr _config)
     };
 
 /*!
+Set a new Box for the simulation...
+DO NOT call this if the cell configuration is not already set
+*/
+void Simulation::setBox(BoxPtr _box)
+    {
+    Box = _box;
+    auto cellConf = cellConfiguration.lock();
+    cellConf->setBox(Box);
+    };
+
+/*!
 Set a pointer to the configuratione, and give the configurationa reference to this
 */
 void Simulation::setConfiguration(ForcePtr _config)

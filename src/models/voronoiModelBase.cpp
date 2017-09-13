@@ -49,7 +49,7 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     celllist.setGridSize(cellsize);
 
     //DelaunayLoc initialization
-    delLoc.setBox(*(Box));
+    delLoc.setBox(Box);
     resetDelLocPoints();
 
     //make a full triangulation

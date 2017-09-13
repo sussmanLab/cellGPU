@@ -79,6 +79,9 @@ class Simple2DCell : public Simple2DModel
         //!return the gpubox
         virtual gpubox & returnBox(){return *(Box);};
 
+        //!Pass in a reference to the box
+        void setBox(BoxPtr _box){Box = _box;};
+
         //!return the base "itt" re-indexing vector
         virtual vector<int> & returnItt(){return itt;};
 

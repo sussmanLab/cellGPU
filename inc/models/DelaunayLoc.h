@@ -24,7 +24,7 @@ using namespace std;
 class DelaunayLoc
     {
     public:
-        DelaunayLoc(){triangulated=false;cellsize=2.0;};
+        DelaunayLoc(){triangulated=false;cellsize=2.0;Box = make_shared<gpubox>();};
         //!constructor via a vector of Dscalar2 objects
         DelaunayLoc(std::vector<Dscalar2> &points, gpubox &bx){setPoints(points);setBox(bx);};
         //!constructor via a vector of scalars, {x1,y1,x2,y2,...}
@@ -35,6 +35,7 @@ class DelaunayLoc
         void setPoints(std::vector<Dscalar2> &points); //!<Set points via a vector of Dscalar2's
         void setPoints(std::vector<Dscalar> &points);   //!<Set the points via a vector of Dscalar's
         void setBox(gpubox &bx);                        //!<Set the box
+        void setBox(BoxPtr bx){Box=bx;};                        //!<Set the box
         void setCellSize(Dscalar cs){cellsize=cs;};     //!<Set the cell size of the underlying grid
 
         void initialize(Dscalar csize);                 //!<Initialize various things, based on a given cell size for the underlying grid
@@ -59,6 +60,8 @@ class DelaunayLoc
         bool testPointTriangulation(int i, vector<int> &neighbors, bool timing=false);
         //!Given a vector of circumcircle indices, label particles that are part of non-empty circumcircles
         void testTriangulation(vector< int > &ccs, vector<bool> &points, bool timing=false);
+        //!return the gpubox
+        virtual gpubox & returnBox(){return *(Box);};
 
         //!A public variable that stores the triangulation as sets of (i,j,k) vertices when this class is used to generate the entire triangulation of the periodic point set.
         triangulation DT;
@@ -75,13 +78,13 @@ class DelaunayLoc
         //!Various aids for timing functions
         Dscalar polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
 
-    private:
+    protected:
         std::vector<Dscalar2> pts;    //!<vector of points to triangulate
         int nV;                       //!<number of vertices
         bool triangulated;            //!<has a triangulation been performed?
 
         Dscalar cellsize;               //!<Sets how fine a grid to use in the cell list
-        gpubox Box;             //!< A box to calculate relative distances in a periodic domain.
+        BoxPtr Box;             //!< A box to calculate relative distances in a periodic domain.
 
         vector<int> DTringIdxCGAL; //!<A vector of Delaunay neighbor indicies that can be repeatedly re-written
         vector<Dscalar2> DTringCGAL;//!<A vector of Delaunay neighbors that can be repeatedly re-written
