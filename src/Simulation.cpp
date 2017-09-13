@@ -23,7 +23,11 @@ void Simulation::addUpdater(UpdaterPtr _upd, ForcePtr _config)
     };
 
 /*!
-Set a new Box for the simulation...
+Set a new Box for the simulation...This is the function that should be called to propagate a change
+in the box dimensions throughout the simulation...By this time the Box pointed to in the Simulation
+is the same one pointed to by the BoxPtrs of Simple2DCell (and, in the Voronoi models, by DelaunayLoc
+and cellListGPU), so when we modify it the changes will run through the rest of the simulation
+components
 */
 void Simulation::setBox(BoxPtr _box)
     {
