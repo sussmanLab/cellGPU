@@ -4,6 +4,8 @@
 
 * BoxPtrs implemented...will eventually make different box shapes easier
 * rationalize naming scheme of vertex and voronoi models
+    * There are now vertexModelBase and voronoiModelBase classes
+    * Derived classes of these largely just need to implement force laws
 * include tree cleaning
 
 ### version 0.6.2
