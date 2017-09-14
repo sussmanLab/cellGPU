@@ -152,15 +152,15 @@ int main(int argc, char*argv[])
                 spv->cellDivision(cdtest,dParams);
                 Ncells = spv->getNumberOfDegreesOfFreedom();
                 //suppose, for instance, you want to keep p_0/sqrt(<A>) constant...
-/*
- //An alternative would be to use something like the following (untested code) to rescale the box size to keep <A> = 1
-BoxPtr newbox = make_shared<gpubox>(sqrt(Ncells),sqrt(Ncells));
-sim->setBox(newbox);
-*/
                 Dscalar meanA = numpts / (Dscalar) Ncells;
                 Dscalar scaledP0 = p0 * sqrt(meanA);
                 spv->setCellPreferencesUniform(1.0,scaledP0);
                 printf("Ncells = %i\t <A> = %f \t p0 = %f\n",Ncells,meanA,scaledP0);
+/*
+ //An alternative would be to use something like the following to rescale the box size to keep <A> = 1, and not rescale the preferred perimeter
+BoxPtr newbox = make_shared<gpubox>(sqrt(Ncells),sqrt(Ncells));
+sim->setBox(newbox);
+*/
                 };
             if(program_switch == 2 && timestep%((int)(10/dt))==0)
                 {
