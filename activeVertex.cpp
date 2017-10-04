@@ -6,6 +6,7 @@
 
 #include "vertexQuadraticEnergy.h"
 #include "selfPropelledCellVertexDynamics.h"
+#include "brownianParticleDynamics.h"
 #include "DatabaseNetCDFAVM.h"
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -77,7 +78,9 @@ int main(int argc, char*argv[])
     bool runSPV = false;//setting this to true will relax the random cell positions to something more uniform before running vertex model dynamics
 
     //define an equation of motion object...here for self-propelled cells
-    EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
+    //EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
+    shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(Nvert);
+    bd->setT(v0);
     //define a vertex model configuration with a quadratic energy functional
     shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible,runSPV);
     //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
@@ -90,7 +93,7 @@ int main(int argc, char*argv[])
     //combine the equation of motion and the cell configuration in a "Simulation"
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(avm);
-    sim->addUpdater(spp,avm);
+    sim->addUpdater(bd,avm);
     //set the time step size
     sim->setIntegrationTimestep(dt);
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
@@ -102,10 +105,10 @@ int main(int argc, char*argv[])
     for (int timestep = 0; timestep < initSteps+1; ++timestep)
         {
         sim->performTimestep();
-        if(program_switch <0 && timestep%((int)(1/dt))==0)
+        if(program_switch <0 && timestep%((int)(100/dt))==0)
             {
             cout << timestep << endl;
-            ncdat.WriteState(avm);
+            //ncdat.WriteState(avm);
             };
         };
 
@@ -114,7 +117,7 @@ int main(int argc, char*argv[])
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
         sim->performTimestep();
-        if(program_switch <0 && timestep%((int)(1/dt))==0)
+        if(program_switch <0 && timestep%((int)(100/dt))==0)
             {
             cout << timestep << endl;
             ncdat.WriteState(avm);

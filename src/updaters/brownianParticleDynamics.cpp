@@ -21,12 +21,14 @@ brownianParticleDynamics::brownianParticleDynamics(int _N)
     };
 
 /*!
-When spatial sorting is performed, re-index the array of cuda RNGs.
+When spatial sorting is performed, re-index the array of cuda RNGs... This function is currently
+commented out, for greater flexibility (i.e., to not require that the indexToTag (or Itt) be the
+re-indexing array), since that assumes cell and not particle-based dynamics
 */
 void brownianParticleDynamics::spatialSorting(const vector<int> &reIndexer)
     {
-    reIndexing = cellModel->returnItt();
-    reIndexRNG(noise.RNGs);
+    //reIndexing = cellModel->returnItt();
+    //reIndexRNG(noise.RNGs);
     };
 
 /*!
