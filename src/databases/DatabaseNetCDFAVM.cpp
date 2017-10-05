@@ -65,6 +65,53 @@ void AVMDatabaseNetCDF::GetDimVar()
     timeVar    = File.get_var("time");
 }
 
+void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
+    {
+    GetDimVar();
+
+    //get the current time
+    timeVar-> set_cur(rec);
+    timeVar->get(& t->currentTime,1,1);
+    //set the box
+    BoxMatrixVar-> set_cur(rec);
+    std::vector<Dscalar> boxdata(4,0.0);
+    BoxMatrixVar->get(&boxdata[0],1, boxDim->size());
+    t->Box->setGeneral(boxdata[0],boxdata[1],boxdata[2],boxdata[3]);
+
+    //get the positions
+    posVar-> set_cur(rec);
+    std::vector<Dscalar> posdata(2*Nv,0.0);
+    posVar->get(&posdata[0],1, dofDim->size());
+
+    ArrayHandle<Dscalar2> h_p(t->vertexPositions,access_location::host,access_mode::overwrite);
+    for (int idx = 0; idx < Nv; ++idx)
+        {
+        Dscalar px = posdata[(2*idx)];
+        Dscalar py = posdata[(2*idx)+1];
+        h_p.data[idx].x=px;
+        h_p.data[idx].y=py;
+        };
+    
+    //set the vertex neighbors
+    ArrayHandle<int> h_vn(t->vertexNeighbors,access_location::host,access_mode::read);
+    vneighVar->set_cur(rec);
+    std::vector<Dscalar> vndat(3*Nv,0.0);
+    vneighVar       ->get(&vndat[0],1,NvnDim->size());
+    for (int vv = 0; vv < Nv; ++vv)
+        {
+        for (int ii = 0 ;ii < 3; ++ii)
+            {
+            h_vn.data[3*vv+ii] = vndat[3*vv+ii];
+            };
+        };
+    //use this to reconstruct network topology
+    //
+    if (geometry)
+        {
+        t->computeGeometryCPU();
+        };
+    };
+
 
 void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
 {
