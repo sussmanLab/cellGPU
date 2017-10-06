@@ -13,11 +13,13 @@ class BaseDatabase
         typedef shared_ptr<Simple2DCell> STATE;
     public:
         //! Base constructure takes a bland filename in readonly mode
-        BaseDatabase(string fn="temp.txt", int mode=-1):filename(fn), Mode(mode){};
+        BaseDatabase(string fn="temp.txt", int mode=-1):filename(fn), Mode(mode),Records(0){};
         //!The name of the file
         string filename;
         //!The desired mode (integer representation of replace, new, write, readonly, etc)
         const int Mode;
+        //!The number of saved records in the database
+        int Records;
 
         //!Write the current state; if the default value of rec=-1 is used, add a new entry
         virtual void WriteState(STATE c, Dscalar time = -1.0, int rec = -1){};
