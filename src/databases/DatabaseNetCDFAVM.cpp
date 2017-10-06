@@ -45,6 +45,7 @@ void AVMDatabaseNetCDF::SetDimVar()
     vneighVar          = File.add_var("Vneighs",         ncInt,recDim, NvnDim );
     directorVar          = File.add_var("director",         ncDscalar,recDim, ncDim );
     BoxMatrixVar    = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
+    meanqVar          = File.add_var("meanQ",     ncDscalar,recDim, unitDim);
     timeVar          = File.add_var("time",     ncDscalar,recDim, unitDim);
 }
 
@@ -60,10 +61,11 @@ void AVMDatabaseNetCDF::GetDimVar()
     //Get the variables
     posVar          = File.get_var("pos");
     forceVar          = File.get_var("force");
-    vcneighVar          = File.get_var("Vneighs");
-    vneighVar          = File.get_var("VertexCellNeighbors");
+    vneighVar          = File.get_var("Vneighs");
+    vcneighVar          = File.get_var("VertexCellNeighbors");
     directorVar          = File.get_var("director");
     BoxMatrixVar    = File.get_var("BoxMatrix");
+    meanqVar          = File.add_var("meanQ",     ncDscalar,recDim, unitDim);
     timeVar    = File.get_var("time");
 }
 
@@ -238,8 +240,10 @@ void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
             };
         };
 
+    Dscalar meanq = s->reportq();
     //Write all the data
     timeVar      ->put_rec(&time,      rec);
+    meanqVar ->put_rec(&meanq,rec);
     posVar      ->put_rec(&posdat[0],     rec);
     forceVar      ->put_rec(&forcedat[0],     rec);
     vneighVar       ->put_rec(&vndat[0],      rec);
