@@ -100,8 +100,8 @@ void brownianParticleDynamics::integrateEquationsOfMotionCPU()
         {
         Dscalar randomNumber1 = noise.getRealNormal();
         Dscalar randomNumber2 = noise.getRealNormal();
-        h_disp.data[ii].x = randomNumber1*sqrt(1.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].x;
-        h_disp.data[ii].y = randomNumber2*sqrt(1.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].y;
+        h_disp.data[ii].x = randomNumber1*sqrt(2.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].x;
+        h_disp.data[ii].y = randomNumber2*sqrt(2.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].y;
         };
     };//end array handle scope
     cellModel->moveDegreesOfFreedom(displacements);

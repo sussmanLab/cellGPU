@@ -31,8 +31,8 @@ __global__ void brownian_eom_integration_kernel(Dscalar2 *forces,
     curandState_t randState;
 
     randState=RNGs[idx];
-    displacements[idx].x = cur_norm(&randState)*sqrt(deltaT*T*mu*0.5) + deltaT*mu*forces[idx].x;
-    displacements[idx].y = cur_norm(&randState)*sqrt(deltaT*T*mu*0.5) + deltaT*mu*forces[idx].y;
+    displacements[idx].x = cur_norm(&randState)*sqrt(deltaT*T*mu*2.0) + deltaT*mu*forces[idx].x;
+    displacements[idx].y = cur_norm(&randState)*sqrt(deltaT*T*mu*2.0) + deltaT*mu*forces[idx].y;
 
     RNGs[idx] = randState;
     return;
