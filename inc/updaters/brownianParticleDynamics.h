@@ -7,7 +7,7 @@
 /*! \file brownianParticleDynamics.h */
 //!A class that implements simple Brownian particle dynamics in 2D
 /*!
-implements dr/dt = mu*F + sqrt(KT mu/2) R(T), where mu is the inverse drag, KT is the temperature,
+implements \Delta r  = mu*F\Delta t + sqrt(2 T \mu \Delta t ) R(T), where mu is the inverse drag, KT is the temperature,
 and R(T) is a delta-correlated Gaussian noise.
 Noise is defined in two dimensions so that the short time diffusion constant is D = KT mu
 */
