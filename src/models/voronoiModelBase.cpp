@@ -1010,10 +1010,6 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     Box->putInBoxReal(newCellPos1);
     Box->putInBoxReal(newCellPos2);
 
-
-    //for debugging
-//    printf("in cellDivision routine: ((%f,%f), (%f,%f), (%f,%f))\n",initialCellPosition.x,initialCellPosition.y,newCellPos1.x,newCellPos1.y,newCellPos2.x,newCellPos2.y);
-
     //This call updates many of the base data structres, but (among other things) does not actually
     //set the new cell position
     Simple2DActiveCell::cellDivision(parameters);
