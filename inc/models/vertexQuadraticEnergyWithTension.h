@@ -22,12 +22,10 @@ class VertexQuadraticEnergyWithTension : public VertexQuadraticEnergy
         //!compute the quadratic energy functional
         virtual Dscalar computeEnergy();
 
-        //!Compute the net force on particle i on the CPU with only a single tension value
-        virtual void computeVertexSimpleTensionForceCPU(int i);
-
+        //!Compute the forces on the GPU with only a single tension value
         virtual void computeVertexSimpleTensionForceGPU();
         //!Compute the net force on particle i on the CPU with multiple tension values
-        virtual void computeVertexTensionForceCPU(int i);
+        virtual void computeVertexTensionForcesCPU();
         //!call gpu_force_sets kernel caller
         virtual void computeVertexTensionForceGPU();
 

@@ -35,3 +35,140 @@ void VertexQuadraticEnergyWithTension::setSurfaceTension(vector<Dscalar> gammas)
         };
     };
 
+/*!
+goes through the process of computing the forces on either the CPU or GPU, either with or without
+exclusions, as determined by the flags. Assumes the geometry has NOT yet been computed.
+\post the geometry is computed, and force per cell is computed.
+*/
+void VertexQuadraticEnergyWithTension::computeForces()
+    {
+    if (GPUcompute)
+        {
+        computeGeometryGPU();
+        if (simpleTension)
+            computeVertexSimpleTensionForceGPU();
+        else
+            computeVertexTensionForceGPU();
+        }
+    else
+        {
+        computeGeometryCPU();
+        if(Tension)
+                computeVertexTensionForcesCPU();
+        else
+            computeForcesCPU();
+        };
+    };
+
+/*!
+Use the data pre-computed in the geometry routine to rapidly compute the net force on each vertex...for the cpu part combine the simple and complex tension routines
+*/
+void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
+    {
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_vc(voroCur,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar4> h_vln(voroLastNext,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::read);
+    ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::read);
+    ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar> h_tm(tensionMatrix,access_location::host,access_mode::read);
+
+    ArrayHandle<Dscalar2> h_fs(vertexForceSets,access_location::host, access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_f(vertexForces,access_location::host, access_mode::overwrite);
+
+    //first, compute the contribution to the force on each vertex from each of its three cells
+    Dscalar2 vlast,vcur,vnext;
+    Dscalar2 dEdv;
+    Dscalar Adiff, Pdiff;
+    for(int fsidx = 0; fsidx < Nvertices*3; ++fsidx)
+        {
+        //for the change in the energy of the cell, just repeat the vertexQuadraticEnergy part
+        int cellIdx1 = h_vcn.data[fsidx];
+        Dscalar Adiff = KA*(h_AP.data[cellIdx1].x - h_APpref.data[cellIdx1].x);
+        Dscalar Pdiff = KP*(h_AP.data[cellIdx1].y - h_APpref.data[cellIdx1].y);
+        vcur = h_vc.data[fsidx];
+        vlast.x = h_vln.data[fsidx].x;  vlast.y = h_vln.data[fsidx].y;
+        vnext.x = h_vln.data[fsidx].z;  vnext.y = h_vln.data[fsidx].w;
+
+        //computeForceSetAVM is defined in inc/utility/functions.h
+        computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
+        h_fs.data[fsidx].x = dEdv.x;
+        h_fs.data[fsidx].y = dEdv.y;
+
+        //first, determine the index of the cell other than cellIdx1 that contains both vcur and vnext
+        int cellNeighs = h_cvn.data[cellIdx1];
+        //find the index of vcur and vnext
+        int vCurIdx = fsidx/3;
+        int vNextInt = 0;
+        if (h_cv.data[n_idx(cellNeighs-1,cellIdx1)] != vCurIdx)
+            {
+            for (int nn = 0; nn < cellNeighs-1; ++nn)
+                {
+                int idx = h_cv.data[n_idx(nn,cellIdx1)];
+                if (idx == vCurIdx)
+                    vNextInt = nn +1;
+                };
+            };
+        int vNextIdx = h_cv.data[n_idx(vNextInt,cellIdx1)];
+       
+        //vcur belongs to three cells... which one isn't cellIdx1 and has both vcur and vnext?
+        int cellIdx2 = 0;
+        int cellOfSet = fsidx-3*vCurIdx;
+        for (int cc = 0; cc < 3; ++cc)
+            {
+            if (cellOfSet == cc) continue;
+            int cNeighs = h_cvn.data[3*vCurIdx+cc];
+            bool cell2 = h_vcn.data[3*vCurIdx+cc];
+            for (int nn = 0; nn < cNeighs; ++nn)
+                if (h_cv.data[n_idx(nn,cell2)] == vNextIdx)
+                    cellIdx2 = cell2;
+            }
+        //now, determine the types of the two relevant cells, and add an extra force if needed
+        int cellType1 = h_ct.data[cellIdx1];
+        int cellType2 = h_ct.data[cellIdx2];
+        if(cellType1 != cellType2)
+            {
+            Dscalar gammaEdge;
+            if (simpleTension)
+                gammaEdge = gamma;
+            else
+                gammaEdge = h_tm.data[cellTypeIndexer(cellType1,cellType2)];
+            Dscalar2 dnext = vcur-vnext;
+            Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+            h_fs.data[fsidx].x -= dnext.x/dnnorm;
+            h_fs.data[fsidx].y -= dnext.y/dnnorm;
+            };
+        };
+
+    //now sum these up to get the force on each vertex
+    for (int v = 0; v < Nvertices; ++v)
+        {
+        Dscalar2 ftemp = make_Dscalar2(0.0,0.0);
+        for (int ff = 0; ff < 3; ++ff)
+            {
+            ftemp.x += h_fs.data[3*v+ff].x;
+            ftemp.y += h_fs.data[3*v+ff].y;
+            };
+        h_f.data[v] = ftemp;
+        };
+    };
+
+Dscalar VertexQuadraticEnergyWithTension::computeEnergy()
+    {
+    printf("Function not written. Very sorry\n");
+    throw std::exception();
+    return 0;
+    };
+void VertexQuadraticEnergyWithTension::computeVertexSimpleTensionForceGPU()
+    {
+    printf("Function not written. Very sorry\n");
+    throw std::exception();
+    };
+void VertexQuadraticEnergyWithTension::computeVertexTensionForceGPU()
+    {
+    printf("Function not written. Very sorry\n");
+    throw std::exception();
+    };
+

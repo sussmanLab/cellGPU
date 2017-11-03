@@ -88,7 +88,7 @@ void VertexQuadraticEnergy::computeForcesCPU()
         vlast.x = h_vln.data[fsidx].x;  vlast.y = h_vln.data[fsidx].y;
         vnext.x = h_vln.data[fsidx].z;  vnext.y = h_vln.data[fsidx].w;
 
-        //computeForceSetAVM is defined in inc/functions.h
+        //computeForceSetAVM is defined in inc/utility/functions.h
         computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
 
 
