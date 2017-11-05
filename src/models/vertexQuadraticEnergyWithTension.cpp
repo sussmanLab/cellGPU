@@ -119,8 +119,8 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
         for (int cc = 0; cc < 3; ++cc)
             {
             if (cellOfSet == cc) continue;
-            int cNeighs = h_cvn.data[3*vCurIdx+cc];
             int cell2 = h_vcn.data[3*vCurIdx+cc];
+            int cNeighs = h_cvn.data[cell2];
             for (int nn = 0; nn < cNeighs; ++nn)
                 if (h_cv.data[n_idx(nn,cell2)] == vNextIdx)
                     cellIdx2 = cell2;
