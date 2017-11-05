@@ -1,0 +1,136 @@
+#include "std_include.h"
+
+#include "cuda_runtime.h"
+#include "cuda_profiler_api.h"
+
+#define ENABLE_CUDA
+
+#include "Simulation.h"
+#include "vertexQuadraticEnergyWithTension.h"
+#include "brownianParticleDynamics.h"
+#include "DatabaseNetCDFAVM.h"
+
+/*!
+This file compiles to produce an executable that can be used to study vertex model cells with explicit line tension terms between cells of different "type"
+*/
+int main(int argc, char*argv[])
+{
+    int numpts = 200;
+    int USE_GPU = 0;
+    int USE_TENSION = 0;
+    int c;
+    int tSteps = 100;
+    int initSteps = 100;
+
+    Dscalar dt = 0.01;
+    Dscalar p0 = 4.0;
+    Dscalar a0 = 1.0;
+    Dscalar v0 = 0.01;
+    Dscalar gamma = 0.0;
+
+    int program_switch = 0;
+    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
+        switch(c)
+        {
+            case 'n': numpts = atoi(optarg); break;
+            case 't': tSteps = atoi(optarg); break;
+            case 'g': USE_GPU = atoi(optarg); break;
+            case 'x': USE_TENSION = atoi(optarg); break;
+            case 'i': initSteps = atoi(optarg); break;
+            case 'z': program_switch = atoi(optarg); break;
+            case 'e': dt = atof(optarg); break;
+            case 's': gamma = atof(optarg); break;
+            case 'p': p0 = atof(optarg); break;
+            case 'a': a0 = atof(optarg); break;
+            case 'v': v0 = atof(optarg); break;
+            case '?':
+                    if(optopt=='c')
+                        std::cerr<<"Option -" << optopt << "requires an argument.\n";
+                    else if(isprint(optopt))
+                        std::cerr<<"Unknown option '-" << optopt << "'.\n";
+                    else
+                        std::cerr << "Unknown option character.\n";
+                    return 1;
+            default:
+                       abort();
+        };
+
+    clock_t t1,t2;
+    bool reproducible = true;
+    bool initializeGPU = true;
+    if (USE_GPU >= 0)
+        {
+        bool gpu = chooseGPU(USE_GPU);
+        if (!gpu) return 0;
+        cudaSetDevice(USE_GPU);
+        }
+    else
+        initializeGPU = false;
+
+    //possibly save output in netCDF format
+    char dataname[256];
+    sprintf(dataname,"../test.nc");
+    int Nvert = 2*numpts;
+    AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
+
+    shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(Nvert);
+    bd->setT(v0);
+    //define a vertex model configuration with a quadratic energy functional
+    shared_ptr<VertexQuadraticEnergyWithTension> avm = make_shared<VertexQuadraticEnergyWithTension>(numpts,1.0,4.0,reproducible,true);
+    //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
+    avm->setCellPreferencesUniform(1.0,p0);
+    //when an edge gets less than this long, perform a simple T1 transition
+    avm->setT1Threshold(0.04);
+
+
+    //combine the equation of motion and the cell configuration in a "Simulation"
+    SimulationPtr sim = make_shared<Simulation>();
+    sim->setConfiguration(avm);
+    sim->addUpdater(bd,avm);
+    //set the time step size
+    sim->setIntegrationTimestep(dt);
+    //set appropriate CPU and GPU flags
+    sim->setCPUOperation(!initializeGPU);
+    sim->setReproducible(reproducible);
+
+    vector<int> types(numpts,0);
+    for (int ii = numpts/2; ii < numpts; ++ii) types[ii]=1;
+    avm->setCellType(types);
+    avm->setSurfaceTension(gamma);
+    avm->setUseSurfaceTension(true);
+
+    //perform some initial time steps.
+    cout << "starting initialization" << endl;
+    for (int timestep = 0; timestep < initSteps+1; ++timestep)
+        {
+        sim->performTimestep();
+        if(program_switch <0 && timestep%((int)(100/dt))==0)
+            {
+            cout << timestep << endl;
+            //ncdat.WriteState(avm);
+            };
+        };
+
+    //run for additional timesteps, and record timing information. Save frames to a database if desired
+    t1=clock();
+    cout << "running and saving states" << endl;
+    for (int timestep = 0; timestep < tSteps; ++timestep)
+        {
+        sim->performTimestep();
+        if(program_switch <0 && timestep%((int)(100/dt))==0)
+            {
+            cout << timestep << endl;
+            ncdat.WriteState(avm);
+            };
+        };
+
+    t2=clock();
+    cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
+    avm->reportMeanVertexForce();
+    cout << "Mean q = " << avm->reportq() << endl;
+
+
+    if(initializeGPU)
+        cudaDeviceReset();
+    return 0;
+};

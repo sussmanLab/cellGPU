@@ -28,7 +28,7 @@ void VertexQuadraticEnergyWithTension::setSurfaceTension(vector<Dscalar> gammas)
 
     ArrayHandle<Dscalar> tensions(tensionMatrix,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < gammas.size(); ++ii)
-        {   
+        {
         int typeI = ii/n;
         int typeJ = ii - typeI*n;
         tensions.data[cellTypeIndexer(typeJ,typeI)] = gammas[ii];
@@ -112,7 +112,7 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
                 };
             };
         int vNextIdx = h_cv.data[n_idx(vNextInt,cellIdx1)];
-       
+
         //vcur belongs to three cells... which one isn't cellIdx1 and has both vcur and vnext?
         int cellIdx2 = 0;
         int cellOfSet = fsidx-3*vCurIdx;
@@ -120,7 +120,7 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
             {
             if (cellOfSet == cc) continue;
             int cNeighs = h_cvn.data[3*vCurIdx+cc];
-            bool cell2 = h_vcn.data[3*vCurIdx+cc];
+            int cell2 = h_vcn.data[3*vCurIdx+cc];
             for (int nn = 0; nn < cNeighs; ++nn)
                 if (h_cv.data[n_idx(nn,cell2)] == vNextIdx)
                     cellIdx2 = cell2;
@@ -157,18 +157,18 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
 
 Dscalar VertexQuadraticEnergyWithTension::computeEnergy()
     {
-    printf("Function not written. Very sorry\n");
+    printf("computeEnergy function for VertexQuadraticEnergyWithTension not written. Very sorry\n");
     throw std::exception();
     return 0;
     };
 void VertexQuadraticEnergyWithTension::computeVertexSimpleTensionForceGPU()
     {
-    printf("Function not written. Very sorry\n");
+    printf("computeVertexSimpleTensionForceGPU function not written. Very sorry\n");
     throw std::exception();
     };
 void VertexQuadraticEnergyWithTension::computeVertexTensionForceGPU()
     {
-    printf("Function not written. Very sorry\n");
+    printf("computeVertexTensionForceGPU function not written. Very sorry\n");
     throw std::exception();
     };
 
