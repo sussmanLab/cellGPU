@@ -20,8 +20,9 @@ private:
     int Nv; //!< number of vertices in AVM
     int Nc; //!< number of cells in AVM
     int Nvn; //!< the number of vertex-vertex connections
-    NcDim *recDim, *NvDim, *dofDim, *NvnDim, *ncDim, *boxDim, *unitDim; //!< NcDims we'll use
+    NcDim *recDim, *NvDim, *dofDim, *NvnDim, *ncDim, *nc2Dim, *boxDim, *unitDim; //!< NcDims we'll use
     NcVar *posVar, *forceVar, *vneighVar, *vcneighVar, *directorVar, *BoxMatrixVar, *timeVar, *meanqVar; //!<NcVars we'll use
+    NcVar *cellPosVar, *cellTypeVar;
     int Current;    //!< keeps track of the current record when in write mode
 
 

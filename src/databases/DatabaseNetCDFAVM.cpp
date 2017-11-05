@@ -30,23 +30,26 @@ AVMDatabaseNetCDF::AVMDatabaseNetCDF(int np, string fn, NcFile::FileMode mode)
 void AVMDatabaseNetCDF::SetDimVar()
 {
     //Set the dimensions
-    recDim = File.add_dim("rec");
-    NvDim  = File.add_dim("Nv",  Nv);
-    ncDim  = File.add_dim("Nc",  Nc);
+    recDim  = File.add_dim("rec");
+    NvDim   = File.add_dim("Nv",  Nv);
+    ncDim   = File.add_dim("Nc",  Nc);
+    nc2Dim  = File.add_dim("Nc2", 2* Nc);
     dofDim  = File.add_dim("dof",  Nv*2);
-    NvnDim = File.add_dim("Nvn", Nv*3);
-    boxDim = File.add_dim("boxdim",4);
+    NvnDim  = File.add_dim("Nvn", Nv*3);
+    boxDim  = File.add_dim("boxdim",4);
     unitDim = File.add_dim("unit",1);
 
     //Set the variables
-    posVar          = File.add_var("pos",       ncDscalar,recDim, dofDim);
-    forceVar          = File.add_var("force",       ncDscalar,recDim, dofDim);
-    vcneighVar          = File.add_var("VertexCellNeighbors",         ncInt,recDim, NvnDim );
-    vneighVar          = File.add_var("Vneighs",         ncInt,recDim, NvnDim );
-    directorVar          = File.add_var("director",         ncDscalar,recDim, ncDim );
-    BoxMatrixVar    = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
-    meanqVar          = File.add_var("meanQ",     ncDscalar,recDim, unitDim);
-    timeVar          = File.add_var("time",     ncDscalar,recDim, unitDim);
+    posVar       = File.add_var("pos",       ncDscalar,recDim, dofDim);
+    forceVar     = File.add_var("force",       ncDscalar,recDim, dofDim);
+    vcneighVar   = File.add_var("VertexCellNeighbors",         ncInt,recDim, NvnDim );
+    vneighVar    = File.add_var("Vneighs",         ncInt,recDim, NvnDim );
+    cellTypeVar  = File.add_var("cellType",         ncDscalar,recDim, ncDim );
+    directorVar  = File.add_var("director",         ncDscalar,recDim, ncDim );
+    cellPosVar   = File.add_var("cellPositions",         ncDscalar,recDim, nc2Dim );
+    BoxMatrixVar = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
+    meanqVar     = File.add_var("meanQ",     ncDscalar,recDim, unitDim);
+    timeVar      = File.add_var("time",     ncDscalar,recDim, unitDim);
 }
 
 void AVMDatabaseNetCDF::GetDimVar()
@@ -69,6 +72,9 @@ void AVMDatabaseNetCDF::GetDimVar()
     timeVar    = File.get_var("time");
 }
 
+/*!
+Vertex model reading not currently functional
+*/
 void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
     {
     GetDimVar();
@@ -144,7 +150,7 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
             h_n.data[t->n_idx(cvn[cell],cell)] = vv;
             cvn[cell] +=1;
             };
- 
+
     //now put all of those vertices in ccw order
     for (int cc = 0; cc < Nc; ++cc)
         {
@@ -202,6 +208,7 @@ void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
     std::vector<Dscalar> posdat(2*Nv);
     std::vector<Dscalar> forcedat(2*Nv);
     std::vector<Dscalar> directordat(Nc);
+    std::vector<int> typedat(Nc);
     std::vector<int> vndat(3*Nv);
     std::vector<int> vcndat(3*Nv);
     int idx = 0;
@@ -211,11 +218,18 @@ void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
     ArrayHandle<Dscalar> h_cd(s->cellDirectors,access_location::host,access_mode::read);
     ArrayHandle<int> h_vn(s->vertexNeighbors,access_location::host,access_mode::read);
     ArrayHandle<int> h_vcn(s->vertexCellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_ct(s->cellType,access_location::host,access_mode::read);
 
+    std::vector<Dscalar> cellPosDat(2*Nc);
+    s->getCellPositionsCPU();
+    ArrayHandle<Dscalar2> h_cpos(s->cellPositions);
     for (int ii = 0; ii < Nc; ++ii)
         {
         int pidx = s->tagToIdx[ii];
         directordat[ii] = h_cd.data[pidx];
+        typedat[ii] = h_ct.data[pidx];
+        cellPosDat[2*ii+0] = h_cpos.data[pidx].x;
+        cellPosDat[2*ii+1] = h_cpos.data[pidx].y;
         };
     for (int ii = 0; ii < Nv; ++ii)
         {
@@ -242,14 +256,16 @@ void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
 
     Dscalar meanq = s->reportq();
     //Write all the data
-    timeVar      ->put_rec(&time,      rec);
-    meanqVar ->put_rec(&meanq,rec);
+    timeVar     ->put_rec(&time,      rec);
+    meanqVar    ->put_rec(&meanq,rec);
     posVar      ->put_rec(&posdat[0],     rec);
-    forceVar      ->put_rec(&forcedat[0],     rec);
-    vneighVar       ->put_rec(&vndat[0],      rec);
-    vcneighVar       ->put_rec(&vcndat[0],      rec);
-    directorVar       ->put_rec(&directordat[0],      rec);
+    forceVar    ->put_rec(&forcedat[0],     rec);
+    vneighVar   ->put_rec(&vndat[0],      rec);
+    vcneighVar  ->put_rec(&vcndat[0],      rec);
+    directorVar ->put_rec(&directordat[0],      rec);
     BoxMatrixVar->put_rec(&boxdat[0],     rec);
+    cellPosVar  ->put_rec(&cellPosDat[0],rec);
+    cellTypeVar ->put_rec(&typedat[0],rec);
 
     File.sync();
 }
