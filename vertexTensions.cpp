@@ -11,7 +11,14 @@
 #include "DatabaseNetCDFAVM.h"
 
 /*!
-This file compiles to produce an executable that can be used to study vertex model cells with explicit line tension terms between cells of different "type"
+This file compiles to produce an executable that can be used to study vertex model cells with explicit line tension terms between cells of different "type."
+One should really consider the interaction between the rules for vertex splitting (e.g. T1 transitions,
+etc.) and the presence of inhomogeneous line tensions in the vertex model. See, for instance, the
+work of Spencer, Jabeen, and Lubensky for how this can stabilize four-fold vertices, which means that
+a default scheme of "perform a T1 transition when edges are sufficiently short" is less sensible.
+Really, this functionality should be coupled with a generalization of the vertex model that easily
+permits stable multifold vertices. Contact DMS if you are interested in working on such an implementation
+in the context of cellGPU!
 */
 int main(int argc, char*argv[])
 {
@@ -93,23 +100,32 @@ int main(int argc, char*argv[])
     sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);
 
-    vector<int> types(numpts,0);
-    for (int ii = numpts/2; ii < numpts; ++ii) types[ii]=1;
-    avm->setCellType(types);
-    avm->setSurfaceTension(gamma);
-    avm->setUseSurfaceTension(true);
-
     //perform some initial time steps.
     cout << "starting initialization" << endl;
     for (int timestep = 0; timestep < initSteps+1; ++timestep)
         {
         sim->performTimestep();
-        if(program_switch <0 && timestep%((int)(100/dt))==0)
+        if(program_switch <0 && timestep%((int)(10/dt))==0)
             {
             cout << timestep << endl;
-            //ncdat.WriteState(avm);
+            ncdat.WriteState(avm);
             };
         };
+
+    //set a strip in the middle of the box?
+    cout << "Setting a strip with tension = " << gamma << endl;
+    avm->getCellPositionsCPU();
+    ArrayHandle<Dscalar2> h_cp(avm->cellPositions);
+    vector<int> types(numpts,0);
+    Dscalar boxL = (Dscalar) sqrt(numpts);
+    for (int ii = 0; ii < numpts; ++ii)
+        {
+        if (h_cp.data[ii].x > boxL/4. && h_cp.data[ii].x < 3.*boxL/4.) types[ii]=1;
+        }
+    avm->setCellType(types);
+    avm->setSurfaceTension(gamma);
+    avm->setUseSurfaceTension(true);
+
 
     //run for additional timesteps, and record timing information. Save frames to a database if desired
     t1=clock();
@@ -117,7 +133,7 @@ int main(int argc, char*argv[])
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
         sim->performTimestep();
-        if(program_switch <0 && timestep%((int)(100/dt))==0)
+        if(program_switch <0 && timestep%((int)(10/dt))==0)
             {
             cout << timestep << endl;
             ncdat.WriteState(avm);

@@ -28,6 +28,11 @@ Voronoi model, using either active cell or overdamped Brownian dynamics
 
 Provides a simple example of adding line tension terms to a Voronoi model
 
+# vertexTensions.cpp
+
+Provides a simple example of adding line tension terms to a 2D vertex model... see comments in this file
+for caveats
+
 # cellDivision.cpp
 
 Provides a simple example of both vertex and voronoi models with cell division activated

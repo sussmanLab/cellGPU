@@ -47,7 +47,7 @@ void VertexQuadraticEnergyWithTension::computeForces()
         computeGeometryGPU();
         if (simpleTension)
             computeVertexSimpleTensionForceGPU();
-        else
+        else if (Tension)
             computeVertexTensionForceGPU();
         }
     else
@@ -137,8 +137,8 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
                 gammaEdge = h_tm.data[cellTypeIndexer(cellType1,cellType2)];
             Dscalar2 dnext = vcur-vnext;
             Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
-            h_fs.data[fsidx].x -= dnext.x/dnnorm;
-            h_fs.data[fsidx].y -= dnext.y/dnnorm;
+            h_fs.data[fsidx].x -= gammaEdge*dnext.x/dnnorm;
+            h_fs.data[fsidx].y -= gammaEdge*dnext.y/dnnorm;
             };
         };
 
