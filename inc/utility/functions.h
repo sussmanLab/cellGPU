@@ -60,6 +60,29 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
 
     };
 
+//!shrink a GPUArray by removing the i'th element and shifting any elements j > i into place
+template<typename T>
+inline __atribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &data, int index)
+    {
+    int n = data.getNumElements();
+    GPUArray<T> newData;
+    newData.resize(n-1);
+    {//scope for array handles
+    ArrayHandle<T> h(data,access_location::host,access_mode::read);
+    ArrayHandle<T> h1(newData,access_location::host,access_mode::overwrite);
+    int idx = 0;
+    for (int i = 0; i < n; ++i)
+        {
+        if (i != index)
+            {
+            h1.data[idx] = h.data[i];
+            idx += 1;
+            };
+        };
+    };
+    data = newData;
+    };
+
 //!grow a GPUArray, leaving the current elements the same but with extra capacity at the end of the array
 template<typename T>
 inline __attribute__((always_inline)) void growGPUArray(GPUArray<T> &data, int extraElements)
