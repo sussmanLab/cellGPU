@@ -105,7 +105,7 @@ int main(int argc, char*argv[])
     for (int timestep = 0; timestep < initSteps+1; ++timestep)
         {
         sim->performTimestep();
-        if(program_switch <0 && timestep%((int)(10/dt))==0)
+        if(program_switch <0 && timestep%((int)(1000/dt))==0)
             {
             cout << timestep << endl;
             ncdat.WriteState(avm);
@@ -133,7 +133,7 @@ int main(int argc, char*argv[])
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
         sim->performTimestep();
-        if(program_switch <0 && timestep%((int)(10/dt))==0)
+        if(program_switch <0 && timestep%((int)(1000/dt))==0)
             {
             cout << timestep << endl;
             ncdat.WriteState(avm);
