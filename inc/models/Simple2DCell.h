@@ -60,6 +60,9 @@ class Simple2DCell : public Simple2DModel
         //!allow for cell division, according to a vector of model-dependent parameters
         virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams={});
 
+        //!allow for cell death, killing off the cell with the specified index
+        virtual void cellDeath(int cellIndex);
+
         //!Set cell positions according to a user-specified vector
         void setCellPositions(vector<Dscalar2> newCellPositions);
         //!Set vertex positions according to a user-specified vector

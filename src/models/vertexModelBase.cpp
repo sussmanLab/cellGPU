@@ -773,6 +773,14 @@ void vertexModelBase::testAndPerformT1TransitionsGPU()
     };
 
 /*!
+Trigger a cell death event. This REQUIRES that the vertex model cell to die be a triangle (i.e., we
+are mimicking a T2 transition)
+*/
+void vertexModelBase::cellDeath(int cellIndex)
+    {
+    };
+
+/*!
 Trigger a cell division event, which involves some laborious re-indexing of various data structures.
 This simple version of cell division will take a cell and two specified vertices. The edges emanating
 clockwise from each of the two vertices will gain a new vertex in the middle of those edges. A new cell is formed by connecting those two new vertices together.

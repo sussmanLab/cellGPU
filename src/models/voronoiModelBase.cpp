@@ -918,6 +918,12 @@ void voronoiModelBase::allDelSets()
         getDelSets(ii);
     };
 
+/*!
+Trigger a cell death event. In the Voronoi model this simply removes the targeted cell and instantaneously computes the new tesselation. Very violent, if the cell isn't already small.
+*/
+void voronoiModelBase::cellDeath(int cellIndex)
+    {
+    };
 
 /*!
 Trigger a cell division event, which involves some laborious re-indexing of various data structures.

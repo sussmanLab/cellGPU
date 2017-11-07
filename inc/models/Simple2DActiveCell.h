@@ -41,6 +41,9 @@ class Simple2DActiveCell : public Simple2DCell
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
         virtual void cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams = {});
 
+        //!Kill the indexed cell
+        virtual void cellDeath(int cellIndex);
+
     //protected functions
     protected:
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity

@@ -55,6 +55,9 @@ class vertexModelBase : public Simple2DActiveCell
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
         virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams = {});
 
+        //!Kill the indexed cell...cell must have only three associated vertices
+        virtual void cellDeath(int cellIndex);
+
         //!Set the length threshold for T1 transitions
         virtual void setT1Threshold(Dscalar t1t){T1Threshold = t1t;};
 

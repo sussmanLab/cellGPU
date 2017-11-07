@@ -65,6 +65,9 @@ class voronoiModelBase : public Simple2DActiveCell
         //!allow for cell division, according to a vector of model-dependent parameters
         virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams);
 
+        //!Kill the indexed cell by simply removing it from the simulation
+        virtual void cellDeath(int cellIndex);
+
         //!move particles on the GPU
         void movePoints(GPUArray<Dscalar2> &displacements);
         //!move particles on the CPU
