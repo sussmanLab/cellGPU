@@ -6,7 +6,7 @@
 #include "vertexQuadraticEnergy.cuh"
 
 /** \file vertexQuadraticEnergy.cu
-    * Defines kernel callers and kernels for GPU calculations of AVM parts
+    * Defines kernel callers and kernels for GPU calculations of vertex model parts
 */
 
 /*!
@@ -44,7 +44,7 @@ __global__ void avm_force_sets_kernel(
     vlast.y = d_voroLastNext[fsidx].y;
     vnext.x = d_voroLastNext[fsidx].z;
     vnext.y = d_voroLastNext[fsidx].w;
-    computeForceSetAVM(d_voroCur[fsidx],vlast,vnext,Adiff,Pdiff,d_vertexForceSets[fsidx]);
+    computeForceSetVertexModel(d_voroCur[fsidx],vlast,vnext,Adiff,Pdiff,d_vertexForceSets[fsidx]);
     };
 
 /*!

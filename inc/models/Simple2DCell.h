@@ -215,7 +215,7 @@ class Simple2DCell : public Simple2DModel
         int vertexMax;
         //!3*Nvertices length array of the position of vertices around cells
         /*!
-        For both AVM and Voronoi, it may help to save the relative position of the vertices around a
+        For both vertex and Voronoi models, it may help to save the relative position of the vertices around a
         cell, either for easy force computation or in the geometry routine, etc.
         voroCur.data[n_idx(nn,i)] gives the nth vertex, in CCW order, of cell i
         */

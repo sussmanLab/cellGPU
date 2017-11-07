@@ -214,7 +214,7 @@ HOSTDEVICE Dscalar computeSignNoCast(Dscalar x)
  Adiff = KA*(A_i-A_0)
  Pdiff = KP*(P_i-P_0)
  */
-HOSTDEVICE void computeForceSetAVM(const Dscalar2 &vcur, const Dscalar2 &vlast, const Dscalar2 &vnext,
+HOSTDEVICE void computeForceSetVertexModel(const Dscalar2 &vcur, const Dscalar2 &vlast, const Dscalar2 &vnext,
                                    const Dscalar &Adiff, const Dscalar &Pdiff,
                                    Dscalar2 &dEdv)
     {
