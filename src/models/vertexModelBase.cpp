@@ -817,13 +817,27 @@ void vertexModelBase::cellDeath(int cellIndex)
             };
         };
     std::rotate(vertices.begin(),vertices.begin()+smallestVIndex,vertices.end());
+    ArrayHandle<int> h_vn(vertexNeighbors);
+    //let's find the vertices connected to the three vertices that form the dying cell
+    vector<int> newVertexNeighbors(3,-1);
+    for (int vv = 0; vv < 3; ++vv)
+        {
+        for (int v2 = 0; v2 < 3; ++v2)
+            {
+            int testVertex = h_vn.data[3*vertices[vv]+v2];
+            if(testVertex != vertices[0] && testVertex != vertices[1] && testVertex != vertices[2])
+                newVertexNeighbors[vv] = testVertex;
+            };
+        };
+
+//    for (int vv = 0; vv < 3; ++vv)
+//        printf("%i\t%i\n",vertices[vv],newVertexNeighbors[vv]);
 
     //Our strategy will be to completely re-wire everything, and then get rid of the dead entries
     //Eventually, put the new vertex in, say, the centroid... for now, just put it on top of v1
     Dscalar2 newVertexPosition;
     ArrayHandle<Dscalar2> h_v(vertexPositions);
     newVertexPosition = h_v.data[vertices[0]];
-
 
 
 
