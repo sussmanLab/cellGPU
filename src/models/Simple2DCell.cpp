@@ -654,7 +654,6 @@ and relabeling the data structures in the simulation.
 void Simple2DCell::cellDeath(int cellIndex)
     {
     Ncells -= 1;
-    n_idx = Index2D(vertexMax,Ncells);
 
     //reset the spatial sorting vectors...
     itt.resize(Ncells);

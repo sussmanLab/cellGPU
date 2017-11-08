@@ -83,6 +83,33 @@ inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &da
     data = newData;
     };
 
+//!shrink a GPUArray by removing the elements [i1,i2,...in] of a vector and shifting any elements j > i_i into place
+template<typename T>
+inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &data, vector<int> indices)
+    {
+    std::sort(indices.begin(),indices.end());
+    int n = data.getNumElements();
+    GPUArray<T> newData;
+    newData.resize(n-indices.size());
+    {//scope for array handles
+    ArrayHandle<T> h(data,access_location::host,access_mode::read);
+    ArrayHandle<T> h1(newData,access_location::host,access_mode::overwrite);
+    int idx = 0;
+    int vectorIndex = 0;
+    for (int i = 0; i < n; ++i)
+        {
+        if (i != indices[vectorIndex])
+            {
+            h1.data[idx] = h.data[i];
+            idx += 1;
+            }
+        else
+            vectorIndex += 1;
+        };
+    };
+    data = newData;
+    };
+
 //!grow a GPUArray, leaving the current elements the same but with extra capacity at the end of the array
 template<typename T>
 inline __attribute__((always_inline)) void growGPUArray(GPUArray<T> &data, int extraElements)

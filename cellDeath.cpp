@@ -29,8 +29,8 @@ int main(int argc, char*argv[])
     int tSteps = 5;
     int initSteps = 0;
 
-    Dscalar dt = 0.01;
-    Dscalar p0 = 3.84;
+    Dscalar dt = 0.005;
+    Dscalar p0 = 3.85;
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.01;
     Dscalar Dr = 1.0;
@@ -148,9 +148,70 @@ int main(int argc, char*argv[])
 
         };
 
-    //program_switch < 0 --> self-propelled vertex model
+    //program_switch < 0 --> vertex model
     if(program_switch <0)
         {
+        //...this section does the usual business of setting up the simulation
+        int Nvert = 2*numpts;
+        //here we'll demonstrate the more awkward task of using a sequence of netCDF databases to record what's going on
+        AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
+        bool runSPV = false;
+
+        shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(Nvert);
+        bd->setT(v0);
+        shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible,runSPV);
+        avm->setCellPreferencesUniform(1.0,p0);
+        avm->setT1Threshold(0.04);
+
+        SimulationPtr sim = make_shared<Simulation>();
+        sim->setConfiguration(avm);
+        sim->addUpdater(bd,avm);
+        sim->setIntegrationTimestep(dt);
+        sim->setSortPeriod(initSteps/10);
+        sim->setCPUOperation(!initializeGPU);
+        sim->setReproducible(reproducible);
+        //initial time steps
+        for (int timestep = 0; timestep < initSteps+1; ++timestep)
+            {
+            sim->performTimestep();
+            if(program_switch < -1 && timestep%((int)(1/dt))==0)
+                {
+                cout << timestep << endl;
+                ncdat.WriteState(avm);
+                };
+            };
+
+        //now, time to kill some cells. Our strategy will be to take a cell, have it want zero area and perimeter, and kill it when it's a triangle
+        int Nvertices = avm->getNumberOfDegreesOfFreedom();
+        int Ncells = Nvertices/2;
+        int fileidx=2;
+        int divisionTime = 10;
+        for (int timestep = 0; timestep < tSteps; ++timestep)
+            {
+            sim->performTimestep();
+            if(program_switch <=-1 && timestep%((int)(divisionTime/dt))==0)
+                {
+                int deadCell = noise.getInt(0,Ncells);
+                Dscalar2 oldAP; oldAP.x=1.; oldAP.y = p0;
+                vector<Dscalar2> newPrefs(Ncells,oldAP);
+                newPrefs[deadCell].x = 0.0;
+                newPrefs[deadCell].y = p0*0.1;
+                avm->setCellPreferences(newPrefs);
+                int cellVertices = 0;
+                //run for up to one tau to see if the cell shrinks to a triangle
+                for (int tt =0; tt < 1/dt; ++tt)
+                    {
+                        {
+                        ArrayHandle<int> cn(avm->cellVertexNum,access_location::host,access_mode::read);
+                        cellVertices = cn.data[deadCell];
+                        };
+                    if(cellVertices==3) break;
+                    sim->performTimestep();
+                    };
+                if(cellVertices ==3)
+                    avm->cellDeath(deadCell);
+                };
+            };
 
         };
 

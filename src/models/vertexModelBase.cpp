@@ -778,6 +778,59 @@ are mimicking a T2 transition)
 */
 void vertexModelBase::cellDeath(int cellIndex)
     {
+    //first, throw an error if function is called inappropriately
+    ArrayHandle<int> h_cvn(cellVertexNum);
+    if (h_cvn.data[cellIndex] != 3)
+        {
+        printf("Error in vertexModelBase::cellDeath... you are trying to perfrom a T2 transition on a cell which is not a triangle\n");
+        throw std::exception();
+        };
+    //get the cell and vertex identities of the triangular cell and the cell neighbors
+    vector<int> cells(3);
+    //For conveniences, we will rotate the elements of "vertices" so that the smallest integer is first
+    vector<int> vertices(3);
+    ArrayHandle<int> h_cv(cellVertices);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors);
+    int cellsNum=0;
+    int smallestV = Nvertices + 1;
+    int smallestVIndex = 0;
+    for (int vv = 0; vv < 3; ++vv)
+        {
+        int vIndex = h_cv.data[n_idx(vv,cellIndex)];
+        vertices[vv] = vIndex;
+        if(vIndex < smallestV)
+            {
+            smallestV = vIndex;
+            smallestVIndex = vv;
+            };
+        for (int cc =0; cc <3; ++cc)
+            {
+            int newCell = h_vcn.data[3*vertices[vv]+cc];
+            bool alreadyFound = false;
+            for (int c2 = 0; c2 < cellsNum; ++c2)
+                if (newCell == cells[c2]) alreadyFound = true;
+            if (!alreadyFound)
+                {
+                cells[cellsNum] = newCell;
+                cellsNum +=1;
+                }
+            };
+        };
+    std::rotate(vertices.begin(),vertices.begin()+smallestVIndex,vertices.end());
+
+    //Our strategy will be to completely re-wire everything, and then get rid of the dead entries
+    //Eventually, put the new vertex in, say, the centroid... for now, just put it on top of v1
+    Dscalar2 newVertexPosition;
+    ArrayHandle<Dscalar2> h_v(vertexPositions);
+    newVertexPosition = h_v.data[vertices[0]];
+
+
+
+
+    //first, call the parent class routines.
+    //This call already changes Ncells
+   // Simple2DActiveCell::cellDeath(cellIndex);
+   // Nvertices -= 2;
     };
 
 /*!

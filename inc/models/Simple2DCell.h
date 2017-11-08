@@ -149,6 +149,11 @@ class Simple2DCell : public Simple2DModel
         GPUArray<int> vertexCellNeighbors;
         //! CELL neighbors of every cell
         GPUArray<int> cellNeighbors;
+        //!The number of vertices defining each cell
+        /*!
+        cellVertexNum[c] is an integer storing the number of vertices that make up the boundary of cell c.
+        */
+        GPUArray<int> cellVertexNum;
 
         //!an array containing net force on each vertex
         GPUArray<Dscalar2> vertexForces;
@@ -213,11 +218,6 @@ class Simple2DCell : public Simple2DModel
         GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
         //!The area and perimeter preferences of each cell
         GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
-        //!The number of vertices defining each cell
-        /*!
-        cellVertexNum[c] is an integer storing the number of vertices that make up the boundary of cell c.
-        */
-        GPUArray<int> cellVertexNum;
         //!The number of CELL neighbors of each cell. For simple models this is the same as cellVertexNum, but does not have to be
         GPUArray<int> cellNeighborNum;
         //!A structure that indexes the vertices defining each cell
