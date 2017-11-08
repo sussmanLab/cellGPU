@@ -30,6 +30,7 @@ void DatabaseTextVoronoi::WriteState(STATE s, Dscalar time, int rec)
         };
         
     int N = s->getNumberOfDegreesOfFreedom();
+//    printf("saving %i cells\n",N);
     if (time < 0) time = s->currentTime;
     Dscalar x11,x12,x21,x22;
     s->returnBox().getBoxDims(x11,x12,x21,x22);

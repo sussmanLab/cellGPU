@@ -923,6 +923,26 @@ Trigger a cell death event. In the Voronoi model this simply removes the targete
 */
 void voronoiModelBase::cellDeath(int cellIndex)
     {
+    //first, call the parent class routines.
+    //This call already changes Ncells
+    Simple2DActiveCell::cellDeath(cellIndex);
+
+    //Simple resizing operations
+    displacements.resize(Ncells);
+    cellForces.resize(Ncells);
+    external_forces.resize(Ncells);
+    exclusions.resize(Ncells);
+    NeighIdxs.resize(6*(Ncells+10));
+    circumcenters.resize(2*(Ncells+10));
+    repair.resize(Ncells);
+
+    celllist.setNp(Ncells);
+    resetDelLocPoints();
+    cellNeighborNum.resize(Ncells);
+    //brute force fix of triangulation
+    globalTriangulationCGAL();
+    resetLists();
+    allDelSets();
     };
 
 /*!

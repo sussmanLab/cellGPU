@@ -182,6 +182,7 @@ class Simple2DCell : public Simple2DModel
         between the current state of the system and the initial state of the system. What about going
         back and forth between the current sorted state and the previous sorted state? The "itt" and
         "tti" vectors give this information.
+        The itt and tti vectors are completely overwritten each time a spatial sorting is called.
         By the way, I apologize if the nomenclature of "index" vs. "tag" is the opposite of what you,
         the reader of these code comments, might expect.
         */

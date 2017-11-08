@@ -129,13 +129,14 @@ int main(int argc, char*argv[])
             if(program_switch >0 && timestep%((int)(divisionTime/dt))==0)
                 {
                 int deadIdx = noise.getInt(0,Ncells-1);
-                //spv->cellDivision(cdtest,dParams);
+                printf("killing cell %i\n", deadIdx);
+                spv->cellDeath(deadIdx);
                 Ncells = spv->getNumberOfDegreesOfFreedom();
                 //rescale the box size to sqrt(N) by sqrt(N)
                 BoxPtr newbox = make_shared<gpubox>(sqrt(Ncells),sqrt(Ncells));
                 sim->setBox(newbox);
                 };
-            if(program_switch == 2 && timestep%((int)(10/dt))==0)
+            if(program_switch == 2 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
                 db1.WriteState(spv);

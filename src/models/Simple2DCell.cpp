@@ -648,10 +648,42 @@ Dscalar2 Simple2DCell::reportVarAP()
  * The heavens themselves blaze forth the death of princes...
  Which are your cells?
 This function supports removing a single cell from the simulation, which requires re-indexing
-/ relabeling the data structures in the simulation.
+and relabeling the data structures in the simulation.
+\post Simple2DCell data vectors are one element shorter, and cells with a higher index than "cellIndex" get re-labeled down by one.
 */
-void Simple2DCell::cellDeath(int cellindex)
+void Simple2DCell::cellDeath(int cellIndex)
     {
+    Ncells -= 1;
+    n_idx = Index2D(vertexMax,Ncells);
+
+    //reset the spatial sorting vectors...
+    itt.resize(Ncells);
+    tti.resize(Ncells);
+    vector<int> newTagToIdx(Ncells);
+    vector<int> newIdxToTag(Ncells);
+    int loopIndex = 0;
+    for (int ii = 0; ii < Ncells+1;++ii)
+        {
+        int pIdx = tagToIdx[ii]; //pIdx is the current position of the cell that was originally ii
+        if(ii != cellIndex)
+            {
+            if (pIdx >= cellIndex) pIdx = pIdx-1;
+            newTagToIdx[loopIndex] = pIdx;
+            loopIndex +=1;
+            };
+        };
+    for (int ii = 0; ii < Ncells; ++ii)
+        newIdxToTag[newTagToIdx[ii]] = ii;
+    tagToIdx = newTagToIdx;
+    idxToTag = newIdxToTag;
+
+    //AreaPeri will have its values updated in a geometry routine... just change the length
+    AreaPeri.resize(Ncells);
+    //use the GPUArray removal mechanism to get rid of the correct data
+    removeGPUArrayElement(AreaPeriPreferences,cellIndex);
+    removeGPUArrayElement(Moduli,cellIndex);
+    removeGPUArrayElement(cellType,cellIndex);
+    removeGPUArrayElement(cellPositions,cellIndex);
     };
 
 /*!

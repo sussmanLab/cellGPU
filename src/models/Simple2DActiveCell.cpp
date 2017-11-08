@@ -101,6 +101,9 @@ This function will first call Simple2DCell's routine, then modify the cellDirect
 */
 void Simple2DActiveCell::cellDeath(int cellIndex)
     {
+    Simple2DCell::cellDeath(cellIndex);
+    removeGPUArrayElement(cellDirectors,cellIndex);
+    removeGPUArrayElement(Motility,cellIndex);
     };
 
 /*!
