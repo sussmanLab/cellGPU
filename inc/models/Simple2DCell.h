@@ -169,6 +169,21 @@ class Simple2DCell : public Simple2DModel
         //!The current energy of the system; only updated when an explicit energy calculation is called (i.e. not by default each timestep)
         Dscalar Energy;
         //!To write consistent files...the cell that started the simulation as index i has current index tagToIdx[i]
+        /*!
+         The Hilbert sorting stuff makes keeping track of particles, and re-indexing things when
+         particle number changes, a pain. Here's a description of the four relevant data structures.
+         tagToIdx[i] = a. At the beginning of a simulation, a particle had index "i", meaning its
+                        current state was found in position "i" of all various data vectors and arrays.
+                        That same particle's data is now in position "a" of those data structures.
+                        Short version: "Where do I look to find info for what I orinally called partice i?"
+        idxToTag[a] = i. That is, idxToTag just helps invert the tagToIdx list.
+        The above two structures (and the vertex versions of them) tell you how to go back and forth
+        between the current state of the system and the initial state of the system. What about going
+        back and forth between the current sorted state and the previous sorted state? The "itt" and
+        "tti" vectors give this information.
+        By the way, I apologize if the nomenclature of "index" vs. "tag" is the opposite of what you,
+        the reader of these code comments, might expect.
+        */
         vector<int> tagToIdx;
         //!To write consistent files...the vertex that started the simulation as index i has current index tagToIdx[i]
         vector<int> tagToIdxVertex;

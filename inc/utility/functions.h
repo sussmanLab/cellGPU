@@ -62,7 +62,7 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
 
 //!shrink a GPUArray by removing the i'th element and shifting any elements j > i into place
 template<typename T>
-inline __atribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &data, int index)
+inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &data, int index)
     {
     int n = data.getNumElements();
     GPUArray<T> newData;
