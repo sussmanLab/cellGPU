@@ -177,6 +177,7 @@ class Simple2DCell : public Simple2DModel
                         That same particle's data is now in position "a" of those data structures.
                         Short version: "Where do I look to find info for what I orinally called partice i?"
         idxToTag[a] = i. That is, idxToTag just helps invert the tagToIdx list.
+                    idxToTag[tagToIdx[i]]=i
         The above two structures (and the vertex versions of them) tell you how to go back and forth
         between the current state of the system and the initial state of the system. What about going
         back and forth between the current sorted state and the previous sorted state? The "itt" and

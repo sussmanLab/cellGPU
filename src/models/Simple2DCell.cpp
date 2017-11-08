@@ -399,7 +399,6 @@ void Simple2DCell::spatiallySortCells()
     reIndexCellArray(Moduli);
     reIndexCellArray(AreaPeriPreferences);
     reIndexCellArray(cellType);
-
     };
 
 /*!
