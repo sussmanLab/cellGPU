@@ -109,6 +109,8 @@ class voronoiModelBase : public Simple2DActiveCell
         bool getDelSets(int i);
         //!resize all neighMax-related arrays
         void resetLists();
+        //!do resize and resetting operations common to cellDivision and cellDeath
+        void resizeAndReset();
 
     //public member variables
     public:

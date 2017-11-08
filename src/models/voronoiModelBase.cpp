@@ -919,14 +919,10 @@ void voronoiModelBase::allDelSets()
     };
 
 /*!
-Trigger a cell death event. In the Voronoi model this simply removes the targeted cell and instantaneously computes the new tesselation. Very violent, if the cell isn't already small.
+A utility function for resizing data arrays... used by the cell division and cell death routines
 */
-void voronoiModelBase::cellDeath(int cellIndex)
+void voronoiModelBase::resizeAndReset()
     {
-    //first, call the parent class routines.
-    //This call already changes Ncells
-    Simple2DActiveCell::cellDeath(cellIndex);
-
     //Simple resizing operations
     displacements.resize(Ncells);
     cellForces.resize(Ncells);
@@ -943,6 +939,17 @@ void voronoiModelBase::cellDeath(int cellIndex)
     globalTriangulationCGAL();
     resetLists();
     allDelSets();
+    };
+
+/*!
+Trigger a cell death event. In the Voronoi model this simply removes the targeted cell and instantaneously computes the new tesselation. Very violent, if the cell isn't already small.
+*/
+void voronoiModelBase::cellDeath(int cellIndex)
+    {
+    //first, call the parent class routines.
+    //This call already changes Ncells
+    Simple2DActiveCell::cellDeath(cellIndex);
+    resizeAndReset();
     };
 
 /*!
@@ -1044,21 +1051,5 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     cp.data[cellIdx] = newCellPos1;
     cp.data[Ncells-1] = newCellPos2;
     }
-
-    //Simple resizing operations
-    displacements.resize(Ncells);
-    cellForces.resize(Ncells);
-    external_forces.resize(Ncells);
-    exclusions.resize(Ncells);
-    NeighIdxs.resize(6*(Ncells+10));
-    circumcenters.resize(2*(Ncells+10));
-    repair.resize(Ncells);
-
-    celllist.setNp(Ncells);
-    resetDelLocPoints();
-    cellNeighborNum.resize(Ncells);
-    //brute force fix of triangulation
-    globalTriangulationCGAL();
-    resetLists();
-    allDelSets();
+    resizeAndReset();
     };
