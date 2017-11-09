@@ -200,7 +200,8 @@ int main(int argc, char*argv[])
                 newPrefs[deadCell].y = p0*0.1;
                 avm->setCellPreferences(newPrefs);
                 int cellVertices = 0;
-                //run for up to one tau to see if the cell shrinks to a triangle
+                //run for up to one tau to see if the cell shrinks to a triangle...if not, restore
+                //the area and perimeter preference to stop the simulation from becoming unstable
                 for (int tt =0; tt < 1/dt; ++tt)
                     {
                         {
@@ -220,8 +221,15 @@ int main(int argc, char*argv[])
                         AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
                         ncdat2.WriteState(avm);
                         };
+                    cout << "killing cell " << deadCell << endl;
                     avm->cellDeath(deadCell);
                     }
+                else
+                    {//if the cell doesn't die, restore it's area preferences
+                    Dscalar2 oldAP; oldAP.x=1.; oldAP.y = p0;
+                    vector<Dscalar2> newPrefs(Ncells,oldAP);
+                    avm->setCellPreferences(newPrefs);
+                    };
                 };
             if(program_switch <=-2 && (timestep%((int)(0.2*divisionTime/dt)))==0)
                 {

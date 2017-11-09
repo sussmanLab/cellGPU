@@ -839,7 +839,10 @@ void vertexModelBase::cellDeath(int cellIndex)
         };
     removeDuplicateVectorElements(newVertexNeighbors);
     if(newVertexNeighbors.size() != 3)
-        printf("whoa, there\n");
+        {
+        printf("\nError in cell death. File %s at line %d\n",__FILE__,__LINE__);
+        throw std::exception();
+        };
 
     //Eventually, put the new vertex in, say, the centroid... for now, just put it on top of v1
     Dscalar2 newVertexPosition;
@@ -968,31 +971,7 @@ void vertexModelBase::cellDeath(int cellIndex)
     Simple2DActiveCell::cellDeath(cellIndex); //This call decrements Ncells by one
     n_idx = Index2D(vertexMax,Ncells);
 
-    computeGeometryCPU();
-
-
-    //Here's a list of stuff we need to get right:
-    //vertexPositions     ..
-    //cellVertices        ..
-    //cellVertexNum       ..
-    //vertexNeighbors     ..
-    //vertexCellNeighbors ..
-    //ittVertex           ..
-    //ttiVertex           ..
-    //idxToTagVertex      ..
-    //tagToIdxVertex      ..
-    //
-    //Here's a list of things that need to be resized
-    //vertexForces.resize(Nvertices);
-    //displacements.resize(Nvertices);
-    //vertexForceSets.resize(3*Nvertices);
-    //voroCur.resize(3*Nvertices);
-    //voroLastNext.resize(3*Nvertices);
-    //
-    //Here's a list of other functions to be called at the end.
-    //initializeEdgeFlipLists(); //function call takes care of EdgeFlips and EdgeFlipsCurrent
-    //Simple2DActiveCell::cellDeath(cellIndex); //This call decrements Ncells by one
-    //n_idx = Index2D(vertexMax,Ncells);
+    //computeGeometryCPU();
     };
 
 /*!
