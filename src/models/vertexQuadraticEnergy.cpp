@@ -91,7 +91,6 @@ void VertexQuadraticEnergy::computeForcesCPU()
         //computeForceSetAVM is defined in inc/utility/functions.h
         computeForceSetAVM(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
 
-
         h_fs.data[fsidx].x = dEdv.x;
         h_fs.data[fsidx].y = dEdv.y;
         };

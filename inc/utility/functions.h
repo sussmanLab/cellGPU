@@ -120,10 +120,20 @@ inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &da
             idx += 1;
             }
         else
+            {   
             vectorIndex += 1;
+            if (vectorIndex >= indices.size())
+                vectorIndex -= 1;
+            };
         };
     };
     data = newData;
+    };
+
+//!print a Dscalar2 to screen
+inline __attribute__((always_inline)) void printDscalar2(Dscalar2 a)
+    {
+    printf("%f\t%f\n",a.x,a.y);
     };
 
 //!grow a GPUArray, leaving the current elements the same but with extra capacity at the end of the array

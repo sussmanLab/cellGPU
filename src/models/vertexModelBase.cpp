@@ -248,7 +248,6 @@ void vertexModelBase::computeGeometryCPU()
             for (int ff = 0; ff < 3; ++ff)
                 if(h_vcn.data[3*vidx+ff]==i)
                     forceSetIdx = 3*vidx+ff;
-
             vidx = h_n.data[n_idx(nn,i)];
             Box->minDist(h_v.data[vidx],cellPos,vnext);
 
@@ -814,6 +813,7 @@ void vertexModelBase::cellDeath(int cellIndex)
         for (int cc =0; cc <3; ++cc)
             {
             int newCell = h_vcn.data[3*vertices[vv]+cc];
+            if (newCell == cellIndex) continue;
             bool alreadyFound = false;
             if(cellsNum > 0)
                 for (int c2 = 0; c2 < cellsNum; ++c2)
@@ -857,7 +857,7 @@ void vertexModelBase::cellDeath(int cellIndex)
         for (int vv = 0; vv < neigh; ++vv)
             {
             int vIdx = h_cv.data[n_idx(vv,cIdx)];
-            if (vIdx == vertices[1] || vertices[2])
+            if (vIdx == vertices[1] || vIdx==vertices[2])
                 vNeighs[vv] = vertices[0];
             else
                 vNeighs[vv] = vIdx;
@@ -872,6 +872,8 @@ void vertexModelBase::cellDeath(int cellIndex)
     for (int ii = 0; ii < 3; ++ii)
         {
         h_vcn.data[3*vertices[0]+ii] = cells[ii];
+        h_vcn.data[3*vertices[1]+ii] = cells[ii];
+        h_vcn.data[3*vertices[2]+ii] = cells[ii];
         h_vn.data[3*vertices[0]+ii] = newVertexNeighbors[ii];
         for (int vv = 0; vv < 3; ++vv)
             {
@@ -888,8 +890,12 @@ void vertexModelBase::cellDeath(int cellIndex)
     for (int cv = 0; cv < cellVertices.getNumElements(); ++cv)
         {
         int cellVert = h_cv.data[cv];
-        if (cellVert >= cellIndex)
-            h_cv.data[cv] = cellVert-1;
+        if (cellVert >= v1)
+            {
+            cellVert -= 1;
+            if (cellVert >=v2) cellVert -=1;
+            h_cv.data[cv] = cellVert;
+            }
         };
     for (int vv = 0; vv < vertexNeighbors.getNumElements(); ++vv)
         {
@@ -958,6 +964,9 @@ void vertexModelBase::cellDeath(int cellIndex)
     initializeEdgeFlipLists(); //function call takes care of EdgeFlips and EdgeFlipsCurrent
     Simple2DActiveCell::cellDeath(cellIndex); //This call decrements Ncells by one
     n_idx = Index2D(vertexMax,Ncells);
+
+    computeGeometryCPU();
+
 
     //Here's a list of stuff we need to get right:
     //vertexPositions     ..

@@ -167,7 +167,7 @@ int main(int argc, char*argv[])
         sim->setConfiguration(avm);
         sim->addUpdater(bd,avm);
         sim->setIntegrationTimestep(dt);
-        sim->setSortPeriod(initSteps/10);
+//        sim->setSortPeriod(initSteps/10);
         sim->setCPUOperation(!initializeGPU);
         sim->setReproducible(reproducible);
         //initial time steps
@@ -182,17 +182,18 @@ int main(int argc, char*argv[])
             };
 
         //now, time to kill some cells. Our strategy will be to take a cell, have it want zero area and perimeter, and kill it when it's a triangle
-        int Nvertices = avm->getNumberOfDegreesOfFreedom();
-        int Ncells = Nvertices/2;
         int fileidx=2;
         int divisionTime = 10;
         for (int timestep = 0; timestep < tSteps; ++timestep)
             {
-            cout << "starting timestep "<<timestep << endl;
             sim->performTimestep();
             if(program_switch <=-1 && timestep%((int)(divisionTime/dt))==0)
                 {
+                cout << "starting timestep "<<timestep << endl;
+                int Nvertices = avm->getNumberOfDegreesOfFreedom();
+                int Ncells = Nvertices/2;
                 int deadCell = noise.getInt(0,Ncells);
+//                cout << "targeting cell " << deadCell << endl;
                 Dscalar2 oldAP; oldAP.x=1.; oldAP.y = p0;
                 vector<Dscalar2> newPrefs(Ncells,oldAP);
                 newPrefs[deadCell].x = 0.0;
@@ -211,10 +212,7 @@ int main(int argc, char*argv[])
                     };
                 if(cellVertices ==3)
                     {
-                    cout << "about to kill cell" << endl;
-                    avm->cellDeath(deadCell);
-                    cout << "cell killed" << endl;
-                    if (program_switch == -2)
+                    if(program_switch ==-2)
                         {
                         char dataname2[256];
                         sprintf(dataname2,"../test%i.nc",fileidx);
@@ -222,9 +220,23 @@ int main(int argc, char*argv[])
                         AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
                         ncdat2.WriteState(avm);
                         };
+                    avm->cellDeath(deadCell);
                     }
                 };
+            if(program_switch ==-2 && (timestep%((int)(0.2*divisionTime/dt)))==0)
+                {
+                char dataname2[256];
+                sprintf(dataname2,"../test%i.nc",fileidx);
+                fileidx +=1;
+                AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
+                ncdat2.WriteState(avm);
+                };
+
             };
+            char dataname2[256];
+            sprintf(dataname2,"../test%i.nc",fileidx);
+            AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
+            ncdat2.WriteState(avm);
 
         };
 
