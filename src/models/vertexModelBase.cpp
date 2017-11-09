@@ -792,7 +792,7 @@ void vertexModelBase::cellDeath(int cellIndex)
     //For conveniences, we will rotate the elements of "vertices" so that the smallest integer is first
     vector<int> vertices(3);
     //also get the vertex neighbors of the vertices (that aren't already part of "vertices")
-    vector<int> newVertexNeighbors(3,-1);
+    vector<int> newVertexNeighbors;
     //So, first create a scope for array handles to write in the re-wired connections
         {//scope for array handle
     ArrayHandle<int> h_cv(cellVertices);
@@ -834,9 +834,12 @@ void vertexModelBase::cellDeath(int cellIndex)
             {
             int testVertex = h_vn.data[3*vertices[vv]+v2];
             if(testVertex != vertices[0] && testVertex != vertices[1] && testVertex != vertices[2])
-                newVertexNeighbors[vv] = testVertex;
+                newVertexNeighbors.push_back(testVertex);
             };
         };
+    removeDuplicateVectorElements(newVertexNeighbors);
+    if(newVertexNeighbors.size() != 3)
+        printf("whoa, there\n");
 
     //Eventually, put the new vertex in, say, the centroid... for now, just put it on top of v1
     Dscalar2 newVertexPosition;
