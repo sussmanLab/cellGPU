@@ -4,6 +4,7 @@
 #include "std_include.h"
 #include "Matrix.h"
 #include "gpuarray.h"
+#include <set>
 
 #ifdef NVCC
 /*!
@@ -58,6 +59,21 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
     xc.x = x3.x + denominator * Det2x2(amcnorm2,amcy,bmcnorm2,bmcy);
     xc.y = x3.y + denominator * Det2x2(amcx,amcnorm2,bmcx,bmcnorm2);
 
+    };
+
+//!remove duplicate elements from a vector, preserving the order, using sets
+template<typename T>
+inline __attribute__((always_inline)) void removeDuplicateVectorElements(vector<T> &data)
+    {
+    set<T> currentElements;
+    auto newEnd = std::remove_if(data.begin(),data.end(),[&currentElements](const T& value)
+        {
+        if (currentElements.find(value) != std::end(currentElements))
+            return true;
+        currentElements.insert(value);
+        return false;
+        });
+    data.erase(newEnd,data.end());
     };
 
 //!shrink a GPUArray by removing the i'th element and shifting any elements j > i into place

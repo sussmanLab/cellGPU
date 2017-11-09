@@ -188,6 +188,7 @@ int main(int argc, char*argv[])
         int divisionTime = 10;
         for (int timestep = 0; timestep < tSteps; ++timestep)
             {
+            cout << "starting timestep "<<timestep << endl;
             sim->performTimestep();
             if(program_switch <=-1 && timestep%((int)(divisionTime/dt))==0)
                 {
@@ -209,7 +210,19 @@ int main(int argc, char*argv[])
                     sim->performTimestep();
                     };
                 if(cellVertices ==3)
+                    {
+                    cout << "about to kill cell" << endl;
                     avm->cellDeath(deadCell);
+                    cout << "cell killed" << endl;
+                    if (program_switch == -2)
+                        {
+                        char dataname2[256];
+                        sprintf(dataname2,"../test%i.nc",fileidx);
+                        fileidx +=1;
+                        AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
+                        ncdat2.WriteState(avm);
+                        };
+                    }
                 };
             };
 
