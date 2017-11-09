@@ -248,7 +248,6 @@ void vertexModelBase::computeGeometryCPU()
             for (int ff = 0; ff < 3; ++ff)
                 if(h_vcn.data[3*vidx+ff]==i)
                     forceSetIdx = 3*vidx+ff;
-
             vidx = h_n.data[n_idx(nn,i)];
             Box->minDist(h_v.data[vidx],cellPos,vnext);
 
@@ -770,6 +769,209 @@ void vertexModelBase::testAndPerformT1TransitionsGPU()
     {
     testEdgesForT1GPU();
     flipEdgesGPU();
+    };
+
+/*!
+Trigger a cell death event. This REQUIRES that the vertex model cell to die be a triangle (i.e., we
+are mimicking a T2 transition)
+*/
+void vertexModelBase::cellDeath(int cellIndex)
+    {
+    //first, throw an error if function is called inappropriately
+        {
+    ArrayHandle<int> h_cvn(cellVertexNum);
+    if (h_cvn.data[cellIndex] != 3)
+        {
+        printf("Error in vertexModelBase::cellDeath... you are trying to perfrom a T2 transition on a cell which is not a triangle\n");
+        throw std::exception();
+        };
+        }
+    //Our strategy will be to completely re-wire everything, and then get rid of the dead entries
+    //get the cell and vertex identities of the triangular cell and the cell neighbors
+    vector<int> cells(3);
+    //For conveniences, we will rotate the elements of "vertices" so that the smallest integer is first
+    vector<int> vertices(3);
+    //also get the vertex neighbors of the vertices (that aren't already part of "vertices")
+    vector<int> newVertexNeighbors;
+    //So, first create a scope for array handles to write in the re-wired connections
+        {//scope for array handle
+    ArrayHandle<int> h_cv(cellVertices);
+    ArrayHandle<int> h_cvn(cellVertexNum);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors);
+    int cellsNum=0;
+    int smallestV = Nvertices + 1;
+    int smallestVIndex = 0;
+    for (int vv = 0; vv < 3; ++vv)
+        {
+        int vIndex = h_cv.data[n_idx(vv,cellIndex)];
+        vertices[vv] = vIndex;
+        if(vIndex < smallestV)
+            {
+            smallestV = vIndex;
+            smallestVIndex = vv;
+            };
+        for (int cc =0; cc <3; ++cc)
+            {
+            int newCell = h_vcn.data[3*vertices[vv]+cc];
+            if (newCell == cellIndex) continue;
+            bool alreadyFound = false;
+            if(cellsNum > 0)
+                for (int c2 = 0; c2 < cellsNum; ++c2)
+                    if (newCell == cells[c2]) alreadyFound = true;
+            if (!alreadyFound)
+                {
+                cells[cellsNum] = newCell;
+                cellsNum +=1;
+                }
+            };
+        };
+    std::rotate(vertices.begin(),vertices.begin()+smallestVIndex,vertices.end());
+    ArrayHandle<int> h_vn(vertexNeighbors);
+    //let's find the vertices connected to the three vertices that form the dying cell
+    for (int vv = 0; vv < 3; ++vv)
+        {
+        for (int v2 = 0; v2 < 3; ++v2)
+            {
+            int testVertex = h_vn.data[3*vertices[vv]+v2];
+            if(testVertex != vertices[0] && testVertex != vertices[1] && testVertex != vertices[2])
+                newVertexNeighbors.push_back(testVertex);
+            };
+        };
+    removeDuplicateVectorElements(newVertexNeighbors);
+    if(newVertexNeighbors.size() != 3)
+        {
+        printf("\nError in cell death. File %s at line %d\n",__FILE__,__LINE__);
+        throw std::exception();
+        };
+
+    //Eventually, put the new vertex in, say, the centroid... for now, just put it on top of v1
+    Dscalar2 newVertexPosition;
+    ArrayHandle<Dscalar2> h_v(vertexPositions);
+    newVertexPosition = h_v.data[vertices[0]];
+
+    //First, we start updating the data structures
+    //new position of the remaining vertex
+    h_v.data[vertices[0]] = newVertexPosition;
+
+    //cell vertices and cell vertex number
+    for (int oldCell = 0; oldCell < 3; ++oldCell)
+        {
+        int cIdx = cells[oldCell];
+        int neigh = h_cvn.data[cIdx];
+        //fun solution: if the cell includes either v2 or v2, replace with v1 and delete duplicates
+        vector<int> vNeighs(neigh);
+        for (int vv = 0; vv < neigh; ++vv)
+            {
+            int vIdx = h_cv.data[n_idx(vv,cIdx)];
+            if (vIdx == vertices[1] || vIdx==vertices[2])
+                vNeighs[vv] = vertices[0];
+            else
+                vNeighs[vv] = vIdx;
+            };
+        removeDuplicateVectorElements(vNeighs);
+        h_cvn.data[cIdx] = vNeighs.size();
+        for (int vv = 0; vv < vNeighs.size(); ++vv)
+            h_cv.data[n_idx(vv,cIdx)] = vNeighs[vv];
+        };
+
+    //vertex-vertex and vertex-cell neighbors
+    for (int ii = 0; ii < 3; ++ii)
+        {
+        h_vcn.data[3*vertices[0]+ii] = cells[ii];
+        h_vcn.data[3*vertices[1]+ii] = cells[ii];
+        h_vcn.data[3*vertices[2]+ii] = cells[ii];
+        h_vn.data[3*vertices[0]+ii] = newVertexNeighbors[ii];
+        for (int vv = 0; vv < 3; ++vv)
+            {
+            if (h_vn.data[3*newVertexNeighbors[ii]+vv] == vertices[1] ||
+                    h_vn.data[3*newVertexNeighbors[ii]+vv] == vertices[2])
+                h_vn.data[3*newVertexNeighbors[ii]+vv] = vertices[0];
+            };
+        };
+
+    //finally (gross), we need to comb through the data arrays and decrement cell indices greater than cellIdx
+    //along with vertex numbers greater than v1 and/or v2
+    int v1 = std::min(vertices[1],vertices[2]);
+    int v2 = std::max(vertices[1],vertices[2]);
+    for (int cv = 0; cv < cellVertices.getNumElements(); ++cv)
+        {
+        int cellVert = h_cv.data[cv];
+        if (cellVert >= v1)
+            {
+            cellVert -= 1;
+            if (cellVert >=v2) cellVert -=1;
+            h_cv.data[cv] = cellVert;
+            }
+        };
+    for (int vv = 0; vv < vertexNeighbors.getNumElements(); ++vv)
+        {
+        int vIdx = h_vn.data[vv];
+        if (vIdx >= v1)
+            {
+            vIdx = vIdx - 1;
+            if (vIdx >= v2) vIdx = vIdx - 1;
+            h_vn.data[vv] = vIdx;
+            };
+        };
+    for (int vv = 0; vv < vertexCellNeighbors.getNumElements(); ++vv)
+        {
+        int cIdx = h_vcn.data[vv];
+        if (cIdx >= cellIndex)
+            h_vcn.data[vv] = cIdx - 1;
+        };
+
+        };//scope for array handle... now we get to delete choice array elements
+
+    //Now that the GPUArrays have updated data, let's delete elements from the GPUArrays
+    vector<int> vpDeletions = {vertices[1],vertices[2]};
+    vector<int> vnDeletions = {3*vertices[1],3*vertices[1]+1,3*vertices[1]+2,
+                               3*vertices[2],3*vertices[2]+1,3*vertices[2]+2};
+    vector<int> cvDeletions(vertexMax);
+    for (int ii = 0; ii < vertexMax; ++ii)
+        cvDeletions[ii] = n_idx(ii,cellIndex);
+    removeGPUArrayElement(vertexPositions,vpDeletions);
+    removeGPUArrayElement(vertexNeighbors,vnDeletions);
+    removeGPUArrayElement(vertexCellNeighbors,vnDeletions);
+    removeGPUArrayElement(cellVertexNum,cellIndex);
+    removeGPUArrayElement(cellVertices,cvDeletions);
+
+    Nvertices -= 2;
+    //phenomenal... let's handle the tag-to-index structures
+    ittVertex.resize(Nvertices);
+    ttiVertex.resize(Nvertices);
+    vector<int> newTagToIdxV(Nvertices);
+    vector<int> newIdxToTagV(Nvertices);
+    int loopIndex = 0;
+    int v1 = std::min(vertices[1],vertices[2]);
+    int v2 = std::max(vertices[1],vertices[2]);
+    for (int ii = 0; ii < Nvertices+2;++ii)
+        {
+        int vIdx = tagToIdxVertex[ii]; //vIdx is the current position of the vertex that was originally ii
+        if (ii != v1 && ii != v2)
+            {
+            if (vIdx >= v1) vIdx = vIdx - 1;
+            if (vIdx >= v2) vIdx = vIdx - 1;
+            newTagToIdxV[loopIndex] = vIdx;
+            loopIndex +=1;
+            };
+        };
+    for (int ii = 0; ii < Nvertices; ++ii)
+        newIdxToTagV[newTagToIdxV[ii]] = ii;
+    tagToIdxVertex = newTagToIdxV;
+    idxToTagVertex = newIdxToTagV;
+
+    //finally, resize remaining stuff and call parent functions
+    vertexForces.resize(Nvertices);
+    displacements.resize(Nvertices);
+    vertexForceSets.resize(3*Nvertices);
+    voroCur.resize(3*Nvertices);
+    voroLastNext.resize(3*Nvertices);
+
+    initializeEdgeFlipLists(); //function call takes care of EdgeFlips and EdgeFlipsCurrent
+    Simple2DActiveCell::cellDeath(cellIndex); //This call decrements Ncells by one
+    n_idx = Index2D(vertexMax,Ncells);
+
+    //computeGeometryCPU();
     };
 
 /*!

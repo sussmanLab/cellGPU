@@ -37,6 +37,11 @@ for caveats
 
 Provides a simple example of both vertex and voronoi models with cell division activated
 
+# cellDeath.cpp
+
+Provides a simple example of both vertex and voronoi models with cell death activated...
+very similar to cellDivision, but particularly in the vertex model some extra care is needed
+
 # dynMat.cpp
 
 Provides an example of computing the dynamical matrix of a minimized voronoi model and using the

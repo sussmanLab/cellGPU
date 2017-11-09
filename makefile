@@ -71,8 +71,8 @@ float: CXXFLAGS += -DSCALARFLOAT
 float: NVCCFLAGS += -DSCALARFLOAT
 float: build
 
-debug: CXXFLAGS += -g -DCUDATHREADSYNC
-debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info # -G
+debug: CXXFLAGS += -g -DCUDATHREADSYNC -DDEBUGFLAGUP
+debug: NVCCFLAGS += -g -lineinfo -Xptxas --generate-line-info -DDEBUGFLAGUP # -G note that in debug mode noise will always be reproducible
 debug: build
 build: $(CLASS_OBJS) $(CU_OBJS) $(PROG_MAINS)  $(PROGS)
 

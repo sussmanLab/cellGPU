@@ -4,6 +4,7 @@
 #include "std_include.h"
 #include "Matrix.h"
 #include "gpuarray.h"
+#include <set>
 
 #ifdef NVCC
 /*!
@@ -58,6 +59,81 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
     xc.x = x3.x + denominator * Det2x2(amcnorm2,amcy,bmcnorm2,bmcy);
     xc.y = x3.y + denominator * Det2x2(amcx,amcnorm2,bmcx,bmcnorm2);
 
+    };
+
+//!remove duplicate elements from a vector, preserving the order, using sets
+template<typename T>
+inline __attribute__((always_inline)) void removeDuplicateVectorElements(vector<T> &data)
+    {
+    set<T> currentElements;
+    auto newEnd = std::remove_if(data.begin(),data.end(),[&currentElements](const T& value)
+        {
+        if (currentElements.find(value) != std::end(currentElements))
+            return true;
+        currentElements.insert(value);
+        return false;
+        });
+    data.erase(newEnd,data.end());
+    };
+
+//!shrink a GPUArray by removing the i'th element and shifting any elements j > i into place
+template<typename T>
+inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &data, int index)
+    {
+    int n = data.getNumElements();
+    GPUArray<T> newData;
+    newData.resize(n-1);
+    {//scope for array handles
+    ArrayHandle<T> h(data,access_location::host,access_mode::read);
+    ArrayHandle<T> h1(newData,access_location::host,access_mode::overwrite);
+    int idx = 0;
+    for (int i = 0; i < n; ++i)
+        {
+        if (i != index)
+            {
+            h1.data[idx] = h.data[i];
+            idx += 1;
+            };
+        };
+    };
+    data = newData;
+    };
+
+//!shrink a GPUArray by removing the elements [i1,i2,...in] of a vector and shifting any elements j > i_i into place
+template<typename T>
+inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &data, vector<int> indices)
+    {
+    std::sort(indices.begin(),indices.end());
+    int n = data.getNumElements();
+    GPUArray<T> newData;
+    newData.resize(n-indices.size());
+    {//scope for array handles
+    ArrayHandle<T> h(data,access_location::host,access_mode::read);
+    ArrayHandle<T> h1(newData,access_location::host,access_mode::overwrite);
+    int idx = 0;
+    int vectorIndex = 0;
+    for (int i = 0; i < n; ++i)
+        {
+        if (i != indices[vectorIndex])
+            {
+            h1.data[idx] = h.data[i];
+            idx += 1;
+            }
+        else
+            {   
+            vectorIndex += 1;
+            if (vectorIndex >= indices.size())
+                vectorIndex -= 1;
+            };
+        };
+    };
+    data = newData;
+    };
+
+//!print a Dscalar2 to screen
+inline __attribute__((always_inline)) void printDscalar2(Dscalar2 a)
+    {
+    printf("%f\t%f\n",a.x,a.y);
     };
 
 //!grow a GPUArray, leaving the current elements the same but with extra capacity at the end of the array

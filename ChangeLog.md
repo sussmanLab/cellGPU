@@ -2,6 +2,7 @@
 
 ### Changes in progress
 
+* Cell death added. This removes a cell in Voronoi model, or does a T2 transition in vertex model
 * BoxPtrs implemented...will eventually make different box shapes easier
 * rationalize naming scheme of vertex and voronoi models
     * There are now vertexModelBase and voronoiModelBase classes

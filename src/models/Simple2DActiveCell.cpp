@@ -96,6 +96,17 @@ void Simple2DActiveCell::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &d
     };
 
 /*!
+This function supports celLDeath, updating the data structures in Simple2DActiveCell.
+This function will first call Simple2DCell's routine, then modify the cellDirectors and Motility arrays
+*/
+void Simple2DActiveCell::cellDeath(int cellIndex)
+    {
+    Simple2DCell::cellDeath(cellIndex);
+    removeGPUArrayElement(cellDirectors,cellIndex);
+    removeGPUArrayElement(Motility,cellIndex);
+    };
+
+/*!
 This function supports cellDivisions, updating data structures in Simple2DActiveCell
 This function will first call Simple2DCell's routine, and then
 grows the cellDirectors and Motility arrays, and assign the new cell

@@ -644,9 +644,50 @@ Dscalar2 Simple2DCell::reportVarAP()
     };
 
 /*!
+ * When beggars die, there are no comets seen;
+ * The heavens themselves blaze forth the death of princes...
+ Which are your cells?
+This function supports removing a single cell from the simulation, which requires re-indexing
+and relabeling the data structures in the simulation.
+\post Simple2DCell data vectors are one element shorter, and cells with a higher index than "cellIndex" get re-labeled down by one.
+*/
+void Simple2DCell::cellDeath(int cellIndex)
+    {
+    Ncells -= 1;
+
+    //reset the spatial sorting vectors...
+    itt.resize(Ncells);
+    tti.resize(Ncells);
+    vector<int> newTagToIdx(Ncells);
+    vector<int> newIdxToTag(Ncells);
+    int loopIndex = 0;
+    for (int ii = 0; ii < Ncells+1;++ii)
+        {
+        int pIdx = tagToIdx[ii]; //pIdx is the current position of the cell that was originally ii
+        if(ii != cellIndex)
+            {
+            if (pIdx >= cellIndex) pIdx = pIdx-1;
+            newTagToIdx[loopIndex] = pIdx;
+            loopIndex +=1;
+            };
+        };
+    for (int ii = 0; ii < Ncells; ++ii)
+        newIdxToTag[newTagToIdx[ii]] = ii;
+    tagToIdx = newTagToIdx;
+    idxToTag = newIdxToTag;
+
+    //AreaPeri will have its values updated in a geometry routine... just change the length
+    AreaPeri.resize(Ncells);
+    //use the GPUArray removal mechanism to get rid of the correct data
+    removeGPUArrayElement(AreaPeriPreferences,cellIndex);
+    removeGPUArrayElement(Moduli,cellIndex);
+    removeGPUArrayElement(cellType,cellIndex);
+    removeGPUArrayElement(cellPositions,cellIndex);
+    };
+
+/*!
 This function supports cellDivisions, updating data structures in Simple2DCell
-This function will 
-and assign the new cell
+This function will grow the cell lists by 1 and assign the new cell
 (the last element of those arrays) the values of the cell given by parameters[0]
 Note that dParams does nothing by default, but allows more general virtual functions to be defined
 downstream (used in the Voronoi branch)
@@ -671,7 +712,7 @@ void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<Dsca
     growGPUArray(Moduli,1);
     growGPUArray(cellType,1);
     growGPUArray(cellPositions,1);
-    
+
         {//arrayhandle scope
         ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
         ArrayHandle<Dscalar2> h_Mod(Moduli); h_Mod.data[Ncells-1] = h_Mod.data[cellIdx];

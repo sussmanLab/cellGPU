@@ -91,7 +91,6 @@ void VertexQuadraticEnergy::computeForcesCPU()
         //computeForceSetVertexModel is defined in inc/utility/functions.h
         computeForceSetVertexModel(vcur,vlast,vnext,Adiff,Pdiff,dEdv);
 
-
         h_fs.data[fsidx].x = dEdv.x;
         h_fs.data[fsidx].y = dEdv.y;
         };
