@@ -223,7 +223,7 @@ int main(int argc, char*argv[])
                     avm->cellDeath(deadCell);
                     }
                 };
-            if(program_switch ==-2 && (timestep%((int)(0.2*divisionTime/dt)))==0)
+            if(program_switch <=-2 && (timestep%((int)(0.2*divisionTime/dt)))==0)
                 {
                 char dataname2[256];
                 sprintf(dataname2,"../test%i.nc",fileidx);
