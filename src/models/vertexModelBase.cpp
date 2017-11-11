@@ -572,6 +572,9 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                     {
                     bool growCellVertexList = false;
                     getCellVertexSetForT1(vertex1,vertex2,cellSet,vertexSet,growCellVertexList);
+                    //forbid a T1 transition that would shrink a triangular cell
+                    if( h_cvn.data[cellSet.x] == 3 || h_cvn.data[cellSet.z] == 3)
+                        continue;
                     //Does the cell-vertex-neighbor data structure need to be bigger?
                     if(growCellVertexList)
                         {
