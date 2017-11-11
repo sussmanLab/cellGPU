@@ -75,9 +75,6 @@ int main(int argc, char*argv[])
     //set the cell activity to have D_r = 1. and a given v_0
     spv->setv0Dr(v0,1.0);
 
-Dscalar b1,b2,b3,b4;
-spv->returnBox().getBoxDims(b1,b2,b3,b4);
-printf("voronoi main function: %f %f %f %f\n",b1,b2,b3,b4);
 
     //combine the equation of motion and the cell configuration in a "Simulation"
     SimulationPtr sim = make_shared<Simulation>();

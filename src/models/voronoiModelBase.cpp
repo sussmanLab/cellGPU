@@ -271,12 +271,7 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
         };
     Dscalar b1,b2,b3,b4;
     Box->getBoxDims(b1,b2,b3,b4);
-    if (b2 != 0 || b3 != 0 || b1 != b4)
-        {
-        printf("\nError: cannot call CGAL for a non-square box\n");
-        throw std::exception();
-        };
-    dcgal.PeriodicTriangulation(Psnew,b1,b1);
+    dcgal.PeriodicTriangulation(Psnew,b1,b2,b3,b4);
 
     ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
