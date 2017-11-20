@@ -2,6 +2,7 @@
 
 #include "NoseHooverChainNVT.h"
 #include "NoseHooverChainNVT.cuh"
+#include "utilities.cuh"
 /*! \file NoseHooverChainNVT.cpp" */
 
 /*!
@@ -15,6 +16,8 @@ NoseHooverChainNVT::NoseHooverChainNVT(int N, int M)
     GPUcompute=true;
     Ndof = N;
     displacements.resize(Ndof);
+    keArray.resize(Ndof);
+    keIntermediateReduction.resize(Ndof);
     Nchain = M;
     BathVariables.resize(Nchain+1);
     ArrayHandle<Dscalar4> h_bv(BathVariables);
@@ -189,11 +192,34 @@ void NoseHooverChainNVT::integrateEquationsOfMotionGPU()
     //propagateChainHalf(); // use data structure that holds [KE,s], update both.
     rescaleVelocitiesGPU(); //use the velocity vector and the [KE,s] data structure. Note that KE is already scaled by s^2 in the above step
     //propagatePositionsVelocities();
-    //calculateKineticEnergyGPU(); //get the kinetic energy into the [KE,s] data structure
+    calculateKineticEnergyGPU(); //get the kinetic energy into the [KE,s] data structure
     //propagateChainHalf();
     rescaleVelocitiesGPU();
 
     };
+
+/*!
+This combines multiple kernel calls. First we make a vector of kinetic energies per particle, then
+we perform a parallel block reduction, and then a serial reduction
+*/
+void NoseHooverChainNVT::calculateKineticEnergyGPU()
+    {
+    {//array handle scope for keArray preparation
+    ArrayHandle<Dscalar2> d_v(State->returnVelocities(),access_location::device,access_mode::read);
+    ArrayHandle<Dscalar> d_m(State->returnMasses(),access_location::device,access_mode::read);
+    ArrayHandle<Dscalar> d_keArray(keArray,access_location::device,access_mode::overwrite);
+    gpu_prepare_KE_vector(d_v.data,d_m.data,d_keArray.data,Ndof);
+    }
+
+    {//array handle scope for parallel reduction
+    ArrayHandle<Dscalar> d_keArray(keArray,access_location::device,access_mode::read);
+    ArrayHandle<Dscalar> d_kes(kineticEnergyScaleFactor,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar> d_keIntermediate(keIntermediateReduction,access_location::device,access_mode::overwrite);
+
+    gpu_parallel_reduction(d_keArray.data,d_keIntermediate.data,d_kes.data,0,Ndof);
+    }
+    };
+
 /*!
 Simply call the velocity rescaling function...
 */
@@ -203,6 +229,3 @@ void NoseHooverChainNVT::rescaleVelocitiesGPU()
     ArrayHandle<Dscalar> d_kes(kineticEnergyScaleFactor,access_location::device,access_mode::read);
     gpu_NoseHooverChainNVT_scale_velocities(d_v.data,d_kes.data,Ndof);
     };
-
-
-

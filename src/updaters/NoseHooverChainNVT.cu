@@ -15,6 +15,46 @@
 */
 
 /*!
+into the output vector put 0.5*m[i]*v[i]^2
+*/
+__global__ void NoseHooverChainNVT_prepare_KE_kernel(
+                                Dscalar2 *velocities,
+                                Dscalar  *masses,
+                                Dscalar  *keArray,
+                                int      N)
+    {
+    // read in the index that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+    keArray[idx] = 0.5*masses[idx]*(velocities[idx].x*velocities[idx].x+velocities[idx].y*velocities[idx].y);
+    };
+
+/*!
+\param velocities Dscalar2 array of current velocities
+\param masses Dscalar array of current masses
+\param keArray Dscalar output array
+\param N      the length of the arrays
+\post keArray[idx] = 0.5*masses[idx]*(velocities[idx])^2
+*/
+bool gpu_prepare_KE_vector(Dscalar2   *velocities,
+                              Dscalar *masses,
+                              Dscalar *keArray,
+                              int N)
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
+    NoseHooverChainNVT_prepare_KE_kernel<<<nblocks,block_size>>>(
+                                                velocities,
+                                                masses,
+                                                keArray,
+                                                N);
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    };
+
+/*!
 Each thread scales the velocity of one particle by the second component of the helper array
 
 */

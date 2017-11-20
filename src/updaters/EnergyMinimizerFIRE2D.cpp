@@ -2,6 +2,7 @@
 
 #include "EnergyMinimizerFIRE2D.h"
 #include "EnergyMinimizerFIRE2D.cuh"
+#include "utilities.cuh"
 
 /*! \file EnergyMinimizerFIRE2D.cpp
  */

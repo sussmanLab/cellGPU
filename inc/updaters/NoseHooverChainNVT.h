@@ -31,14 +31,6 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
         //!call the GPU routine to integrate the e.o.m.
         virtual void integrateEquationsOfMotionGPU();
 
-        //!Propagate the chain
-        void propagateChain();
-        //!Propagate the position and velocity of the particles
-        void propagatePositionsVelocities();
-
-        //!Rescale velocities on the GPU
-        void rescaleVelocitiesGPU();
-
         //!Get temperature, T
         Dscalar getT(){return Temperature;};
         //!Set temperature, T, and also the bath masses!
@@ -56,5 +48,20 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
         int Ndof;
         //!the (position,velocity,acceleration,mass) of the bath degrees of freedom
         GPUArray<Dscalar4> BathVariables;
+        //!A helper vector for the GPU branch...can be asked to store 0.5*m[i]*v[i]^2 as an array
+        GPUArray<Dscalar> keArray;
+        //!A helper structure for performing parallel reduction of the keArray
+        GPUArray<Dscalar> keIntermediateReduction;
+
+        //!Propagate the chain
+        void propagateChain();
+        //!Propagate the position and velocity of the particles
+        void propagatePositionsVelocities();
+
+        //!Rescale velocities on the GPU
+        void rescaleVelocitiesGPU();
+        //! combine kernel calls for vector combination and parallel reduction to compute the KE in the helper structure
+        void calculateKineticEnergyGPU();
+
     };
 #endif

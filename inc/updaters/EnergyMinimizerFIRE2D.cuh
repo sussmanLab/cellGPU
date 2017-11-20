@@ -19,12 +19,6 @@ A file providing an interface to the relevant cuda calls for the EnergyMinimizer
 bool gpu_zero_velocity(Dscalar2 *d_velocity,
                        int N);
 
-//! (Dscalar) ans = (Dscalar2) vec1 . vec2
-bool gpu_dot_Dscalar2_vectors(Dscalar2 *d_vec1,
-                              Dscalar2 *d_vec2,
-                              Dscalar  *d_ans,
-                              int N);
-
 //!velocity = velocity +0.5*deltaT*force
 bool gpu_update_velocity(Dscalar2 *d_velocity,
                       Dscalar2 *d_force,
@@ -49,20 +43,6 @@ bool gpu_displacement_velocity_verlet(Dscalar2 *d_displacement,
                       int N
                       );
 
-//!A trivial reduction of an array by one thread in serial. Think before you use this.
-bool gpu_serial_reduction(
-                    Dscalar *array,
-                    Dscalar *output,
-                    int helperIdx,
-                    int N);
-
-//!A straightforward two-step parallel reduction algorithm.
-bool gpu_parallel_reduction(
-                    Dscalar *input,
-                    Dscalar *intermediate,
-                    Dscalar *output,
-                    int helperIdx,
-                    int N);
 
 /** @} */ //end of group declaration
 
