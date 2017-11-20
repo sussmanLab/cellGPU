@@ -4,7 +4,7 @@ If you use cellGPU for a publication or project, please site the main cellGPU pa
 
 (1) "cellGPU: massively parallel simulations of dynamic vertex models" Daniel M. Sussman; Computer Physics Communications, volume 219, pages 400-406, (2017)
 
-Additional citation to consider, according to your taste on how expansive to be with your citing behavior:
+Here are some additional citation to consider, according to your taste on how expansive to be with your citing behavior:
 
 (2) Chen and Gotsman ''Localizing the delaunay triangulation and its parallel implementation,''
 [Transactions on Computational Science XX (M. L. Gavrilova, C.J.K. Tan, and B. Kalantari, eds.),Lecture Notes in Computer Science, vol. 8110, Springer Berlin Heidelberg, 2013, Extended abstract in ISVD 2012, pp. 24–31, pp. 39–55 (English)]
@@ -17,6 +17,8 @@ formed by that point and consecutive vertices of the polygon).
 
 (3) CGAL,Computational Geometry Algorithms Library, http://www.cgal.org
 
+The default triangulation library
+
 (4) paulbourke.net/papers/triangulate (Pan-Pacific Computer Conference, Beijing, China)
 
 Staying on the "Delaunay" branch, there are two underlying routines for computing full Delaunay
@@ -27,4 +29,11 @@ code: paulbourke.net/papers/triangulate (Pan-Pacific Computer Conference, Beijin
 
 (5) [E. Bitzek et al. Phys. Rev. Lett. 97, 170201 (2006)](http://journals.aps.org/prl/abstract/10.1103/PhysRevLett.97.170201)
 
-One of the energy minimizer uses a straightforward implementation of the FIRE minimization algorithm, as described in the above paper
+One of the energy minimizer uses a straightforward implementation of the FIRE minimization algorithm,
+as described in the above paper.
+
+(6) [G. J. Martyna, M. E. Tuckerman, D. J. Tobias, and M. L. Klein; Mol. Phys. 87, 1117 (1996)](http://www.tandfonline.com/doi/abs/10.1080/00268979600100761)
+
+The NoseHooverChainNVT class integrates the Nose-Hoover equations of motion with a chain of thermostats,
+and does so using an update scheme that is explicitly time-reversible. The algorithm to do this is
+described in Martyna et al., and see also the nice algorithmic pseudo-code in Frenkel & Smit.

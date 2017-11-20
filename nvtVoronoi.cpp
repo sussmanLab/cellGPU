@@ -8,6 +8,7 @@
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
 #include "NoseHooverChainNVT.h"
+#include "DatabaseNetCDFSPV.h"
 
 /*!
 This file explores integrating the Nose-Hoover equations of motion
@@ -65,11 +66,17 @@ int main(int argc, char*argv[])
     else
         initializeGPU = false;
 
+    char dataname[256];
+    sprintf(dataname,"../test.nc");
+    SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace,false);
+
     //define the equation of motion to be used
     shared_ptr<NoseHooverChainNVT> nvt = make_shared<NoseHooverChainNVT>(numpts,Nchain);
-    nvt->setT(v0);
     //define a voronoi configuration with a quadratic energy functional
     shared_ptr<VoronoiQuadraticEnergy> vm  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,p0,reproducible);
+    //set the temperature and the initial velocities to the desired value
+    vm->setCellVelocitiesMaxwellBoltzmann(v0);
+    nvt->setT(v0);
 
     //combine the equation of motion and the cell configuration in a "Simulation"
     SimulationPtr sim = make_shared<Simulation>();
@@ -100,10 +107,12 @@ int main(int argc, char*argv[])
     Dscalar meanT = 0.0;
     for(int ii = 0; ii < tSteps; ++ii)
         {
-        meanT += nvt->kineticEnergy/(2.*numpts);
-        if(ii%100 ==0)
+        ArrayHandle<Dscalar> h_kes(nvt->kineticEnergyScaleFactor);
+        meanT += h_kes.data[0]/(2.*numpts);
+        if(ii%(int)(1/dt) ==0)
             {
-            printf("timestep %i\t\t energy %f \t T %f \n",ii,vm->computeEnergy(),nvt->kineticEnergy/(2.*numpts));
+            printf("timestep %i\t\t energy %f \t T %f \n",ii,vm->computeEnergy(),h_kes.data[0]/(2.*numpts));
+            ncdat.WriteState(vm);
             };
         sim->performTimestep();
         };

@@ -36,15 +36,16 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
         //!Propagate the position and velocity of the particles
         void propagatePositionsVelocities();
 
-        //!Define the current kinetic energy
-        void setKineticEnergy(Dscalar KE){kineticEnergy = KE;};
+        //!Rescale velocities on the GPU
+        void rescaleVelocitiesGPU();
 
         //!Get temperature, T
         Dscalar getT(){return Temperature;};
         //!Set temperature, T, and also the bath masses!
         void setT(Dscalar _T);
 
-        Dscalar kineticEnergy;
+        //!Helper structure for GPU branch. A two-component GPU array that contains the total KE and the velocity scale factor
+        GPUArray<Dscalar> kineticEnergyScaleFactor;
 
     protected:
         //!The targeted temperature

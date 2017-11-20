@@ -12,8 +12,13 @@ This file provides an interface to cuda calls for integrating the NoseHooverChai
  * @{
  */
 
-//!Do something
-//function(0sdfsidfuah)
+//!Rescale the velocities according to the given scale factor
+bool gpu_NoseHooverChainNVT_scale_velocities(
+                    Dscalar2 *velocities,
+                    Dscalar  *kineticEnergyScaleFactor,
+                    int       N);
+
+
 
 /** @} */ //end of group declaration
  #endif

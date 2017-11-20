@@ -266,7 +266,7 @@ __global__ void gpu_parallel_block_reduction2_kernel(Dscalar *input, Dscalar *ou
 
 
 /*!
-a two-step parallel reduction alorithm that first does a partial sum reduction of input into the
+a two-step parallel reduction algorithm that first does a partial sum reduction of input into the
 intermediate array, then launches a second kernel to sum reduce intermediate into output[helperIdx]
 \param input the input array to sum
 \param intermediate an array that input is block-reduced to
@@ -293,7 +293,7 @@ bool gpu_parallel_reduction(Dscalar *input, Dscalar *intermediate, Dscalar *outp
 
 /*!
 This serial reduction routine should probably never be called. It provides an interface to the
-gpu_serial_reduction_kernel above that may be usefull for testing
+gpu_serial_reduction_kernel above that may be useful for testing
   */
 bool gpu_serial_reduction(Dscalar *array, Dscalar *output, int helperIdx, int N)
     {
@@ -301,7 +301,5 @@ bool gpu_serial_reduction(Dscalar *array, Dscalar *output, int helperIdx, int N)
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
-
-
 
 /** @} */ //end of group declaration

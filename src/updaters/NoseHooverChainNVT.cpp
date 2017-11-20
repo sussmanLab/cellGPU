@@ -13,7 +13,6 @@ NoseHooverChainNVT::NoseHooverChainNVT(int N, int M)
     Timestep = 0;
     deltaT=0.01;
     GPUcompute=true;
-    kineticEnergy=0.0;
     Ndof = N;
     displacements.resize(Ndof);
     Nchain = M;
@@ -26,6 +25,7 @@ NoseHooverChainNVT::NoseHooverChainNVT(int N, int M)
         h_bv.data[ii].y = 0.0;
         h_bv.data[ii].z = 0.0;
         };
+    kineticEnergyScaleFactor.resize(2);
     setT(1.0);
     };
 
@@ -38,11 +38,13 @@ void NoseHooverChainNVT::setT(Dscalar T)
     Temperature = T;
     ArrayHandle<Dscalar4> h_bv(BathVariables);
     h_bv.data[0].w = 2 * Ndof*Temperature;
-    kineticEnergy = 0.0;
     for (int ii = 1; ii < Nchain+1; ++ii)
         {
         h_bv.data[ii].w = Temperature;
         };
+    ArrayHandle<Dscalar> kes(kineticEnergyScaleFactor,access_location::host,access_mode::overwrite);
+    kes.data[0] = h_bv.data[0].w;
+    kes.data[1] = 1.0;
     };
 
 /*!
@@ -89,7 +91,8 @@ This is the step in which a force calculation is required.
 */
 void NoseHooverChainNVT::propagatePositionsVelocities()
     {
-    kineticEnergy = 0.0;
+    ArrayHandle<Dscalar> h_kes(kineticEnergyScaleFactor);
+    h_kes.data[0] = 0.0;
     Dscalar deltaT2 = 0.5*deltaT;
     {//scope for array handles in the first half of the time step
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
@@ -110,7 +113,7 @@ void NoseHooverChainNVT::propagatePositionsVelocities()
         {
         h_v.data[ii] = h_v.data[ii] + (deltaT/h_m.data[ii])*h_f.data[ii];
         h_disp.data[ii] = deltaT2*h_v.data[ii];
-        kineticEnergy += 0.5*h_m.data[ii]*dot(h_v.data[ii],h_v.data[ii]);
+        h_kes.data[0] += 0.5*h_m.data[ii]*dot(h_v.data[ii],h_v.data[ii]);
         }
     };
     State->moveDegreesOfFreedom(displacements);
@@ -123,6 +126,7 @@ called twice per time step
 */
 void NoseHooverChainNVT::propagateChain()
     {
+    ArrayHandle<Dscalar> h_kes(kineticEnergyScaleFactor);
     Dscalar dt8 = 0.125*deltaT;
     Dscalar dt4 = 0.25*deltaT;
     Dscalar dt2 = 0.5*deltaT;
@@ -140,7 +144,7 @@ void NoseHooverChainNVT::propagateChain()
         Bath.data[ii].y += Bath.data[ii].z*dt4;
         Bath.data[ii].y *= ef;
         };
-    Bath.data[0].z = (kineticEnergy - 2.0*Ndof*Temperature)/Bath.data[0].w;
+    Bath.data[0].z = (h_kes.data[0] - 2.0*Ndof*Temperature)/Bath.data[0].w;
     Dscalar ef = exp(-dt8*Bath.data[1].y);
     Bath.data[0].y *= ef;
     Bath.data[0].y += Bath.data[0].z*dt4;
@@ -154,10 +158,10 @@ void NoseHooverChainNVT::propagateChain()
     Dscalar s = exp(-dt2*Bath.data[0].y);
     for (int ii = 0; ii < Ndof; ++ii)
         h_v.data[ii] = s*h_v.data[ii];
-    kineticEnergy = s*s*kineticEnergy;
+    h_kes.data[0] = s*s*h_kes.data[0];
 
     //finally, do the other quarter-timestep of the velocities and accelerations, from 0 to Nchain
-    Bath.data[0].z = (kineticEnergy - 2.0*Ndof*Temperature)/Bath.data[0].w;
+    Bath.data[0].z = (h_kes.data[0] - 2.0*Ndof*Temperature)/Bath.data[0].w;
     ef = exp(-dt8*Bath.data[1].y);
     Bath.data[0].y *= ef;
     Bath.data[0].y += Bath.data[0].z*dt4;
@@ -179,5 +183,26 @@ The GPU implementation of the identical algorithm done on the CPU
 */
 void NoseHooverChainNVT::integrateEquationsOfMotionGPU()
     {
+    //The kernel calling scheme. To avoid ridiculous numbers of brackets for array handle scoping,
+    //we'll define helper functions
+
+    //propagateChainHalf(); // use data structure that holds [KE,s], update both.
+    rescaleVelocitiesGPU(); //use the velocity vector and the [KE,s] data structure. Note that KE is already scaled by s^2 in the above step
+    //propagatePositionsVelocities();
+    //calculateKineticEnergyGPU(); //get the kinetic energy into the [KE,s] data structure
+    //propagateChainHalf();
+    rescaleVelocitiesGPU();
+
     };
+/*!
+Simply call the velocity rescaling function...
+*/
+void NoseHooverChainNVT::rescaleVelocitiesGPU()
+    {
+    ArrayHandle<Dscalar2> d_v(State->returnVelocities(),access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar> d_kes(kineticEnergyScaleFactor,access_location::device,access_mode::read);
+    gpu_NoseHooverChainNVT_scale_velocities(d_v.data,d_kes.data,Ndof);
+    };
+
+
 
