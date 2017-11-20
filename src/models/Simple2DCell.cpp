@@ -28,6 +28,8 @@ void Simple2DCell::initializeSimple2DCell(int n)
     setCellPreferencesUniform(1.0,3.8);
     setModuliUniform(1.0,1.0);
     setCellTypeUniform(0);
+    cellMasses.resize(Ncells);
+    cellVelocities.resize(Ncells);
     vector<Dscalar> masses(Ncells,1.0);
     fillGPUArrayWithVector(masses,cellMasses);
     vector<Dscalar2> velocities(Ncells,make_Dscalar2(0.0,0.0));
@@ -141,6 +143,29 @@ void Simple2DCell::setCellTypeUniform(int i)
         {
         h_ct.data[ii] = i;
         };
+    };
+
+/*!
+Set the velocities by drawing from a Maxwell-Boltzmann distribution, and then make sure there is no
+net momentum
+ */
+void Simple2DCell::setVertexVelocitiesMaxwellBoltzmann(Dscalar T)
+    {
+    noise.Reproducible = Reproducible;
+    ArrayHandle<Dscalar> h_cm(vertexMasses,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(vertexVelocities,access_location::host,access_mode::overwrite);
+    Dscalar2 P = make_Dscalar2(0.0,0.0);
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        Dscalar2 vi;
+        vi.x = noise.getRealNormal(0.0,sqrt(T/h_cm.data[ii]));
+        vi.y = noise.getRealNormal(0.0,sqrt(T/h_cm.data[ii]));
+        h_v.data[ii] = vi;
+        P = P+h_cm.data[ii]*vi;
+        };
+    //remove excess momentum
+    for (int ii = 0; ii < Nvertices; ++ii)
+        h_v.data[ii] = h_v.data[ii] + (-1.0/(Ncells*h_cm.data[ii]))*P;
     };
 
 /*!

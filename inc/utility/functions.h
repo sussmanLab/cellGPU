@@ -120,7 +120,7 @@ inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &da
             idx += 1;
             }
         else
-            {   
+            {
             vectorIndex += 1;
             if (vectorIndex >= indices.size())
                 vectorIndex -= 1;

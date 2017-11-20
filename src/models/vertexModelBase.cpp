@@ -48,6 +48,13 @@ void vertexModelBase::initializeVertexModelBase(int n,bool spvInitialize)
     //initializes per-cell lists
     initializeCellSorting();
 
+    vertexMasses.resize(Nvertices);
+    vertexVelocities.resize(Nvertices);
+    vector<Dscalar> vmasses(Nvertices,1.0);
+    fillGPUArrayWithVector(vmasses,vertexMasses);
+    vector<Dscalar2> velocities(Nvertices,make_Dscalar2(0.0,0.0));
+    fillGPUArrayWithVector(velocities,vertexVelocities);
+
     //initializes per-vertex lists
     displacements.resize(Nvertices);
     initializeVertexSorting();
@@ -212,6 +219,8 @@ void vertexModelBase::spatialSorting()
     {
     //the base vertex model class doesn't need to change any other unusual data structures at the moment
     spatiallySortVerticesAndCellActivity();
+    reIndexVertexArray(vertexMasses);
+    reIndexVertexArray(vertexVelocities);
     };
 
 /*!
@@ -933,6 +942,8 @@ void vertexModelBase::cellDeath(int cellIndex)
     for (int ii = 0; ii < vertexMax; ++ii)
         cvDeletions[ii] = n_idx(ii,cellIndex);
     removeGPUArrayElement(vertexPositions,vpDeletions);
+    removeGPUArrayElement(vertexMasses,vpDeletions);
+    removeGPUArrayElement(vertexVelocities,vpDeletions);
     removeGPUArrayElement(vertexNeighbors,vnDeletions);
     removeGPUArrayElement(vertexCellNeighbors,vnDeletions);
     removeGPUArrayElement(cellVertexNum,cellIndex);
@@ -1125,6 +1136,8 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
 
     //use the copy and grow mechanism where we need to actually set values
     growGPUArray(vertexPositions,2); //(nv)
+    growGPUArray(vertexMasses,2); //(nv)
+    growGPUArray(vertexVelocities,2); //(nv)
     growGPUArray(vertexNeighbors,6); //(3*nv)
     growGPUArray(vertexCellNeighbors,6); //(3*nv)
     growGPUArray(cellVertexNum,1); //(nc)
@@ -1132,11 +1145,17 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
     vector<int>  cellVerticesVec;
     copyGPUArrayData(cellVertices,cellVerticesVec);
     cellVertices.resize(vertexMax*Ncells);
-    //first, let's take care of the vertex positions
+    //first, let's take care of the vertex positions, masses, and velocities
         {//arrayhandle scope
         ArrayHandle<Dscalar2> h_vp(vertexPositions);
         h_vp.data[Nvertices-2] = newV1Pos;
         h_vp.data[Nvertices-1] = newV2Pos;
+        ArrayHandle<Dscalar2> h_vv(vertexVelocities);
+        h_vv.data[Nvertices-2] = make_Dscalar2(0.0,0.0);
+        h_vv.data[Nvertices-1] = make_Dscalar2(0.0,0.0);
+        ArrayHandle<Dscalar> h_vm(vertexMasses);
+        h_vm.data[Nvertices-2] = h_vm.data[v1idx];
+        h_vm.data[Nvertices-1] = h_vm.data[v2idx];
         }
 
     //the vertex-vertex neighbors

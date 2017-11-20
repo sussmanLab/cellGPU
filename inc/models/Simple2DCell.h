@@ -69,6 +69,8 @@ class Simple2DCell : public Simple2DModel
         void setVertexPositions(vector<Dscalar2> newVertexPositions);
         //!Set velocities via a temperature
         void setCellVelocitiesMaxwellBoltzmann(Dscalar T);
+        //!Set velocities via a temperature for the vertex degrees of freedom
+        void setVertexVelocitiesMaxwellBoltzmann(Dscalar T);
 
         //! set uniform moduli for all cells
         void setModuliUniform(Dscalar newKA, Dscalar newKP);
@@ -139,6 +141,11 @@ class Simple2DCell : public Simple2DModel
         GPUArray<Dscalar2> cellVelocities;
         //!The masses of the cells
         GPUArray<Dscalar> cellMasses;
+        //!The velocity vector of vertices (only relevant if the equations of motion use it)
+        GPUArray<Dscalar2> vertexVelocities;
+        //!The masses of the vertices
+        GPUArray<Dscalar> vertexMasses;
+
         //! VERTEX neighbors of every vertex
         /*!
         in general, we have:
