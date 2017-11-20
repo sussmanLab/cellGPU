@@ -28,6 +28,10 @@ void Simple2DCell::initializeSimple2DCell(int n)
     setCellPreferencesUniform(1.0,3.8);
     setModuliUniform(1.0,1.0);
     setCellTypeUniform(0);
+    vector<Dscalar> masses(Ncells,1.0);
+    fillGPUArrayWithVector(masses,cellMasses);
+    vector<Dscalar2> velocities(Ncells,make_Dscalar2(0.0,0.0));
+    fillGPUArrayWithVector(velocities,cellVelocities);
 
     vertexForces.resize(Nvertices);
     };
@@ -139,6 +143,28 @@ void Simple2DCell::setCellTypeUniform(int i)
         };
     };
 
+/*!
+Set the velocities by drawing from a Maxwell-Boltzmann distribution, and then make sure there is no
+net momentum
+ */
+void Simple2DCell::setCellVelocitiesMaxwellBoltzmann(Dscalar T)
+    {
+    noise.Reproducible = Reproducible;
+    ArrayHandle<Dscalar> h_cm(cellMasses,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(cellVelocities,access_location::host,access_mode::overwrite);
+    Dscalar2 P = make_Dscalar2(0.0,0.0);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        Dscalar2 vi;
+        vi.x = noise.getRealNormal(0.0,sqrt(T/h_cm.data[ii]));
+        vi.y = noise.getRealNormal(0.0,sqrt(T/h_cm.data[ii]));
+        h_v.data[ii] = vi;
+        P = P+h_cm.data[ii]*vi;
+        };
+    //remove excess momentum
+    for (int ii = 0; ii < Ncells; ++ii)
+        h_v.data[ii] = h_v.data[ii] + (-1.0/(Ncells*h_cm.data[ii]))*P;
+    };
 
 /*!
  \param types a vector of integers that the cell types will be set to
@@ -399,6 +425,8 @@ void Simple2DCell::spatiallySortCells()
     reIndexCellArray(Moduli);
     reIndexCellArray(AreaPeriPreferences);
     reIndexCellArray(cellType);
+    reIndexCellArray(cellVelocities);
+    reIndexCellArray(cellMasses);
     };
 
 /*!
@@ -681,6 +709,8 @@ void Simple2DCell::cellDeath(int cellIndex)
     //use the GPUArray removal mechanism to get rid of the correct data
     removeGPUArrayElement(AreaPeriPreferences,cellIndex);
     removeGPUArrayElement(Moduli,cellIndex);
+    removeGPUArrayElement(cellMasses,cellIndex);
+    removeGPUArrayElement(cellVelocities,cellIndex);
     removeGPUArrayElement(cellType,cellIndex);
     removeGPUArrayElement(cellPositions,cellIndex);
     };
@@ -710,6 +740,8 @@ void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<Dsca
     //use the copy and grow mechanism where we need to actually set values
     growGPUArray(AreaPeriPreferences,1); //(nc)
     growGPUArray(Moduli,1);
+    growGPUArray(cellMasses,1);
+    growGPUArray(cellVelocities,1);
     growGPUArray(cellType,1);
     growGPUArray(cellPositions,1);
 
@@ -717,5 +749,7 @@ void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<Dsca
         ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
         ArrayHandle<Dscalar2> h_Mod(Moduli); h_Mod.data[Ncells-1] = h_Mod.data[cellIdx];
         ArrayHandle<int> h_ct(cellType); h_ct.data[Ncells-1] = h_ct.data[cellIdx];
+        ArrayHandle<Dscalar> h_cm(cellMasses);  h_cm.data[Ncells-1] = h_cm.data[cellIdx];
+        ArrayHandle<Dscalar2> h_v(cellVelocities); h_v.data[Ncells-1] = make_Dscalar2(0.0,0.0);
         };
     };
