@@ -3,10 +3,10 @@
 
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
-#include "brownianParticleDynamics.cuh"
+#include "NoseHooverChainNVT.cuh"
 
-/** \file brownianParticleDynamics.cu
-    * Defines kernel callers and kernels for GPU calculations of simple brownian 2D cell models
+/*! \file NoseHooverChainNVT.cu
+ Defines kernel callers and kernels for GPU calculations for integrating the NH equations of motion
 */
 
 /*!
@@ -17,6 +17,7 @@
 /*!
 Each thread calculates the displacement of an individual cell
 */
+/*
 __global__ void brownian_eom_integration_kernel(Dscalar2 *forces,
                                            Dscalar2 *displacements,
                                            curandState *RNGs,
@@ -60,5 +61,6 @@ bool gpu_brownian_eom_integration(
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
-
+*/
 /** @} */ //end of group declaration
+

@@ -48,6 +48,7 @@ using namespace std;
 //double variables types
 #define Dscalar double
 #define Dscalar2 double2
+#define Dscalar3 double3
 #define Dscalar4 double4
 //the netcdf variable type
 #define ncDscalar ncDouble
@@ -64,6 +65,7 @@ using namespace std;
 
 #define Dscalar float
 #define Dscalar2 float2
+#define Dscalar3 float3
 #define Dscalar4 float4
 #define ncDscalar ncFloat
 #define cur_norm curand_normal
@@ -110,6 +112,16 @@ HOSTDEVICE Dscalar2 operator-(const Dscalar2 &a, const Dscalar2 &b)
 HOSTDEVICE Dscalar2 operator*(const Dscalar &a, const Dscalar2 &b)
     {
     return make_Dscalar2(a*b.x,a*b.y);
+    }
+
+//!return a Dscalar3 from three Dscalars
+HOSTDEVICE Dscalar3 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z)
+    {
+    Dscalar3 ans;
+    ans.x =x;
+    ans.y=y;
+    ans.z =z;
+    return ans;
     }
 
 //!return a Dscalar4 from four Dscalars
