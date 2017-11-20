@@ -146,10 +146,10 @@ void Simple2DCell::setCellTypeUniform(int i)
     };
 
 /*!
-Set the velocities by drawing from a Maxwell-Boltzmann distribution, and then make sure there is no
-net momentum
+Set the vertex velocities by drawing from a Maxwell-Boltzmann distribution, and then make sure there is no
+net momentum. The return value is the total kinetic energy.
  */
-void Simple2DCell::setVertexVelocitiesMaxwellBoltzmann(Dscalar T)
+Dscalar Simple2DCell::setVertexVelocitiesMaxwellBoltzmann(Dscalar T)
     {
     noise.Reproducible = Reproducible;
     ArrayHandle<Dscalar> h_cm(vertexMasses,access_location::host,access_mode::read);
@@ -163,16 +163,21 @@ void Simple2DCell::setVertexVelocitiesMaxwellBoltzmann(Dscalar T)
         h_v.data[ii] = vi;
         P = P+h_cm.data[ii]*vi;
         };
-    //remove excess momentum
+    //remove excess momentum, calculate the KE
+    Dscalar KE = 0.0;
     for (int ii = 0; ii < Nvertices; ++ii)
+        {
         h_v.data[ii] = h_v.data[ii] + (-1.0/(Ncells*h_cm.data[ii]))*P;
+        KE += 0.5*h_cm.data[ii]*dot(h_v.data[ii],h_v.data[ii]);
+        }
+    return KE;
     };
 
 /*!
-Set the velocities by drawing from a Maxwell-Boltzmann distribution, and then make sure there is no
-net momentum
+Set the cell velocities by drawing from a Maxwell-Boltzmann distribution, and then make sure there is no
+net momentum. The return value is the total kinetic energy
  */
-void Simple2DCell::setCellVelocitiesMaxwellBoltzmann(Dscalar T)
+Dscalar Simple2DCell::setCellVelocitiesMaxwellBoltzmann(Dscalar T)
     {
     noise.Reproducible = Reproducible;
     ArrayHandle<Dscalar> h_cm(cellMasses,access_location::host,access_mode::read);
@@ -186,9 +191,14 @@ void Simple2DCell::setCellVelocitiesMaxwellBoltzmann(Dscalar T)
         h_v.data[ii] = vi;
         P = P+h_cm.data[ii]*vi;
         };
-    //remove excess momentum
+    //remove excess momentum, calculate the KE
+    Dscalar KE = 0.0;
     for (int ii = 0; ii < Ncells; ++ii)
+        {
         h_v.data[ii] = h_v.data[ii] + (-1.0/(Ncells*h_cm.data[ii]))*P;
+        KE += 0.5*h_cm.data[ii]*dot(h_v.data[ii],h_v.data[ii]);
+        }
+    return KE;
     };
 
 /*!

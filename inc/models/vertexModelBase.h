@@ -41,6 +41,10 @@ class vertexModelBase : public Simple2DActiveCell
 
         //!return a reference to the GPUArray of the current forces
         virtual GPUArray<Dscalar2> & returnForces(){return vertexForces;};
+        //!return a reference to the GPUArray of the current velocities
+        virtual GPUArray<Dscalar2> & returnVelocities(){return vertexVelocities;};
+        //!return a reference to the GPUArray of the current masses
+        virtual GPUArray<Dscalar> & returnMasses(){return vertexMasses;};
 
         //!Compute the geometry (area & perimeter) of the cells on the CPU
         void computeGeometryCPU();

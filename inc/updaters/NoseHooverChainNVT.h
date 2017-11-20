@@ -31,10 +31,20 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
         //!call the GPU routine to integrate the e.o.m.
         virtual void integrateEquationsOfMotionGPU();
 
+        //!Propagate the chain
+        void propagateChain();
+        //!Propagate the position and velocity of the particles
+        void propagatePositionsVelocities();
+
+        //!Define the current kinetic energy
+        void setKineticEnergy(Dscalar KE){kineticEnergy = KE;};
+
         //!Get temperature, T
         Dscalar getT(){return Temperature;};
         //!Set temperature, T, and also the bath masses!
         void setT(Dscalar _T);
+
+        Dscalar kineticEnergy;
 
     protected:
         //!The targeted temperature
@@ -43,7 +53,7 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
         int Nchain;
         //!The number of particles in the State
         int Ndof;
-        //!the (position,velocity,mass) of the bath degrees of freedom
-        GPUArray<Dscalar3> BathVariables;
+        //!the (position,velocity,acceleration,mass) of the bath degrees of freedom
+        GPUArray<Dscalar4> BathVariables;
     };
 #endif

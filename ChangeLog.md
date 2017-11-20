@@ -3,6 +3,7 @@
 ### Changes in progress
 
 * Support for non-square boxes... DelaunayCGAL calls currently implemented, but not DelaunayLoc
+* Nose-Hoover thermostat-chain NVT simulations
 
 ### version 0.7
 

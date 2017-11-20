@@ -67,10 +67,10 @@ class Simple2DCell : public Simple2DModel
         void setCellPositions(vector<Dscalar2> newCellPositions);
         //!Set vertex positions according to a user-specified vector
         void setVertexPositions(vector<Dscalar2> newVertexPositions);
-        //!Set velocities via a temperature
-        void setCellVelocitiesMaxwellBoltzmann(Dscalar T);
+        //!Set velocities via a temperature. The return value is the total kinetic energy
+        Dscalar setCellVelocitiesMaxwellBoltzmann(Dscalar T);
         //!Set velocities via a temperature for the vertex degrees of freedom
-        void setVertexVelocitiesMaxwellBoltzmann(Dscalar T);
+        Dscalar setVertexVelocitiesMaxwellBoltzmann(Dscalar T);
 
         //! set uniform moduli for all cells
         void setModuliUniform(Dscalar newKA, Dscalar newKP);
@@ -93,14 +93,16 @@ class Simple2DCell : public Simple2DModel
         virtual vector<int> & returnItt(){return itt;};
 
         //GPUArray returners...
-        //!Return a reference to forces on cells
-        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
         //!Return a reference to moduli
         virtual GPUArray<Dscalar2> & returnModuli(){return Moduli;};
         //!Return a reference to AreaPeri array
         virtual GPUArray<Dscalar2> & returnAreaPeri(){return AreaPeri;};
         //!Return a reference to AreaPeriPreferences
         virtual GPUArray<Dscalar2> & returnAreaPeriPreferences(){return AreaPeriPreferences;};
+        //!Return a reference to forces on cells. VertexModelBase will instead return vertexVelocities
+        virtual GPUArray<Dscalar2> & returnVelocities(){return cellVelocities;};
+        //!Return a reference to forces on cells
+        virtual GPUArray<Dscalar> & returnMasses(){return cellMasses;};
 
     //protected functions
     protected:
@@ -184,8 +186,10 @@ class Simple2DCell : public Simple2DModel
         //!A indexer for turning a pair of cells into a 1-D index
         Index2D cellTypeIndexer;
 
-        //!The current energy of the system; only updated when an explicit energy calculation is called (i.e. not by default each timestep)
+        //!The current potential energy of the system; only updated when an explicit energy calculation is called (i.e. not by default each timestep)
         Dscalar Energy;
+        //!The current kinetic energy of the system; only updated when an explicit calculation is called
+        Dscalar KineticEnergy;
         //!To write consistent files...the cell that started the simulation as index i has current index tagToIdx[i]
         /*!
          The Hilbert sorting stuff makes keeping track of particles, and re-indexing things when

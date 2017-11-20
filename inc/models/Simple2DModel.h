@@ -19,6 +19,8 @@ S.getForces();
 S.moveDegreesOfFreedom();
 S.enforceTopology();
 S.spatialSorting();
+S.returnVelocities();
+S.returnMasses();
 */
 class Simple2DModel
     {
@@ -41,6 +43,10 @@ class Simple2DModel
         virtual void getForces(GPUArray<Dscalar2> &forces) = 0;
         //!Return the maximum force
         virtual Dscalar getMaxForce(){return 0.;};
+        //!return a reference to the GPUArray of the masses
+        virtual GPUArray<Dscalar> & returnMasses() = 0;
+        //!return a reference to the GPUArray of the current velocities
+        virtual GPUArray<Dscalar2> & returnVelocities() = 0;
         //!return a reference to the GPUArray of the current forces
         virtual GPUArray<Dscalar2> & returnForces() = 0;
         //!move the degrees of freedom
