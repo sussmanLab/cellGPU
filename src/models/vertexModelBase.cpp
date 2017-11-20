@@ -8,28 +8,40 @@
 /*!
 move vertices according to an inpute GPUarray
 */
-void vertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
+void vertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale)
     {
     //handle things either on the GPU or CPU
     if (GPUcompute)
         {
-        ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::read);
+        ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::read);
         ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
-        gpu_vm_displace(d_v.data,
-                         d_disp.data,
-                         *(Box),
-                         Nvertices);
+        if (scale == 1.)
+            gpu_move_degrees_of_freedom(d_v.data,d_d.data,Nvertices,*(Box));
+        else
+            gpu_move_degrees_of_freedom(d_v.data,d_d.data,scale,Nvertices,*(Box));
         }
     else
         {
         ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::read);
         ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
-        for (int i = 0; i < Nvertices; ++i)
+        if(scale ==1.)
             {
-            h_v.data[i].x += h_disp.data[i].x;
-            h_v.data[i].y += h_disp.data[i].y;
-            Box->putInBoxReal(h_v.data[i]);
-            };
+            for (int i = 0; i < Nvertices; ++i)
+                {
+                h_v.data[i].x += h_disp.data[i].x;
+                h_v.data[i].y += h_disp.data[i].y;
+                Box->putInBoxReal(h_v.data[i]);
+                };
+            }
+        else
+            {
+            for (int i = 0; i < Nvertices; ++i)
+                {
+                h_v.data[i].x += scale*h_disp.data[i].x;
+                h_v.data[i].y += scale*h_disp.data[i].y;
+                Box->putInBoxReal(h_v.data[i]);
+                };
+            }
         };
     };
 

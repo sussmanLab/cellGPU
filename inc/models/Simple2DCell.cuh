@@ -25,6 +25,14 @@ bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
                     gpubox &Box
                     );
 
+//!The same as the above, but scale the displacements by a scalar (i.e., x[i] += scale*disp[i]
+bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
+                    Dscalar2 *d_disp,
+                    Dscalar  scale,
+                    int N,
+                    gpubox &Box
+                    );
+
 //!A utility function; set all copmonents of an integer array to value
 bool gpu_set_integer_array(int *d_array,
                            int value,

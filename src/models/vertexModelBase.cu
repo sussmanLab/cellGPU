@@ -112,26 +112,6 @@ __global__ void vm_get_cell_positions_kernel(Dscalar2* d_cellPositions,
     };
 
 /*!
-  This kernel just moves the vertices around according to the input vector, then makes sure the
-  vertices stay in the box.
-  */
-__global__ void vm_move_vertices_kernel(
-                                        Dscalar2 *d_vertexPositions,
-                                        Dscalar2 *d_vertexDisplacements,
-                                        gpubox   Box,
-                                        int      Nvertices)
-    {
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= Nvertices)
-        return;
-
-    d_vertexPositions[idx].x += d_vertexDisplacements[idx].x;
-    d_vertexPositions[idx].y += d_vertexDisplacements[idx].y;
-    //make sure the vertices stay in the box
-    Box.putInBoxReal(d_vertexPositions[idx]);
-    };
-
-/*!
   Run through every pair of vertices (once), see if any T1 transitions should be done,
   and see if the cell-vertex list needs to grow
   */
@@ -527,23 +507,6 @@ bool gpu_vm_geometry(
                                                d_vertexCellNeighbors,d_voroCur,
                                                d_voroLastNext,d_AreaPerimeter,
                                                N, n_idx, Box);
-    HANDLE_ERROR(cudaGetLastError());
-    return cudaSuccess;
-    };
-
-//!Call the kernel to displace vertices according to the displacement vector
-bool gpu_vm_displace(
-                    Dscalar2 *d_vertexPositions,
-                    Dscalar2 *d_vertexDisplacements,
-                    gpubox   &Box,
-                    int      Nvertices)
-    {
-    unsigned int block_size = 128;
-    if (Nvertices < 128) block_size = 32;
-    unsigned int nblocks  = Nvertices/block_size + 1;
-
-    vm_move_vertices_kernel<<<nblocks,block_size>>>(d_vertexPositions,d_vertexDisplacements,
-                                                     Box,Nvertices);
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };

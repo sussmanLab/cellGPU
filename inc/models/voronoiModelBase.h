@@ -51,7 +51,7 @@ class voronoiModelBase : public Simple2DActiveCell
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 
         //!moveDegrees of Freedom calls either the move points or move points CPU routines
-        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements);
+        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements,Dscalar scale = 1.);
         //!return the forces
         virtual void getForces(GPUArray<Dscalar2> &forces){forces = cellForces;};
         //!return a reference to the GPUArray of the current forces
@@ -69,9 +69,9 @@ class voronoiModelBase : public Simple2DActiveCell
         virtual void cellDeath(int cellIndex);
 
         //!move particles on the GPU
-        void movePoints(GPUArray<Dscalar2> &displacements);
+        void movePoints(GPUArray<Dscalar2> &displacements,Dscalar scale);
         //!move particles on the CPU
-        void movePointsCPU(GPUArray<Dscalar2> &displacements);
+        void movePointsCPU(GPUArray<Dscalar2> &displacements,Dscalar scale);
         //!Transfer particle data from the GPU to the CPU for use by delLoc
         void resetDelLocPoints();
 

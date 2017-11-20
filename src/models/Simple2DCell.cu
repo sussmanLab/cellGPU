@@ -34,6 +34,28 @@ __global__ void gpu_move_degrees_of_freedom_kernel(Dscalar2 *d_points,
     return;
     };
 
+/*!
+  A simple routine that takes in a pointer array of points, an array of displacements,
+  adds the displacements to the points, but with the displacement vector scaled by some amount, and
+  puts the points back in the primary unit cell.
+  This is useful, e.g., when the displacements are a dt times a velocity
+*/
+__global__ void gpu_move_degrees_of_freedom_kernel(Dscalar2 *d_points,
+                                          Dscalar2 *d_disp,
+                                          Dscalar scale,
+                                          int N,
+                                          gpubox Box
+                                         )
+    {
+    // read in the particle that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+    d_points[idx].x += scale*d_disp[idx].x;
+    d_points[idx].y += scale*d_disp[idx].y;
+    Box.putInBoxReal(d_points[idx]);
+    return;
+    };
 
 /*!
 every thread just writes in a value
@@ -49,6 +71,34 @@ __global__ void gpu_set_integer_array_kernel(int *d_array,
     return;
     };
 
+/*!
+\param d_points Dscalar2 array of locations
+\param d_disp   Dscalar2 array of displacements
+\param N        The number of degrees of freedom to move
+\param Box      The gpubox in which the new positions must reside
+*/
+bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
+                        Dscalar2 *d_disp,
+                        Dscalar  scale,
+                        int N,
+                        gpubox &Box
+                        )
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
+
+    gpu_move_degrees_of_freedom_kernel<<<nblocks,block_size>>>(
+                                                d_points,
+                                                d_disp,
+                                                scale,
+                                                N,
+                                                Box
+                                                );
+    HANDLE_ERROR(cudaGetLastError());
+
+    return cudaSuccess;
+    };
 
 /*!
 \param d_points Dscalar2 array of locations

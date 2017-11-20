@@ -28,7 +28,7 @@ class vertexModelBase : public Simple2DActiveCell
         virtual int getNumberOfDegreesOfFreedom(){return Nvertices;};
 
         //!moveDegrees of Freedom calls either the move points or move points CPU routines
-        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements);
+        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements,Dscalar scale = 1.);
 
         //!return the forces
         virtual void getForces(GPUArray<Dscalar2> &forces){forces = vertexForces;};
@@ -94,7 +94,7 @@ class vertexModelBase : public Simple2DActiveCell
 
         //!A threshold defining the edge length below which a T1 transition will occur
         Dscalar T1Threshold;
-        
+
         //!Enforce CPU-only operation.
         void setCPU(bool global = true){GPUcompute = false;};
 

@@ -136,16 +136,28 @@ Displace cells on the CPU
 \param displacements a vector of Dscalar2 specifying how much to move every cell
 \post the cells are displaced according to the input vector, and then put back in the main unit cell.
 */
-void voronoiModelBase::movePointsCPU(GPUArray<Dscalar2> &displacements)
+void voronoiModelBase::movePointsCPU(GPUArray<Dscalar2> &displacements,Dscalar scale)
     {
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<Dscalar2> h_d(displacements,access_location::host,access_mode::read);
-    for (int idx = 0; idx < Ncells; ++idx)
+    if(scale == 1.)
         {
-        h_p.data[idx].x += h_d.data[idx].x;
-        h_p.data[idx].y += h_d.data[idx].y;
-        Box->putInBoxReal(h_p.data[idx]);
-        };
+        for (int idx = 0; idx < Ncells; ++idx)
+            {
+            h_p.data[idx].x += h_d.data[idx].x;
+            h_p.data[idx].y += h_d.data[idx].y;
+            Box->putInBoxReal(h_p.data[idx]);
+            };
+        }
+    else
+        {
+        for (int idx = 0; idx < Ncells; ++idx)
+            {
+            h_p.data[idx].x += scale*h_d.data[idx].x;
+            h_p.data[idx].y += scale*h_d.data[idx].y;
+            Box->putInBoxReal(h_p.data[idx]);
+            };
+        }
     };
 
 /*!
@@ -153,11 +165,15 @@ Displace cells on the GPU
 \param displacements a vector of Dscalar2 specifying how much to move every cell
 \post the cells are displaced according to the input vector, and then put back in the main unit cell.
 */
-void voronoiModelBase::movePoints(GPUArray<Dscalar2> &displacements)
+void voronoiModelBase::movePoints(GPUArray<Dscalar2> &displacements,Dscalar scale)
     {
     ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::readwrite);
-    gpu_move_degrees_of_freedom(d_p.data,d_d.data,Ncells,*(Box));
+    if (scale == 1.)
+        gpu_move_degrees_of_freedom(d_p.data,d_d.data,Ncells,*(Box));
+    else
+        gpu_move_degrees_of_freedom(d_p.data,d_d.data,scale,Ncells,*(Box));
+
     cudaError_t code = cudaGetLastError();
     if(code!=cudaSuccess)
         {
@@ -169,14 +185,15 @@ void voronoiModelBase::movePoints(GPUArray<Dscalar2> &displacements)
 /*!
 Displace cells on either the GPU or CPU, according to the flag
 \param displacements a vector of Dscalar2 specifying how much to move every cell
+\param scale a scalar that multiples the value of every index of displacements before things are moved
 \post the cells are displaced according to the input vector, and then put back in the main unit cell.
 */
-void voronoiModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
+void voronoiModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale)
     {
     if (GPUcompute)
-        movePoints(displacements);
+        movePoints(displacements,scale);
     else
-        movePointsCPU(displacements);
+        movePointsCPU(displacements,scale);
     };
 
 /*!

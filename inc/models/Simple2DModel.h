@@ -50,7 +50,7 @@ class Simple2DModel
         //!return a reference to the GPUArray of the current forces
         virtual GPUArray<Dscalar2> & returnForces() = 0;
         //!move the degrees of freedom
-        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements) = 0;
+        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale = 1.) = 0;
         //!reporting function (remove later...)
         virtual Dscalar reportq() = 0;
         //!reporting function (remove later...)

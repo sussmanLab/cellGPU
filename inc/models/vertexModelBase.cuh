@@ -37,12 +37,6 @@ bool gpu_vm_get_cell_positions(
                     Index2D  &n_idx,
                     gpubox   &Box);
 
-bool gpu_vm_displace(
-                    Dscalar2 *d_vertexPositions,
-                    Dscalar2 *d_vertexDisplacements,
-                    gpubox &Box,
-                    int Nvertices);
-
 bool gpu_vm_test_edges_for_T1(
                     Dscalar2 *d_vertexPositions,
                     int      *d_vertexNeighbors,

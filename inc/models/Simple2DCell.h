@@ -43,7 +43,7 @@ class Simple2DCell : public Simple2DModel
         virtual void getForces(GPUArray<Dscalar2> &forces){};
 
         //!move the degrees of freedom
-        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements){};
+        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale = 1.){};
 
         //!Do everything necessary to update or enforce the topology in the current model
         virtual void enforceTopology(){};
