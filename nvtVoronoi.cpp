@@ -25,12 +25,14 @@ int main(int argc, char*argv[])
     Dscalar p0 = 3.8;  //the preferred perimeter
     Dscalar a0 = 1.0;  // the preferred area
     Dscalar v0 = 0.1;  // the self-propulsion
+    int Nchain = 4;     //The number of thermostats to chain together
 
     //The defaults can be overridden from the command line
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
+            case 'm': Nchain = atoi(optarg); break;
             case 't': tSteps = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
             case 'i': initSteps = atoi(optarg); break;
@@ -64,7 +66,7 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     //define the equation of motion to be used
-    shared_ptr<NoseHooverChainNVT> nvt = make_shared<NoseHooverChainNVT>(numpts,4);
+    shared_ptr<NoseHooverChainNVT> nvt = make_shared<NoseHooverChainNVT>(numpts,Nchain);
     nvt->setT(v0);
     //define a voronoi configuration with a quadratic energy functional
     shared_ptr<VoronoiQuadraticEnergy> vm  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,p0,reproducible);
