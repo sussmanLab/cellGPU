@@ -43,6 +43,8 @@ class Simple2DModel
         virtual void getForces(GPUArray<Dscalar2> &forces) = 0;
         //!Return the maximum force
         virtual Dscalar getMaxForce(){return 0.;};
+        //!return a reference to the GPUArray of positions
+        virtual GPUArray<Dscalar2> & returnPositions() = 0;
         //!return a reference to the GPUArray of the masses
         virtual GPUArray<Dscalar> & returnMasses() = 0;
         //!return a reference to the GPUArray of the current velocities

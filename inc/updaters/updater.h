@@ -30,7 +30,7 @@ class updater
         //! A pointer to a Simple2DModel that the updater acts on
         shared_ptr<Simple2DModel> model;
         //! virtual function to allow the model to be a derived class
-        virtual void set2DModel(shared_ptr<Simple2DModel> _model){};
+        virtual void set2DModel(shared_ptr<Simple2DModel> _model){model=_model;};
         //! set the period
         void setPeriod(int _p){Period = _p;};
         //! set the phase

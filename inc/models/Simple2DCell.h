@@ -99,9 +99,13 @@ class Simple2DCell : public Simple2DModel
         virtual GPUArray<Dscalar2> & returnAreaPeri(){return AreaPeri;};
         //!Return a reference to AreaPeriPreferences
         virtual GPUArray<Dscalar2> & returnAreaPeriPreferences(){return AreaPeriPreferences;};
-        //!Return a reference to forces on cells. VertexModelBase will instead return vertexVelocities
+        //!Return a reference to velocities on cells. VertexModelBase will instead return vertexVelocities
         virtual GPUArray<Dscalar2> & returnVelocities(){return cellVelocities;};
+        //!Return a reference to Positions on cells
+        virtual GPUArray<Dscalar2> & returnPositions(){return cellPositions;};
         //!Return a reference to forces on cells
+        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
+        //!Return a reference to Masses on cells
         virtual GPUArray<Dscalar> & returnMasses(){return cellMasses;};
 
     //protected functions
