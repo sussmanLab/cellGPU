@@ -56,7 +56,6 @@ bool gpu_prepare_KE_vector(Dscalar2   *velocities,
 
 /*!
 Each thread scales the velocity of one particle by the second component of the helper array
-
 */
 __global__ void NoseHooverChainNVT_scale_velocities_kernel(
                                 Dscalar2 *velocities,
@@ -89,5 +88,46 @@ bool gpu_NoseHooverChainNVT_scale_velocities(
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
-/** @} */ //end of group declaration
 
+/*!
+Each thread updates the velocity of one particle
+*/
+__global__ void NoseHooverChainNVT_update_velocities_kernel(
+                                Dscalar2 *velocities,
+                                Dscalar2 *forces,
+                                Dscalar  *masses,
+                                Dscalar  deltaT,
+                                int      N)
+    {
+    unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
+    if (idx >=N)
+        return;
+    velocities[idx].x += (deltaT/masses[idx])*forces[idx].x;
+    velocities[idx].y += (deltaT/masses[idx])*forces[idx].y;
+    return;
+    };
+
+//!simple update of velocity based on force and mass
+bool gpu_NoseHooverChainNVT_update_velocities(
+                    Dscalar2 *velocities,
+                    Dscalar2 *forces,
+                    Dscalar  *masses,
+                    Dscalar  deltaT,
+                    int       N)
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
+
+
+    NoseHooverChainNVT_update_velocities_kernel<<<nblocks,block_size>>>(
+                                velocities,
+                                forces,
+                                masses,
+                                deltaT,
+                                N);
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    };
+
+/** @} */ //end of group declaration

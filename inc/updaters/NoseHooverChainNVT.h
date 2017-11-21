@@ -62,6 +62,8 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
         void rescaleVelocitiesGPU();
         //! combine kernel calls for vector combination and parallel reduction to compute the KE in the helper structure
         void calculateKineticEnergyGPU();
+        //!Propagate the position and velocity of the particles...on the gpu
+        void propagatePositionsVelocitiesGPU();
 
     };
 #endif

@@ -24,7 +24,13 @@ bool gpu_NoseHooverChainNVT_scale_velocities(
                     Dscalar  *kineticEnergyScaleFactor,
                     int       N);
 
-
+//!update the velocities according to the forces and the masses
+bool gpu_NoseHooverChainNVT_update_velocities(
+                    Dscalar2 *velocities,
+                    Dscalar2 *forces,
+                    Dscalar  *masses,
+                    Dscalar  deltaT,
+                    int       N);
 
 /** @} */ //end of group declaration
  #endif

@@ -120,7 +120,6 @@ void NoseHooverChainNVT::propagatePositionsVelocities()
         }
     };
     State->moveDegreesOfFreedom(displacements);
-
     };
 
 /*!
@@ -178,7 +177,6 @@ void NoseHooverChainNVT::propagateChain()
         Bath.data[ii].y += Bath.data[ii].z*dt4;
         Bath.data[ii].y *= ef;
         };
-
     };
 
 /*!
@@ -191,11 +189,31 @@ void NoseHooverChainNVT::integrateEquationsOfMotionGPU()
 
     //propagateChainHalf(); // use data structure that holds [KE,s], update both.
     rescaleVelocitiesGPU(); //use the velocity vector and the [KE,s] data structure. Note that KE is already scaled by s^2 in the above step
-    //propagatePositionsVelocities();
+    propagatePositionsVelocitiesGPU();
     calculateKineticEnergyGPU(); //get the kinetic energy into the [KE,s] data structure
     //propagateChainHalf();
     rescaleVelocitiesGPU();
+    };
 
+/*!
+Do a multi-step dance to get the positions and velocities updated on the gpu branch
+*/
+void NoseHooverChainNVT::propagatePositionsVelocitiesGPU()
+    {
+    Dscalar deltaT2 = 0.5*deltaT;
+    //first, we move particles according to their velocities
+    State->moveDegreesOfFreedom(State->returnVelocities(),deltaT2);
+    State->enforceTopology();
+    State->computeForces();
+
+    //Now we execute the second half of the time step.. first we need to update the velocities according to the forces and the masses
+    {//array handle scope for the second half of the time step
+    ArrayHandle<Dscalar2> d_f(State->returnForces(),access_location::device,access_mode::read);
+    ArrayHandle<Dscalar2> d_v(State->returnVelocities(),access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar> d_m(State->returnMasses(),access_location::device,access_mode::read);
+    gpu_NoseHooverChainNVT_update_velocities(d_v.data,d_f.data,d_m.data,deltaT,Ndof);
+    };
+    State->moveDegreesOfFreedom(State->returnVelocities(),deltaT2);
     };
 
 /*!
