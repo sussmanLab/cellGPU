@@ -31,15 +31,19 @@ class MullerPlatheShear : public updater
         //!The momentum transferred since the last time the updater was querried
         Dscalar accumulatedDeltaP;
 
+        //!Returns the total momentum transferred between the slabs since the last time this function was called
         Dscalar getMomentumTransferred()
             {
             Dscalar answer = accumulatedDeltaP;
             accumulatedDeltaP = 0.0;
             return answer;
             };
-    protected:
+        //Averages the x-velocity in each slab and puts it in the vector
+        void getVelocityProfile(vector<Dscalar> &Vx);
         //!The number of slabs in the y-direction... this implicitly controls the thickness of the slabs
         int Nslabs;
+
+    protected:
         //!The size of the box in the y-directions
         Dscalar boxY;
         //!The thickness of the slabs

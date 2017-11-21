@@ -37,7 +37,6 @@ slabs' desired direction. Swap the x-momenta of the two worst offenders
 void MullerPlatheShear::performUpdate()
     {
     //first, try to identify the right-fastest and left-fastest particles in the two slabs
-    int N = model->getNumberOfDegreesOfFreedom();
     int p1idx = -1;
     int p2idx = -1;
     Dscalar maxPositiveV = -1000000.;
@@ -45,6 +44,7 @@ void MullerPlatheShear::performUpdate()
     ArrayHandle<Dscalar2> h_p(model->returnPositions(),access_location::host,access_mode::read);
     ArrayHandle<Dscalar> h_m(model->returnMasses(),access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_v(model->returnVelocities());
+    int N = model->getNumberOfDegreesOfFreedom();
     for (int ii = 0; ii < N; ++ii)
         {
         Dscalar y = h_p.data[ii].y;
@@ -78,4 +78,33 @@ void MullerPlatheShear::performUpdate()
         deltaP = m1*v1-m2*v2;
         accumulatedDeltaP += deltaP;
         };
+    };
+
+/*!
+This function takes the particles, sorts them into slabs, and gets the average x-direction
+velocity in each slab.
+*/
+void MullerPlatheShear::getVelocityProfile(vector<Dscalar> &Vx)
+    {
+    vector<int> particlesPerSlab(Nslabs,0);
+    Vx.resize(Nslabs);
+    for (int ii = 0; ii < Nslabs; ++ii)
+        Vx[ii] = 0.0;
+
+    ArrayHandle<Dscalar2> h_p(model->returnPositions(),access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(model->returnVelocities());
+    int N = model->getNumberOfDegreesOfFreedom();
+    for (int ii = 0; ii < N; ++ii)
+        {
+        Dscalar y = h_p.data[ii].y;
+        int slabIdx = floor(y/slabThickness);
+        if(slabIdx >=0 && slabIdx < Nslabs)
+            {
+            Vx[slabIdx] += h_v.data[ii].x;
+            particlesPerSlab[slabIdx] += 1;
+            };
+        };
+    for (int ii = 0; ii < Nslabs; ++ii)
+        if(particlesPerSlab[ii]>0)
+            Vx[ii] = Vx[ii] / particlesPerSlab[ii];
     };

@@ -9,6 +9,8 @@
 #include "voronoiQuadraticEnergy.h"
 #include "NoseHooverChainNVT.h"
 #include "DatabaseNetCDFSPV.h"
+#include "vectorValueDatabase.h"
+#include "MullerPlatheShear.h"
 
 /*!
 This file explores integrating the Nose-Hoover equations of motion
@@ -78,6 +80,12 @@ int main(int argc, char*argv[])
     vm->setCellVelocitiesMaxwellBoltzmann(v0);
     nvt->setT(v0);
 
+    Dscalar boxL = sqrt(numpts);
+    shared_ptr<MullerPlatheShear> mullerPlathe = make_shared<MullerPlatheShear>(floor(.3/dt),floor(boxL),boxL);
+    char dataname2[256];
+    sprintf(dataname2,"../testMPprofile.nc");
+    vectorValueDatabase vvdat(mullerPlathe->Nslabs,dataname2,NcFile::Replace);
+
     //combine the equation of motion and the cell configuration in a "Simulation"
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(vm);
@@ -97,7 +105,12 @@ int main(int argc, char*argv[])
         sim->performTimestep();
         };
 
-    printf("Finished with initialization\n");
+    sim->addUpdater(mullerPlathe,vm);
+    printf("Finished with initialization..adding a Muller-Plathe updater\n");
+    for(int ii = 0; ii < initSteps; ++ii)
+        {
+        sim->performTimestep();
+        };
     cout << "current q = " << vm->reportq() << endl;
     //the reporting of the force should yield a number that is numerically close to zero.
     vm->reportMeanCellForce(false);
@@ -105,14 +118,19 @@ int main(int argc, char*argv[])
     //run for additional timesteps, and record timing information
     t1=clock();
     Dscalar meanT = 0.0;
+    Dscalar Tsample = (1/dt);
     for(int ii = 0; ii < tSteps; ++ii)
         {
         ArrayHandle<Dscalar> h_kes(nvt->kineticEnergyScaleFactor);
         meanT += h_kes.data[0]/(2.*numpts);
-        if(ii%(int)(1/dt) ==0)
+        if(ii%(int)(Tsample) ==0)
             {
-            printf("timestep %i\t\t energy %f \t T %f \n",ii,vm->computeEnergy(),h_kes.data[0]/(2.*numpts));
+            Dscalar DeltaP = mullerPlathe->getMomentumTransferred();
+            printf("timestep %i\t\t energy %f \t T %f DeltaP %f \n",ii,vm->computeEnergy(),h_kes.data[0]/(2.*numpts),DeltaP);
             ncdat.WriteState(vm);
+            vector<Dscalar> Vprofile;
+            mullerPlathe->getVelocityProfile(Vprofile);
+            vvdat.WriteState(Vprofile,DeltaP/(2.0*(dt*Tsample)*boxL));
             };
         sim->performTimestep();
         };
