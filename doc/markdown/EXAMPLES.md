@@ -47,3 +47,6 @@ very similar to cellDivision, but particularly in the vertex model some extra ca
 Provides an example of computing the dynamical matrix of a minimized voronoi model and using the
 Eigen interface to diagonalize it.
 
+# nvtVoronoi.cpp
+
+Example setting up and using the NoseHooverChainNVT integrator. Nothing special

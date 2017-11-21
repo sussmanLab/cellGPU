@@ -83,9 +83,21 @@ case where the chain length is not necessarily always 2
 void NoseHooverChainNVT::integrateEquationsOfMotionCPU()
     {
     //We (i.e. Martyna et al., and Frenkel & Smit) use the Trotter formula approach to get time-reversible dynamics.
+    {
     propagateChain();
+    ArrayHandle<Dscalar> h_kes(kineticEnergyScaleFactor,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(State->returnVelocities());
+    for (int ii = 0; ii < Ndof; ++ii)
+        h_v.data[ii] = h_kes.data[1]*h_v.data[ii];
+    }
     propagatePositionsVelocities();
+    {
     propagateChain();
+    ArrayHandle<Dscalar> h_kes(kineticEnergyScaleFactor,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(State->returnVelocities());
+    for (int ii = 0; ii < Ndof; ++ii)
+        h_v.data[ii] = h_kes.data[1]*h_v.data[ii];
+    }
     };
 
 /*!
@@ -135,7 +147,6 @@ void NoseHooverChainNVT::propagateChain()
 
     //partially update bath velocities and accelerations (quarter-timestep), from Nchain to 0
     ArrayHandle<Dscalar4> Bath(BathVariables);
-    ArrayHandle<Dscalar2> h_v(State->returnVelocities());
     for (int ii = Nchain; ii > 0; --ii)
         {
         //update the acceleration: G = (Q_{i-1}*v_{i-1}^2 - T)/Q_i
@@ -156,11 +167,10 @@ void NoseHooverChainNVT::propagateChain()
     for (int ii = 0; ii < Nchain; ++ii)
         Bath.data[ii].x += dt2*Bath.data[ii].y;
 
-    //rescale particle velocities
-    Dscalar s = exp(-dt2*Bath.data[0].y);
-    for (int ii = 0; ii < Ndof; ++ii)
-        h_v.data[ii] = s*h_v.data[ii];
-    h_kes.data[0] = s*s*h_kes.data[0];
+    //get the factor that will particle velocities
+    h_kes.data[1] = exp(-dt2*Bath.data[0].y);
+    //and pre-emptively update the kinetic energy
+    h_kes.data[0] = h_kes.data[1]*h_kes.data[1]*h_kes.data[0];
 
     //finally, do the other quarter-timestep of the velocities and accelerations, from 0 to Nchain
     Bath.data[0].z = (h_kes.data[0] - 2.0*Ndof*Temperature)/Bath.data[0].w;
@@ -187,11 +197,12 @@ void NoseHooverChainNVT::integrateEquationsOfMotionGPU()
     //The kernel calling scheme. To avoid ridiculous numbers of brackets for array handle scoping,
     //we'll define helper functions
 
-    //propagateChainHalf(); // use data structure that holds [KE,s], update both.
+    //for now, let's update the chain variables on the CPU... profile later
+    propagateChain(); // use data structure that holds [KE,s], update both.
     rescaleVelocitiesGPU(); //use the velocity vector and the [KE,s] data structure. Note that KE is already scaled by s^2 in the above step
     propagatePositionsVelocitiesGPU();
     calculateKineticEnergyGPU(); //get the kinetic energy into the [KE,s] data structure
-    //propagateChainHalf();
+    propagateChain();
     rescaleVelocitiesGPU();
     };
 
