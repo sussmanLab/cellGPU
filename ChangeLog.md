@@ -2,8 +2,11 @@
 
 ### Changes in progress
 
+### version 0.7.1
+
 * Support for non-square boxes... DelaunayCGAL calls currently implemented, but not DelaunayLoc
 * Nose-Hoover thermostat-chain NVT simulations
+* Starting transition away from Simple2DActiveCell class by using velocity GPUArrays in SPP updater
 
 ### version 0.7
 
