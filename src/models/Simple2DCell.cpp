@@ -503,6 +503,8 @@ void Simple2DCell::spatiallySortVertices()
         tagToIdxVertex[tempi[ittVertex[ii]]] = ii;
         };
     reIndexVertexArray(vertexPositions);
+    reIndexCellArray(vertexVelocities);
+    reIndexCellArray(vertexMasses);
 
     //grab array handles and old copies of GPUarrays
     GPUArray<int> TEMP_vertexNeighbors = vertexNeighbors;

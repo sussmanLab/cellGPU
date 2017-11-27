@@ -22,8 +22,8 @@ void Simple2DActiveCell::initializeSimple2DActiveCell(int n)
     Ncells = n;
     initializeSimple2DCell(Ncells);
     //The setting functions automatically resize their vectors
-    setv0Dr(0.0,1.0);
     setCellDirectorsRandomly();
+    setv0Dr(0.0,1.0);
     };
 
 /*!
@@ -56,8 +56,13 @@ void Simple2DActiveCell::setCellDirectorsRandomly()
     cellDirectors.resize(Ncells);
     noise.Reproducible = Reproducible;
     ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::overwrite);
+    ArrayHandle<Dscalar2> h_v(cellVelocities);
     for (int ii = 0; ii < Ncells; ++ii)
+        {
         h_cd.data[ii] =noise.getRealUniform(0.0,2.0*PI);
+        h_v.data[ii].x = cos(h_cd.data[ii]);
+        h_v.data[ii].y = sin(h_cd.data[ii]);
+        };
     };
 
 /*!
@@ -69,14 +74,20 @@ void Simple2DActiveCell::setv0Dr(Dscalar v0new,Dscalar drnew)
     Motility.resize(Ncells);
     v0=v0new;
     Dr=drnew;
-    if (true)
+    ArrayHandle<Dscalar2> h_v(cellVelocities);
+    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
         {
-        ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
-        for (int ii = 0; ii < Ncells; ++ii)
+        h_mot.data[ii].x = v0new;
+        h_mot.data[ii].y = drnew;
+        Dscalar2 Vcur = h_v.data[ii];
+        if(Vcur.x != 0 && Vcur.y !=0)
             {
-            h_mot.data[ii].x = v0new;
-            h_mot.data[ii].y = drnew;
+            Dscalar theta = atan2(Vcur.y,Vcur.x);
+            h_v.data[ii].x = v0new*cos(theta);
+            h_v.data[ii].y = v0new*sin(theta);
             };
+
         };
     };
 
@@ -87,16 +98,24 @@ void Simple2DActiveCell::setv0Dr(Dscalar v0new,Dscalar drnew)
 void Simple2DActiveCell::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs)
     {
     Motility.resize(Ncells);
+    ArrayHandle<Dscalar2> h_v(cellVelocities);
     ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_mot.data[ii].x = v0s[ii];
         h_mot.data[ii].y = drs[ii];
+        Dscalar2 Vcur = h_v.data[ii];
+        if(Vcur.x != 0 && Vcur.y !=0)
+            {
+            Dscalar theta = atan2(Vcur.y,Vcur.x);
+            h_v.data[ii].x = v0s[ii]*cos(theta);
+            h_v.data[ii].y = v0s[ii]*sin(theta);
+            };
         };
     };
 
 /*!
-This function supports celLDeath, updating the data structures in Simple2DActiveCell.
+This function supports cellDeath, updating the data structures in Simple2DActiveCell.
 This function will first call Simple2DCell's routine, then modify the cellDirectors and Motility arrays
 */
 void Simple2DActiveCell::cellDeath(int cellIndex)
@@ -124,5 +143,8 @@ void Simple2DActiveCell::cellDivision(const vector<int> &parameters, const vecto
         {//arrayhandle scope
         ArrayHandle<Dscalar2> h_mot(Motility); h_mot.data[Ncells-1] = h_mot.data[cellIdx];
         ArrayHandle<Dscalar> h_cd(cellDirectors); h_cd.data[Ncells-1] = noise.getRealUniform(0.,2*PI);
+        ArrayHandle<Dscalar2> h_v(cellVelocities);
+        h_v.data[Ncells-1] = h_mot.data[Ncells-1].x*cos(h_cd.data[Ncells-1]);
+        h_v.data[Ncells-1] = h_mot.data[Ncells-1].x*sin(h_cd.data[Ncells-1]);
         };
     };

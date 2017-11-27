@@ -23,9 +23,6 @@ class Simple2DActiveCell : public Simple2DCell
         //! initialize class' data structures and set default values
         void initializeSimple2DActiveCell(int n);
 
-        //!Set the simulation time stepsize
-        void setDeltaT(Dscalar dt){deltaT = dt;};
-
         //!Set uniform motility
         void setv0Dr(Dscalar v0new,Dscalar drnew);
 
@@ -54,11 +51,6 @@ class Simple2DActiveCell : public Simple2DCell
 
     //public member variables
     public:
-        //! Count the number of times "performTimeStep" has been called
-        int Timestep;
-        //!The time stepsize of the simulation
-        Dscalar deltaT;
-
         //!An array of angles (relative to the x-axis) that the cell directors point
         GPUArray<Dscalar> cellDirectors;
 

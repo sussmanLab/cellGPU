@@ -108,6 +108,9 @@ class Simple2DCell : public Simple2DModel
         //!Return a reference to Masses on cells
         virtual GPUArray<Dscalar> & returnMasses(){return cellMasses;};
 
+        //!Set the simulation time stepsize
+        void setDeltaT(Dscalar dt){deltaT = dt;};
+
     //protected functions
     protected:
         //!set the size of the cell-sorting structures, initialize lists simply
@@ -218,6 +221,11 @@ class Simple2DCell : public Simple2DModel
 
         //!the box defining the periodic domain
         BoxPtr Box;
+
+        //! Count the number of times "performTimeStep" has been called
+        int Timestep;
+        //!The time stepsize of the simulation
+        Dscalar deltaT;
 
     //protected member variables
     protected:
