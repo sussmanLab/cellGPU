@@ -3,7 +3,7 @@
 #include "NoseHooverChainNVT.h"
 #include "NoseHooverChainNVT.cuh"
 #include "utilities.cuh"
-/*! \file NoseHooverChainNVT.cpp" */
+/*! \file NoseHooverChainNVT.cpp */
 
 /*!
 Initialize everything, by default setting the target temperature to unity.

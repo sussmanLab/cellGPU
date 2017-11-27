@@ -17,6 +17,7 @@ occasionally, the Update function is passed a timestep, and each updaters has a 
 class updater
     {
     public:
+        //! by default, updaters are called every timestep with no offset
         updater(){Period = -1;Phase = 0;};
         updater(int _p){Period = _p; Phase = 0;};
         //! The fundamental function that a controlling Simulation can call

@@ -34,7 +34,19 @@ bool gpu_parallel_reduction(
                     int helperIdx,
                     int N);
 
+//!A straightforward two-step parallel reduction algorithm for Dscalar2 arrays.
+bool gpu_parallel_reduction(
+                    Dscalar2 *input,
+                    Dscalar2 *intermediate,
+                    Dscalar2 *output,
+                    int helperIdx,
+                    int N);
 
+//! (Dscalar2) ans = (Dscalar2) vec1 * vec2
+bool gpu_dot_Dscalar_Dscalar2_vectors(Dscalar *d_vec1,
+                              Dscalar2 *d_vec2,
+                              Dscalar2  *d_ans,
+                              int N);
 
 /** @} */ //end of group declaration
 #endif

@@ -24,7 +24,7 @@ int main(int argc, char*argv[])
     int initSteps = 1; //number of initialization steps
 
     Dscalar dt = 0.01; //the time step size
-    Dscalar p0 = 4.0;  //the preferred perimeter
+    Dscalar p0 = 3.8;  //the preferred perimeter
     Dscalar a0 = 1.0;  // the preferred area
     Dscalar v0 = 0.1;  // the self-propulsion
 
@@ -94,7 +94,6 @@ int main(int argc, char*argv[])
         {
         sim->performTimestep();
         };
-
     printf("Finished with initialization\n");
     cout << "current q = " << spv->reportq() << endl;
     //the reporting of the force should yield a number that is numerically close to zero.
