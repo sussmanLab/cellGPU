@@ -67,21 +67,30 @@ void selfPropelledParticleDynamics::integrateEquationsOfMotionCPU()
     activeModel->computeForces();
     {//scope for array Handles
     ArrayHandle<Dscalar2> h_f(activeModel->returnForces(),access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(activeModel->cellDirectors,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar> h_cd(activeModel->cellDirectors);
+    ArrayHandle<Dscalar2> h_v(activeModel->cellVelocities);
     ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
     ArrayHandle<Dscalar2> h_motility(activeModel->Motility,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Ndof; ++ii)
         {
+        //displace according to current velocities and forces
+        Dscalar2 Vcur = h_v.data[ii];
+        h_disp.data[ii].x = deltaT*(Vcur.x + mu * h_f.data[ii].x);
+        h_disp.data[ii].y = deltaT*(Vcur.y + mu * h_f.data[ii].y);
+
+        Dscalar theta = h_cd.data[ii];
+        //rotate the velocity vector a bit
+        if (Vcur.x != 0. && Vcur.y != 0.)
+            {
+            theta = atan2(Vcur.y,Vcur.x);
+            };
         Dscalar v0i = h_motility.data[ii].x;
         Dscalar Dri = h_motility.data[ii].y;
-        Dscalar directorx = cos(h_cd.data[ii]);
-        Dscalar directory = sin(h_cd.data[ii]);
-        h_disp.data[ii].x = deltaT*(v0i * directorx + mu * h_f.data[ii].x);
-        h_disp.data[ii].y = deltaT*(v0i * directory + mu * h_f.data[ii].y);
-        //rotate each director a bit
         Dscalar randomNumber = noise.getRealNormal();
-        h_cd.data[ii] +=randomNumber*sqrt(2.0*deltaT*Dri);
+        h_cd.data[ii] =theta+randomNumber*sqrt(2.0*deltaT*Dri);
+        h_v.data[ii].x =  v0i * cos(h_cd.data[ii]);
+        h_v.data[ii].y =  v0i * sin(h_cd.data[ii]);
         };
     }//end array handle scoping
     activeModel->moveDegreesOfFreedom(displacements);
@@ -98,11 +107,13 @@ void selfPropelledParticleDynamics::integrateEquationsOfMotionGPU()
     {//scope for array Handles
     ArrayHandle<Dscalar2> d_f(activeModel->returnForces(),access_location::device,access_mode::read);
     ArrayHandle<Dscalar> d_cd(activeModel->cellDirectors,access_location::device,access_mode::readwrite);
+    ArrayHandle<Dscalar2> d_v(activeModel->cellVelocities,access_location::device,access_mode::readwrite);
     ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::overwrite);
     ArrayHandle<Dscalar2> d_motility(activeModel->Motility,access_location::device,access_mode::read);
     ArrayHandle<curandState> d_RNG(noise.RNGs,access_location::device,access_mode::readwrite);
 
     gpu_spp_eom_integration(d_f.data,
+                 d_v.data,
                  d_disp.data,
                  d_motility.data,
                  d_cd.data,

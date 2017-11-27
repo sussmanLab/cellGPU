@@ -352,7 +352,6 @@ class Simple2DCell : public Simple2DModel
         Dscalar reportMeanP();
 
         // virtual functions for interfacing with a Simulation
-        virtual void setDeltaT(Dscalar dt) = 0;
         virtual void setCPU(bool a) = 0;
         virtual void setv0Dr(Dscalar a, Dscalar b) = 0;
     };

@@ -8,9 +8,10 @@
 /*!
 An extremely simple constructor that does nothing, but enforces default GPU operation
 */
-Simple2DActiveCell::Simple2DActiveCell() :
-    Timestep(0), deltaT(0.01)
+Simple2DActiveCell::Simple2DActiveCell()
     {
+    Timestep=0;
+    setDeltaT(0.01);
     };
 
 /*!
@@ -144,7 +145,7 @@ void Simple2DActiveCell::cellDivision(const vector<int> &parameters, const vecto
         ArrayHandle<Dscalar2> h_mot(Motility); h_mot.data[Ncells-1] = h_mot.data[cellIdx];
         ArrayHandle<Dscalar> h_cd(cellDirectors); h_cd.data[Ncells-1] = noise.getRealUniform(0.,2*PI);
         ArrayHandle<Dscalar2> h_v(cellVelocities);
-        h_v.data[Ncells-1] = h_mot.data[Ncells-1].x*cos(h_cd.data[Ncells-1]);
-        h_v.data[Ncells-1] = h_mot.data[Ncells-1].x*sin(h_cd.data[Ncells-1]);
+        h_v.data[Ncells-1].x = h_mot.data[Ncells-1].x*cos(h_cd.data[Ncells-1]);
+        h_v.data[Ncells-1].y = h_mot.data[Ncells-1].x*sin(h_cd.data[Ncells-1]);
         };
     };

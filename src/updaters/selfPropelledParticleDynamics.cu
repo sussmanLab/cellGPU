@@ -18,6 +18,7 @@
 Each thread calculates the displacement of an individual cell
 */
 __global__ void spp_eom_integration_kernel(Dscalar2 *forces,
+                                           Dscalar2 *velocities,
                                            Dscalar2 *displacements,
                                            Dscalar2 *motility,
                                            Dscalar *cellDirectors,
@@ -30,20 +31,27 @@ __global__ void spp_eom_integration_kernel(Dscalar2 *forces,
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     if (idx >=N)
         return;
-    curandState_t randState;
+    //update displacements
+    displacements[idx].x = deltaT*(velocities[idx].x + mu*forces[idx].x);
+    displacements[idx].y = deltaT*(velocities[idx].y + mu*forces[idx].y);
 
+    //next, get an appropriate random angle displacement
+    curandState_t randState;
     randState=RNGs[idx];
-    Dscalar dirx = Cos(cellDirectors[idx]);
-    Dscalar diry = Sin(cellDirectors[idx]);
     Dscalar v0 = motility[idx].x;
     Dscalar Dr = motility[idx].y;
     Dscalar angleDiff = cur_norm(&randState)*sqrt(2.0*deltaT*Dr);
-    cellDirectors[idx] += angleDiff;
-
     RNGs[idx] = randState;
+    //update director and velocity vector
+    Dscalar currentTheta = cellDirectors[idx];
+    if(velocities[idx].y != 0. && velocities[idx].x != 0.)
+        {
+        currentTheta = atan2(velocities[idx].y,velocities[idx].x);
+        };
+    cellDirectors[idx] = currentTheta + angleDiff;
+    velocities[idx].x = v0 * Cos(cellDirectors[idx]);
+    velocities[idx].y = v0 * Sin(cellDirectors[idx]);
 
-    displacements[idx].x = deltaT*(v0*dirx + mu*forces[idx].x);
-    displacements[idx].y = deltaT*(v0*diry + mu*forces[idx].y);
 
     return;
     };
@@ -51,6 +59,7 @@ __global__ void spp_eom_integration_kernel(Dscalar2 *forces,
 //!get the current timesteps vector of displacements into the displacement vector
 bool gpu_spp_eom_integration(
                     Dscalar2 *forces,
+                    Dscalar2 *velocities,
                     Dscalar2 *displacements,
                     Dscalar2 *motility,
                     Dscalar *cellDirectors,
@@ -66,7 +75,7 @@ bool gpu_spp_eom_integration(
 
 
     spp_eom_integration_kernel<<<nblocks,block_size>>>(
-                                forces,displacements,motility,cellDirectors,
+                                forces,velocities,displacements,motility,cellDirectors,
                                 RNGs,
                                 N,deltaT,Timestep,mu);
     HANDLE_ERROR(cudaGetLastError());

@@ -16,6 +16,7 @@ A file providing an interface to the relevant cuda calls for the selfPropelledPa
 //!set the vector of displacements from forces and activity
 bool gpu_spp_eom_integration(
                     Dscalar2 *forces,
+                    Dscalar2 *velocities,
                     Dscalar2 *displacements,
                     Dscalar2 *motility,
                     Dscalar *cellDirectors,
