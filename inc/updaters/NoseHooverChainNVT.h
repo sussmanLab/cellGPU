@@ -38,6 +38,11 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
 
         //!Helper structure for GPU branch. A two-component GPU array that contains the total KE and the velocity scale factor
         GPUArray<Dscalar> kineticEnergyScaleFactor;
+        //!the (position,velocity,acceleration,mass) of the bath degrees of freedom
+        GPUArray<Dscalar4> BathVariables;
+
+        //!Report the current status of the bath
+        void reportBathData()
 
     protected:
         //!The targeted temperature
@@ -46,8 +51,6 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
         int Nchain;
         //!The number of particles in the State
         int Ndof;
-        //!the (position,velocity,acceleration,mass) of the bath degrees of freedom
-        GPUArray<Dscalar4> BathVariables;
         //!A helper vector for the GPU branch...can be asked to store 0.5*m[i]*v[i]^2 as an array
         GPUArray<Dscalar> keArray;
         //!A helper structure for performing parallel reduction of the keArray

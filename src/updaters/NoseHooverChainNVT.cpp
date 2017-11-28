@@ -77,6 +77,17 @@ void NoseHooverChainNVT::integrateEquationsOfMotion()
     };
 
 /*!
+print out the current state of the bath: (pos, vel, accel, mass) for each element of the chain
+*/
+void NoseHooverChainNVT::reportBathData()
+    {
+    ArrayHandle<Dscalar4> bath(BathVariables);
+    printf("position\tvelocity\tacceleration\tmass\n");
+    for (int i = 0; i < BathVariables.getNumElements(); ++i)
+        printf("%f\t%f\t%f\t%f\n",bath.data[i].x,bath.data[i].y,bath.data[i].z,bath.data[i].w);
+    };
+
+/*!
 The implementation here closely follows algorithms 30 - 32 in Frenkel & Smit, generalized to the
 case where the chain length is not necessarily always 2
 */
