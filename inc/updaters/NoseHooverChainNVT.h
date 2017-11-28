@@ -42,7 +42,7 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
         GPUArray<Dscalar4> BathVariables;
 
         //!Report the current status of the bath
-        void reportBathData()
+        void reportBathData();
 
     protected:
         //!The targeted temperature
