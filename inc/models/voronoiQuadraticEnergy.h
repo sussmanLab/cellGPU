@@ -57,7 +57,13 @@ class VoronoiQuadraticEnergy : public voronoiModelBase
         //!Report information about net forces...
         void reportForces(bool verbose);
 
-    public:
+        //!Save tuples for half of the dynamical matrix
+        virtual void getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress = 1.0, Dscalar stress = 1.0);
+
+        //!calculate the current global off-diagonal stress
+        virtual Dscalar getSigmaXY();
+
+    protected:
         //Various partial derivatives related to calculating the dynamical matrix
         //!The derivative of a voronoi vertex position with respect to change in the first cells position
         Matrix2x2 dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk);
@@ -76,9 +82,6 @@ class VoronoiQuadraticEnergy : public voronoiModelBase
         Matrix2x2 d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr);
         //!Second derivative of perimeter w/r/t voronoi and cell position
         Matrix2x2 d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr, Matrix2x2 &dvpdr,Dscalar2 vm, Dscalar2 v, Dscalar2 vp);
-
-        //!Save tuples for half of the dynamical matrix
-        virtual void getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress = 1.0, Dscalar stress = 1.0);
 
     //be friends with the associated Database class so it can access data to store or read
     friend class SPVDatabaseNetCDF;

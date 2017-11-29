@@ -176,7 +176,6 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
     //read in all the data we'll need
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::read);
@@ -242,7 +241,6 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         };
 
     Dscalar2 vlast,vnext,vother;
-    vlast = voro[neigh-1];
 
     //start calculating forces
     Dscalar2 forceSum;
@@ -706,6 +704,98 @@ Dscalar2 VoronoiQuadraticEnergy::dPidrj(int i, int j)
         vlast = vcur;
         };
     return answer;
+    };
+
+/*!
+This function calculates
+\sigma_{xy} = 1/Area_{total}*(dE/d\gamma), the normalized change in energy when deforming the box with a strain tensor given by
+0   \gamma
+0   1
+. Notably, this is done by taking analytic derivatives, not by doing a finite-difference computed
+by actually deforming the box a bit and recomputing the geometry.
+*/
+Dscalar VoronoiQuadraticEnergy::getSigmaXY()
+    {
+    Dscalar sigmaXY = 0.0;
+    Dscalar Pthreshold = THRESHOLD;
+
+    //read in the needed data
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::read);
+
+    ArrayHandle<Dscalar4> h_vln(voroLastNext,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    
+    //compute the contribution from each cell
+    for (int i = 0; i < Ncells; ++i)
+        {
+        Dscalar2 pi = h_p.data[i];
+        //get Delaunay neighbors of the cell
+        int neigh = h_nn.data[i];
+        vector<int> ns(neigh);
+        vector<Dscalar2> voro(neigh);
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            ns[nn]=h_n.data[n_idx(nn,i)];
+            int id = n_idx(nn,i);
+            voro[nn] = h_v.data[id];
+            };
+        //loop through the Delaunay neighbors, computing dA/d\gamma and dP/d\gamma
+        Dscalar2 rij,rik,dhdg;
+        Dscalar2 nnextp,nlastp;
+        Dscalar2 vlast,vnext,vcur;
+        nlastp = h_p.data[ns[ns.size()-1]]; 
+        Box->minDist(nlastp,pi,rij);
+        Dscalar Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
+        Dscalar Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
+        Dscalar dAdg = 0.0;
+        Dscalar dPdg = 0.0;
+        vlast = voro[neigh-1];
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            vcur = voro[nn];
+            vnext = voro[(nn+1)%neigh];
+            nnextp = h_p.data[ns[nn]];
+            Box->minDist(nnextp,pi,rik);
+            getdhdgamma(dhdg,rij,rik);
+
+            //get area and perimeter derivatives from force calculation
+            //note that in the force calculation we adopted a sign convention to avoid computing the
+            //final minus sign in f= - \nabla E
+            //We'll compensate by writing sigmaXY -= (blah blah) instead of the more natural +=
+            Dscalar2 dAidv,dPidv;
+            dAidv.x = 0.5*(vlast.y-vnext.y);
+            dAidv.y = 0.5*(vnext.x-vlast.x);
+            Dscalar2 dlast,dnext;
+            dlast.x = vlast.x-vcur.x;
+            dlast.y=vlast.y-vcur.y;
+            Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+            dnext.x = vcur.x-vnext.x;
+            dnext.y = vcur.y-vnext.y;
+            Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+            if(dnnorm < Pthreshold)
+                    dnnorm = Pthreshold;
+            if(dlnorm < Pthreshold)
+                    dlnorm = Pthreshold;
+            dPidv.x = dlast.x/dlnorm - dnext.x/dnnorm;
+            dPidv.y = dlast.y/dlnorm - dnext.y/dnnorm;
+
+            dAdg += dot(dAidv,dhdg);
+            dPdg += dot(dPidv,dhdg);
+
+            rij=rik;
+            vlast=vcur;
+            };
+        sigmaXY -= 2.0*Adiff*dAdg + 2.0*Pdiff*dPdg;
+        };
+
+    Dscalar b1,b2,b3,b4;
+    Box->getBoxDims(b1,b2,b3,b4);
+    Dscalar area = b1*b4;
+    return sigmaXY/area;
     };
 
 /*!

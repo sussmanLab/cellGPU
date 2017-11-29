@@ -270,6 +270,27 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     return;
     };
 
+//!Calculate the derivative of a Voronoi vertex w/r/t shear strain
+/*!
+Have you ever wanted to know the derivative of the position of a Voronoi vertex with respect to a 
+deformation of positions
+E(\gamma) = 
+1   \gamma
+0   1
+? If so, this function is for you! Assumes that one Delaunay vertex is at the origin, and rij and
+rik tell you where the other two Delaunay vertices are.
+*/
+HOSTDEVICE void getdhdgamma(Dscalar2 &dhdg,const Dscalar2 &rij,const Dscalar2 &rik)
+    {
+    Dscalar x2 = rij.x;
+    Dscalar x3 = rik.x;
+    Dscalar y2 = rij.y;
+    Dscalar y3 = rik.y;
+    Dscalar denominator = x3*y2-x2*y3;
+    dhdg.x = (x3-x2)*y2*y3 / denominator;
+    dhdg.y = (x2*x2*y3+2*x2*x3*(y2-y3)-y2*(x3*x3+y3*(y3-y2)))/(2.0*denominator);
+    };
+
 //!compute the sign of a Dscalar, and return zero if x = 0
 HOSTDEVICE int computeSign(Dscalar x)
     {
