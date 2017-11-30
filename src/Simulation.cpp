@@ -164,3 +164,33 @@ void Simulation::performTimestep()
         };
     cellConf->setTime(Time);
     };
+
+/*!
+P_ab = \sum m_i v_{ib}v_{ia}
+*/
+Dscalar4 Simulation::computeKineticPressure()
+    {
+    auto cellConf = cellConfiguration.lock();
+    int Ndof = cellConf->getNumberOfDegreesOfFreedom();
+    Dscalar4 ans; ans.x = 0.0; ans.y=0.0;ans.z=0;ans.w=0.0;
+    ArrayHandle<Dscalar> h_m(cellConf->returnMasses());
+    ArrayHandle<Dscalar2> h_v(cellConf->returnVelocities());
+    for (int ii = 0; ii < Ndof; ++ii)
+        {
+        Dscalar  m = h_m.data[ii];
+        Dscalar2 v = h_v.data[ii];
+        ans.x += m*v.x*v.x;
+        ans.y += m*v.y*v.x;
+        ans.z += m*v.x*v.y;
+        ans.w += m*v.y*v.y;
+        };
+    Dscalar b1,b2,b3,b4;
+    Box->getBoxDims(b1,b2,b3,b4);
+    Dscalar area = b1*b4;
+    ans.x = ans.x / area;
+    ans.y = ans.y / area;
+    ans.z = ans.z / area;
+    ans.w = ans.w / area;
+    return ans;
+    };
+
