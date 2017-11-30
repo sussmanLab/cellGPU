@@ -112,6 +112,20 @@ class voronoiModelBase : public Simple2DActiveCell
         //!do resize and resetting operations common to cellDivision and cellDeath
         void resizeAndReset();
 
+        //Some functions associated with derivates of voronoi vertex positions or cell geometries
+        //!The derivative of a voronoi vertex position with respect to change in the first cells position
+        Matrix2x2 dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk);
+        //!Derivative of the area of cell i with respect to the position of cell j
+        Dscalar2 dAidrj(int i, int j);
+        //!Derivative of the perimeter of cell i with respect to the position of cell j
+        Dscalar2 dPidrj(int i, int j);
+        //!Second derivative of area w/r/t voronoi and cell position
+        Matrix2x2 d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr);
+        //!Second derivative of perimeter w/r/t voronoi and cell position
+        Matrix2x2 d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr, Matrix2x2 &dvpdr,Dscalar2 vm, Dscalar2 v, Dscalar2 vp);
+        //!second derivatives of voronoi vertex with respect to cell positions
+        vector<Dscalar> d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj);
+
     //public member variables
     public:
         //!The class' local Delaunay tester/updater

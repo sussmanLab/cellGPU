@@ -64,24 +64,8 @@ class VoronoiQuadraticEnergy : public voronoiModelBase
         virtual Dscalar getSigmaXY();
 
     protected:
-        //Various partial derivatives related to calculating the dynamical matrix
-        //!The derivative of a voronoi vertex position with respect to change in the first cells position
-        Matrix2x2 dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk);
-
-        //!Derivative of the area of cell i with respect to the position of cell j
-        Dscalar2 dAidrj(int i, int j);
-        //!Derivative of the perimeter of cell i with respect to the position of cell j
-        Dscalar2 dPidrj(int i, int j);
-
-        //!second derivatives of voronoi vertex with respect to cell positions
-        vector<Dscalar> d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj);
-
-        //! Second derivative of the energy w/r/t cell positions
+        //! Second derivative of the energy w/r/t cell positions...for getting dynMat info
         Matrix2x2 d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress = 1.0, Dscalar stress = 1.0);
-        //!Second derivative of area w/r/t voronoi and cell position
-        Matrix2x2 d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr);
-        //!Second derivative of perimeter w/r/t voronoi and cell position
-        Matrix2x2 d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr, Matrix2x2 &dvpdr,Dscalar2 vm, Dscalar2 v, Dscalar2 vp);
 
     //be friends with the associated Database class so it can access data to store or read
     friend class SPVDatabaseNetCDF;
