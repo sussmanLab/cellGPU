@@ -70,7 +70,6 @@ void VoronoiQuadraticEnergy::computeForces()
         };
     };
 
-
 /*!
 \pre The geoemtry (area and perimeter) has already been calculated
 \post calculate the contribution to the net force on every particle from each of its voronoi vertices
@@ -92,7 +91,6 @@ void VoronoiQuadraticEnergy::SumForcesGPU()
     else
         sumForceSetsWithExclusions();
     };
-
 
 /*!
 \pre forceSets are already computed,
@@ -186,7 +184,6 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
     ArrayHandle<Dscalar2> h_external_forces(external_forces,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_exes(exclusions,access_location::host,access_mode::read);
 
-
     //get Delaunay neighbors of the cell
     int neigh = h_nn.data[i];
     vector<int> ns(neigh);
@@ -221,7 +218,6 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
         Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
         Dscalar D = 2*cp*cp;
-
 
         z.x = betaD*rij.x+gammaD*rik.x;
         z.y = betaD*rij.y+gammaD*rik.y;
@@ -260,7 +256,6 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         int other_idx = nn - 1;
         if (other_idx < 0) other_idx += neigh;
         int otherNeigh = ns[other_idx];
-
 
         Dscalar2 dAidv,dPidv;
         dAidv.x = 0.5*(vlast.y-vnext.y);
@@ -394,7 +389,6 @@ Dscalar VoronoiQuadraticEnergy::computeEnergy()
         Energy += KA * (h_AP.data[nn].x-h_APP.data[nn].x)*(h_AP.data[nn].x-h_APP.data[nn].x);
         Energy += KP * (h_AP.data[nn].y-h_APP.data[nn].y)*(h_AP.data[nn].y-h_APP.data[nn].y);
         };
-
     return Energy;
     };
 
@@ -898,4 +892,3 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
 
     return answer;
     };
-
