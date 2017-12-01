@@ -297,7 +297,6 @@ void Simple2DCell::setVertexTopologyFromCells(vector< vector<int> > cellVertexIn
         };
     };
 
-
 /*!
  *Sets the size of itt, tti, idxToTag, and tagToIdx, and sets all of them so that
  array[i] = i,
@@ -635,7 +634,6 @@ Dscalar Simple2DCell::reportMeanP()
     return ans/(Dscalar)Ncells;
     };
 
-
 /*!
 Returns the mean value of the shape parameter:
 */
@@ -673,7 +671,6 @@ Dscalar Simple2DCell::reportVarq()
         };
     return var/(Dscalar)Ncells;
     };
-
 
 /*!
 Returns the variance of the A and P for the system:

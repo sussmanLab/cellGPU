@@ -422,7 +422,7 @@ Dscalar VoronoiQuadraticEnergy::getSigmaXY()
     ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
-    
+
     //compute the contribution from each cell
     for (int i = 0; i < Ncells; ++i)
         {
@@ -501,7 +501,7 @@ void VoronoiQuadraticEnergy::getDynMatEntries(vector<int2> &rcs, vector<Dscalar>
     printf("evaluating dynamical matrix\n");
     ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
-    
+
     neighborType nt0 = neighborType::self;
     neighborType nt1 = neighborType::first;
     neighborType nt2 = neighborType::second;
@@ -750,10 +750,10 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         answer += area*stress*dEdA*(tempMatrix);
 
         //third of three area terms
-        tempMatrix.x11 =dAdv.x*d2vidridrj[0]+dAdv.y*d2vidridrj[1]; 
-        tempMatrix.x21 =dAdv.x*d2vidridrj[2]+dAdv.y*d2vidridrj[3]; 
-        tempMatrix.x12 =dAdv.x*d2vidridrj[4]+dAdv.y*d2vidridrj[5]; 
-        tempMatrix.x22 =dAdv.x*d2vidridrj[6]+dAdv.y*d2vidridrj[7]; 
+        tempMatrix.x11 =dAdv.x*d2vidridrj[0]+dAdv.y*d2vidridrj[1];
+        tempMatrix.x21 =dAdv.x*d2vidridrj[2]+dAdv.y*d2vidridrj[3];
+        tempMatrix.x12 =dAdv.x*d2vidridrj[4]+dAdv.y*d2vidridrj[5];
+        tempMatrix.x22 =dAdv.x*d2vidridrj[6]+dAdv.y*d2vidridrj[7];
         answer += area*stress*dEdA*tempMatrix;
 
         //perimeter part
@@ -767,7 +767,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
         dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
-        
+
         //first of three peri terms...it's a dyadic product outside the loop
         //second of three peri terms
         Matrix2x2 d2Pdvidrj; //Get in form M_{rb, psi}
@@ -776,10 +776,10 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         tempMatrix.transpose();
         answer += peri*stress*dEdP*(tempMatrix);
         //third of three peri terms
-        tempMatrix.x11 =dPdv.x*d2vidridrj[0]+dPdv.y*d2vidridrj[1]; 
-        tempMatrix.x21 =dPdv.x*d2vidridrj[2]+dPdv.y*d2vidridrj[3]; 
-        tempMatrix.x12 =dPdv.x*d2vidridrj[4]+dPdv.y*d2vidridrj[5]; 
-        tempMatrix.x22 =dPdv.x*d2vidridrj[6]+dPdv.y*d2vidridrj[7]; 
+        tempMatrix.x11 =dPdv.x*d2vidridrj[0]+dPdv.y*d2vidridrj[1];
+        tempMatrix.x21 =dPdv.x*d2vidridrj[2]+dPdv.y*d2vidridrj[3];
+        tempMatrix.x12 =dPdv.x*d2vidridrj[4]+dPdv.y*d2vidridrj[5];
+        tempMatrix.x22 =dPdv.x*d2vidridrj[6]+dPdv.y*d2vidridrj[7];
         answer += peri*stress*dEdP*tempMatrix;
 
         //now we compute terms related to cells gamma and beta
@@ -800,12 +800,12 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         tempMatrix.transpose();
         answer += area*stress*dEGdA*tempMatrix;
         //third term
-        tempMatrix.x11 =dAGdv.x*d2vidridrj[0]+dAGdv.y*d2vidridrj[1]; 
-        tempMatrix.x21 =dAGdv.x*d2vidridrj[2]+dAGdv.y*d2vidridrj[3]; 
-        tempMatrix.x12 =dAGdv.x*d2vidridrj[4]+dAGdv.y*d2vidridrj[5]; 
-        tempMatrix.x22 =dAGdv.x*d2vidridrj[6]+dAGdv.y*d2vidridrj[7]; 
+        tempMatrix.x11 =dAGdv.x*d2vidridrj[0]+dAGdv.y*d2vidridrj[1];
+        tempMatrix.x21 =dAGdv.x*d2vidridrj[2]+dAGdv.y*d2vidridrj[3];
+        tempMatrix.x12 =dAGdv.x*d2vidridrj[4]+dAGdv.y*d2vidridrj[5];
+        tempMatrix.x22 =dAGdv.x*d2vidridrj[6]+dAGdv.y*d2vidridrj[7];
         answer += area*stress*dEGdA*tempMatrix;
-        
+
 
         //perimeter part
         Dscalar2 dPGdv;
@@ -817,7 +817,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
         dPGdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPGdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
-        
+
         //first term
         Dscalar2 dPGdrj = dPidrj(cellG,j);
         answer += peri*unstress*2.*KP*dyad(dPGdv*dvidri,dPGdrj);
@@ -827,10 +827,10 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         tempMatrix.transpose();
         answer += peri*stress*dEGdP*(tempMatrix);
         //third of three peri terms
-        tempMatrix.x11 =dPGdv.x*d2vidridrj[0]+dPGdv.y*d2vidridrj[1]; 
-        tempMatrix.x21 =dPGdv.x*d2vidridrj[2]+dPGdv.y*d2vidridrj[3]; 
-        tempMatrix.x12 =dPGdv.x*d2vidridrj[4]+dPGdv.y*d2vidridrj[5]; 
-        tempMatrix.x22 =dPGdv.x*d2vidridrj[6]+dPGdv.y*d2vidridrj[7]; 
+        tempMatrix.x11 =dPGdv.x*d2vidridrj[0]+dPGdv.y*d2vidridrj[1];
+        tempMatrix.x21 =dPGdv.x*d2vidridrj[2]+dPGdv.y*d2vidridrj[3];
+        tempMatrix.x12 =dPGdv.x*d2vidridrj[4]+dPGdv.y*d2vidridrj[5];
+        tempMatrix.x22 =dPGdv.x*d2vidridrj[6]+dPGdv.y*d2vidridrj[7];
         answer += peri*stress*dEGdP*tempMatrix;
 
         //cell beta terms
@@ -842,7 +842,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         dABdv.x = 0.5*(vlast.y-vother.y);
         dABdv.y = 0.5*(vother.x-vlast.x);
         Dscalar2 dABdrj = dAidrj(cellB,j);
-        
+
         //first term
         answer += area*unstress*2.*KA*dyad(dABdv*dvidri,dABdrj);
         //second term
@@ -851,10 +851,10 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         tempMatrix.transpose();
         answer += area*stress*dEBdA*tempMatrix;
         //third term
-        tempMatrix.x11 =dABdv.x*d2vidridrj[0]+dABdv.y*d2vidridrj[1]; 
-        tempMatrix.x21 =dABdv.x*d2vidridrj[2]+dABdv.y*d2vidridrj[3]; 
-        tempMatrix.x12 =dABdv.x*d2vidridrj[4]+dABdv.y*d2vidridrj[5]; 
-        tempMatrix.x22 =dABdv.x*d2vidridrj[6]+dABdv.y*d2vidridrj[7]; 
+        tempMatrix.x11 =dABdv.x*d2vidridrj[0]+dABdv.y*d2vidridrj[1];
+        tempMatrix.x21 =dABdv.x*d2vidridrj[2]+dABdv.y*d2vidridrj[3];
+        tempMatrix.x12 =dABdv.x*d2vidridrj[4]+dABdv.y*d2vidridrj[5];
+        tempMatrix.x22 =dABdv.x*d2vidridrj[6]+dABdv.y*d2vidridrj[7];
         answer += area*stress*dEBdA*tempMatrix;
 
 
@@ -878,10 +878,10 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         tempMatrix.transpose();
         answer += peri*stress*dEBdP*(tempMatrix);
         //third of three peri terms
-        tempMatrix.x11 =dPBdv.x*d2vidridrj[0]+dPBdv.y*d2vidridrj[1]; 
-        tempMatrix.x21 =dPBdv.x*d2vidridrj[2]+dPBdv.y*d2vidridrj[3]; 
-        tempMatrix.x12 =dPBdv.x*d2vidridrj[4]+dPBdv.y*d2vidridrj[5]; 
-        tempMatrix.x22 =dPBdv.x*d2vidridrj[6]+dPBdv.y*d2vidridrj[7]; 
+        tempMatrix.x11 =dPBdv.x*d2vidridrj[0]+dPBdv.y*d2vidridrj[1];
+        tempMatrix.x21 =dPBdv.x*d2vidridrj[2]+dPBdv.y*d2vidridrj[3];
+        tempMatrix.x12 =dPBdv.x*d2vidridrj[4]+dPBdv.y*d2vidridrj[5];
+        tempMatrix.x22 =dPBdv.x*d2vidridrj[6]+dPBdv.y*d2vidridrj[7];
         answer += peri*stress*dEBdP*tempMatrix;
 
         //update the vertices and cell indices for the next loop

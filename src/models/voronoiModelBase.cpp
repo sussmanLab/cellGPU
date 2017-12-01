@@ -973,7 +973,7 @@ Dscalar2 voronoiModelBase::dAidrj(int i, int j)
                 indexk=vv-1;
             else
                 indexk=vv;
-                    
+
             if (indexk <0) indexk = neigh-1;
             Dscalar2 dAdv;
             dAdv.x = -0.5*(vlast.y-vnext.y);
@@ -1073,7 +1073,7 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
                 indexk=vv-1;
             else
                 indexk=vv;
-                    
+
             if (indexk <0) indexk = neigh-1;
             Dscalar2 dPdv;
             Dscalar2 dlast,dnext;
@@ -1142,7 +1142,7 @@ Matrix2x2 voronoiModelBase::d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr,Matrix2
     dLdr.x12 = (-v.x + vm.x)*((-dvdr.x21 + dvmdr.x21)*(-v.x + vm.x) - (-dvdr.x11 + dvmdr.x11)*(-v.y + vm.y));
     dLdr.x21 = (-v.y + vm.y)*(-(-dvdr.x22 + dvmdr.x22)*(-v.x + vm.x) + (-dvdr.x12 + dvmdr.x12)*(-v.y + vm.y));
     dLdr.x22 = (-v.x + vm.x)*((-dvdr.x22 + dvmdr.x22)*(-v.x + vm.x) - (-dvdr.x12 + dvmdr.x12)*(-v.y + vm.y));
-    
+
     return denNext*dNdr - denLast*dLdr;
     };
 
@@ -1154,9 +1154,9 @@ Matrix2x2 voronoiModelBase::d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr,Matrix2
 Returns an 8-component vector containing the derivatives of the voronoi vertex formed by cells i, j, and k
 with respect to r_i and r_{jj}... jj should be either 1 (to give d^2H/(d r_i)^2 or 2 (to give d^2H/dridrj)
 The vector is laid out as
-(H_x/r_{i,x}r_{j,x}, H_y/r_{i,x}r_{j,x}  
-H_x/r_{i,y}r_{j,x}, H_y/r_{i,y}r_{j,x}  
-H_x/r_{i,x}r_{j,y}, H_y/r_{i,x}r_{j,y}  
+(H_x/r_{i,x}r_{j,x}, H_y/r_{i,x}r_{j,x}
+H_x/r_{i,y}r_{j,x}, H_y/r_{i,y}r_{j,x
+H_x/r_{i,x}r_{j,y}, H_y/r_{i,x}r_{j,y
 H_x/r_{i,y}r_{j,y}, H_y/r_{i,y}r_{j,y}  )
 NOTE: This function does not check that ri, rj, and rk actually share a voronoi vertex in the triangulation
 NOTE: This function assumes that rj and rk are w/r/t the position of ri, so ri = (0.,0.)
@@ -1176,7 +1176,7 @@ vector<Dscalar> voronoiModelBase::d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj)
     //first, handle the d^2h/dr_i^2 case
     if ( jj == 1)
         {
-        hxr1xr2x *= rjy*(rjy - rky)*rky*(-2*rjx*rkx - 2*rjy*rky + rjx*rjx + rjy*rjy + rkx*rkx + rky*rky); 
+        hxr1xr2x *= rjy*(rjy - rky)*rky*(-2*rjx*rkx - 2*rjy*rky + rjx*rjx + rjy*rjy + rkx*rkx + rky*rky);
         hyr1xr2x *= -(rjy*(rjx - rkx)*rky*(-2*rjx*rkx - 2*rjy*rky + rjx*rjx + rjy*rjy + rkx*rkx + rky*rky));
         hxr1yr2x *= -((rjy - rky)*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) + rjx*(rky*(rjy*rjy) - 2*rjy*(rkx*rkx + rky*rky) + rky*(rkx*rkx + rky*rky))))/2.;
         hyr1yr2x *= ((rjx - rkx)*(rkx*(rjy - 2*rky)*(rjx*rjx) + rky*(rjx*rjx*rjx) + rjy*rkx*(-2*rjy*rky + rjy*rjy + rkx*rkx + rky*rky) + rjx*(rky*(rjy*rjy) - 2*rjy*(rkx*rkx + rky*rky) + rky*(rkx*rkx + rky*rky))))/2.;

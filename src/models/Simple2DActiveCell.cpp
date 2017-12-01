@@ -61,8 +61,8 @@ void Simple2DActiveCell::setCellDirectorsRandomly()
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_cd.data[ii] =noise.getRealUniform(0.0,2.0*PI);
-        h_v.data[ii].x = cos(h_cd.data[ii]);
-        h_v.data[ii].y = sin(h_cd.data[ii]);
+        h_v.data[ii].x = 0.0*cos(h_cd.data[ii]);
+        h_v.data[ii].y = 0.0*sin(h_cd.data[ii]);
         };
     };
 
@@ -75,20 +75,16 @@ void Simple2DActiveCell::setv0Dr(Dscalar v0new,Dscalar drnew)
     Motility.resize(Ncells);
     v0=v0new;
     Dr=drnew;
+    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::read);
     ArrayHandle<Dscalar2> h_v(cellVelocities);
     ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_mot.data[ii].x = v0new;
         h_mot.data[ii].y = drnew;
-        Dscalar2 Vcur = h_v.data[ii];
-        if(Vcur.x != 0 && Vcur.y !=0)
-            {
-            Dscalar theta = atan2(Vcur.y,Vcur.x);
-            h_v.data[ii].x = v0new*cos(theta);
-            h_v.data[ii].y = v0new*sin(theta);
-            };
-
+        Dscalar theta = h_cd.data[ii];
+        h_v.data[ii].x = v0new*cos(theta);
+        h_v.data[ii].y = v0new*sin(theta);
         };
     };
 
@@ -99,19 +95,16 @@ void Simple2DActiveCell::setv0Dr(Dscalar v0new,Dscalar drnew)
 void Simple2DActiveCell::setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs)
     {
     Motility.resize(Ncells);
+    ArrayHandle<Dscalar> h_cd(cellDirectors,access_location::host, access_mode::read);
     ArrayHandle<Dscalar2> h_v(cellVelocities);
     ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_mot.data[ii].x = v0s[ii];
         h_mot.data[ii].y = drs[ii];
-        Dscalar2 Vcur = h_v.data[ii];
-        if(Vcur.x != 0 && Vcur.y !=0)
-            {
-            Dscalar theta = atan2(Vcur.y,Vcur.x);
-            h_v.data[ii].x = v0s[ii]*cos(theta);
-            h_v.data[ii].y = v0s[ii]*sin(theta);
-            };
+        Dscalar theta = h_cd.data[ii];
+        h_v.data[ii].x = v0s[ii]*cos(theta);
+        h_v.data[ii].y = v0s[ii]*sin(theta);
         };
     };
 
