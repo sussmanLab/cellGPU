@@ -38,6 +38,10 @@ class Simple2DCell : public Simple2DModel
 
         //!do everything necessary to compute the energy for the current model
         virtual Dscalar computeEnergy(){Energy = 0.0; return 0.0;};
+        //!Call masses and velocities to get the total kinetic energy
+        Dscalar computeKineticEnergy();
+        //!Call masses and velocities to get the average kinetic contribution to the pressure tensor
+        Dscalar4 computeKineticPressure();
 
         //!copy the models current set of forces to the variable
         virtual void getForces(GPUArray<Dscalar2> &forces){};

@@ -586,6 +586,52 @@ void Simple2DCell::spatiallySortVertices()
     };
 
 /*!
+P_ab = \sum m_i v_{ib}v_{ia}
+*/
+Dscalar4 Simple2DCell::computeKineticPressure()
+    {
+    int Ndof = getNumberOfDegreesOfFreedom();
+    Dscalar4 ans; ans.x = 0.0; ans.y=0.0;ans.z=0;ans.w=0.0;
+    ArrayHandle<Dscalar> h_m(returnMasses());
+    ArrayHandle<Dscalar2> h_v(returnVelocities());
+    for (int ii = 0; ii < Ndof; ++ii)
+        {
+        Dscalar  m = h_m.data[ii];
+        Dscalar2 v = h_v.data[ii];
+        ans.x += m*v.x*v.x;
+        ans.y += m*v.y*v.x;
+        ans.z += m*v.x*v.y;
+        ans.w += m*v.y*v.y;
+        };
+    Dscalar b1,b2,b3,b4;
+    Box->getBoxDims(b1,b2,b3,b4);
+    Dscalar area = b1*b4;
+    ans.x = ans.x / area;
+    ans.y = ans.y / area;
+    ans.z = ans.z / area;
+    ans.w = ans.w / area;
+    return ans;
+    };
+
+/*!
+E = \sum 0.2*m_i v_i^2
+*/
+Dscalar Simple2DCell::computeKineticEnergy()
+    {
+    int Ndof = getNumberOfDegreesOfFreedom();
+    Dscalar ans = 0.0;
+    ArrayHandle<Dscalar> h_m(returnMasses());
+    ArrayHandle<Dscalar2> h_v(returnVelocities());
+    for (int ii = 0; ii < Ndof; ++ii)
+        {
+        Dscalar  m = h_m.data[ii];
+        Dscalar2 v = h_v.data[ii];
+        ans += 0.5*m*(v.x*v.x+v.y*v.y);
+        };
+    return ans;
+    };
+
+/*!
 a utility/testing function...output the currently computed mean net force to screen.
 \param verbose if true also print out the force on each cell
 */
