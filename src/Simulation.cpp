@@ -194,3 +194,21 @@ Dscalar4 Simulation::computeKineticPressure()
     return ans;
     };
 
+/*!
+P_ab = \sum m_i v_{ib}v_{ia}
+*/
+Dscalar Simulation::computeKineticEnergy()
+    {
+    auto cellConf = cellConfiguration.lock();
+    int Ndof = cellConf->getNumberOfDegreesOfFreedom();
+    Dscalar ans = 0.0;
+    ArrayHandle<Dscalar> h_m(cellConf->returnMasses());
+    ArrayHandle<Dscalar2> h_v(cellConf->returnVelocities());
+    for (int ii = 0; ii < Ndof; ++ii)
+        {
+        Dscalar  m = h_m.data[ii];
+        Dscalar2 v = h_v.data[ii];
+        ans += 0.5*m*(v.x*v.x+v.y*v.y);
+        };
+    return ans;
+    };

@@ -78,6 +78,8 @@ class Simulation : public enable_shared_from_this<Simulation>
         //! A flag controlling whether to use the GPU
         bool USE_GPU;
 
+        //!Call masses and velocities to get the total kinetic energy
+        Dscalar computeKineticEnergy();
         //!Call masses and velocities to get the average kinetic contribution to the pressure tensor
         Dscalar4 computeKineticPressure();
 
