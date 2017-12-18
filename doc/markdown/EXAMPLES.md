@@ -3,9 +3,9 @@
 These minimal samples show how to run default-initialized simulations. Please see the provided .cpp
 files in the main directory and examples directory for more samples, or consult the documentation for more advanced usage.
 
-# activeVertex.cpp
+# Vertex.cpp
 
-A simple interface that initializes and runs a reproducible simulation of the 2D active vertex model.
+A simple interface that initializes and runs a simulation of the 2D vertex model.
 After being built with the included makefile, command line parameters can be passed in, controlling the
 number of cells, the number of initialization time steps, the number of production-run time steps, the
 time step size, the preferred cell energy and motility parameters, etc. This program can be used to

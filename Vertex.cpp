@@ -15,13 +15,13 @@ i = 1000
 t = 4000
 e = 0.01
 dr = 1.0,
-along with a range of v0 and p0. This model is not very sensitive to these other choices
+along with a range of v0 and p0. This program also demonstrates the use of brownian dynamics
+applied to the vertices themselves.
 */
 int main(int argc, char*argv[])
 {
     int numpts = 200; //number of cells
     int USE_GPU = 0; //0 or greater uses a gpu, any negative number runs on the cpu
-    int c;
     int tSteps = 5; //number of time steps to run after initialization
     int initSteps = 1; //number of initialization steps
 
@@ -29,9 +29,10 @@ int main(int argc, char*argv[])
     Dscalar p0 = 4.0;  //the preferred perimeter
     Dscalar a0 = 1.0;  // the preferred area
     Dscalar v0 = 0.1;  // the self-propulsion
-    Dscalar Dr = 1.0;
-
+    Dscalar Dr = 1.0;  //the rotational diffusion constant of the cell directors
     int program_switch = 0; //various settings control output
+
+    int c;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:d:")) != -1)
         switch(c)
         {
@@ -77,8 +78,10 @@ int main(int argc, char*argv[])
 
     bool runSPV = false;//setting this to true will relax the random cell positions to something more uniform before running vertex model dynamics
 
+    //We will define two potential equations of motion, and choose which later on.
     //define an equation of motion object...here for self-propelled cells
-    //EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
+    EOMPtr spp = make_shared<selfPropelledCellVertexDynamics>(numpts,Nvert);
+    //the next lines declare a potential brownian dynamics scheme at some targe temperature
     shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(Nvert);
     bd->setT(v0);
     //define a vertex model configuration with a quadratic energy functional
@@ -94,6 +97,8 @@ int main(int argc, char*argv[])
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(avm);
     sim->addUpdater(bd,avm);
+    //one could have written "sim->addUpdater(spp,avm);" to use the active cell dynamics instead
+
     //set the time step size
     sim->setIntegrationTimestep(dt);
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
