@@ -25,8 +25,8 @@ CXXFLAGS += -w -frounding-math
 CFLAGS += $(COMMONFLAGS) -frounding-math
 
 CUOBJ_DIR=obj/cuobj
-MODULES = databases models updaters utility
-INCLUDES += -I./inc/databases -I./inc/models -I./inc/updaters -I./inc/utility
+MODULES = databases models updaters utility analysis
+INCLUDES += -I./inc/databases -I./inc/models -I./inc/updaters -I./inc/utility -I./inc/analysis
 OBJ_DIR=obj
 SRC_DIR=src
 BIN_DIR=.

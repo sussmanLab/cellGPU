@@ -2,6 +2,8 @@
 
 ### Changes in progress
 
+* A directory to put common MD data analysis tools has been added
+
 ### version 0.7.1
 
 * Support for non-square boxes... DelaunayCGAL calls currently implemented, but not DelaunayLoc

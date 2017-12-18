@@ -62,5 +62,4 @@ class Simple2DModel
         //!set the time
         virtual void setTime(Dscalar time){currentTime = time;};
     };
-
 #endif

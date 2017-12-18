@@ -37,3 +37,7 @@ as described in the above paper.
 The NoseHooverChainNVT class integrates the Nose-Hoover equations of motion with a chain of thermostats,
 and does so using an update scheme that is explicitly time-reversible. The algorithm to do this is
 described in Martyna et al., and see also the nice algorithmic pseudo-code in Frenkel & Smit.
+
+(7) [J. Ramirez, S. K. Sukumaran, B. Vorselaars, and A. E. Likhtman; J. Chem. Phys. 133, 154103 (2010)](http://aip.scitation.org/doi/abs/10.1063/1.3491098)
+
+The "autocorrelator" class is entirely based around this Ramirez et al. paper.
