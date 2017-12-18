@@ -12,6 +12,9 @@ presented in Frenkel and Smit (with independently controllable lag times), as ex
 "Efficient on the fly calculation of time correlation functions in computer simulations"
 J. Ramirez, S. K. Sukumaran, B. Vorselaars, and A. E. Likhtman
 The Journal of Chemical Physics 133, 154103 (2010).
+
+A primary modification of the source code linked to from that paper is that this class does not need
+to set a maximum number of correlator levels; the correlator structure simply grows whenever it needs to
 */
 class autocorrelator
     {
@@ -24,7 +27,7 @@ class autocorrelator
         void evaluate(bool normalize = false);
 
         //!After evaluate is called, correlator is filled with the current autocorrelation.
-        vector<Dscalar> correlator;
+        vector<Dscalar2> correlator;
 
         //! Set the time spacing
         void setDeltaT(Dscalar deltaT){dt=deltaT;};
@@ -60,6 +63,5 @@ class autocorrelator
         vector<vector< Dscalar> > correlation;
         //!A vector of vector where incoming values get stored
         vector<vector< Dscalar> > shift;
-
     };
 #endif
