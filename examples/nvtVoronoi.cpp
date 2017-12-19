@@ -122,11 +122,11 @@ int main(int argc, char*argv[])
     for(int ii = 0; ii < tSteps; ++ii)
         {
         ArrayHandle<Dscalar> h_kes(nvt->kineticEnergyScaleFactor);
-        meanT += h_kes.data[0]/(2.*numpts);
+        meanT += h_kes.data[0]/(numpts);
         if(ii%(int)(Tsample) ==0)
             {
             Dscalar DeltaP = mullerPlathe->getMomentumTransferred();
-            printf("timestep %i\t\t energy %f \t T %f DeltaP %f \n",ii,vm->computeEnergy(),h_kes.data[0]/(2.*numpts),DeltaP);
+            printf("timestep %i\t\t energy %f \t T %f DeltaP %f \n",ii,vm->computeEnergy(),h_kes.data[0]/(numpts),DeltaP);
             ncdat.WriteState(vm);
             vector<Dscalar> Vprofile;
             mullerPlathe->getVelocityProfile(Vprofile);
