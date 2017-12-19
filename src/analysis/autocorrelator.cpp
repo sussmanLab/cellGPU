@@ -106,7 +106,7 @@ void autocorrelator::add(Dscalar w, int k)
             };
         };
     insertIndex[k] +=1;
-    if (insertIndex[k] ==p)
+    if (insertIndex[k] == p)
         insertIndex[k] = 0;
     };
 
@@ -133,7 +133,7 @@ void autocorrelator::evaluate(bool normalize)
         for (int ii = minimumDistance; ii < p; ++ii)
             if (nCorrelation[k][ii] > 0)
                 {
-                Dscalar autocorr = correlation[0][ii]/nCorrelation[0][ii] - auxiliary;
+                Dscalar autocorr = correlation[k][ii]/nCorrelation[k][ii] - auxiliary;
                 Dscalar time = dt*ii*pow((Dscalar)m,k);
                 correlator.push_back(make_Dscalar2(time,autocorr));
                 };

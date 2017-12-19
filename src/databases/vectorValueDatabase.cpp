@@ -6,9 +6,12 @@ vectorValueDatabase::vectorValueDatabase(int vectorLength, string fn, NcFile::Fi
     :BaseDatabaseNetCDF(fn,mode)
     {
     N=vectorLength;
+    val=0.0;
+    vec.resize(N);
     switch(Mode)
         {
         case NcFile::ReadOnly:
+            GetDimVar();
             break;
         case NcFile::Write:
             GetDimVar();
@@ -55,3 +58,16 @@ void vectorValueDatabase::WriteState(vector<Dscalar> &vec,Dscalar val)
     File.sync();
     };
 
+void vectorValueDatabase::ReadState(int rec)
+    {
+    int totalRecords = GetNumRecs();
+    if (rec >= totalRecords)
+        {
+        printf("Trying to read a database entry that does not exist\n");
+        throw std::exception();
+        };
+        vecVar->set_cur(rec);
+        vecVar->get(&vec[0],1,dofDim->size());
+        valVar->set_cur(rec);
+        valVar->get(&val,1,1);
+    };

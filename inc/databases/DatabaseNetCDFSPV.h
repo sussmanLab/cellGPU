@@ -44,5 +44,4 @@ public:
     virtual void ReadState(STATE c, int rec,bool geometry=true);
 
 };
-
 #endif
