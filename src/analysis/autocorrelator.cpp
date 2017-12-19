@@ -68,7 +68,7 @@ void autocorrelator::add(Dscalar w, int k)
     //add to accumulator, and, if needed, recursively call the higher-level add
     accumulator[k] +=w;
     nAccumulator[k] +=1;
-    if(nAccumulator[k] ==m)
+    if(nAccumulator[k] == m)
         {
         add(accumulator[k]/m,k+1);
         accumulator[k]=0.0;
@@ -93,7 +93,7 @@ void autocorrelator::add(Dscalar w, int k)
         }
     else
         {
-        int index2 = index1;
+        int index2 = index1-minimumDistance;
         for (int jj = minimumDistance; jj < p; ++jj)
             {
             if (index2 < 0) index2 +=p;
