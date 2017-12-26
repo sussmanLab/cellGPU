@@ -90,18 +90,22 @@ void structuralFeatures::computeStructureFactor(vector<Dscalar2> &points,vector<
     Dscalar kmax = wavevectors[maxLatticeInt-1][maxLatticeInt-1].x;
     for (Dscalar rmin = deltaK-0.5*binWidth; rmin< kmax-binWidth; rmin +=binWidth)
         {
+        Dscalar rmax = rmin + binWidth;
         Dscalar value = 0.0;
         int inSum = 0;
         for (int ii = 0; ii < maxLatticeInt; ++ii)
+            {
             for (int jj = 0; jj < maxLatticeInt; ++jj)
                 {
-                bool includePoint = inAnnulus(wavevectors[ii][jj],rmin,rmin+binWidth);
+                if(rmin > 
+                bool includePoint = inAnnulus(wavevectors[ii][jj],rmin,rmax);
                 if (includePoint)
                     {
                     inSum +=1;
                     value += SK[ii][jj];
                     }
                 };
+            };
         if (inSum >0)
             value = value/inSum;
         answer.push_back(make_Dscalar2(rmin+0.5*binWidth,value));
