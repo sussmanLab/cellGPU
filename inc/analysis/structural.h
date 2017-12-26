@@ -1,5 +1,5 @@
 #ifndef structuralFeatures_H
-#define structuralFeature_H
+#define structuralFeatures_H
 
 #include "std_include.h"
 #include "gpubox.h"
