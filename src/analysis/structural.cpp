@@ -1,6 +1,6 @@
 #define ENABLE_CUDA
 
-#include "structural.cpp"
+#include "structural.h"
 /*! \file structural.cpp */
 
 structuralFeatures::computeRadialDistributionFunction(vector<Dscalar2> &points, Dscalar binWidth, vector<Dscalar2> &GofR)
