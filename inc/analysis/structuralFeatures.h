@@ -5,7 +5,7 @@
 #include "functions.h"
 #include "gpubox.h"
 
-/*! \file structural.h */
+/*! \file structuralFeatures.h */
 
 //! A class that calculates various structural features of 2D point patterns
 class structuralFeatures

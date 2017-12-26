@@ -1,7 +1,7 @@
 #define ENABLE_CUDA
 
-#include "structural.h"
-/*! \file structural.cpp */
+#include "structuralFeatures.h"
+/*! \file structuralFeatures.cpp */
 
 /*!
 A brute-force, O(N^2) computation of the radial distribution function for the point pattern. The
