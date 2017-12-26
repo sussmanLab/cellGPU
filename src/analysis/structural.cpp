@@ -10,7 +10,7 @@ void structuralFeatures::computeRadialDistributionFunction(vector<Dscalar2> &poi
     Box->getBoxDims(L,b2,b3,b4);
 
     //Initialize the answer vector
-    int totalBins = floor(L/binWidth);
+    int totalBins = floor(0.5*L/binWidth);
     GofR.resize(totalBins);
     for (int bb = 0; bb < totalBins; ++bb)
         GofR[bb] = make_Dscalar2((bb+0.5)*binWidth,0.0);
