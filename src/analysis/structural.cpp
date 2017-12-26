@@ -95,10 +95,8 @@ void structuralFeatures::computeStructureFactor(vector<Dscalar2> &points,vector<
         int inSum = 0;
         for (int ii = 0; ii < maxLatticeInt; ++ii)
             {
-            if(rmin < norm(wavevectors[ii][0])) continue;
             for (int jj = 0; jj < maxLatticeInt; ++jj)
                 {
-                if(rmin < norm(wavevectors[ii][jj])) continue;
                 bool includePoint = inAnnulus(wavevectors[ii][jj],rmin,rmax);
                 if (includePoint)
                     {
