@@ -3,7 +3,7 @@
 #include "structural.h"
 /*! \file structural.cpp */
 
-structuralFeatures::computeRadialDistributionFunction(vector<Dscalar2> &points, Dscalar binWidth, vector<Dscalar2> &GofR)
+void structuralFeatures::computeRadialDistributionFunction(vector<Dscalar2> &points,vector<Dscalar2> &GofR, Dscalar binWidth)
     {
     int N = points.size();
     Dscalar L,b2,b3,b4;
@@ -31,7 +31,7 @@ structuralFeatures::computeRadialDistributionFunction(vector<Dscalar2> &points, 
     for (int bb = 0; bb < totalBins; ++bb)
         {
         Dscalar annulusArea = PI*(((bb+1)*binWidth)*((bb+1)*binWidth)-(bb*binWidth)*(bb*binWidth));
-        Dscalar yVal = (2.0*GofR[ibin].y/N) / annulusArea;
-        GofR[ibin].y=yVal;
+        Dscalar yVal = (2.0*GofR[bb].y/N) / annulusArea;
+        GofR[bb].y=yVal;
         };
     };
