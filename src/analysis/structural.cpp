@@ -81,7 +81,7 @@ void structuralFeatures::computeStructureFactor(vector<Dscalar2> &points,vector<
         for (int jj = 0; jj < maxLatticeInt; ++jj)
             {
             Dscalar2 rk = rhoK[ii][jj];
-            SK[ii][jj] = rk.x*rk.x+rk.y*rk.y;
+            SK[ii][jj] = (rk.x*rk.x+rk.y*rk.y)/N;
             };
 
     //finally, average the grid points to the answer
