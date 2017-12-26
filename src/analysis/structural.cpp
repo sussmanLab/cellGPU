@@ -24,7 +24,8 @@ void structuralFeatures::computeRadialDistributionFunction(vector<Dscalar2> &poi
             Box->minDist(points[ii],points[jj],dist);
             Dscalar d=norm(dist);
             int ibin = floor(d/binWidth);
-            GofR[ibin].y += 1.0;
+            if (ibin < totalBins)
+                GofR[ibin].y += 1.0;
             };
         };
     //finally, normalize the function appropriately
