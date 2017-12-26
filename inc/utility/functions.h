@@ -206,6 +206,13 @@ HOSTDEVICE Dscalar norm(const Dscalar2 &p)
     return sqrt(p.x*p.x+p.y*p.y);
     };
 
+//!test if a point lies in an annulus, given the inner and outer radii
+HOSTDEVICE bool inAnnulus(const Dscalar2 &p1, const Dscalar &rmin, const Dscalar &rmax)
+    {
+    Dscalar n = norm(p1);
+    return (n > rmin && n < rmax);
+    };
+
 //!Calculate the area of a triangle with a vertex at the origin
 HOSTDEVICE Dscalar SignedPolygonAreaPart(const Dscalar2 &p1, const Dscalar2 &p2)
     {
