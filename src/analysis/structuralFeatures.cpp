@@ -61,8 +61,8 @@ void structuralFeatures::computeStructureFactor(vector<Dscalar2> &points,vector<
     for (int ii = 0; ii < maxLatticeInt; ++ii)
         for (int jj = 0; jj < maxLatticeInt; ++jj)
             {
-            wavevectors[ii][jj].x = (ii+1)*deltaK;
-            wavevectors[ii][jj].y = (jj+1)*deltaK;
+            wavevectors[ii][jj].x = (ii)*deltaK;
+            wavevectors[ii][jj].y = (jj)*deltaK;
             };
     //evaluate the transformed density at each lattice vector
     vector<vector<Dscalar2> > rhoK(maxLatticeInt,zeroVector);
@@ -106,8 +106,10 @@ void structuralFeatures::computeStructureFactor(vector<Dscalar2> &points,vector<
                 };
             };
         if (inSum >0)
+            {
             value = value/inSum;
-        answer.push_back(make_Dscalar2(rmin+0.5*binWidth,value));
+            answer.push_back(make_Dscalar2(rmin+0.5*binWidth,value));
+            };
         };
 
     SofK=answer;
