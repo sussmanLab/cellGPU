@@ -6,14 +6,14 @@ and on a two-dimensional dynamical version of the vertex model. CellGPU grew out
 "DelGPU" and "VoroGuppy" projects, and the current class structure still bears some traces of that
 (please see the contributing page of the documentation, which is maintained at
 https://dmsussman.gitlab.io/cellGPUdocumentation
-for information on upcoming code refactoring and new planned features!). The paper describing this
-code in more detail can currently be found on the arXiv: https://arxiv.org/abs/1702.02939, or in print:
-http://www.sciencedirect.com/science/article/pii/S0010465517301832
+for information on upcoming code refactoring and new planned features). The paper describing this
+code in more detail can currently be found on the arXiv (https://arxiv.org/abs/1702.02939), or in print (
+http://www.sciencedirect.com/science/article/pii/S0010465517301832)
 
 Information on installing the project and contributing to it is contained in the relevant
 markdown files in the base directory and in the doc/markdown directory. Documentation of the
-code is maintained via Doxygen, and all of the links in this readme only function in the Doxygen
-documentation (link above, or compile it by going to the "/doc" directory and typing "doxygen Doxyfile"
+code is maintained via Doxygen, which can be viewed at the gitlab.io pagea linked to above, or by compiling
+the doxygen documentation in the "/doc" directory
 
 A very rough outline of some of the main classes and the basic operating flow of the primary branches
 of the code can be found [here](@ref basicinfo); this page is a good place to start before diving into

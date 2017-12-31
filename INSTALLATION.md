@@ -2,9 +2,12 @@
 
 A general makefile is included with the repository. To install on your system, update the CUDA_LIB,
 CUDA_INC, LIB_CUDA, LIB_CGAL, LIB_NETCDF paths, and make sure the PATH and LD_LIBRARY_PATH
-environment variables are appropriately set.
-Create the /obj and /obj/cuobj directories, and from there, a simple "make" will do the trick. See below for detailed installation instructions on MacOS
-.
+environment variables are appropriately set. From there a simple "make" will do the trick. See below
+for detailed installation instructions on MacOS. The command "make float" will compile the code with
+everything in floating-point precision (a bit faster on GPUs, but, of course, less numerically precise).
+The command "make debug" will add common debugging flags, and also enforce always-reproducible random
+number generation.
+
 # Requirements
 
 The current iteration of the code was written using some features of C++11, and was compiled using
@@ -15,7 +18,7 @@ CUDA-8.0. The code has been tested with CUDA versions as early as 6.5, and uses 
 The Voronoi model branch uses the CGAL library; this dependency can be removed, if necessary, by monkeying
 with the code to run "fullTriangulation()" rather than "globalTriangulationCGAL()" in the relevant
 spots. This is highly discouraged, and the code may be much less stable as a result. In any event,
-CGAL-4.9 was used, which in turn requires up to date versions of the gmp and mpfr libraries.
+CGAL-4.9 was used, which in turn requires up-to-date versions of the gmp and mpfr libraries.
 The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.
 
 The default database class uses the netCDF-4 C++  library (tested on version 4.1.3).The dependency on netCDF

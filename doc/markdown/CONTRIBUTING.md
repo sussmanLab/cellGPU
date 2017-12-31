@@ -65,11 +65,12 @@ Every class, member, function, etc., should be documented with doxygen comments.
 
 ## Directory structure
 
-This repository currently follows a simple structure. The main executables, activeVertex.cpp and
+This repository currently follows a simple structure. The main executables, Vertex.cpp and
 voronoi.cpp are in the base directory and can be used to reproduce timing information. Other example files are in examples/
 headers and .cu/.cpp files are in inc/ and src/ directories, respectively, with a subdirectory
-structure for updaters, models, utilities, and database creators. Object files get compiled in the obj/ directory.
-.gitignored). A simple makefile is used to compile everything and all cpp files in the root directory.
+structure for updaters, models, utilities, analysis, and database creators. Object files get compiled
+in the obj/ directory. A simple makefile is used to compile everything and all cpp files in the root
+directory.
 
 ### Optimizations
 

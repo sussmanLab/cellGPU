@@ -2,7 +2,7 @@
 
 CellGPU is released under the MIT license
 
-Copyright (c) 2016 - 2017 Daniel M. Sussman
+Copyright (c) 2016 - 2018 Daniel M. Sussman
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 documentation files (the "Software"), to deal in the Software without restriction, including without limitation
@@ -47,11 +47,11 @@ THE POSSIBILITY OF SUCH DAMAGE.
 Burkardt. The "HilberSort.h" wrapper is used by the program to call the functions defined in the
 library, and the source code from which the library can be built is in the "hilbert_sort.hpp" and
 "hilbert_sort.cpp" files. Thus, this repository contains everything a user would need to relink the
-application with a different version of Burkardt's LGPL source code. As such CellGPU can be distributed
+application with a different version of Burkardts LGPL source code. As such CellGPU can be distributed
 under a non-(L)GPL license. Credit for this library, of course, goes to John Burkardt:
 https://people.sc.fsu.edu/~jburkardt/cpp_src/hilbert_curve/hilbert_curve.html
 
-(3) eigenMatrixInterface.h/.cpp interfaces with, indeed, the Eigen library. Eigen is Free Software,
+(3) eigenMatrixInterface.h and .cpp interfaces with the Eigen library. Eigen is Free Software,
 available from eigen.tuxfamily.org/. It is licensed under the MPL2. See https://www.mozilla.org/en-US/MPL/2.0/ for more details.
 
 (4) Finally, the cellGPU logo was made by using the ``Lincoln Experiments'' project,
