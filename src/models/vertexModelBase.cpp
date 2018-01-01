@@ -383,9 +383,10 @@ void vertexModelBase::initializeEdgeFlipLists()
         h_vflipc.data[i]=0;
         }
 
-    finishedFlippingEdges.resize(1);
+    finishedFlippingEdges.resize(2);
     ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::overwrite);
     h_ffe.data[0]=0;
+    h_ffe.data[1]=0;
     };
 
 /*!
@@ -754,8 +755,7 @@ void vertexModelBase::flipEdgesGPU()
     int iterations = 0;
     while(keepFlipping)
         {
-            {//provide scope for ArrayHandles
-            ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
+            {//provide scope for ArrayHandles in the multiple-flip-parsing stage
             ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_vflipcur(vertexEdgeFlipsCurrent,access_location::device,access_mode::readwrite);
@@ -764,26 +764,45 @@ void vertexModelBase::flipEdgesGPU()
             ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_ffe(finishedFlippingEdges,access_location::device,access_mode::readwrite);
 
-            gpu_vm_flip_edges(d_vflip.data,
+            gpu_vm_parse_multiple_flips(d_vflip.data,
                                d_vflipcur.data,
-                               d_v.data,
                                d_vn.data,
                                d_vcn.data,
                                d_cvn.data,
                                d_cv.data,
                                d_ffe.data,
+                               n_idx,
+                               Ncells);
+            };
+        //do we need to flip edges? Loop additional times?
+        ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
+        if(h_ffe.data[0] != 0)
+            {
+            ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_vflipcur(vertexEdgeFlipsCurrent,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
+            gpu_vm_flip_edges(d_vflipcur.data,
+                               d_v.data,
+                               d_vn.data,
+                               d_vcn.data,
+                               d_cvn.data,
+                               d_cv.data,
                                T1Threshold,
                                *(Box),
                                n_idx,
                                Nvertices,
                                Ncells);
-            }; //scope for arrayhandles
-        ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
-        if(h_ffe.data[0]==0)
+            iterations += 1;
+            };
+        if(h_ffe.data[1]==0)
             keepFlipping = false;
+
         h_ffe.data[0]=0;
-        iterations += 1;
-        };
+        h_ffe.data[1]=0;
+        };//end while loop
     };
 
 /*!

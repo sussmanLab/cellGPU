@@ -188,6 +188,7 @@ __global__ void vm_one_T1_per_cell_per_vertex_kernel(
     int cneigh = d_cellVertexNum[cell];
     int vertex;
     bool flipFound = false;
+    bool moreFlipsFound = false;
     for (int cc = 0; cc < cneigh; ++cc)
         {
         vertex = d_cellVertices[n_idx(cc,cell)];
@@ -202,26 +203,42 @@ __global__ void vm_one_T1_per_cell_per_vertex_kernel(
             {
             d_vertexEdgeFlipsCurrent[3*vertex] = 1;
             d_vertexEdgeFlips[3*vertex] = 0;
+            if (flipFound)
+                {
+                moreFlipsFound = true;
+                break;
+                }
             flipFound = true;
-            break;
             };
         if(d_vertexEdgeFlips[3*vertex+1] == 1)
             {
             d_vertexEdgeFlipsCurrent[3*vertex+1] = 1;
             d_vertexEdgeFlips[3*vertex+1] = 0;
+            if (flipFound)
+                {
+                moreFlipsFound = true;
+                break;
+                }
             flipFound = true;
-            break;
             };
         if(d_vertexEdgeFlips[3*vertex+2] == 1)
             {
             d_vertexEdgeFlipsCurrent[3*vertex+2] = 1;
             d_vertexEdgeFlips[3*vertex+2] = 0;
+            if (flipFound)
+                {
+                moreFlipsFound = true;
+                break;
+                }
             flipFound = true;
-            break;
             };
         };
     if (flipFound)
+        {
         d_finishedFlippingEdges[0] = 1;
+        if(moreFlipsFound)
+            d_finishedFlippingEdges[1] = 1;
+        };
     };
 
 /*!
@@ -233,13 +250,11 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
                                       int      *d_vertexCellNeighbors,
                                       int      *d_cellVertexNum,
                                       int      *d_cellVertices,
-                                      int      *d_finishedFlippingEdges,
                                       Dscalar  T1Threshold,
                                       gpubox   Box,
                                       Index2D  n_idx,
                                       int      NvTimes3)
     {
-    if (d_finishedFlippingEdges[0]==0) return;
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     //return if the index is out of bounds or if the edge isn't marked for flipping
     if (idx >= NvTimes3 || d_vertexEdgeFlipsCurrent[idx] == 0)
@@ -543,20 +558,17 @@ bool gpu_vm_test_edges_for_T1(
     return cudaSuccess;
     };
 
-//!Call the kernel to flip at most one edge per cell, write to d_finishedFlippingEdges the current state
-bool gpu_vm_flip_edges(
+
+//!determine whether any edges need to be flipped, and if we need to loop through the flipping routine, writing to d_finishedFlippingEdges the current state
+bool gpu_vm_parse_multiple_flips(
                     int      *d_vertexEdgeFlips,
                     int      *d_vertexEdgeFlipsCurrent,
-                    Dscalar2 *d_vertexPositions,
                     int      *d_vertexNeighbors,
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      *d_finishedFlippingEdges,
-                    Dscalar  T1Threshold,
-                    gpubox   &Box,
                     Index2D  &n_idx,
-                    int      Nvertices,
                     int      Ncells)
     {
     unsigned int block_size = 128;
@@ -567,8 +579,9 @@ bool gpu_vm_flip_edges(
 
     The strategy will be to take the d_vertexEdgeFlips list, put at most one T1 per cell per vertex into the
     d_vertexEdgeFlipsCurrent list (erasing it from the d_vertexEdgeFlips list), and swap the edges specified
-    by the "current" list. If d_vertexEdgeFlips is empty, we will set d_finishedFlippingEdges to 1. As long
-    as it is != 1, the cpp code will continue calling this gpu_avm_flip_edges function.
+    by the "current" list. If d_vertexEdgeFlips is empty, we will set d_finishedFlippingEdges[0] to 1,
+     and if any cell has multiple edges to flip, we set d_finishedFlippingEdges[1] to 1. As long
+    as the zeroth entry is 1, the flip edges kernel is called; as long as the first entry is 1 the cpp code will continue calling this gpu_avm_flip_edges function.
     */
 
     //first select a few edges to flip...
@@ -585,16 +598,35 @@ bool gpu_vm_flip_edges(
                                                                 n_idx,
                                                                 Ncells);
     HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    };
 
-    //Now flip 'em
+
+//!Call the kernel to flip at most one edge per cell, write to d_finishedFlippingEdges the current state
+bool gpu_vm_flip_edges(
+                    int      *d_vertexEdgeFlipsCurrent,
+                    Dscalar2 *d_vertexPositions,
+                    int      *d_vertexNeighbors,
+                    int      *d_vertexCellNeighbors,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
+                    Dscalar  T1Threshold,
+                    gpubox   &Box,
+                    Index2D  &n_idx,
+                    int      Nvertices,
+                    int      Ncells)
+    {
+    unsigned int block_size = 128;
+
+    if(Ncells <128) block_size = 32;
+
     int NvTimes3 = Nvertices*3;
     if (NvTimes3 < 128) block_size = 32;
-    nblocks  = NvTimes3/block_size + 1;
+    unsigned int nblocks  = NvTimes3/block_size + 1;
 
     vm_flip_edges_kernel<<<nblocks,block_size>>>(
                                                   d_vertexEdgeFlipsCurrent,d_vertexPositions,d_vertexNeighbors,
                                                   d_vertexCellNeighbors,d_cellVertexNum,d_cellVertices,
-                                                  d_finishedFlippingEdges,
                                                   T1Threshold,Box,
                                                   n_idx,NvTimes3);
 

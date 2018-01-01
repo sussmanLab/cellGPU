@@ -69,7 +69,7 @@ int main(int argc, char*argv[])
         }
     else
         initializeGPU = false;
-    
+
     //possibly save output in netCDF format
     char dataname[256];
     sprintf(dataname,"../test.nc");
@@ -118,6 +118,7 @@ int main(int argc, char*argv[])
         };
 
     //run for additional timesteps, and record timing information. Save frames to a database if desired
+    cudaProfilerStart();
     t1=clock();
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
@@ -128,6 +129,7 @@ int main(int argc, char*argv[])
             ncdat.WriteState(avm);
             };
         };
+    cudaProfilerStop();
 
     t2=clock();
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;

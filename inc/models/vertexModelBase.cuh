@@ -51,15 +51,24 @@ bool gpu_vm_test_edges_for_T1(
                     int      *d_grow,
                     Index2D  &n_idx);
 
-bool gpu_vm_flip_edges(
+bool gpu_vm_parse_multiple_flips(
                     int      *d_vertexEdgeFlips,
+                    int      *d_vertexEdgeFlipsCurrent,
+                    int      *d_vertexNeighbors,
+                    int      *d_vertexCellNeighbors,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
+                    int      *d_finishedFlippingEdges,
+                    Index2D  &n_idx,
+                    int      Ncells);
+
+bool gpu_vm_flip_edges(
                     int      *d_vertexEdgeFlipsCurrent,
                     Dscalar2 *d_vertexPositions,
                     int      *d_vertexNeighbors,
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
-                    int      *d_finishedFlippingEdges,
                     Dscalar  T1Threshold,
                     gpubox   &Box,
                     Index2D  &n_idx,
