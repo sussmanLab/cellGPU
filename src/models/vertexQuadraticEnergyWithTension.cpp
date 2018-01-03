@@ -5,7 +5,7 @@
 /*! \file vertexQuadraticEnergyWithTension.cpp */
 
 /*!
-This function definesa matrix, \gamma_{i,j}, describing the imposed tension between cell types i and
+This function defines a matrix, \gamma_{i,j}, describing the imposed tension between cell types i and
 j. This function both sets that matrix and sets the flag telling the computeForces function to call
 the more general tension force computations.
 \pre the vector has n^2 elements, where n is the number of types, and the values of type in the system

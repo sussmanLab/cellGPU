@@ -38,7 +38,7 @@ class VertexQuadraticEnergyWithTension : public VertexQuadraticEnergy
         //!Get surface tension
         Dscalar getSurfaceTension(){return gamma;};
     protected:
-        //!The value of surface tension between two cells of different type (some day make this more general)
+        //!The value of surface tension between two cells of different type 
         Dscalar gamma;
         //!A flag specifying whether the force calculation contains any surface tensions to compute
         bool Tension;
