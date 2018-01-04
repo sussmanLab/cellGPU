@@ -115,7 +115,7 @@ HOSTDEVICE Dscalar2 operator*(const Dscalar &a, const Dscalar2 &b)
     }
 
 //!return a Dscalar3 from three Dscalars
-HOSTDEVICE Dscalar3 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z)
+HOSTDEVICE Dscalar3 make_Dscalar3(Dscalar x, Dscalar y,Dscalar z)
     {
     Dscalar3 ans;
     ans.x =x;
