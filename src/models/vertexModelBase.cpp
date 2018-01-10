@@ -316,6 +316,68 @@ void vertexModelBase::computeGeometryGPU()
     };
 
 /*!
+This function fills the "cellPositions" GPUArray with the centroid of every cell. Does not assume
+that the area in the AreaPeri array is current. This function just calls the CPU or GPU routine, as determined by the GPUcompute flag
+*/
+void vertexModelBase::getCellCentroids()
+    {
+    if(GPUcompute)
+        getCellCentroidsGPU();
+    else
+        getCellCentroidsCPU();
+    };
+
+/*!
+GPU computation of the centroid of every cell
+*/
+void vertexModelBase::getCellCentroidsGPU()
+    {
+    printf("getCellCentroidsGPU() function not currently functional...Very sorry\n");
+    throw std::exception();
+    };
+
+/*!
+CPU computation of the centroid of every cell
+*/
+void vertexModelBase::getCellCentroidsCPU()
+    {
+    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
+
+    Dscalar2 zero = make_Dscalar2(0.0,0.0);
+    Dscalar2 baseVertex;
+    for (int cell = 0; cell < Ncells; ++cell)
+        {
+        //for convenience, for each cell we will make a vector of the vertices of the cell relative to vertex 0
+        //the vector will be of length (vertices+1), and the first and last entry will be zero.
+        baseVertex = h_v.data[h_n.data[n_idx(0,cell)]];
+        int neighs = h_nn.data[cell];
+        vector<Dscalar2> vertices(neighs+1,zero);
+        for (int vv = 1; vv < neighs; ++vv)
+            {
+            int vidx = h_n.data[n_idx(vv,cell)];
+            Box->minDist(h_v.data[vidx],baseVertex,vertices[vv]);
+            };
+        //compute the area and the sums for the centroids
+        Dscalar Area = 0.0;
+        Dscalar2 centroid = zero;
+        for (int vv = 0; vv < neighs; ++vv)
+            {
+            Area += (vertices[vv].x*vertices[vv+1].y - vertices[vv+1].x*vertices[vv].y);
+            centroid.x += (vertices[vv].x+vertices[vv+1].x) * (vertices[vv].x*vertices[vv+1].y - vertices[vv+1].x*vertices[vv].y);
+            centroid.y += (vertices[vv].y+vertices[vv+1].y) * (vertices[vv].x*vertices[vv+1].y - vertices[vv+1].x*vertices[vv].y);
+            };
+        Area = 0.5*Area;
+        centroid.x = centroid.x / (6.0*Area) + baseVertex.x;
+        centroid.y = centroid.y / (6.0*Area) + baseVertex.y;
+        Box->putInBoxReal(centroid);
+        h_p.data[cell] = centroid;
+        };
+    };
+
+/*!
 One would prefer the cell position to be defined as the centroid, requiring an additional computation of the cell area.
 This may be implemented some day, but for now we define the cell position as the straight average of the vertex positions.
 This isn't really used much, anyway, so update this only when the functionality becomes needed

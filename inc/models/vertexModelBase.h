@@ -53,9 +53,17 @@ class vertexModelBase : public Simple2DActiveCell
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         virtual void computeGeometryGPU();
 
+        //!Call the CPU or GPU getCellCentroids function
+        void getCellCentroids();
         //!Get the cell position from the vertices on the CPU
-        void getCellPositionsCPU();
+        void getCellCentroidsCPU();
         //!Get the cell position from the vertices on the GPU
+        void getCellCentroidsGPU();
+        //!Call the CPU or GPU getCellPositions function
+        void getCellPositions();
+        //!Get the cell position from the average vertex position on the CPU
+        void getCellPositionsCPU();
+        //!Get the cell position from the average vertex position on the GPU
         void getCellPositionsGPU();
 
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
