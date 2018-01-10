@@ -49,17 +49,18 @@ flags
 */
 void VertexQuadraticEnergy::computeForces()
     {
+    if(forcesUpToDate)
+       return; 
     forcesUpToDate = true;
     //compute the current area and perimeter of every cell
+    computeGeometry();
     //use this information to compute the net force on the vertices
     if(GPUcompute)
         {
-        computeGeometryGPU();
         computeForcesGPU();
         }
     else
         {
-        computeGeometryCPU();
         computeForcesCPU();
         };
     };

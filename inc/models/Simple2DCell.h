@@ -36,6 +36,14 @@ class Simple2DCell : public Simple2DModel
         //!do everything necessary to compute forces in the current model
         virtual void computeForces(){};
 
+        //!call either the computeGeometryCPU or GPU routines for the current model
+        virtual void computeGeometry();
+        //!let computeGeometryCPU be defined in derived classes
+        virtual void computeGeometryCPU(){};
+        //!let computeGeometryGPU be defined in derived classes
+        virtual void computeGeometryGPU(){};
+        
+
         //!do everything necessary to compute the energy for the current model
         virtual Dscalar computeEnergy(){Energy = 0.0; return 0.0;};
         //!Call masses and velocities to get the total kinetic energy

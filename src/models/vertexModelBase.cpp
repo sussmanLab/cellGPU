@@ -1017,7 +1017,7 @@ void vertexModelBase::cellDeath(int cellIndex)
     Simple2DActiveCell::cellDeath(cellIndex); //This call decrements Ncells by one
     n_idx = Index2D(vertexMax,Ncells);
 
-    //computeGeometryCPU();
+    //computeGeometry();
     };
 
 /*!

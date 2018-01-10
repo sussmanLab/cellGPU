@@ -68,6 +68,17 @@ void Simple2DCell::setCellPreferences(vector<Dscalar2> &APPref)
     };
 
 /*!
+Simply call either the CPU or GPU routine in the current or derived model
+*/
+void Simple2DCell::computeGeometry()
+    {
+    if(GPUcompute)
+        computeGeometryGPU();
+    else
+        computeGeometryCPU();
+    }
+
+/*!
 Resize the box so that every cell has, on average, area = 1, and place cells via either a simple,
 reproducible RNG or a non-reproducible RNG
 */

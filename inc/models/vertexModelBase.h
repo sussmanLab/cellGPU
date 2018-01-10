@@ -49,9 +49,9 @@ class vertexModelBase : public Simple2DActiveCell
         virtual GPUArray<Dscalar> & returnMasses(){return vertexMasses;};
 
         //!Compute the geometry (area & perimeter) of the cells on the CPU
-        void computeGeometryCPU();
+        virtual void computeGeometryCPU();
         //!Compute the geometry (area & perimeter) of the cells on the GPU
-        void computeGeometryGPU();
+        virtual void computeGeometryGPU();
 
         //!Get the cell position from the vertices on the CPU
         void getCellPositionsCPU();

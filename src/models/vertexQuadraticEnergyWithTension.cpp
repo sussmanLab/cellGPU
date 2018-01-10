@@ -42,10 +42,12 @@ exclusions, as determined by the flags. Assumes the geometry has NOT yet been co
 */
 void VertexQuadraticEnergyWithTension::computeForces()
     {
+    if(forcesUpToDate)
+       return; 
     forcesUpToDate = true;
+    computeGeometry();
     if (GPUcompute)
         {
-        computeGeometryGPU();
         if (simpleTension)
             computeVertexSimpleTensionForceGPU();
         else if (Tension)
@@ -53,7 +55,6 @@ void VertexQuadraticEnergyWithTension::computeForces()
         }
     else
         {
-        computeGeometryCPU();
         if(Tension)
                 computeVertexTensionForcesCPU();
         else

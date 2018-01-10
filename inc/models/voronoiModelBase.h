@@ -58,9 +58,9 @@ class voronoiModelBase : public Simple2DActiveCell
         virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
 
         //!Compute cell geometry on the CPU
-        void computeGeometryCPU();
+        virtual void computeGeometryCPU();
         //!call gpu_compute_geometry kernel caller
-        void computeGeometryGPU();
+        virtual void computeGeometryGPU();
 
         //!allow for cell division, according to a vector of model-dependent parameters
         virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams);

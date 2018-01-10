@@ -43,16 +43,17 @@ exclusions, as determined by the flags. Assumes the geometry has NOT yet been co
 */
 void VoronoiQuadraticEnergyWithTension::computeForces()
     {
+    if(forcesUpToDate)
+       return; 
     forcesUpToDate = true;
+    computeGeometry();
     if (GPUcompute)
         {
-        computeGeometryGPU();
         ComputeForceSetsGPU();
         SumForcesGPU();
         }
     else
         {
-        computeGeometryCPU();
         if(Tension)
             {
             if (simpleTension)
