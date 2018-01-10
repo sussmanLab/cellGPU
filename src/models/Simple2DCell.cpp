@@ -764,6 +764,7 @@ and relabeling the data structures in the simulation.
 void Simple2DCell::cellDeath(int cellIndex)
     {
     Ncells -= 1;
+    forcesUpToDate=false;
 
     //reset the spatial sorting vectors...
     itt.resize(Ncells);
@@ -806,6 +807,7 @@ downstream (used in the Voronoi branch)
  */
 void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams)
     {
+    forcesUpToDate=false;
     Ncells += 1;
     n_idx = Index2D(vertexMax,Ncells);
     int cellIdx = parameters[0];
