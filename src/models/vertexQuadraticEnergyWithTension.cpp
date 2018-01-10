@@ -42,6 +42,7 @@ exclusions, as determined by the flags. Assumes the geometry has NOT yet been co
 */
 void VertexQuadraticEnergyWithTension::computeForces()
     {
+    forcesUpToDate = true;
     if (GPUcompute)
         {
         computeGeometryGPU();
@@ -157,6 +158,8 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
 
 Dscalar VertexQuadraticEnergyWithTension::computeEnergy()
     {
+    if(!forcesUpToDate)
+        computeForces();
     printf("computeEnergy function for VertexQuadraticEnergyWithTension not written. Very sorry\n");
     throw std::exception();
     return 0;

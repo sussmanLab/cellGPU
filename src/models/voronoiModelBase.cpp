@@ -190,6 +190,7 @@ Displace cells on either the GPU or CPU, according to the flag
 */
 void voronoiModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale)
     {
+    forcesUpToDate = false;
     if (GPUcompute)
         movePoints(displacements,scale);
     else

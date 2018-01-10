@@ -231,6 +231,9 @@ class Simple2DCell : public Simple2DModel
         //!The time stepsize of the simulation
         Dscalar deltaT;
 
+        //!Are the forces (and hence, the geometry) up-to-date?
+        bool forcesUpToDate;
+
     //protected member variables
     protected:
         //!Compute aspects of the model on the GPU

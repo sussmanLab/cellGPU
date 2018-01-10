@@ -43,6 +43,7 @@ exclusions, as determined by the flags. Assumes the geometry has NOT yet been co
 */
 void VoronoiQuadraticEnergyWithTension::computeForces()
     {
+    forcesUpToDate = true;
     if (GPUcompute)
         {
         computeGeometryGPU();
@@ -98,6 +99,8 @@ E = \sum_{cells} K_A(A_i-A_i,0)^2 + K_P(P_i-P_i,0)^2 + \sum_{[i]\neq[j]} \gamma_
 */
 Dscalar VoronoiQuadraticEnergyWithTension::computeEnergy()
     {
+    if(!forcesUpToDate)
+        computeForces();
     //first, compute the area and perimeter pieces...which are easy
     ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences,access_location::host,access_mode::read);

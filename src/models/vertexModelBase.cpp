@@ -10,6 +10,7 @@ move vertices according to an inpute GPUarray
 */
 void vertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale)
     {
+    forcesUpToDate = false;
     //handle things either on the GPU or CPU
     if (GPUcompute)
         {
