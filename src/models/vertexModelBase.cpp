@@ -378,6 +378,17 @@ void vertexModelBase::getCellCentroidsCPU()
     };
 
 /*!
+This function fills the "cellPositions" GPUArray with the mean position of the vertices of each cell.
+This function just calls the CPU or GPU routine, as determined by the GPUcompute flag
+*/
+void vertexModelBase::getCellPositions()
+    {
+    if(GPUcompute)
+        getCellPositionsGPU();
+    else
+        getCellPositionsCPU();
+    };
+/*!
 One would prefer the cell position to be defined as the centroid, requiring an additional computation of the cell area.
 This may be implemented some day, but for now we define the cell position as the straight average of the vertex positions.
 This isn't really used much, anyway, so update this only when the functionality becomes needed
