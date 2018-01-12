@@ -52,10 +52,6 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         void setAlphaDec(Dscalar ad){alphaDec = ad;};
         //!Set the number of consecutive steps P must be non-negative before increasing delatT
         void setNMin(int nm){NMin = nm;};
-        //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
-        void setGPU(){GPUcompute = true;};
-        //!Enforce CPU-only operation.
-        virtual void setCPU(){GPUcompute = false;};
 
         //!an interface to call either the CPU or GPU velocity Verlet algorithm
         void velocityVerlet();
@@ -133,9 +129,5 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         GPUArray<Dscalar> sumReductionIntermediate;
         //!Utility array for simple reductions
         GPUArray<Dscalar> sumReductions;
-
-        //!Should calculations be done on the GPU?
-        bool GPUcompute;
     };
-
 #endif
