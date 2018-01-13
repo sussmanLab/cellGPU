@@ -1,63 +1,20 @@
 #define ENABLE_CUDA
 
 #include "vertexModelBase.h"
+#include "DelaunayCGAL.h" 
 #include "vertexModelBase.cuh"
-#include "voronoiQuadraticEnergy.h"
 /*! \file vertexModelBase.cpp */
-
-/*!
-move vertices according to an inpute GPUarray
-*/
-void vertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale)
-    {
-    forcesUpToDate = false;
-    //handle things either on the GPU or CPU
-    if (GPUcompute)
-        {
-        ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::read);
-        ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
-        if (scale == 1.)
-            gpu_move_degrees_of_freedom(d_v.data,d_d.data,Nvertices,*(Box));
-        else
-            gpu_move_degrees_of_freedom(d_v.data,d_d.data,scale,Nvertices,*(Box));
-        }
-    else
-        {
-        ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::read);
-        ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
-        if(scale ==1.)
-            {
-            for (int i = 0; i < Nvertices; ++i)
-                {
-                h_v.data[i].x += h_disp.data[i].x;
-                h_v.data[i].y += h_disp.data[i].y;
-                Box->putInBoxReal(h_v.data[i]);
-                };
-            }
-        else
-            {
-            for (int i = 0; i < Nvertices; ++i)
-                {
-                h_v.data[i].x += scale*h_disp.data[i].x;
-                h_v.data[i].y += scale*h_disp.data[i].y;
-                Box->putInBoxReal(h_v.data[i]);
-                };
-            }
-        };
-    };
 
 /*!
 Take care of all base class initialization functions, this involves setting arrays to the right size, etc.
 */
-void vertexModelBase::initializeVertexModelBase(int n,bool spvInitialize)
+void vertexModelBase::initializeVertexModelBase(int n)
     {
-    //set number of cells, and call initializer chain
-    Ncells=n;
-    initializeSimple2DActiveCell(Ncells);
+    //call initializer chain...sets Ncells = n
+    initializeSimpleVertexModelBase(n);
     //derive the vertices from a voronoi tesselation
-    setCellsVoronoiTesselation(spvInitialize);
+    setCellsVoronoiTesselation();
 
-    setT1Threshold(0.01);
     //initializes per-cell lists
     initializeCellSorting();
 
@@ -103,38 +60,12 @@ void vertexModelBase::enforceTopology()
 
 /*!
 A function of convenience.... initialize cell positions and vertices by constructing the Delaunay
-triangulation of the current cell positions. If you want something more regular, run the Voronoi mode for a few
-timesteps to smooth out the random point set first.
-\param spvInitialize only use if the initial cell positions are to be random, and you want to make the points more uniform
+triangulation of the current cell positions.
 \post After this is called, all topology data structures are initialized
 */
-void vertexModelBase::setCellsVoronoiTesselation(bool spvInitialize)
+void vertexModelBase::setCellsVoronoiTesselation()
     {
     ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
-    //use the Voronoi class to relax the initial configuration just a bit?
-    if(spvInitialize)
-        {
-        EOMPtr spp = make_shared<selfPropelledParticleDynamics>(Ncells);
-
-        ForcePtr spv = make_shared<Voronoi2D>(Ncells,1.0,3.8,Reproducible);
-        spv->setCellPreferencesUniform(1.0,3.8);
-        spv->setv0Dr(.1,1.0);
-
-        SimulationPtr sim = make_shared<Simulation>();
-        sim->setConfiguration(spv);
-        sim->addUpdater(spp,spv);
-        sim->setIntegrationTimestep(0.1);
-        sim->setCPUOperation(true);
-        spp->setDeltaT(0.1);
-        sim->setReproducible(true);
-
-        for (int ii = 0; ii < 100;++ii)
-            sim->performTimestep();
-        ArrayHandle<Dscalar2> h_pp(spv->cellPositions,access_location::host,access_mode::read);
-        for (int ii = 0; ii < Ncells; ++ii)
-            h_p.data[ii] = h_pp.data[ii];
-        };
-
     //call CGAL to get Delaunay triangulation
     vector<pair<Point,int> > Psnew(Ncells);
     for (int ii = 0; ii < Ncells; ++ii)
@@ -224,19 +155,6 @@ void vertexModelBase::setCellsVoronoiTesselation(bool spvInitialize)
    };
 
 /*!
- *When sortPeriod < 0 this routine does not get called
- \post vertices are re-ordered according to a Hilbert sorting scheme, cells are reordered according
- to what vertices they are near, and all data structures are updated
- */
-void vertexModelBase::spatialSorting()
-    {
-    //the base vertex model class doesn't need to change any other unusual data structures at the moment
-    spatiallySortVerticesAndCellActivity();
-    reIndexVertexArray(vertexMasses);
-    reIndexVertexArray(vertexVelocities);
-    };
-
-/*!
 Very similar to the function in Voronoi2d.cpp, but optimized since we already have some data structures
 (the vertices)...compute the area and perimeter of the cells
 */
@@ -316,133 +234,6 @@ void vertexModelBase::computeGeometryGPU()
     };
 
 /*!
-This function fills the "cellPositions" GPUArray with the centroid of every cell. Does not assume
-that the area in the AreaPeri array is current. This function just calls the CPU or GPU routine, as determined by the GPUcompute flag
-*/
-void vertexModelBase::getCellCentroids()
-    {
-    if(GPUcompute)
-        getCellCentroidsGPU();
-    else
-        getCellCentroidsCPU();
-    };
-
-/*!
-GPU computation of the centroid of every cell
-*/
-void vertexModelBase::getCellCentroidsGPU()
-    {
-    printf("getCellCentroidsGPU() function not currently functional...Very sorry\n");
-    throw std::exception();
-    };
-
-/*!
-CPU computation of the centroid of every cell
-*/
-void vertexModelBase::getCellCentroidsCPU()
-    {
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
-
-    Dscalar2 zero = make_Dscalar2(0.0,0.0);
-    Dscalar2 baseVertex;
-    for (int cell = 0; cell < Ncells; ++cell)
-        {
-        //for convenience, for each cell we will make a vector of the vertices of the cell relative to vertex 0
-        //the vector will be of length (vertices+1), and the first and last entry will be zero.
-        baseVertex = h_v.data[h_n.data[n_idx(0,cell)]];
-        int neighs = h_nn.data[cell];
-        vector<Dscalar2> vertices(neighs+1,zero);
-        for (int vv = 1; vv < neighs; ++vv)
-            {
-            int vidx = h_n.data[n_idx(vv,cell)];
-            Box->minDist(h_v.data[vidx],baseVertex,vertices[vv]);
-            };
-        //compute the area and the sums for the centroids
-        Dscalar Area = 0.0;
-        Dscalar2 centroid = zero;
-        for (int vv = 0; vv < neighs; ++vv)
-            {
-            Area += (vertices[vv].x*vertices[vv+1].y - vertices[vv+1].x*vertices[vv].y);
-            centroid.x += (vertices[vv].x+vertices[vv+1].x) * (vertices[vv].x*vertices[vv+1].y - vertices[vv+1].x*vertices[vv].y);
-            centroid.y += (vertices[vv].y+vertices[vv+1].y) * (vertices[vv].x*vertices[vv+1].y - vertices[vv+1].x*vertices[vv].y);
-            };
-        Area = 0.5*Area;
-        centroid.x = centroid.x / (6.0*Area) + baseVertex.x;
-        centroid.y = centroid.y / (6.0*Area) + baseVertex.y;
-        Box->putInBoxReal(centroid);
-        h_p.data[cell] = centroid;
-        };
-    };
-
-/*!
-This function fills the "cellPositions" GPUArray with the mean position of the vertices of each cell.
-This function just calls the CPU or GPU routine, as determined by the GPUcompute flag
-*/
-void vertexModelBase::getCellPositions()
-    {
-    if(GPUcompute)
-        getCellPositionsGPU();
-    else
-        getCellPositionsCPU();
-    };
-/*!
-One would prefer the cell position to be defined as the centroid, requiring an additional computation of the cell area.
-This may be implemented some day, but for now we define the cell position as the straight average of the vertex positions.
-This isn't really used much, anyway, so update this only when the functionality becomes needed
-*/
-void vertexModelBase::getCellPositionsCPU()
-    {
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
-
-    Dscalar2 vertex,baseVertex,pos;
-    for (int cell = 0; cell < Ncells; ++cell)
-        {
-        baseVertex = h_v.data[h_n.data[n_idx(0,cell)]];
-        int neighs = h_nn.data[cell];
-        pos.x=0.0;pos.y=0.0;
-        //compute the vertex position relative to the cell position
-        for (int n = 1; n < neighs; ++n)
-            {
-            int vidx = h_n.data[n_idx(n,cell)];
-            Box->minDist(h_v.data[vidx],baseVertex,vertex);
-            pos.x += vertex.x;
-            pos.y += vertex.y;
-            };
-        pos.x /= neighs;
-        pos.y /= neighs;
-        pos.x += baseVertex.x;
-        pos.y += baseVertex.y;
-        Box->putInBoxReal(pos);
-        h_p.data[cell] = pos;
-        };
-    };
-
-/*!
-Repeat the above calculation of "cell positions", but on the GPU
-*/
-void vertexModelBase::getCellPositionsGPU()
-    {
-    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
-    ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::read);
-    ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::read);
-
-    gpu_vm_get_cell_positions(d_p.data,
-                               d_v.data,
-                               d_cvn.data,
-                               d_cv.data,
-                               Ncells,
-                               n_idx,
-                               *(Box));
-    };
-
-/*!
  Initialize the auxilliary edge flip data structures to zero
  */
 void vertexModelBase::initializeEdgeFlipLists()
@@ -461,37 +252,6 @@ void vertexModelBase::initializeEdgeFlipLists()
     ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::overwrite);
     h_ffe.data[0]=0;
     h_ffe.data[1]=0;
-    };
-
-/*!
-when a transition increases the maximum number of vertices around any cell in the system,
-call this function first to copy over the cellVertices structure into a larger array
- */
-void vertexModelBase::growCellVerticesList(int newVertexMax)
-    {
-    cout << "maximum number of vertices per cell grew from " <<vertexMax << " to " << newVertexMax << endl;
-    vertexMax = newVertexMax+1;
-    Index2D old_idx = n_idx;
-    n_idx = Index2D(vertexMax,Ncells);
-
-    GPUArray<int> newCellVertices;
-    newCellVertices.resize(vertexMax*Ncells);
-    {//scope for array handles
-    ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n_old(cellVertices,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(newCellVertices,access_location::host,access_mode::readwrite);
-
-    for(int cell = 0; cell < Ncells; ++cell)
-        {
-        int neighs = h_nn.data[cell];
-        for (int n = 0; n < neighs; ++n)
-            {
-            h_n.data[n_idx(n,cell)] = h_n_old.data[old_idx(n,cell)];
-            };
-        };
-    };//scope for array handles
-    cellVertices.resize(vertexMax*Ncells);
-    cellVertices.swap(newCellVertices);
     };
 
 /*!
@@ -1089,8 +849,6 @@ void vertexModelBase::cellDeath(int cellIndex)
     initializeEdgeFlipLists(); //function call takes care of EdgeFlips and EdgeFlipsCurrent
     Simple2DActiveCell::cellDeath(cellIndex); //This call decrements Ncells by one
     n_idx = Index2D(vertexMax,Ncells);
-
-    //computeGeometry();
     };
 
 /*!

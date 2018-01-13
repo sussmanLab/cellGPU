@@ -10,16 +10,15 @@
 \param A0 set uniform preferred area for all cells
 \param P0 set uniform preferred perimeter for all cells
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
-\param runSPVToInitialize the default constructor has the cells start as a Voronoi tesselation of
-a random point set. Set this flag to true to relax this initial configuration via the Voronoi2D class
-\post Initialize(n,runSPVToInitialize) is called, setCellPreferencesUniform(A0,P0), and
+a random point set.
+\post initializeVertexModelBase(n,) is called, setCellPreferencesUniform(A0,P0), and
 setModuliUniform(1.0,1.0)
 */
-VertexQuadraticEnergy::VertexQuadraticEnergy(int n,Dscalar A0, Dscalar P0,bool reprod,bool runSPVToInitialize)
+VertexQuadraticEnergy::VertexQuadraticEnergy(int n,Dscalar A0, Dscalar P0,bool reprod)
     {
     printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
     Reproducible = reprod;
-    initializeVertexModelBase(n,runSPVToInitialize);
+    initializeVertexModelBase(n);
     setCellPreferencesUniform(A0,P0);
     };
 

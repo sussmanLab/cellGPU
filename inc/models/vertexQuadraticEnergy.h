@@ -17,7 +17,7 @@ class VertexQuadraticEnergy : public vertexModelBase
     {
     public:
         //! the constructor: initialize as a Delaunay configuration with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        VertexQuadraticEnergy(int n, Dscalar A0, Dscalar P0,bool reprod = false,bool runSPVToInitialize=false);
+        VertexQuadraticEnergy(int n, Dscalar A0, Dscalar P0,bool reprod = false);
 
         //virtual functions that need to be implemented
         //!compute the geometry and get the forces
