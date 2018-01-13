@@ -230,4 +230,3 @@ void simpleVertexModelBase::getCellPositionsGPU()
                                n_idx,
                                *(Box));
     };
-

@@ -2,7 +2,6 @@
 #define vertexModelBase_H
 
 #include "simpleVertexModelBase.h"
-#include "Simulation.h"
 
 /*! \file vertexModelBase.h */
 //!A class that can calculate many geometric and topological features common to three-fold coordinated vertex models
