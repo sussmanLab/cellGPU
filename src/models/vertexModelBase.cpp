@@ -1,7 +1,6 @@
 #define ENABLE_CUDA
 
 #include "vertexModelBase.h"
-#include "DelaunayCGAL.h" 
 #include "vertexModelBase.cuh"
 /*! \file vertexModelBase.cpp */
 
@@ -12,28 +11,8 @@ void vertexModelBase::initializeVertexModelBase(int n)
     {
     //call initializer chain...sets Ncells = n
     initializeSimpleVertexModelBase(n);
-    //derive the vertices from a voronoi tesselation
-    setCellsVoronoiTesselation();
 
-    //initializes per-cell lists
-    initializeCellSorting();
-
-    vertexMasses.resize(Nvertices);
-    vertexVelocities.resize(Nvertices);
-    vector<Dscalar> vmasses(Nvertices,1.0);
-    fillGPUArrayWithVector(vmasses,vertexMasses);
-    vector<Dscalar2> velocities(Nvertices,make_Dscalar2(0.0,0.0));
-    fillGPUArrayWithVector(velocities,vertexVelocities);
-
-    //initializes per-vertex lists
-    displacements.resize(Nvertices);
-    initializeVertexSorting();
     initializeEdgeFlipLists();
-
-    //initialize per-triple-vertex lists
-    vertexForceSets.resize(3*Nvertices);
-    voroCur.resize(3*Nvertices);
-    voroLastNext.resize(3*Nvertices);
 
     growCellVertexListAssist.resize(1);
     ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);
@@ -57,102 +36,6 @@ void vertexModelBase::enforceTopology()
         testAndPerformT1TransitionsCPU();
         };
     };
-
-/*!
-A function of convenience.... initialize cell positions and vertices by constructing the Delaunay
-triangulation of the current cell positions.
-\post After this is called, all topology data structures are initialized
-*/
-void vertexModelBase::setCellsVoronoiTesselation()
-    {
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
-    //call CGAL to get Delaunay triangulation
-    vector<pair<Point,int> > Psnew(Ncells);
-    for (int ii = 0; ii < Ncells; ++ii)
-        {
-        Psnew[ii]=make_pair(Point(h_p.data[ii].x,h_p.data[ii].y),ii);
-        };
-    Dscalar b11,b12,b21,b22;
-    Box->getBoxDims(b11,b12,b21,b22);
-    Iso_rectangle domain(0.0,0.0,b11,b22);
-    PDT T(Psnew.begin(),Psnew.end(),domain);
-    T.convert_to_1_sheeted_covering();
-
-    //set number of vertices
-    Nvertices = 2*Ncells;
-    vertexPositions.resize(Nvertices);
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::overwrite);
-
-    //first, ask CGAL for the circumcenter of the face, and add it to the list of vertices, and make a map between the iterator and the vertex idx
-    map<PDT::Face_handle,int> faceToVoroIdx;
-    int idx = 0;
-    for(PDT::Face_iterator fit = T.faces_begin(); fit != T.faces_end(); ++fit)
-        {
-        PDT::Point p(T.dual(fit));
-        h_v.data[idx].x = p.x();
-        h_v.data[idx].y = p.y();
-        faceToVoroIdx[fit] = idx;
-        idx +=1;
-        };
-    //create a list of what vertices are connected to what vertices,
-    //and what cells each vertex is part of
-    vertexNeighbors.resize(3*Nvertices);
-    vertexCellNeighbors.resize(3*Nvertices);
-    ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::overwrite);
-    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::overwrite);
-    for(PDT::Face_iterator fit = T.faces_begin(); fit != T.faces_end(); ++fit)
-        {
-        int vidx = faceToVoroIdx[fit];
-        for(int ff =0; ff<3; ++ff)
-            {
-            PDT::Face_handle neighFace = fit->neighbor(ff);
-            int vnidx = faceToVoroIdx[neighFace];
-            h_vn.data[3*vidx+ff] = vnidx;
-            h_vcn.data[3*vidx+ff] = fit->vertex(ff)->info();
-            };
-        };
-
-    //now create a list of what vertices are associated with each cell
-    //first get the maximum number of vertices for a cell, and the number of vertices per cell
-    cellVertexNum.resize(Ncells);
-    ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::overwrite);
-    vertexMax = 0;
-    int nnum = 0;
-    for(PDT::Vertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); ++vit)
-        {
-        PDT::Vertex_circulator vc(vit);
-        int base = vc ->info();
-        int neighs = 1;
-        ++vc;
-        while(vc->info() != base)
-            {
-            neighs += 1;
-            ++vc;
-            };
-        h_cvn.data[vit->info()] = neighs;
-        if (neighs > vertexMax) vertexMax = neighs;
-        nnum += neighs;
-        };
-    vertexMax += 2;
-    cout << "Total number of neighs = " << nnum << endl;
-    cellVertices.resize(vertexMax*Ncells);
-    cellNeighborIndexer = Index2D(vertexMax,Ncells);
-
-    //now use face circulators and the map to get the vertices associated with each cell
-    ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::overwrite);
-    for(PDT::Vertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); ++vit)
-        {
-        int cellIdx = vit->info();
-        PDT::Face_circulator fc(vit);
-        int fidx = 0;
-        for (int ff = 0; ff < h_cvn.data[vit->info()]; ++ff)
-            {
-            h_cv.data[cellNeighborIndexer(fidx,cellIdx)] = faceToVoroIdx[fc];
-            ++fidx;
-            ++fc;
-            };
-        };
-   };
 
 /*!
 Very similar to the function in Voronoi2d.cpp, but optimized since we already have some data structures

@@ -23,9 +23,6 @@ class vertexModelBase : public simpleVertexModelBase
         //!Initialize vertexModelBase, set random orientations for vertex directors, prepare data structures
         void initializeVertexModelBase(int n);
 
-        //!Initialize cells to be a voronoi tesselation of a random point set
-        void setCellsVoronoiTesselation();
-
         //!Compute the geometry (area & perimeter) of the cells on the CPU
         virtual void computeGeometryCPU();
         //!Compute the geometry (area & perimeter) of the cells on the GPU

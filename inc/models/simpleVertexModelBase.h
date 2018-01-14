@@ -24,6 +24,9 @@ class simpleVertexModelBase : public Simple2DActiveCell
         //!Take care of some simple data structure initialization
         void initializeSimpleVertexModelBase(int n);
 
+        //!Initialize cells to be a voronoi tesselation of a random point set
+        void setCellsVoronoiTesselation();
+
         //!moveDegrees of Freedom calls either the move points or move points CPU routines
         virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements,Dscalar scale = 1.);
         //!In vertex models the number of degrees of freedom is the number of vertices

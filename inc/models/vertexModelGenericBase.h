@@ -13,17 +13,18 @@ coordinated.
 class vertexModelGenericBase : public simpleVertexModelBase
     {
     public:
+        //!Initialize vertexModelBase,  prepare data structures
+        void initializeVertexGenericModelBase(int n);
+
     /*
-        //!Initialize vertexModelBase, set random orientations for vertex directors, prepare data structures
-        void initializeVertexModelBase(int n);
-
-        //!Initialize cells to be a voronoi tesselation of a random point set
-        void setCellsVoronoiTesselation();
-
         //!Compute the geometry (area & perimeter) of the cells on the CPU
         virtual void computeGeometryCPU();
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         virtual void computeGeometryGPU();
+
+        //!"Remove" a cell...This function will delete a cell but leave its vertices (as long as the vertex is part of at least one cell...useful for creating open boundaries
+        virtual void removeCell(int cellIndex);
+        
 
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
         virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams = {});
@@ -38,11 +39,11 @@ class vertexModelGenericBase : public simpleVertexModelBase
 
         //!update/enforce the topology, performing simple T1 transitions
         virtual void enforceTopology();
-
     */
 
-
     protected:
+        //!The largest highet coordination number of any vertex
+        int vertexCoordinationMaximum;
         //!The number of vertices that vertex[i] is connected to
         GPUArray<int> vertexNeighborNum;
         //!A 2dIndexer for computing where in the GPUArray to look for a given vertex's vertex neighbors (or cell neighbors)
@@ -53,6 +54,9 @@ class vertexModelGenericBase : public simpleVertexModelBase
         The maximum index that should be accessed in this way is given by vertexNeighborNum[i];
         */
         Index2D vertexNeighborIndexer;
+
+        //!if the maximum vertex coordination increases, grow the vertexNeighbor and force set lists
+        void growVertexNeighborLists(int newCoordinationMax);
 
     /*
         //!Initialize the data structures for edge flipping...should also be called if Nvertices changes
