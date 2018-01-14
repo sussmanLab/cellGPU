@@ -45,20 +45,9 @@ class vertexModelBase : public simpleVertexModelBase
         //!update/enforce the topology, performing simple T1 transitions
         virtual void enforceTopology();
 
-        /*!
-        if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting vertex i and vertex
-        vertexNeighbors[3*i+j] has been marked for a T1 transition
-        */
-        //! flags that indicate whether an edge should be GPU-flipped (1) or not (0)
-        GPUArray<int> vertexEdgeFlips;
-        //! it is important to not flip edges concurrently, so this data structure helps flip edges sequentially
-        GPUArray<int> vertexEdgeFlipsCurrent;
-
     protected:
         //!Initialize the data structures for edge flipping...should also be called if Nvertices changes
         void initializeEdgeFlipLists();
-        //! data structure to help with cell-vertex list
-        GPUArray<int> growCellVertexListAssist;
 
         //!test the edges for a T1 event, and grow the cell-vertex list if necessary
         void testEdgesForT1GPU();
@@ -68,7 +57,5 @@ class vertexModelBase : public simpleVertexModelBase
         //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
         void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
 
-        //! data structure to help with not simultaneously trying to flip nearby edges
-        GPUArray<int> finishedFlippingEdges;
     };
 #endif

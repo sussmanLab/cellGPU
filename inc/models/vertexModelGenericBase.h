@@ -13,8 +13,59 @@ coordinated.
 class vertexModelGenericBase : public simpleVertexModelBase
     {
     public:
+    /*
+        //!Initialize vertexModelBase, set random orientations for vertex directors, prepare data structures
+        void initializeVertexModelBase(int n);
+
+        //!Initialize cells to be a voronoi tesselation of a random point set
+        void setCellsVoronoiTesselation();
+
+        //!Compute the geometry (area & perimeter) of the cells on the CPU
+        virtual void computeGeometryCPU();
+        //!Compute the geometry (area & perimeter) of the cells on the GPU
+        virtual void computeGeometryGPU();
+
+        //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
+        virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams = {});
+
+        //!Kill the indexed cell...cell must have only three associated vertices
+        virtual void cellDeath(int cellIndex);
+
+        //!Simple test for T1 transitions (edge length less than threshold) on the CPU
+        void testAndPerformT1TransitionsCPU();
+        //!Simple test for T1 transitions (edge length less than threshold) on the GPU...calls the following functions
+        void testAndPerformT1TransitionsGPU();
+
+        //!update/enforce the topology, performing simple T1 transitions
+        virtual void enforceTopology();
+
+    */
+
 
     protected:
+        //!The number of vertices that vertex[i] is connected to
+        GPUArray<int> vertexNeighborNum;
+        //!A 2dIndexer for computing where in the GPUArray to look for a given vertex's vertex neighbors (or cell neighbors)
+        /*!
+        So, for instance, the kth vertex or cell neighbor of vertex i can ve accessed by:
+        vertexNeighbors[vertexNeighborIndexer(k,i)];
+        vertexCellNeighbors[vertexCellNeighborIndexer(k,i)];
+        The maximum index that should be accessed in this way is given by vertexNeighborNum[i];
+        */
+        Index2D vertexNeighborIndexer;
 
+    /*
+        //!Initialize the data structures for edge flipping...should also be called if Nvertices changes
+        void initializeEdgeFlipLists();
+
+        //!test the edges for a T1 event, and grow the cell-vertex list if necessary
+        void testEdgesForT1GPU();
+        //!perform the edge flips found in the previous step
+        void flipEdgesGPU();
+
+        //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
+        void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
+
+    */
     };
 #endif
