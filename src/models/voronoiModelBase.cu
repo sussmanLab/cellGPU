@@ -119,7 +119,7 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
                                           Dscalar2* __restrict__ d_vc,
                                           Dscalar4* __restrict__ d_vln,
                                           int N,
-                                          Index2D n_idx,
+                                          Index2D cellNeighborIndexer,
                                           gpubox Box
                                         )
     {
@@ -135,8 +135,8 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
     Dscalar Vperi= 0.0;
 
     pi = d_points[idx];
-    nlastp = d_points[ d_n[n_idx(neigh-1,idx)] ];
-    nnextp = d_points[ d_n[n_idx(0,idx)] ];
+    nlastp = d_points[ d_n[cellNeighborIndexer(neigh-1,idx)] ];
+    nnextp = d_points[ d_n[cellNeighborIndexer(0,idx)] ];
 
     Box.minDist(nlastp,pi,rij);
     Box.minDist(nnextp,pi,rik);
@@ -145,21 +145,21 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
 
     //set the VoroCur to this voronoi vertex
     //the convention is that nn=0 in this routine should be nn = 1 in the force sets calculation
-    d_vc[n_idx(1,idx)] = vlast;
+    d_vc[cellNeighborIndexer(1,idx)] = vlast;
 
     for (int nn = 1; nn < neigh; ++nn)
         {
         rij = rik;
-        int nid = d_n[n_idx(nn,idx)];
+        int nid = d_n[cellNeighborIndexer(nn,idx)];
         nnextp = d_points[ nid ];
         Box.minDist(nnextp,pi,rik);
         Circumcenter(rij,rik,vnext);
 
         //fill in the VoroCur structure
 
-        int idc = n_idx(nn+1,idx);
+        int idc = cellNeighborIndexer(nn+1,idx);
         if(nn == neigh-1)
-            idc = n_idx(0,idx);
+            idc = cellNeighborIndexer(0,idx);
 
         d_vc[idc]=vnext;
 
@@ -176,15 +176,15 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
     Vperi += sqrt(dx*dx+dy*dy);
 
     //it's more memory-access friendly to now fill in the VoroLastNext structure separately
-    vlast = d_vc[n_idx(neigh-1,idx)];
-    vfirst = d_vc[n_idx(0,idx)];
+    vlast = d_vc[cellNeighborIndexer(neigh-1,idx)];
+    vfirst = d_vc[cellNeighborIndexer(0,idx)];
     for (int nn = 0; nn < neigh; ++nn)
         {
-        int idn = n_idx(nn+1,idx);
-        if(nn == neigh-1) idn = n_idx(0,idx);
+        int idn = cellNeighborIndexer(nn+1,idx);
+        if(nn == neigh-1) idn = cellNeighborIndexer(0,idx);
         vnext = d_vc[idn];
 
-        int idc = n_idx(nn,idx);
+        int idc = cellNeighborIndexer(nn,idx);
         d_vln[idc].x = vlast.x;
         d_vln[idc].y = vlast.y;
         d_vln[idc].z = vnext.x;
@@ -250,7 +250,7 @@ bool gpu_compute_voronoi_geometry(Dscalar2 *d_points,
                         Dscalar2 *d_vc,
                         Dscalar4 *d_vln,
                         int      N,
-                        Index2D  &n_idx,
+                        Index2D  &cellNeighborIndexer,
                         gpubox &Box
                         )
     {
@@ -266,7 +266,7 @@ bool gpu_compute_voronoi_geometry(Dscalar2 *d_points,
                                                 d_vc,
                                                 d_vln,
                                                 N,
-                                                n_idx,
+                                                cellNeighborIndexer,
                                                 Box
                                                 );
     HANDLE_ERROR(cudaGetLastError());

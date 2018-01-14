@@ -30,7 +30,7 @@ bool gpu_force_sets(
                     Dscalar  KA,
                     Dscalar  KP,
                     int    NeighIdxNum,
-                    Index2D &n_idx,
+                    Index2D &cellNeighborIndexer,
                     gpubox &Box
                     );
 //!Add up the force contributions to get the net force on each particle
@@ -39,7 +39,7 @@ bool gpu_sum_force_sets(
                     Dscalar2 *d_forces,
                     int    *d_nn,
                     int     N,
-                    Index2D &n_idx
+                    Index2D &cellNeighborIndexer
                     );
 
 //!Add up the force constributions, but in the condidtion where some exclusions exist
@@ -50,7 +50,7 @@ bool gpu_sum_force_sets_with_exclusions(
                     int    *d_exes,
                     int    *d_nn,
                     int     N,
-                    Index2D &n_idx
+                    Index2D &cellNeighborIndexer
                     );
 
 /** @} */ //end of group declaration

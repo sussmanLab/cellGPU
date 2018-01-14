@@ -43,10 +43,9 @@ bool gpu_compute_voronoi_geometry(
                     Dscalar2 *d_vc,
                     Dscalar4 *d_vln,
                     int    N,
-                    Index2D &n_idx,
+                    Index2D &cellNeighborIndexer,
                     gpubox &Box
                     );
 
 /** @} */ //end of group declaration
-
 #endif

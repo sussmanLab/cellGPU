@@ -22,7 +22,7 @@ __global__ void vm_get_cell_positions_kernel(Dscalar2* d_cellPositions,
                                               int    * d_nn,
                                               int    * d_n,
                                               int N,
-                                              Index2D n_idx,
+                                              Index2D cellNeighborIndexer,
                                               gpubox Box)
     {
     // read in the cell index that belongs to this thread
@@ -32,11 +32,11 @@ __global__ void vm_get_cell_positions_kernel(Dscalar2* d_cellPositions,
 
     Dscalar2 vertex, pos, baseVertex;
     pos.x=0.0;pos.y=0.0;
-    baseVertex = d_vertexPositions[ d_n[n_idx(0,idx)] ];
+    baseVertex = d_vertexPositions[ d_n[cellNeighborIndexer(0,idx)] ];
     int neighs = d_nn[idx];
     for (int n = 1; n < neighs; ++n)
         {
-        Box.minDist(d_vertexPositions[ d_n[n_idx(n,idx)] ],baseVertex,vertex);
+        Box.minDist(d_vertexPositions[ d_n[cellNeighborIndexer(n,idx)] ],baseVertex,vertex);
         pos.x += vertex.x;
         pos.y += vertex.y;
         };
@@ -56,7 +56,7 @@ bool gpu_vm_get_cell_positions(
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      N,
-                    Index2D  &n_idx,
+                    Index2D  &cellNeighborIndexer,
                     gpubox   &Box)
     {
     unsigned int block_size = 128;
@@ -66,7 +66,7 @@ bool gpu_vm_get_cell_positions(
 
     vm_get_cell_positions_kernel<<<nblocks,block_size>>>(d_cellPositions,d_vertexPositions,
                                                           d_cellVertexNum,d_cellVertices,
-                                                          N, n_idx, Box);
+                                                          N, cellNeighborIndexer, Box);
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };

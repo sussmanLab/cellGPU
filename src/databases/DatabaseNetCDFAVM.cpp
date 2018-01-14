@@ -140,14 +140,14 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
         };
     t->vertexMax = nMax+2;
     t->cellVertices.resize((nMax+2)*Nc);
-    t->n_idx = Index2D(nMax+2,Nc);
+    t->cellNeighborIndexer = Index2D(nMax+2,Nc);
 
     ArrayHandle<int> h_n(t->cellVertices);
     for (int vv = 0; vv <Nv; ++vv)
         for (int ii = 0; ii < 3; ++ii)
             {
             int cell =  vcndat[3*vv+ii];
-            h_n.data[t->n_idx(cvn[cell],cell)] = vv;
+            h_n.data[t->cellNeighborIndexer(cvn[cell],cell)] = vv;
             cvn[cell] +=1;
             };
 
@@ -157,12 +157,12 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
         int neigh = h_nn.data[cc];
         //The voronoi vertices, relative to cell CM
         vector< Dscalar2> Vpoints(neigh);
-        int v0 =  h_n.data[t->n_idx(0,cc)];
+        int v0 =  h_n.data[t->cellNeighborIndexer(0,cc)];
         Dscalar2 meanPos = make_Dscalar2(0.0,0.0);
         vector<int> originalVertexOrder(neigh);
         for (int vv = 0; vv < neigh; ++vv)
             {
-            int v1 =  h_n.data[t->n_idx(vv,cc)];
+            int v1 =  h_n.data[t->cellNeighborIndexer(vv,cc)];
             originalVertexOrder[vv]=v1;
             t->Box->minDist(h_p.data[v0],h_p.data[v1],Vpoints[vv]);
             meanPos = meanPos + Vpoints[vv];
@@ -180,7 +180,7 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
         for (int vv = 0; vv < neigh; ++vv)
             {
             int orderedVertexIndex = CCWorder[neigh-1-vv].second;
-            h_n.data[t->n_idx(vv,cc)] = originalVertexOrder[orderedVertexIndex];
+            h_n.data[t->cellNeighborIndexer(vv,cc)] = originalVertexOrder[orderedVertexIndex];
             }
         };
 

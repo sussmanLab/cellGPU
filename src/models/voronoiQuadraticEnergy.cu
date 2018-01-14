@@ -31,7 +31,7 @@ __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
                                       Dscalar2* __restrict__ d_forces,
                                       const int* __restrict__      d_nn,
                                       int     N,
-                                      Index2D n_idx
+                                      Index2D cellNeighborIndexer
                                      )
     {
     // read in the particle that belongs to this thread
@@ -44,7 +44,7 @@ __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
     temp.x=0.0;temp.y=0.0;
     for (int nn = 0; nn < neigh; ++nn)
         {
-        Dscalar2 val = d_forceSets[n_idx(nn,idx)];
+        Dscalar2 val = d_forceSets[cellNeighborIndexer(nn,idx)];
         temp.x+=val.x;
         temp.y+=val.y;
         };
@@ -62,7 +62,7 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict
                                       const int* __restrict__ d_exes,
                                       const int* __restrict__ d_nn,
                                       int     N,
-                                      Index2D n_idx
+                                      Index2D cellNeighborIndexer
                                      )
     {
     // read in the particle that belongs to this thread
@@ -75,7 +75,7 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict
     temp.x=0.0;temp.y=0.0;
     for (int nn = 0; nn < neigh; ++nn)
         {
-        Dscalar2 val = d_forceSets[n_idx(nn,idx)];
+        Dscalar2 val = d_forceSets[cellNeighborIndexer(nn,idx)];
         temp.x+=val.x;
         temp.y+=val.y;
         };
@@ -108,7 +108,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
                                       Dscalar   KA,
                                       Dscalar   KP,
                                       int     computations,
-                                      Index2D n_idx,
+                                      Index2D cellNeighborIndexer,
                                       gpubox Box
                                      )
     {
@@ -119,7 +119,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     //which particle are we evaluating, and which neighbor
     int pidx = d_nidx[tidx].x;
     int nn = d_nidx[tidx].y;
-    int nidx=n_idx(nn,pidx);
+    int nidx=cellNeighborIndexer(nn,pidx);
 
     //local variables declared...
     Dscalar2 dAdv,dPdv;
@@ -251,7 +251,7 @@ bool gpu_force_sets(Dscalar2 *d_points,
                     Dscalar  KA,
                     Dscalar  KP,
                     int    NeighIdxNum,
-                    Index2D &n_idx,
+                    Index2D &cellNeighborIndexer,
                     gpubox &Box
                     )
     {
@@ -272,7 +272,7 @@ bool gpu_force_sets(Dscalar2 *d_points,
                                                 KA,
                                                 KP,
                                                 NeighIdxNum,
-                                                n_idx,
+                                                cellNeighborIndexer,
                                                 Box
                                                 );
     HANDLE_ERROR(cudaGetLastError());
@@ -286,7 +286,7 @@ bool gpu_sum_force_sets(
                         Dscalar2 *d_forces,
                         int    *d_nn,
                         int     N,
-                        Index2D &n_idx
+                        Index2D &cellNeighborIndexer
                         )
     {
     unsigned int block_size = 128;
@@ -298,7 +298,7 @@ bool gpu_sum_force_sets(
                                             d_forces,
                                             d_nn,
                                             N,
-                                            n_idx
+                                            cellNeighborIndexer
             );
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
@@ -313,7 +313,7 @@ bool gpu_sum_force_sets_with_exclusions(
                         int    *d_exes,
                         int    *d_nn,
                         int     N,
-                        Index2D &n_idx
+                        Index2D &cellNeighborIndexer
                         )
     {
     unsigned int block_size = 128;
@@ -327,7 +327,7 @@ bool gpu_sum_force_sets_with_exclusions(
                                             d_exes,
                                             d_nn,
                                             N,
-                                            n_idx
+                                            cellNeighborIndexer
             );
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;

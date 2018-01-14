@@ -39,7 +39,7 @@ __global__ void gpu_VoronoiTension_force_sets_kernel(const Dscalar2* __restrict_
                                           Dscalar   KA,
                                           Dscalar   KP,
                                           int     computations,
-                                          Index2D n_idx,
+                                          Index2D cellNeighborIndexer,
                                           gpubox Box
                                         )
     {
@@ -50,7 +50,7 @@ __global__ void gpu_VoronoiTension_force_sets_kernel(const Dscalar2* __restrict_
     //which particle are we evaluating, and which neighbor
     int pidx = d_nidx[tidx].x;
     int nn = d_nidx[tidx].y;
-    int nidx=n_idx(nn,pidx);
+    int nidx=cellNeighborIndexer(nn,pidx);
 
     //Great...access the Delaunay neighbors and the relevant other point
     Dscalar2 pi   = d_points[pidx];
@@ -210,7 +210,7 @@ __global__ void gpu_VoronoiSimpleTension_force_sets_kernel(const Dscalar2* __res
                                           Dscalar   KP,
                                           Dscalar   gamma,
                                           int     computations,
-                                          Index2D n_idx,
+                                          Index2D cellNeighborIndexer,
                                           gpubox Box
                                         )
     {
@@ -221,7 +221,7 @@ __global__ void gpu_VoronoiSimpleTension_force_sets_kernel(const Dscalar2* __res
     //which particle are we evaluating, and which neighbor
     int pidx = d_nidx[tidx].x;
     int nn = d_nidx[tidx].y;
-    int nidx=n_idx(nn,pidx);
+    int nidx=cellNeighborIndexer(nn,pidx);
 
     //Great...access the Delaunay neighbors and the relevant other point
     Dscalar2 pi   = d_points[pidx];
@@ -379,7 +379,7 @@ bool gpu_VoronoiTension_force_sets(Dscalar2 *d_points,
                     Dscalar  KA,
                     Dscalar  KP,
                     int    NeighIdxNum,
-                    Index2D &n_idx,
+                    Index2D &cellNeighborIndexer,
                     gpubox &Box
                     )
     {
@@ -403,7 +403,7 @@ bool gpu_VoronoiTension_force_sets(Dscalar2 *d_points,
                                                 KA,
                                                 KP,
                                                 NeighIdxNum,
-                                                n_idx,
+                                                cellNeighborIndexer,
                                                 Box
                                                 );
     HANDLE_ERROR(cudaGetLastError());
@@ -425,7 +425,7 @@ bool gpu_VoronoiSimpleTension_force_sets(Dscalar2 *d_points,
                     Dscalar  KP,
                     Dscalar  gamma,
                     int    NeighIdxNum,
-                    Index2D &n_idx,
+                    Index2D &cellNeighborIndexer,
                     gpubox &Box
                     )
     {
@@ -448,7 +448,7 @@ bool gpu_VoronoiSimpleTension_force_sets(Dscalar2 *d_points,
                                                 KP,
                                                 gamma,
                                                 NeighIdxNum,
-                                                n_idx,
+                                                cellNeighborIndexer,
                                                 Box
                                                 );
     HANDLE_ERROR(cudaGetLastError());

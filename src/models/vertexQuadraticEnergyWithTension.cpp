@@ -104,16 +104,16 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
         //find the index of vcur and vnext
         int vCurIdx = fsidx/3;
         int vNextInt = 0;
-        if (h_cv.data[n_idx(cellNeighs-1,cellIdx1)] != vCurIdx)
+        if (h_cv.data[cellNeighborIndexer(cellNeighs-1,cellIdx1)] != vCurIdx)
             {
             for (int nn = 0; nn < cellNeighs-1; ++nn)
                 {
-                int idx = h_cv.data[n_idx(nn,cellIdx1)];
+                int idx = h_cv.data[cellNeighborIndexer(nn,cellIdx1)];
                 if (idx == vCurIdx)
                     vNextInt = nn +1;
                 };
             };
-        int vNextIdx = h_cv.data[n_idx(vNextInt,cellIdx1)];
+        int vNextIdx = h_cv.data[cellNeighborIndexer(vNextInt,cellIdx1)];
 
         //vcur belongs to three cells... which one isn't cellIdx1 and has both vcur and vnext?
         int cellIdx2 = 0;
@@ -124,7 +124,7 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
             int cell2 = h_vcn.data[3*vCurIdx+cc];
             int cNeighs = h_cvn.data[cell2];
             for (int nn = 0; nn < cNeighs; ++nn)
-                if (h_cv.data[n_idx(nn,cell2)] == vNextIdx)
+                if (h_cv.data[cellNeighborIndexer(nn,cell2)] == vNextIdx)
                     cellIdx2 = cell2;
             }
         //now, determine the types of the two relevant cells, and add an extra force if needed

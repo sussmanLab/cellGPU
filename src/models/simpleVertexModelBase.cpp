@@ -81,8 +81,8 @@ void simpleVertexModelBase::growCellVerticesList(int newVertexMax)
     {
     cout << "maximum number of vertices per cell grew from " <<vertexMax << " to " << newVertexMax << endl;
     vertexMax = newVertexMax+1;
-    Index2D old_idx = n_idx;
-    n_idx = Index2D(vertexMax,Ncells);
+    Index2D old_idx = cellNeighborIndexer;
+    cellNeighborIndexer = Index2D(vertexMax,Ncells);
 
     GPUArray<int> newCellVertices;
     newCellVertices.resize(vertexMax*Ncells);
@@ -96,7 +96,7 @@ void simpleVertexModelBase::growCellVerticesList(int newVertexMax)
         int neighs = h_nn.data[cell];
         for (int n = 0; n < neighs; ++n)
             {
-            h_n.data[n_idx(n,cell)] = h_n_old.data[old_idx(n,cell)];
+            h_n.data[cellNeighborIndexer(n,cell)] = h_n_old.data[old_idx(n,cell)];
             };
         };
     };//scope for array handles
@@ -141,12 +141,12 @@ void simpleVertexModelBase::getCellCentroidsCPU()
         {
         //for convenience, for each cell we will make a vector of the vertices of the cell relative to vertex 0
         //the vector will be of length (vertices+1), and the first and last entry will be zero.
-        baseVertex = h_v.data[h_n.data[n_idx(0,cell)]];
+        baseVertex = h_v.data[h_n.data[cellNeighborIndexer(0,cell)]];
         int neighs = h_nn.data[cell];
         vector<Dscalar2> vertices(neighs+1,zero);
         for (int vv = 1; vv < neighs; ++vv)
             {
-            int vidx = h_n.data[n_idx(vv,cell)];
+            int vidx = h_n.data[cellNeighborIndexer(vv,cell)];
             Box->minDist(h_v.data[vidx],baseVertex,vertices[vv]);
             };
         //compute the area and the sums for the centroids
@@ -192,13 +192,13 @@ void simpleVertexModelBase::getCellPositionsCPU()
     Dscalar2 vertex,baseVertex,pos;
     for (int cell = 0; cell < Ncells; ++cell)
         {
-        baseVertex = h_v.data[h_n.data[n_idx(0,cell)]];
+        baseVertex = h_v.data[h_n.data[cellNeighborIndexer(0,cell)]];
         int neighs = h_nn.data[cell];
         pos.x=0.0;pos.y=0.0;
         //compute the vertex position relative to the cell position
         for (int n = 1; n < neighs; ++n)
             {
-            int vidx = h_n.data[n_idx(n,cell)];
+            int vidx = h_n.data[cellNeighborIndexer(n,cell)];
             Box->minDist(h_v.data[vidx],baseVertex,vertex);
             pos.x += vertex.x;
             pos.y += vertex.y;
@@ -227,6 +227,6 @@ void simpleVertexModelBase::getCellPositionsGPU()
                                d_cvn.data,
                                d_cv.data,
                                Ncells,
-                               n_idx,
+                               cellNeighborIndexer,
                                *(Box));
     };

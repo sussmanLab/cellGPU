@@ -26,7 +26,7 @@ bool gpu_vm_geometry(
                     Dscalar4  *d_voroLastNext,
                     Dscalar2 *d_AreaPeri,
                     int      N,
-                    Index2D  &n_idx,
+                    Index2D  &cellNeighborIndexer,
                     gpubox   &Box);
 
 bool gpu_vm_test_edges_for_T1(
@@ -41,7 +41,7 @@ bool gpu_vm_test_edges_for_T1(
                     int      Nvertices,
                     int      vertexMax,
                     int      *d_grow,
-                    Index2D  &n_idx);
+                    Index2D  &cellNeighborIndexer);
 
 bool gpu_vm_parse_multiple_flips(
                     int      *d_vertexEdgeFlips,
@@ -51,7 +51,7 @@ bool gpu_vm_parse_multiple_flips(
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      *d_finishedFlippingEdges,
-                    Index2D  &n_idx,
+                    Index2D  &cellNeighborIndexer,
                     int      Ncells);
 
 bool gpu_vm_flip_edges(
@@ -63,7 +63,7 @@ bool gpu_vm_flip_edges(
                     int      *d_cellVertices,
                     Dscalar  T1Threshold,
                     gpubox   &Box,
-                    Index2D  &n_idx,
+                    Index2D  &cellNeighborIndexer,
                     int      Nvertices,
                     int      Ncells);
 

@@ -2,7 +2,6 @@
 
 #include "vertexQuadraticEnergy.h"
 #include "vertexQuadraticEnergy.cuh"
-#include "voronoiQuadraticEnergy.h"
 /*! \file vertexQuadraticEnergy.cpp */
 
 /*!

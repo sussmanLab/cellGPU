@@ -148,8 +148,6 @@ class voronoiModelBase : public Simple2DActiveCell
         cellListGPU celllist;        
         //!The size of the cell list's underlying grid
         Dscalar cellsize;            
-        //!A 2dIndexer for computing where in the GPUArray to look for a given particles neighbors
-        Index2D n_idx;
         //!An upper bound for the maximum number of neighbors that any cell has
         int neighMax;
 
@@ -188,13 +186,13 @@ class voronoiModelBase : public Simple2DActiveCell
         //!A flag that notifies the existence of any particle exclusions (for which the net force is set to zero by fictitious external forces)
         bool particleExclusions;
 
-        //!delSet.data[n_idx(nn,i)] are the previous and next consecutive delaunay neighbors
+        //!delSet.data[cellNeighborIndexer(nn,i)] are the previous and next consecutive delaunay neighbors
         /*! These are orientationally ordered, of point i (for use in computing forces on GPU)
         */
         GPUArray<int2> delSets;
-        //!delOther.data[n_idx(nn,i)] contains the index of the "other" delaunay neighbor.
+        //!delOther.data[cellNeighborIndexer(nn,i)] contains the index of the "other" delaunay neighbor.
         /*!
-        i.e., the mutual neighbor of delSet.data[n_idx(nn,i)].y and delSet.data[n_idx(nn,i)].z that isn't point i
+        i.e., the mutual neighbor of delSet.data[cellNeighborIndexer(nn,i)].y and delSet.data[cellNeighborIndexer(nn,i)].z that isn't point i
         */
         GPUArray<int> delOther;
 

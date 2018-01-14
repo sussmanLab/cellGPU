@@ -127,8 +127,8 @@ Dscalar VoronoiQuadraticEnergyWithTension::computeEnergy()
         vector<Dscalar2> voro(neigh);
         for (int nn = 0; nn < neigh; ++nn)
             {
-            ns[nn] = h_n.data[n_idx(nn,cell)];
-            voro[nn] = h_v.data[n_idx(nn,cell)];
+            ns[nn] = h_n.data[cellNeighborIndexer(nn,cell)];
+            voro[nn] = h_v.data[cellNeighborIndexer(nn,cell)];
             };
 
         Dscalar2 vlast, vnext,vcur;
@@ -190,7 +190,7 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceSetsGPU(
                     KA,
                     KP,
                     gamma,
-                    NeighIdxNum,n_idx,*(Box));
+                    NeighIdxNum,cellNeighborIndexer,*(Box));
     };
 
 /*!
@@ -227,7 +227,7 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceSetsGPU()
                     cellTypeIndexer,
                     KA,
                     KP,
-                    NeighIdxNum,n_idx,*(Box));
+                    NeighIdxNum,cellNeighborIndexer,*(Box));
     };
 /*!
 \param i The particle index for which to compute the net force, assuming addition tension terms between unlike particles
@@ -255,7 +255,7 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceCPU(int 
     vector<int> ns(neigh);
     for (int nn = 0; nn < neigh; ++nn)
         {
-        ns[nn]=h_n.data[n_idx(nn,i)];
+        ns[nn]=h_n.data[cellNeighborIndexer(nn,i)];
         };
 
     //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
@@ -272,7 +272,7 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceCPU(int 
     Box->minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
-        int id = n_idx(nn,i);
+        int id = cellNeighborIndexer(nn,i);
         nnextp = h_p.data[ns[nn]];
         Box->minDist(nnextp,pi,rik);
         voro[nn] = h_v.data[id];
@@ -367,8 +367,8 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceCPU(int 
         int DT_other_idx=-1;
         for (int n2 = 0; n2 < neigh2; ++n2)
             {
-            int testPoint = h_n.data[n_idx(n2,baseNeigh)];
-            if(testPoint == otherNeigh) DT_other_idx = h_n.data[n_idx((n2+1)%neigh2,baseNeigh)];
+            int testPoint = h_n.data[cellNeighborIndexer(n2,baseNeigh)];
+            if(testPoint == otherNeigh) DT_other_idx = h_n.data[cellNeighborIndexer((n2+1)%neigh2,baseNeigh)];
             };
         if(DT_other_idx == otherNeigh || DT_other_idx == baseNeigh || DT_other_idx == -1)
             {
@@ -510,7 +510,7 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceCPU(int i)
     vector<int> ns(neigh);
     for (int nn = 0; nn < neigh; ++nn)
         {
-        ns[nn]=h_n.data[n_idx(nn,i)];
+        ns[nn]=h_n.data[cellNeighborIndexer(nn,i)];
         };
 
     //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
@@ -527,7 +527,7 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceCPU(int i)
     Box->minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
-        int id = n_idx(nn,i);
+        int id = cellNeighborIndexer(nn,i);
         nnextp = h_p.data[ns[nn]];
         Box->minDist(nnextp,pi,rik);
         voro[nn] = h_v.data[id];
@@ -627,8 +627,8 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceCPU(int i)
         int DT_other_idx=-1;
         for (int n2 = 0; n2 < neigh2; ++n2)
             {
-            int testPoint = h_n.data[n_idx(n2,baseNeigh)];
-            if(testPoint == otherNeigh) DT_other_idx = h_n.data[n_idx((n2+1)%neigh2,baseNeigh)];
+            int testPoint = h_n.data[cellNeighborIndexer(n2,baseNeigh)];
+            if(testPoint == otherNeigh) DT_other_idx = h_n.data[cellNeighborIndexer((n2+1)%neigh2,baseNeigh)];
             };
         if(DT_other_idx == otherNeigh || DT_other_idx == baseNeigh || DT_other_idx == -1)
             {

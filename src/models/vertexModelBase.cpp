@@ -136,7 +136,7 @@ void vertexModelBase::setCellsVoronoiTesselation()
     vertexMax += 2;
     cout << "Total number of neighs = " << nnum << endl;
     cellVertices.resize(vertexMax*Ncells);
-    n_idx = Index2D(vertexMax,Ncells);
+    cellNeighborIndexer = Index2D(vertexMax,Ncells);
 
     //now use face circulators and the map to get the vertices associated with each cell
     ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::overwrite);
@@ -147,7 +147,7 @@ void vertexModelBase::setCellsVoronoiTesselation()
         int fidx = 0;
         for (int ff = 0; ff < h_cvn.data[vit->info()]; ++ff)
             {
-            h_cv.data[n_idx(fidx,cellIdx)] = faceToVoroIdx[fc];
+            h_cv.data[cellNeighborIndexer(fidx,cellIdx)] = faceToVoroIdx[fc];
             ++fidx;
             ++fc;
             };
@@ -173,13 +173,13 @@ void vertexModelBase::computeGeometryCPU()
         {
         int neighs = h_nn.data[i];
 //      Define the vertices of a cell relative to some (any) of its verties to take care of periodic boundaries
-        Dscalar2 cellPos = h_v.data[h_n.data[n_idx(neighs-2,i)]];
+        Dscalar2 cellPos = h_v.data[h_n.data[cellNeighborIndexer(neighs-2,i)]];
         Dscalar2 vlast, vcur,vnext;
         Dscalar Varea = 0.0;
         Dscalar Vperi = 0.0;
         //compute the vertex position relative to the cell position
         vlast.x=0.;vlast.y=0.0;
-        int vidx = h_n.data[n_idx(neighs-1,i)];
+        int vidx = h_n.data[cellNeighborIndexer(neighs-1,i)];
         Box->minDist(h_v.data[vidx],cellPos,vcur);
         for (int nn = 0; nn < neighs; ++nn)
             {
@@ -188,7 +188,7 @@ void vertexModelBase::computeGeometryCPU()
             for (int ff = 0; ff < 3; ++ff)
                 if(h_vcn.data[3*vidx+ff]==i)
                     forceSetIdx = 3*vidx+ff;
-            vidx = h_n.data[n_idx(nn,i)];
+            vidx = h_n.data[cellNeighborIndexer(nn,i)];
             Box->minDist(h_v.data[vidx],cellPos,vnext);
 
             //contribution to cell's area is
@@ -230,7 +230,7 @@ void vertexModelBase::computeGeometryGPU()
                     d_vc.data,
                     d_vln.data,
                     d_AP.data,
-                    Ncells,n_idx,*(Box));
+                    Ncells,cellNeighborIndexer,*(Box));
     };
 
 /*!
@@ -278,11 +278,11 @@ void vertexModelBase::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cell
         };
     //find vertices "c" and "d"
     cneigh = h_cvn.data[cellSet.w];
-    vlast = h_cv.data[ n_idx(cneigh-2,cellSet.w) ];
-    vcur = h_cv.data[ n_idx(cneigh-1,cellSet.w) ];
+    vlast = h_cv.data[ cellNeighborIndexer(cneigh-2,cellSet.w) ];
+    vcur = h_cv.data[ cellNeighborIndexer(cneigh-1,cellSet.w) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = h_cv.data[n_idx(cn,cell1)];
+        vnext = h_cv.data[cellNeighborIndexer(cn,cell1)];
         if(vcur == vertex2) break;
         vlast = vcur;
         vcur = vnext;
@@ -290,11 +290,11 @@ void vertexModelBase::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cell
 
     //classify cell1
     cneigh = h_cvn.data[cell1];
-    vlast = h_cv.data[ n_idx(cneigh-2,cell1) ];
-    vcur = h_cv.data[ n_idx(cneigh-1,cell1) ];
+    vlast = h_cv.data[ cellNeighborIndexer(cneigh-2,cell1) ];
+    vcur = h_cv.data[ cellNeighborIndexer(cneigh-1,cell1) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = h_cv.data[n_idx(cn,cell1)];
+        vnext = h_cv.data[cellNeighborIndexer(cn,cell1)];
         if(vcur == vertex1) break;
         vlast = vcur;
         vcur = vnext;
@@ -310,11 +310,11 @@ void vertexModelBase::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cell
 
     //classify cell2
     cneigh = h_cvn.data[cell2];
-    vlast = h_cv.data[ n_idx(cneigh-2,cell2) ];
-    vcur = h_cv.data[ n_idx(cneigh-1,cell2) ];
+    vlast = h_cv.data[ cellNeighborIndexer(cneigh-2,cell2) ];
+    vcur = h_cv.data[ cellNeighborIndexer(cneigh-1,cell2) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = h_cv.data[n_idx(cn,cell2)];
+        vnext = h_cv.data[cellNeighborIndexer(cn,cell2)];
         if(vcur == vertex1) break;
         vlast = vcur;
         vcur = vnext;
@@ -330,11 +330,11 @@ void vertexModelBase::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cell
 
     //classify cell3
     cneigh = h_cvn.data[cell3];
-    vlast = h_cv.data[ n_idx(cneigh-2,cell3) ];
-    vcur = h_cv.data[ n_idx(cneigh-1,cell3) ];
+    vlast = h_cv.data[ cellNeighborIndexer(cneigh-2,cell3) ];
+    vcur = h_cv.data[ cellNeighborIndexer(cneigh-1,cell3) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = h_cv.data[n_idx(cn,cell3)];
+        vnext = h_cv.data[cellNeighborIndexer(cn,cell3)];
         if(vcur == vertex1) break;
         vlast = vcur;
         vcur = vnext;
@@ -350,11 +350,11 @@ void vertexModelBase::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cell
 
     //get the vertexSet by examining cells j and l
     cneigh = h_cvn.data[cellSet.y];
-    vlast = h_cv.data[ n_idx(cneigh-2,cellSet.y) ];
-    vcur = h_cv.data[ n_idx(cneigh-1,cellSet.y) ];
+    vlast = h_cv.data[ cellNeighborIndexer(cneigh-2,cellSet.y) ];
+    vcur = h_cv.data[ cellNeighborIndexer(cneigh-1,cellSet.y) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = h_cv.data[n_idx(cn,cellSet.y)];
+        vnext = h_cv.data[cellNeighborIndexer(cn,cellSet.y)];
         if(vcur == vertex1) break;
         vlast = vcur;
         vcur = vnext;
@@ -362,11 +362,11 @@ void vertexModelBase::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cell
     vertexSet.x=vlast;
     vertexSet.y=vnext;
     cneigh = h_cvn.data[cellSet.w];
-    vlast = h_cv.data[ n_idx(cneigh-2,cellSet.w) ];
-    vcur = h_cv.data[ n_idx(cneigh-1,cellSet.w) ];
+    vlast = h_cv.data[ cellNeighborIndexer(cneigh-2,cellSet.w) ];
+    vcur = h_cv.data[ cellNeighborIndexer(cneigh-1,cellSet.w) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = h_cv.data[n_idx(cn,cellSet.w)];
+        vnext = h_cv.data[cellNeighborIndexer(cn,cellSet.w)];
         if(vcur == vertex2) break;
         vlast = vcur;
         vcur = vnext;
@@ -478,9 +478,9 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                     int cidx = 0;
                     for (int cc = 0; cc < cneigh-1; ++cc)
                         {
-                        if(h_cv.data[n_idx(cc,cellSet.x)] == vertex2)
+                        if(h_cv.data[cellNeighborIndexer(cc,cellSet.x)] == vertex2)
                             cidx +=1;
-                        h_cv.data[n_idx(cc,cellSet.x)] = h_cv.data[n_idx(cidx,cellSet.x)];
+                        h_cv.data[cellNeighborIndexer(cc,cellSet.x)] = h_cv.data[cellNeighborIndexer(cidx,cellSet.x)];
                         cidx +=1;
                         };
                     h_cvn.data[cellSet.x] -= 1;
@@ -491,7 +491,7 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                     cidx = 0;
                     for (int cc = 0; cc < cneigh; ++cc)
                         {
-                        int cellIndex = h_cv.data[n_idx(cc,cellSet.y)];
+                        int cellIndex = h_cv.data[cellNeighborIndexer(cc,cellSet.y)];
                         cvcopy1[cidx] = cellIndex;
                         cidx +=1;
                         if(cellIndex == vertex1)
@@ -501,7 +501,7 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                             };
                         };
                     for (int cc = 0; cc < cneigh+1; ++cc)
-                        h_cv.data[n_idx(cc,cellSet.y)] = cvcopy1[cc];
+                        h_cv.data[cellNeighborIndexer(cc,cellSet.y)] = cvcopy1[cc];
                     h_cvn.data[cellSet.y] += 1;
 
                     //cell k loses v1 as a neighbor
@@ -509,9 +509,9 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                     cidx = 0;
                     for (int cc = 0; cc < cneigh-1; ++cc)
                         {
-                        if(h_cv.data[n_idx(cc,cellSet.z)] == vertex1)
+                        if(h_cv.data[cellNeighborIndexer(cc,cellSet.z)] == vertex1)
                             cidx +=1;
-                        h_cv.data[n_idx(cc,cellSet.z)] = h_cv.data[n_idx(cidx,cellSet.z)];
+                        h_cv.data[cellNeighborIndexer(cc,cellSet.z)] = h_cv.data[cellNeighborIndexer(cidx,cellSet.z)];
                         cidx +=1;
                         };
                     h_cvn.data[cellSet.z] -= 1;
@@ -522,7 +522,7 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                     cidx = 0;
                     for (int cc = 0; cc < cneigh; ++cc)
                         {
-                        int cellIndex = h_cv.data[n_idx(cc,cellSet.w)];
+                        int cellIndex = h_cv.data[cellNeighborIndexer(cc,cellSet.w)];
                         cvcopy2[cidx] = cellIndex;
                         cidx +=1;
                         if(cellIndex == vertex2)
@@ -532,7 +532,7 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                             };
                         };
                     for (int cc = 0; cc < cneigh+1; ++cc)
-                        h_cv.data[n_idx(cc,cellSet.w)] = cvcopy2[cc];
+                        h_cv.data[cellNeighborIndexer(cc,cellSet.w)] = cvcopy2[cc];
                     h_cvn.data[cellSet.w] = cneigh + 1;
 
                     };//end condition that a T1 transition should occur
@@ -568,7 +568,7 @@ void vertexModelBase::testEdgesForT1GPU()
                               Nvertices,
                               vertexMax,
                               d_grow.data,
-                              n_idx);
+                              cellNeighborIndexer);
         }
     ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::readwrite);
     if(h_grow.data[0] ==1)
@@ -605,7 +605,7 @@ void vertexModelBase::flipEdgesGPU()
                                d_cvn.data,
                                d_cv.data,
                                d_ffe.data,
-                               n_idx,
+                               cellNeighborIndexer,
                                Ncells);
             };
         //do we need to flip edges? Loop additional times?
@@ -626,7 +626,7 @@ void vertexModelBase::flipEdgesGPU()
                                d_cv.data,
                                T1Threshold,
                                *(Box),
-                               n_idx,
+                               cellNeighborIndexer,
                                Nvertices,
                                Ncells);
             iterations += 1;
@@ -680,7 +680,7 @@ void vertexModelBase::cellDeath(int cellIndex)
     int smallestVIndex = 0;
     for (int vv = 0; vv < 3; ++vv)
         {
-        int vIndex = h_cv.data[n_idx(vv,cellIndex)];
+        int vIndex = h_cv.data[cellNeighborIndexer(vv,cellIndex)];
         vertices[vv] = vIndex;
         if(vIndex < smallestV)
             {
@@ -739,7 +739,7 @@ void vertexModelBase::cellDeath(int cellIndex)
         vector<int> vNeighs(neigh);
         for (int vv = 0; vv < neigh; ++vv)
             {
-            int vIdx = h_cv.data[n_idx(vv,cIdx)];
+            int vIdx = h_cv.data[cellNeighborIndexer(vv,cIdx)];
             if (vIdx == vertices[1] || vIdx==vertices[2])
                 vNeighs[vv] = vertices[0];
             else
@@ -748,7 +748,7 @@ void vertexModelBase::cellDeath(int cellIndex)
         removeDuplicateVectorElements(vNeighs);
         h_cvn.data[cIdx] = vNeighs.size();
         for (int vv = 0; vv < vNeighs.size(); ++vv)
-            h_cv.data[n_idx(vv,cIdx)] = vNeighs[vv];
+            h_cv.data[cellNeighborIndexer(vv,cIdx)] = vNeighs[vv];
         };
 
     //vertex-vertex and vertex-cell neighbors
@@ -805,7 +805,7 @@ void vertexModelBase::cellDeath(int cellIndex)
                                3*vertices[2],3*vertices[2]+1,3*vertices[2]+2};
     vector<int> cvDeletions(vertexMax);
     for (int ii = 0; ii < vertexMax; ++ii)
-        cvDeletions[ii] = n_idx(ii,cellIndex);
+        cvDeletions[ii] = cellNeighborIndexer(ii,cellIndex);
     removeGPUArrayElement(vertexPositions,vpDeletions);
     removeGPUArrayElement(vertexMasses,vpDeletions);
     removeGPUArrayElement(vertexVelocities,vpDeletions);
@@ -848,7 +848,7 @@ void vertexModelBase::cellDeath(int cellIndex)
 
     initializeEdgeFlipLists(); //function call takes care of EdgeFlips and EdgeFlipsCurrent
     Simple2DActiveCell::cellDeath(cellIndex); //This call decrements Ncells by one
-    n_idx = Index2D(vertexMax,Ncells);
+    cellNeighborIndexer = Index2D(vertexMax,Ncells);
     };
 
 /*!
@@ -894,7 +894,7 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
 
     combinedVertices.reserve(neighs+2);
     for (int i = 0; i < neighs; ++i)
-        combinedVertices.push_back(cv.data[n_idx(i,cellIdx)]);
+        combinedVertices.push_back(cv.data[cellNeighborIndexer(i,cellIdx)]);
     combinedVertices.insert(combinedVertices.begin()+1+v1,Nvertices);
     combinedVertices.insert(combinedVertices.begin()+2+v2,Nvertices+1);
 
@@ -904,16 +904,16 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
         throw std::exception();
         };
 
-    v1idx = cv.data[n_idx(v1,cellIdx)];
-    v2idx = cv.data[n_idx(v2,cellIdx)];
+    v1idx = cv.data[cellNeighborIndexer(v1,cellIdx)];
+    v2idx = cv.data[cellNeighborIndexer(v2,cellIdx)];
     if (v1 < neighs - 1)
-        v1NextIdx = cv.data[n_idx(v1+1,cellIdx)];
+        v1NextIdx = cv.data[cellNeighborIndexer(v1+1,cellIdx)];
     else
-        v1NextIdx = cv.data[n_idx(0,cellIdx)];
+        v1NextIdx = cv.data[cellNeighborIndexer(0,cellIdx)];
     if (v2 < neighs - 1)
-        v2NextIdx = cv.data[n_idx(v2+1,cellIdx)];
+        v2NextIdx = cv.data[cellNeighborIndexer(v2+1,cellIdx)];
     else
-        v2NextIdx = cv.data[n_idx(0,cellIdx)];
+        v2NextIdx = cv.data[cellNeighborIndexer(0,cellIdx)];
 
     //find the positions of the new vertices
     Dscalar2 disp;
@@ -1085,14 +1085,14 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
             {
             int ns = h_cvn.data[cell];
             for (int vv = 0; vv < ns; ++vv)
-                cv.data[n_idx(vv,cell)] = cellVerticesVec[n_idxOld(vv,cell)];
+                cv.data[cellNeighborIndexer(vv,cell)] = cellVerticesVec[n_idxOld(vv,cell)];
             };
         //correct cellIdx's vertices
         for (int vv = 0; vv < nVertCellI; ++vv)
-            cv.data[n_idx(vv,cellIdx)] = cv2[vv];
+            cv.data[cellNeighborIndexer(vv,cellIdx)] = cv2[vv];
         //add the vertices to the new cell
         for (int vv = 0; vv < nVertNewCell; ++vv)
-            cv.data[n_idx(vv,Ncells-1)] = combinedVertices[vv];
+            cv.data[cellNeighborIndexer(vv,Ncells-1)] = combinedVertices[vv];
 
         //insert the vertices into newV1CellNeighbor and newV2CellNeighbor
         vector<int> cn1, cn2;
@@ -1102,14 +1102,14 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
         cn2.reserve(cn2Size+1);
         for (int i = 0; i < cn1Size; ++i)
             {
-            int curVertex = cv.data[n_idx(i,newV1CellNeighbor)];
+            int curVertex = cv.data[cellNeighborIndexer(i,newV1CellNeighbor)];
             cn1.push_back(curVertex);
             if(curVertex == v1NextIdx)
                 cn1.push_back(Nvertices-2);
             };
         for (int i = 0; i < cn2Size; ++i)
             {
-            int curVertex = cv.data[n_idx(i,newV2CellNeighbor)];
+            int curVertex = cv.data[cellNeighborIndexer(i,newV2CellNeighbor)];
             cn2.push_back(curVertex);
             if(curVertex == v2NextIdx)
                 cn2.push_back(Nvertices-1);
@@ -1117,10 +1117,10 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
 
         //correct newV1CellNeighbor's vertices
         for (int vv = 0; vv < cn1Size+1; ++vv)
-            cv.data[n_idx(vv,newV1CellNeighbor)] = cn1[vv];
+            cv.data[cellNeighborIndexer(vv,newV1CellNeighbor)] = cn1[vv];
         //correct newV2CellNeighbor's vertices
         for (int vv = 0; vv < cn2Size+1; ++vv)
-            cv.data[n_idx(vv,newV2CellNeighbor)] = cn2[vv];
+            cv.data[cellNeighborIndexer(vv,newV2CellNeighbor)] = cn2[vv];
         //correct the number of vertex neighbors of the cells
         h_cvn.data[newV1CellNeighbor] = cn1Size+1;
         h_cvn.data[newV2CellNeighbor] = cn2Size+1;

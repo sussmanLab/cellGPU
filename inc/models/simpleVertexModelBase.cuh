@@ -23,7 +23,7 @@ bool gpu_vm_get_cell_positions(
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      N,
-                    Index2D  &n_idx,
+                    Index2D  &cellNeighborIndexer,
                     gpubox   &Box);
 
 /** @} */ //end of group declaration

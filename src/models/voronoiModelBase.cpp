@@ -230,7 +230,7 @@ void voronoiModelBase::fullTriangulation(bool verbose)
     else
         neighMax = nmax + 1;
 
-    n_idx = Index2D(neighMax,Ncells);
+    cellNeighborIndexer = Index2D(neighMax,Ncells);
     if(neighMax != oldNmax)
         {
         cellNeighbors.resize(neighMax*Ncells);
@@ -247,7 +247,7 @@ void voronoiModelBase::fullTriangulation(bool verbose)
         int imax = neighnum.data[nn];
         for (int ii = 0; ii < imax; ++ii)
             {
-            int idxpos = n_idx(ii,nn);
+            int idxpos = cellNeighborIndexer(ii,nn);
             ns.data[idxpos] = allneighs[nn][ii];
             };
         };
@@ -309,7 +309,7 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
     else
         neighMax = nmax+1;
 
-    n_idx = Index2D(neighMax,Ncells);
+    cellNeighborIndexer = Index2D(neighMax,Ncells);
     if(cellNeighbors.getNumElements() != Ncells*neighMax)
         {
         cellNeighbors.resize(neighMax*Ncells);
@@ -326,7 +326,7 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
         int imax = neighnum.data[nn];
         for (int ii = 0; ii < imax; ++ii)
             {
-            int idxpos = n_idx(ii,nn);
+            int idxpos = cellNeighborIndexer(ii,nn);
             ns.data[idxpos] = dcgal.allneighs[nn][ii];
             };
         };
@@ -392,10 +392,10 @@ void voronoiModelBase::getCircumcenterIndices(bool secondtime, bool verbose)
             {
             if (fail) continue;
 
-            int n1 = ns.data[n_idx(jj,nn)];
+            int n1 = ns.data[cellNeighborIndexer(jj,nn)];
             int ne2 = jj + 1;
             if (jj == nmax-1)  ne2=0;
-            int n2 = ns.data[n_idx(ne2,nn)];
+            int n2 = ns.data[cellNeighborIndexer(ne2,nn)];
             if (nn < n1 && nn < n2)
                 {
                 h_ccs.data[cidx].x = nn;
@@ -491,7 +491,7 @@ void voronoiModelBase::repairTriangulation(vector<int> &fixlist)
         neighnum.data[pidx] = imax;
         for (int ii = 0; ii < imax; ++ii)
             {
-            int idxpos = n_idx(ii,pidx);
+            int idxpos = cellNeighborIndexer(ii,pidx);
             //ns.data[idxpos] = allneighs[nn][ii];
             ns.data[idxpos] = allneighs[ii+allneighidxstart[nn]];
             };
@@ -575,7 +575,7 @@ void voronoiModelBase::testTriangulationCPU()
             neighbors.reserve(neighMax);
             for (int ii = 0; ii < neighnum.data[nn];++ii)
                     {
-                    int idxpos = n_idx(ii,nn);
+                    int idxpos = cellNeighborIndexer(ii,nn);
                     neighbors.push_back(ns.data[idxpos]);
                     };
 
@@ -634,7 +634,7 @@ void voronoiModelBase::testAndRepairTriangulation(bool verb)
                 h_repair.data[nn] = 0;
                 for (int ii = 0; ii < neighnum.data[nn];++ii)
                     {
-                    int idxpos = n_idx(ii,nn);
+                    int idxpos = cellNeighborIndexer(ii,nn);
                     NeedsFixing.push_back(ns.data[idxpos]);
                     };
                 };
@@ -795,7 +795,7 @@ void voronoiModelBase::computeGeometryCPU()
         vector<int> ns(neigh);
         for (int nn = 0; nn < neigh; ++nn)
             {
-            ns[nn]=h_n.data[n_idx(nn,i)];
+            ns[nn]=h_n.data[cellNeighborIndexer(nn,i)];
             };
 
         //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
@@ -814,7 +814,7 @@ void voronoiModelBase::computeGeometryCPU()
             Circumcenter(rij,rik,circumcent);
             voro[nn] = circumcent;
             rij=rik;
-            int id = n_idx(nn,i);
+            int id = cellNeighborIndexer(nn,i);
             h_v.data[id] = voro[nn];
             };
 
@@ -830,7 +830,7 @@ void voronoiModelBase::computeGeometryCPU()
             Dscalar dx = vlast.x-vnext.x;
             Dscalar dy = vlast.y-vnext.y;
             Vperi += sqrt(dx*dx+dy*dy);
-            int id = n_idx(nn,i);
+            int id = cellNeighborIndexer(nn,i);
             h_vln.data[id].x=vlast.x;
             h_vln.data[id].y=vlast.y;
             h_vln.data[id].z=vnext.x;
@@ -862,7 +862,7 @@ void voronoiModelBase::computeGeometryGPU()
                         d_n.data,
                         d_vc.data,
                         d_vln.data,
-                        Ncells, n_idx,*(Box));
+                        Ncells, cellNeighborIndexer,*(Box));
     };
 
 /*!
@@ -926,7 +926,7 @@ Dscalar2 voronoiModelBase::dAidrj(int i, int j)
     int n1, n2;
     for (int nn = 0; nn < neigh; ++nn)
         {
-        ns[nn] = h_n.data[n_idx(nn,i)];
+        ns[nn] = h_n.data[cellNeighborIndexer(nn,i)];
         if (ns[nn] ==j)
             {
             jIsANeighbor = true;
@@ -942,18 +942,18 @@ Dscalar2 voronoiModelBase::dAidrj(int i, int j)
     //if i ==j, do the loop simply
     if ( i == j)
         {
-        vlast = h_v.data[n_idx(neigh-1,i)];
+        vlast = h_v.data[cellNeighborIndexer(neigh-1,i)];
         for (int vv = 0; vv < neigh; ++vv)
             {
-            vcur = h_v.data[n_idx(vv,i)];
-            vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+            vcur = h_v.data[cellNeighborIndexer(vv,i)];
+            vnext = h_v.data[cellNeighborIndexer((vv+1)%neigh,i)];
             Dscalar2 dAdv;
             dAdv.x = -0.5*(vlast.y-vnext.y);
             dAdv.y = -0.5*(vnext.x-vlast.x);
 
             int indexk = vv - 1;
             if (indexk <0) indexk = neigh-1;
-            Dscalar2 temp = dAdv*dHdri(h_p.data[i],h_p.data[ h_n.data[n_idx(vv,i)] ],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            Dscalar2 temp = dAdv*dHdri(h_p.data[i],h_p.data[ h_n.data[cellNeighborIndexer(vv,i)] ],h_p.data[ h_n.data[cellNeighborIndexer(indexk,i)] ]);
             answer.x += temp.x;
             answer.y += temp.y;
             vlast = vcur;
@@ -962,11 +962,11 @@ Dscalar2 voronoiModelBase::dAidrj(int i, int j)
         };
 
     //otherwise, the interesting case
-    vlast = h_v.data[n_idx(neigh-1,i)];
+    vlast = h_v.data[cellNeighborIndexer(neigh-1,i)];
     for (int vv = 0; vv < neigh; ++vv)
         {
-        vcur = h_v.data[n_idx(vv,i)];
-        vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+        vcur = h_v.data[cellNeighborIndexer(vv,i)];
+        vnext = h_v.data[cellNeighborIndexer((vv+1)%neigh,i)];
         if(vv == n1 || vv == n2)
             {
             int indexk;
@@ -979,7 +979,7 @@ Dscalar2 voronoiModelBase::dAidrj(int i, int j)
             Dscalar2 dAdv;
             dAdv.x = -0.5*(vlast.y-vnext.y);
             dAdv.y = -0.5*(vnext.x-vlast.x);
-            Dscalar2 temp = dAdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            Dscalar2 temp = dAdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[cellNeighborIndexer(indexk,i)] ]);
             answer.x += temp.x;
             answer.y += temp.y;
             };
@@ -1013,7 +1013,7 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
     int n1, n2;
     for (int nn = 0; nn < neigh; ++nn)
         {
-        ns[nn] = h_n.data[n_idx(nn,i)];
+        ns[nn] = h_n.data[cellNeighborIndexer(nn,i)];
         if (ns[nn] ==j)
             {
             jIsANeighbor = true;
@@ -1029,11 +1029,11 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
     //if i ==j, do the loop simply
     if ( i == j)
         {
-        vlast = h_v.data[n_idx(neigh-1,i)];
+        vlast = h_v.data[cellNeighborIndexer(neigh-1,i)];
         for (int vv = 0; vv < neigh; ++vv)
             {
-            vcur = h_v.data[n_idx(vv,i)];
-            vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+            vcur = h_v.data[cellNeighborIndexer(vv,i)];
+            vnext = h_v.data[cellNeighborIndexer((vv+1)%neigh,i)];
             Dscalar2 dPdv;
             Dscalar2 dlast,dnext;
             dlast.x = vlast.x-vcur.x;
@@ -1053,7 +1053,7 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
 
             int indexk = vv - 1;
             if (indexk <0) indexk = neigh-1;
-            Dscalar2 temp = dPdv*dHdri(h_p.data[i],h_p.data[ h_n.data[n_idx(vv,i)] ],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            Dscalar2 temp = dPdv*dHdri(h_p.data[i],h_p.data[ h_n.data[cellNeighborIndexer(vv,i)] ],h_p.data[ h_n.data[cellNeighborIndexer(indexk,i)] ]);
             answer.x -= temp.x;
             answer.y -= temp.y;
             vlast = vcur;
@@ -1062,11 +1062,11 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
         };
 
     //otherwise, the interesting case
-    vlast = h_v.data[n_idx(neigh-1,i)];
+    vlast = h_v.data[cellNeighborIndexer(neigh-1,i)];
     for (int vv = 0; vv < neigh; ++vv)
         {
-        vcur = h_v.data[n_idx(vv,i)];
-        vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+        vcur = h_v.data[cellNeighborIndexer(vv,i)];
+        vnext = h_v.data[cellNeighborIndexer((vv+1)%neigh,i)];
         if(vv == n1 || vv == n2)
             {
             int indexk;
@@ -1092,7 +1092,7 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
                 dlnorm = Pthreshold;
             dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
             dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
-            Dscalar2 temp = dPdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            Dscalar2 temp = dPdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[cellNeighborIndexer(indexk,i)] ]);
             answer.x -= temp.x;
             answer.y -= temp.y;
             };
@@ -1226,9 +1226,9 @@ void voronoiModelBase::resetLists()
 /*!
 \param i the cell in question
 \post the delSet and delOther data structure for cell i is updated. Recall that
-delSet.data[n_idx(nn,i)] is an int2; the x and y parts store the index of the previous and next
-Delaunay neighbor, ordered CCW. delOther contains the mutual neighbor of delSet.data[n_idx(nn,i)].y
-and delSet.data[n_idx(nn,i)].z that isn't cell i
+delSet.data[cellNeighborIndexer(nn,i)] is an int2; the x and y parts store the index of the previous and next
+Delaunay neighbor, ordered CCW. delOther contains the mutual neighbor of delSet.data[cellNeighborIndexer(nn,i)].y
+and delSet.data[cellNeighborIndexer(nn,i)].z that isn't cell i
 */
 bool voronoiModelBase::getDelSets(int i)
     {
@@ -1239,28 +1239,28 @@ bool voronoiModelBase::getDelSets(int i)
 
     int iNeighs = neighnum.data[i];
     int nm2,nm1,n1,n2;
-    nm2 = ns.data[n_idx(iNeighs-3,i)];
-    nm1 = ns.data[n_idx(iNeighs-2,i)];
-    n1 = ns.data[n_idx(iNeighs-1,i)];
+    nm2 = ns.data[cellNeighborIndexer(iNeighs-3,i)];
+    nm1 = ns.data[cellNeighborIndexer(iNeighs-2,i)];
+    n1 = ns.data[cellNeighborIndexer(iNeighs-1,i)];
 
     for (int nn = 0; nn < iNeighs; ++nn)
         {
-        n2 = ns.data[n_idx(nn,i)];
+        n2 = ns.data[cellNeighborIndexer(nn,i)];
         int nextNeighs = neighnum.data[n1];
         for (int nn2 = 0; nn2 < nextNeighs; ++nn2)
             {
-            int testPoint = ns.data[n_idx(nn2,n1)];
+            int testPoint = ns.data[cellNeighborIndexer(nn2,n1)];
             if(testPoint == nm1)
                 {
-                dother.data[n_idx(nn,i)] = ns.data[n_idx((nn2+1)%nextNeighs,n1)];
+                dother.data[cellNeighborIndexer(nn,i)] = ns.data[cellNeighborIndexer((nn2+1)%nextNeighs,n1)];
                 break;
                 };
             };
-        ds.data[n_idx(nn,i)].x= nm1;
-        ds.data[n_idx(nn,i)].y= n1;
+        ds.data[cellNeighborIndexer(nn,i)].x= nm1;
+        ds.data[cellNeighborIndexer(nn,i)].y= n1;
 
         //is "delOther" a copy of i or either of the delSet points? if so, the local topology is inconsistent
-        if(nm1 == dother.data[n_idx(nn,i)] || n1 == dother.data[n_idx(nn,i)] || i == dother.data[n_idx(nn,i)])
+        if(nm1 == dother.data[cellNeighborIndexer(nn,i)] || n1 == dother.data[cellNeighborIndexer(nn,i)] || i == dother.data[cellNeighborIndexer(nn,i)])
             return false;
 
         nm2=nm1;
@@ -1353,7 +1353,7 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     neigh = h_nn.data[cellIdx];
     vector<int> ns(neigh);
     for (int nn = 0; nn < neigh; ++nn)
-            ns[nn]=h_n.data[n_idx(nn,cellIdx)];
+            ns[nn]=h_n.data[cellNeighborIndexer(nn,cellIdx)];
     Dscalar2 circumcent;
     Dscalar2 nnextp,nlastp;
     Dscalar2 pi = h_p.data[cellIdx];

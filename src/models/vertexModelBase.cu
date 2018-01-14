@@ -26,7 +26,7 @@ __global__ void vm_geometry_kernel(
                                    Dscalar4*  __restrict__ d_voroLastNext,
                                    Dscalar2*  __restrict__ d_AreaPerimeter,
                                    int N,
-                                   Index2D n_idx,
+                                   Index2D cellNeighborIndexer,
                                    gpubox Box
                                     )
     {
@@ -36,13 +36,13 @@ __global__ void vm_geometry_kernel(
         return;
     int neighs = d_cellVertexNum[idx];
     //Define the vertices of a cell relative to some (any one ) of its vertices to take care of periodic BCs
-    Dscalar2 cellPos = d_vertexPositions[ d_cellVertices[n_idx(neighs-2,idx)]];
+    Dscalar2 cellPos = d_vertexPositions[ d_cellVertices[cellNeighborIndexer(neighs-2,idx)]];
     Dscalar2 vlast, vcur,vnext;
     Dscalar Varea = 0.0;
     Dscalar Vperi = 0.0;
 
     vlast.x = 0.0; vlast.y=0.0;
-    int vidx = d_cellVertices[n_idx(neighs-1,idx)];
+    int vidx = d_cellVertices[cellNeighborIndexer(neighs-1,idx)];
     Box.minDist(d_vertexPositions[vidx],cellPos,vcur);
     for (int nn = 0; nn < neighs; ++nn)
         {
@@ -56,7 +56,7 @@ __global__ void vm_geometry_kernel(
                 forceSetIdx = 3*vidx+ff;
             };
 
-        vidx = d_cellVertices[n_idx(nn,idx)];
+        vidx = d_cellVertices[cellNeighborIndexer(nn,idx)];
         Box.minDist(d_vertexPositions[vidx],cellPos,vnext);
 
         //compute area contribution. It is
@@ -142,7 +142,7 @@ __global__ void vm_one_T1_per_cell_per_vertex_kernel(
                                         const int* __restrict__ d_cellVertexNum,
                                         const int * __restrict__ d_cellVertices,
                                         int *d_finishedFlippingEdges,
-                                        Index2D n_idx,
+                                        Index2D cellNeighborIndexer,
                                         int Ncells)
     {
     unsigned int cell = blockDim.x * blockIdx.x + threadIdx.x;
@@ -156,7 +156,7 @@ __global__ void vm_one_T1_per_cell_per_vertex_kernel(
     bool moreFlipsFound = false;
     for (int cc = 0; cc < cneigh; ++cc)
         {
-        vertex = d_cellVertices[n_idx(cc,cell)];
+        vertex = d_cellVertices[cellNeighborIndexer(cc,cell)];
         //what are the other cells attached to this vertex? For correctness, only one cell should
         //own each vertex here. For simplicity, only the lowest-indexed cell gets to do any work.
         if(d_vertexCellNeighbors[3*vertex] < cell ||
@@ -217,7 +217,7 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
                                       int      *d_cellVertices,
                                       Dscalar  T1Threshold,
                                       gpubox   Box,
-                                      Index2D  n_idx,
+                                      Index2D  cellNeighborIndexer,
                                       int      NvTimes3)
     {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -274,11 +274,11 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         };
     //find vertices "c" and "d"
     cneigh = d_cellVertexNum[cellSet.w];
-    vlast = d_cellVertices[ n_idx(cneigh-2,cellSet.w) ];
-    vcur = d_cellVertices[ n_idx(cneigh-1,cellSet.w) ];
+    vlast = d_cellVertices[ cellNeighborIndexer(cneigh-2,cellSet.w) ];
+    vcur = d_cellVertices[ cellNeighborIndexer(cneigh-1,cellSet.w) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = d_cellVertices[n_idx(cn,cell1)];
+        vnext = d_cellVertices[cellNeighborIndexer(cn,cell1)];
         if(vcur == vertex2) break;
         vlast = vcur;
         vcur = vnext;
@@ -286,11 +286,11 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
 
     //classify cell1
     cneigh = d_cellVertexNum[cell1];
-    vlast = d_cellVertices[ n_idx(cneigh-2,cell1) ];
-    vcur = d_cellVertices[ n_idx(cneigh-1,cell1) ];
+    vlast = d_cellVertices[ cellNeighborIndexer(cneigh-2,cell1) ];
+    vcur = d_cellVertices[ cellNeighborIndexer(cneigh-1,cell1) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = d_cellVertices[n_idx(cn,cell1)];
+        vnext = d_cellVertices[cellNeighborIndexer(cn,cell1)];
         if(vcur == vertex1) break;
         vlast = vcur;
         vcur = vnext;
@@ -306,11 +306,11 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
 
     //classify cell2
     cneigh = d_cellVertexNum[cell2];
-    vlast = d_cellVertices[ n_idx(cneigh-2,cell2) ];
-    vcur = d_cellVertices[ n_idx(cneigh-1,cell2) ];
+    vlast = d_cellVertices[ cellNeighborIndexer(cneigh-2,cell2) ];
+    vcur = d_cellVertices[ cellNeighborIndexer(cneigh-1,cell2) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = d_cellVertices[n_idx(cn,cell2)];
+        vnext = d_cellVertices[cellNeighborIndexer(cn,cell2)];
         if(vcur == vertex1) break;
         vlast = vcur;
         vcur = vnext;
@@ -326,11 +326,11 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
 
     //classify cell3
     cneigh = d_cellVertexNum[cell3];
-    vlast = d_cellVertices[ n_idx(cneigh-2,cell3) ];
-    vcur = d_cellVertices[ n_idx(cneigh-1,cell3) ];
+    vlast = d_cellVertices[ cellNeighborIndexer(cneigh-2,cell3) ];
+    vcur = d_cellVertices[ cellNeighborIndexer(cneigh-1,cell3) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = d_cellVertices[n_idx(cn,cell3)];
+        vnext = d_cellVertices[cellNeighborIndexer(cn,cell3)];
         if(vcur == vertex1) break;
         vlast = vcur;
         vcur = vnext;
@@ -346,11 +346,11 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
 
     //get the vertexSet by examining cells j and l
     cneigh = d_cellVertexNum[cellSet.y];
-    vlast = d_cellVertices[ n_idx(cneigh-2,cellSet.y) ];
-    vcur = d_cellVertices[ n_idx(cneigh-1,cellSet.y) ];
+    vlast = d_cellVertices[ cellNeighborIndexer(cneigh-2,cellSet.y) ];
+    vcur = d_cellVertices[ cellNeighborIndexer(cneigh-1,cellSet.y) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = d_cellVertices[n_idx(cn,cellSet.y)];
+        vnext = d_cellVertices[cellNeighborIndexer(cn,cellSet.y)];
         if(vcur == vertex1) break;
         vlast = vcur;
         vcur = vnext;
@@ -359,11 +359,11 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     //vertexSet.y=vnext;
     vertexSet.x=vnext;
     cneigh = d_cellVertexNum[cellSet.w];
-    vlast = d_cellVertices[ n_idx(cneigh-2,cellSet.w) ];
-    vcur = d_cellVertices[ n_idx(cneigh-1,cellSet.w) ];
+    vlast = d_cellVertices[ cellNeighborIndexer(cneigh-2,cellSet.w) ];
+    vcur = d_cellVertices[ cellNeighborIndexer(cneigh-1,cellSet.w) ];
     for (int cn = 0; cn < cneigh; ++cn)
         {
-        vnext = d_cellVertices[n_idx(cn,cellSet.w)];
+        vnext = d_cellVertices[cellNeighborIndexer(cn,cellSet.w)];
         if(vcur == vertex2) break;
         vlast = vcur;
         vcur = vnext;
@@ -402,9 +402,9 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     int cidx = 0;
     for (int cc = 0; cc < cneigh-1; ++cc)
         {
-        if(d_cellVertices[n_idx(cc,cellSet.x)] == vertex2)
+        if(d_cellVertices[cellNeighborIndexer(cc,cellSet.x)] == vertex2)
             cidx +=1;
-        d_cellVertices[n_idx(cc,cellSet.x)] = d_cellVertices[n_idx(cidx,cellSet.x)];
+        d_cellVertices[cellNeighborIndexer(cc,cellSet.x)] = d_cellVertices[cellNeighborIndexer(cidx,cellSet.x)];
         cidx +=1;
         };
     d_cellVertexNum[cellSet.x] -= 1;
@@ -415,19 +415,19 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     int vLocation = cneigh;
     for (int cc = cneigh-1;cc >=0; --cc)
         {
-        int cellIndex = d_cellVertices[n_idx(cc,cellSet.y)];
+        int cellIndex = d_cellVertices[cellNeighborIndexer(cc,cellSet.y)];
         if(cellIndex == vertex1)
             {
             vLocation = cidx;
             cidx -= 1;
             };
-        d_cellVertices[n_idx(cidx,cellSet.y)] = cellIndex;
+        d_cellVertices[cellNeighborIndexer(cidx,cellSet.y)] = cellIndex;
         cidx -= 1;
         };
     if(cidx ==0)
-        d_cellVertices[n_idx(0,cellSet.y)] = vertex2;
+        d_cellVertices[cellNeighborIndexer(0,cellSet.y)] = vertex2;
     else
-        d_cellVertices[n_idx(vLocation,cellSet.y)] = vertex2;
+        d_cellVertices[cellNeighborIndexer(vLocation,cellSet.y)] = vertex2;
     d_cellVertexNum[cellSet.y] += 1;
 
     //cell k loses v1 as a neighbor
@@ -435,9 +435,9 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     cidx = 0;
     for (int cc = 0; cc < cneigh-1; ++cc)
         {
-        if(d_cellVertices[n_idx(cc,cellSet.z)] == vertex1)
+        if(d_cellVertices[cellNeighborIndexer(cc,cellSet.z)] == vertex1)
             cidx +=1;
-        d_cellVertices[n_idx(cc,cellSet.z)] = d_cellVertices[n_idx(cidx,cellSet.z)];
+        d_cellVertices[cellNeighborIndexer(cc,cellSet.z)] = d_cellVertices[cellNeighborIndexer(cidx,cellSet.z)];
         cidx +=1;
         };
     d_cellVertexNum[cellSet.z] -= 1;
@@ -448,19 +448,19 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     vLocation = cneigh;
     for (int cc = cneigh-1;cc >=0; --cc)
         {
-        int cellIndex = d_cellVertices[n_idx(cc,cellSet.w)];
+        int cellIndex = d_cellVertices[cellNeighborIndexer(cc,cellSet.w)];
         if(cellIndex == vertex2)
             {
             vLocation = cidx;
             cidx -= 1;
             };
-        d_cellVertices[n_idx(cidx,cellSet.w)] = cellIndex;
+        d_cellVertices[cellNeighborIndexer(cidx,cellSet.w)] = cellIndex;
         cidx -= 1;
         };
     if(cidx ==0)
-        d_cellVertices[n_idx(0,cellSet.w)] = vertex1;
+        d_cellVertices[cellNeighborIndexer(0,cellSet.w)] = vertex1;
     else
-        d_cellVertices[n_idx(vLocation,cellSet.w)] = vertex1;
+        d_cellVertices[cellNeighborIndexer(vLocation,cellSet.w)] = vertex1;
     d_cellVertexNum[cellSet.w] += 1;
     };
 
@@ -474,7 +474,7 @@ bool gpu_vm_geometry(
                     Dscalar4 *d_voroLastNext,
                     Dscalar2 *d_AreaPerimeter,
                     int      N,
-                    Index2D  &n_idx,
+                    Index2D  &cellNeighborIndexer,
                     gpubox   &Box)
     {
     unsigned int block_size = 128;
@@ -486,7 +486,7 @@ bool gpu_vm_geometry(
                                                d_cellVertexNum,d_cellVertices,
                                                d_vertexCellNeighbors,d_voroCur,
                                                d_voroLastNext,d_AreaPerimeter,
-                                               N, n_idx, Box);
+                                               N, cellNeighborIndexer, Box);
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
@@ -504,7 +504,7 @@ bool gpu_vm_test_edges_for_T1(
                     int      Nvertices,
                     int      vertexMax,
                     int      *d_grow,
-                    Index2D  &n_idx)
+                    Index2D  &cellNeighborIndexer)
     {
     unsigned int block_size = 128;
     int NvTimes3 = Nvertices*3;
@@ -533,7 +533,7 @@ bool gpu_vm_parse_multiple_flips(
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      *d_finishedFlippingEdges,
-                    Index2D  &n_idx,
+                    Index2D  &cellNeighborIndexer,
                     int      Ncells)
     {
     unsigned int block_size = 128;
@@ -560,7 +560,7 @@ bool gpu_vm_parse_multiple_flips(
                                                                 d_cellVertexNum,
                                                                 d_cellVertices,
                                                                 d_finishedFlippingEdges,
-                                                                n_idx,
+                                                                cellNeighborIndexer,
                                                                 Ncells);
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
@@ -577,7 +577,7 @@ bool gpu_vm_flip_edges(
                     int      *d_cellVertices,
                     Dscalar  T1Threshold,
                     gpubox   &Box,
-                    Index2D  &n_idx,
+                    Index2D  &cellNeighborIndexer,
                     int      Nvertices,
                     int      Ncells)
     {
@@ -593,7 +593,7 @@ bool gpu_vm_flip_edges(
                                                   d_vertexEdgeFlipsCurrent,d_vertexPositions,d_vertexNeighbors,
                                                   d_vertexCellNeighbors,d_cellVertexNum,d_cellVertices,
                                                   T1Threshold,Box,
-                                                  n_idx,NvTimes3);
+                                                  cellNeighborIndexer,NvTimes3);
 
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;

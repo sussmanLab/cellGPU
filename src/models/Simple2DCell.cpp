@@ -250,14 +250,14 @@ void Simple2DCell::setVertexTopologyFromCells(vector< vector<int> > cellVertexIn
         };
     vertexMax +=2;
     //set the vertices associated with every cell
-    n_idx = Index2D(vertexMax,Ncells);
+    cellNeighborIndexer = Index2D(vertexMax,Ncells);
     cellVertices.resize(vertexMax*Ncells);
     ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::overwrite);
     for (int cc = 0; cc < Ncells; ++cc)
         {
         for (int nn = 0; nn < cellVertexIndices[cc].size(); ++nn)
             {
-            h_cv.data[n_idx(nn,cc)] = cellVertexIndices[cc][nn];
+            h_cv.data[cellNeighborIndexer(nn,cc)] = cellVertexIndices[cc][nn];
             };
         };
 
@@ -594,7 +594,7 @@ void Simple2DCell::spatiallySortVertices()
         //the cellVertexNeigh array is already sorted
         int neighs = cvn.data[cellIndex];
         for (int nn = 0; nn < neighs; ++nn)
-            cv.data[n_idx(nn,cellIndex)] = ttiVertex[temp_cv.data[n_idx(nn,cc)]];
+            cv.data[cellNeighborIndexer(nn,cellIndex)] = ttiVertex[temp_cv.data[cellNeighborIndexer(nn,cc)]];
         };
     };
 
@@ -820,7 +820,7 @@ void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<Dsca
     {
     forcesUpToDate=false;
     Ncells += 1;
-    n_idx = Index2D(vertexMax,Ncells);
+    cellNeighborIndexer = Index2D(vertexMax,Ncells);
     int cellIdx = parameters[0];
 
     //additions to the spatial sorting vectors...

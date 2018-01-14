@@ -34,7 +34,7 @@ bool gpu_VoronoiTension_force_sets(
                     Dscalar  KA,
                     Dscalar  KP,
                     int    NeighIdxNum,
-                    Index2D &n_idx,
+                    Index2D &cellNeighborIndexer,
                     gpubox &Box
                     );
 
@@ -54,7 +54,7 @@ bool gpu_VoronoiSimpleTension_force_sets(
                     Dscalar  KP,
                     Dscalar  gamma,
                     int    NeighIdxNum,
-                    Index2D &n_idx,
+                    Index2D &cellNeighborIndexer,
                     gpubox &Box
                     );
 

@@ -12,6 +12,6 @@ A file providing an interface to the relevant cuda calls for the VertexQuadratic
  */
 
 
-
+/** @} */ //end of group declaration
 #endif
 

@@ -109,7 +109,7 @@ void VoronoiQuadraticEnergy::sumForceSets()
                     d_forceSets.data,
                     d_forces.data,
                     d_nn.data,
-                    Ncells,n_idx);
+                    Ncells,cellNeighborIndexer);
     };
 
 /*!
@@ -131,7 +131,7 @@ void VoronoiQuadraticEnergy::sumForceSetsWithExclusions()
                     d_external_forces.data,
                     d_exes.data,
                     d_nn.data,
-                    Ncells,n_idx);
+                    Ncells,cellNeighborIndexer);
     };
 
 /*!
@@ -162,7 +162,7 @@ void VoronoiQuadraticEnergy::computeVoronoiForceSetsGPU()
                     d_nidx.data,
                     KA,
                     KP,
-                    NeighIdxNum,n_idx,*(Box));
+                    NeighIdxNum,cellNeighborIndexer,*(Box));
     };
 
 /*!
@@ -191,7 +191,7 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
     vector<int> ns(neigh);
     for (int nn = 0; nn < neigh; ++nn)
         {
-        ns[nn]=h_n.data[n_idx(nn,i)];
+        ns[nn]=h_n.data[cellNeighborIndexer(nn,i)];
         };
 
     //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
@@ -208,7 +208,7 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
     Box->minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
         {
-        int id = n_idx(nn,i);
+        int id = cellNeighborIndexer(nn,i);
         nnextp = h_p.data[ns[nn]];
         Box->minDist(nnextp,pi,rik);
         voro[nn] = h_v.data[id];
@@ -287,8 +287,8 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         int DT_other_idx=-1;
         for (int n2 = 0; n2 < neigh2; ++n2)
             {
-            int testPoint = h_n.data[n_idx(n2,baseNeigh)];
-            if(testPoint == otherNeigh) DT_other_idx = h_n.data[n_idx((n2+1)%neigh2,baseNeigh)];
+            int testPoint = h_n.data[cellNeighborIndexer(n2,baseNeigh)];
+            if(testPoint == otherNeigh) DT_other_idx = h_n.data[cellNeighborIndexer((n2+1)%neigh2,baseNeigh)];
             };
         if(DT_other_idx == otherNeigh || DT_other_idx == baseNeigh || DT_other_idx == -1)
             {
@@ -437,8 +437,8 @@ Dscalar VoronoiQuadraticEnergy::getSigmaXY()
         vector<Dscalar2> voro(neigh);
         for (int nn = 0; nn < neigh; ++nn)
             {
-            ns[nn]=h_n.data[n_idx(nn,i)];
-            int id = n_idx(nn,i);
+            ns[nn]=h_n.data[cellNeighborIndexer(nn,i)];
+            int id = cellNeighborIndexer(nn,i);
             voro[nn] = h_v.data[id];
             };
         //loop through the Delaunay neighbors, computing dA/d\gamma and dP/d\gamma
@@ -541,7 +541,7 @@ void VoronoiQuadraticEnergy::getDynMatEntries(vector<int2> &rcs, vector<Dscalar>
         vector<int> ns(neigh);
         for (int nn = 0; nn < neigh; ++nn)
             {
-            ns[nn] = h_n.data[n_idx(nn,cell)];
+            ns[nn] = h_n.data[cellNeighborIndexer(nn,cell)];
             firstNeighs.push_back(ns[nn]);
             };
         //find the second neighbors
@@ -554,7 +554,7 @@ void VoronoiQuadraticEnergy::getDynMatEntries(vector<int2> &rcs, vector<Dscalar>
             int neigh2 = h_nn.data[curCell];
             for (int n2 = 0; n2 < neigh2; ++n2)
                 {
-                int potentialNeighbor = h_n.data[n_idx(n2,curCell)];
+                int potentialNeighbor = h_n.data[cellNeighborIndexer(n2,curCell)];
                 if (potentialNeighbor != cell && potentialNeighbor != lastCell && potentialNeighbor != nextCell)
                     secondNeighs.push_back(potentialNeighbor);
                 };
@@ -641,7 +641,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
     vector<int> ns(neigh);
     for (int nn = 0; nn < neigh; ++nn)
         {
-        ns[nn] = h_n.data[n_idx(nn,i)];
+        ns[nn] = h_n.data[cellNeighborIndexer(nn,i)];
         };
     //the saved voronoi positions
     Dscalar2 vlast, vcur,vnext;
@@ -650,7 +650,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
     int cellG, cellB,cellGp1,cellBm1;
     cellB = ns[neigh-1];
     cellBm1 = ns[neigh-2];
-    vlast = h_v.data[n_idx(neigh-1,i)];
+    vlast = h_v.data[cellNeighborIndexer(neigh-1,i)];
     Dscalar dEdA = 2*KA*(h_AP.data[i].x - h_APpref.data[i].x);
     Dscalar dEdP = 2*KP*(h_AP.data[i].y - h_APpref.data[i].y);
     Dscalar2 dAadrj = dAidrj(i,j);
@@ -675,8 +675,8 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         int cellD=-1;
         for (int n2 = 0; n2 < neigh2; ++n2)
             {
-            int testPoint = h_n.data[n_idx(n2,cellG)];
-            if(testPoint == cellB) cellD = h_n.data[n_idx((n2+1)%neigh2,cellG)];
+            int testPoint = h_n.data[cellNeighborIndexer(n2,cellG)];
+            if(testPoint == cellB) cellD = h_n.data[cellNeighborIndexer((n2+1)%neigh2,cellG)];
             };
         if(cellD == cellB || cellD  == cellG || cellD == -1)
             {
@@ -692,8 +692,8 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         Dscalar2 vother;
         Circumcenter(rB,rG,rD,vother);
 
-        vcur = h_v.data[n_idx(vv,i)];
-        vnext = h_v.data[n_idx((vv+1)%neigh,i)];
+        vcur = h_v.data[cellNeighborIndexer(vv,i)];
+        vnext = h_v.data[cellNeighborIndexer((vv+1)%neigh,i)];
 
         Matrix2x2 dvidri = dHdri(h_p.data[i],h_p.data[cellB],h_p.data[cellG]);
         Matrix2x2 dvidrj(0.0,0.0,0.0,0.0);

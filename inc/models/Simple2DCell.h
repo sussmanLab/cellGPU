@@ -202,7 +202,7 @@ class Simple2DCell : public Simple2DModel
         determine when to apply an additional line tension between cells.
         */
         GPUArray<int> cellType;
-        //!A indexer for turning a pair of cells into a 1-D index
+        //!A indexer for turning a pair of cell types into a 1-D index
         Index2D cellTypeIndexer;
 
         //!The current potential energy of the system; only updated when an explicit energy calculation is called (i.e. not by default each timestep)
@@ -267,25 +267,25 @@ class Simple2DCell : public Simple2DModel
         //!A structure that indexes the vertices defining each cell
         /*!
         cellVertices is a large, 1D array containing the vertices associated with each cell.
-        It must be accessed with the help of the Index2D structure n_idx.
+        It must be accessed with the help of the Index2D structure cellNeighborIndexer.
         the index of the kth vertex of cell c (where the ordering is counter-clockwise starting
         with a random vertex) is given by
-        cellVertices[n_idx(k,c)];
+        cellVertices[cellNeighborIndexer(k,c)];
         */
         GPUArray<int> cellVertices;
-        //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices
-        Index2D n_idx;
+        //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices (or cell neighbors)
+        Index2D cellNeighborIndexer;
         //!An upper bound for the maximum number of neighbors that any cell has
         int vertexMax;
         //!3*Nvertices length array of the position of vertices around cells
         /*!
         For both vertex and Voronoi models, it may help to save the relative position of the vertices around a
         cell, either for easy force computation or in the geometry routine, etc.
-        voroCur.data[n_idx(nn,i)] gives the nth vertex, in CCW order, of cell i
+        voroCur.data[cellNeighborIndexer(nn,i)] gives the nth vertex, in CCW order, of cell i
         */
         GPUArray<Dscalar2> voroCur;
         //!3*Nvertices length array of the position of the last and next vertices along the cell
-        //!Similarly, voroLastNext.data[n_idx(nn,i)] gives the previous and next vertex of the same
+        //!Similarly, voroLastNext.data[cellNeighborIndexer(nn,i)] gives the previous and next vertex of the same
         GPUArray<Dscalar4> voroLastNext;
 
         //!A map between cell index and the spatially sorted version.
