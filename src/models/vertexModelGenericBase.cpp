@@ -352,3 +352,26 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     //edgeFlipLists
     computeGeometry();
     };
+
+/*!
+Take a vector of vertex indices and merge them into a single vertex, handling all of the data structure
+updates necessary. Note that this construction means that, for instance, a T2 extrusion event that
+keeps the tissue confluent can be modeled by a removeCell call followed by a merging if the vertices
+that formed that cell
+*/
+void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
+    {
+    };
+
+/*!
+cell death, as opposed to cell removal, removes a cell but maintains the confluent nature of the
+tissue. This is accomplished by subsequent calls to removeCell and then mergeVertices.
+*/
+void vertexModelGenericBase::cellDeath(int cellIndex)
+    {
+    //get a list of vertices that make up the cell
+    //call removeCell
+    //use vertexMap and vertexMapInverse to figure out the new vertex labels
+    //merge those vertices together
+    };
+

@@ -23,23 +23,24 @@ class vertexModelGenericBase : public simpleVertexModelBase
         //!"Remove" cells whose index matches those in the vector...This function will delete a cell but leave its vertices (as long as the vertex is part of at least one cell...useful for creating open boundaries
         virtual void removeCells(vector<int> cellIndices);
         
+        //!Merge a number of vertices into a single vertex...this construction means T2s are easy
+        virtual void mergeVertices(vector<int> verticesToMerge);
+
+        //!Kill the indexed cell...cell can have any number of vertices
+        virtual void cellDeath(int cellIndex);
     /*
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         virtual void computeGeometryGPU();
 
-        //!Merge two vertices (connected by an edge) into a single vertex
-        virtual void mergeVertices(int vertex1, int vertex2);
 
         //!Take a vertex and divide it into two vertices
-        virtual void splitVertex(int vertexIndxer, Dscalar separation, Dscalar theta);
+        virtual void splitVertex(int vertexIndex, Dscalar separation, Dscalar theta);
 
     */
     /*
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
         virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams = {});
 
-        //!Kill the indexed cell...cell must have only three associated vertices
-        virtual void cellDeath(int cellIndex);
 
         //!Simple test for T1 transitions (edge length less than threshold) on the CPU
         void testAndPerformT1TransitionsCPU();
