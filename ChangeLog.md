@@ -3,6 +3,7 @@
 ### Changes in progress
 
 * A directory to put common MD data analysis tools has been added
+* Work on permitting more general vertex models has begun...still a long way off, though
 
 ### version 0.7.1
 

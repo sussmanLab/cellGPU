@@ -165,10 +165,10 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     //Now, create a map of (old index, new index) for cells and vertices, with new index = -1 if it is to be removed
     //so, e.g., cellMap[100] is the new index of what used to be cell 100, or is -1 if it was to be removed
     //cellMapInverse is a vector of length new Ncells. cellMapInverse[10] gives the index of the cell that will be mapped to the 10th cell
-    vector<int> cellMap(Ncells);
-    vector<int> cellMapInverse(Ncells-cellIndices.size());
-    vector<int> vertexMap(Nvertices);
-    vector<int> vertexMapInverse(Nvertices-verticesToRemove.size());
+    cellMap.resize(Ncells);
+    cellMapInverse.resize(Ncells-cellIndices.size());
+    vertexMap.resize(Nvertices);
+    vertexMapInverse.resize(Nvertices-verticesToRemove.size());
     int idx = 0;
     int newidx = 0;
     int shift = 0;

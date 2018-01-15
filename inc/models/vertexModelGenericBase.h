@@ -69,6 +69,8 @@ class vertexModelGenericBase : public simpleVertexModelBase
         vertexNeighbors[vertexNeighborIndexer(k,i)];
         vertexCellNeighbors[vertexCellNeighborIndexer(k,i)];
         The maximum index that should be accessed in this way is given by vertexNeighborNum[i];
+        Note that this indexer will be used for both vertexNeighborNum and vertexCellNeighborNum,
+        even though when there are open boundaries they may start to diverge
         */
         Index2D vertexNeighborIndexer;
 
@@ -86,7 +88,16 @@ class vertexModelGenericBase : public simpleVertexModelBase
 
         //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
         void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
-
     */
+
+        //The following are data structures that help manage topology after removals
+        //!cellMap[i] is the index of what was cell i before a removal, or is -1 if it was removed
+        vector<int> cellMap;
+        //!cellMapInverse[i] gives the index of the cell that was mapped to the ith current cell
+        vector<int> cellMapInverse;
+        //!Same as cellMap, but for vertices
+        vector<int> vertexMap;
+        //!Same as cellMapInverse, but for vertices
+        vector<int> vertexMapInverse;;
     };
 #endif
