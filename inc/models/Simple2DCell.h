@@ -30,6 +30,11 @@ class Simple2DCell : public Simple2DModel
         //!Enforce CPU-only operation. Derived classes might have to do more work when the CPU mode is invoked
         virtual void setCPU(){GPUcompute = false;};
 
+        //!Enforce GPU or CPU operation via flag
+        virtual void setGPU(bool usegpu){GPUcompute = usegpu;};
+        //!Allow for a reproducibility call to be made
+        virtual void setReproducible(bool rep){Reproducible = rep;};
+        
         //!get the number of degrees of freedom, defaulting to the number of cells
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 

@@ -53,27 +53,48 @@ int main(int argc, char*argv[])
     bool initializeGPU = setCudaDevice(USE_GPU);
 
     shared_ptr<vertexModelGenericBase> modelBase = make_shared<vertexModelGenericBase>();
+    modelBase->setGPU(initializeGPU);
+    modelBase->setReproducible(reproducible);
     modelBase->initializeVertexGenericModelBase(numpts);
 
     //possibly save output in netCDF format
     char dataname[256];
     sprintf(dataname,"../test.txt");
 
+    modelBase->computeGeometryCPU();
+    modelBase->getCellPositions();
+    vector<int> cellsToRemove;
+    {
+    ArrayHandle<Dscalar2> pos(modelBase->cellPositions);
+    Dscalar2 center = make_Dscalar2(sqrt(numpts)*0.5,sqrt(numpts)*0.5);
+    for (int n =0; n < numpts; ++n)
+        {
+        Dscalar2 dist;
+        modelBase->Box->minDist(pos.data[n],center,dist);
+        if(norm(dist) > 3.5)
+            cellsToRemove.push_back(n);
+        };
+    };
+    modelBase->removeCells(cellsToRemove);
+
+
+
     ArrayHandle<int> vnn(modelBase->vertexNeighborNum);
     Index2D vni = modelBase->vertexNeighborIndexer;
     ArrayHandle<Dscalar2> pos(modelBase->vertexPositions);
     ArrayHandle<int> vn(modelBase->vertexNeighbors);
     ArrayHandle<int> vcn(modelBase->vertexCellNeighbors);
-
+    int Nv = modelBase->Nvertices;
+    int Nc = modelBase->Ncells;
     ofstream output(dataname);
-    output << modelBase->Nvertices << "\n";
+    output << Nv << "\n";
     //write the verte coordinates
-    for (int vv = 0; vv < modelBase->Nvertices; ++vv)
+    for (int vv = 0; vv < Nv; ++vv)
         {
         output << pos.data[vv].x <<"\t" <<pos.data[vv].y << "\n";
         };
     //write vertex-vertex connections (only lower index to higher index)
-    for (int vv = 0; vv < modelBase->Nvertices; ++vv)
+    for (int vv = 0; vv < Nv; ++vv)
         {
         int neighs = vnn.data[vv];
         for (int n = 0; n < neighs; ++n)
@@ -83,19 +104,17 @@ int main(int argc, char*argv[])
                 output << vv << "\t" << vIdx << "\n";
             };
         };
-/*
+
     modelBase->computeGeometryCPU();
     ArrayHandle<Dscalar2> ap(modelBase->returnAreaPeri());
-    for (int ii = 0; ii < numpts; ++ii)
+    for (int ii = 0; ii < Nc; ++ii)
         {
-        //if(ap.data[ii].x > .95 && ap.data[ii].x < 1.52)
         if(true)
             {
             modelBase->printCellGeometry(ii);
             printf("\n");
             }
         };
-*/
 /*
     //possibly save output in netCDF format
     char dataname[256];

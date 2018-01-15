@@ -18,13 +18,15 @@ class vertexModelGenericBase : public simpleVertexModelBase
 
         //!Compute the geometry (area & perimeter) of the cells on the CPU
         virtual void computeGeometryCPU();
+
+
+        //!"Remove" cells whose index matches those in the vector...This function will delete a cell but leave its vertices (as long as the vertex is part of at least one cell...useful for creating open boundaries
+        virtual void removeCells(vector<int> cellIndices);
+        
     /*
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         virtual void computeGeometryGPU();
 
-        //!"Remove" a cell...This function will delete a cell but leave its vertices (as long as the vertex is part of at least one cell...useful for creating open boundaries
-        virtual void removeCell(int cellIndex);
-        
         //!Merge two vertices (connected by an edge) into a single vertex
         virtual void mergeVertices(int vertex1, int vertex2);
 
@@ -55,10 +57,12 @@ class vertexModelGenericBase : public simpleVertexModelBase
 
         //!Eventually we will be including vertex-edge merging events; to make this efficient we will maintain a separate edge structure
         //GPUArray<EDGE> edgeList;
-        //!The largest highet coordination number of any vertex
+        //!The largest  coordination number of any vertex
         int vertexCoordinationMaximum;
         //!The number of vertices that vertex[i] is connected to
         GPUArray<int> vertexNeighborNum;
+        //!The number of cells that vertex[i] borders
+        GPUArray<int> vertexCellNeighborNum;
         //!A 2dIndexer for computing where in the GPUArray to look for a given vertex's vertex neighbors (or cell neighbors)
         /*!
         So, for instance, the kth vertex or cell neighbor of vertex i can ve accessed by:
