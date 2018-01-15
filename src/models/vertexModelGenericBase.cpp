@@ -14,7 +14,8 @@ void vertexModelGenericBase::initializeVertexGenericModelBase(int n)
     //Note that this, by default, uses a random voronoi construction with every vertex being three-fold coordinated
     initializeSimpleVertexModelBase(n);
     vertexCoordinationMaximum = 3;
-    vertexNeighborIndexer = Index2D(vertexMax,Nvertices);
+    printf("vertices = %i\n", Nvertices);
+    vertexNeighborIndexer = Index2D(vertexCoordinationMaximum,Nvertices);
     vector<int> vertexCoordination(Nvertices,3);
     fillGPUArrayWithVector(vertexCoordination,vertexNeighborNum);
     //initializeEdgeFlipLists();

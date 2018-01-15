@@ -4,6 +4,7 @@
 
 #define ENABLE_CUDA
 
+#include "vertexModelGenericBase.h"
 //#include "vertexQuadraticEnergy.h"
 //#include "selfPropelledCellVertexDynamics.h"
 //#include "brownianParticleDynamics.h"
@@ -50,6 +51,37 @@ int main(int argc, char*argv[])
     bool reproducible = true;
     //check to see if we should run on a GPU
     bool initializeGPU = setCudaDevice(USE_GPU);
+
+    shared_ptr<vertexModelGenericBase> modelBase = make_shared<vertexModelGenericBase>();
+    modelBase->initializeVertexGenericModelBase(numpts);
+
+    //possibly save output in netCDF format
+    char dataname[256];
+    sprintf(dataname,"../test.txt");
+
+    ArrayHandle<int> vnn(modelBase->vertexNeighborNum);
+    Index2D vni = modelBase->vertexNeighborIndexer;
+    ArrayHandle<Dscalar2> pos(modelBase->vertexPositions);
+    ArrayHandle<int> vn(modelBase->vertexNeighbors);
+
+    ofstream output(dataname);
+    output << modelBase->Nvertices << "\n";
+    //write the verte coordinates
+    for (int vv = 0; vv < modelBase->Nvertices; ++vv)
+        {
+        output << pos.data[vv].x <<"\t" <<pos.data[vv].y << "\n";
+        };
+    //write vertex-vertex connections (only lower index to higher index)
+    for (int vv = 0; vv < modelBase->Nvertices; ++vv)
+        {
+        int neighs = vnn.data[vv];
+        for (int n = 0; n < neighs; ++n)
+            {
+            int vIdx = vn.data[vni(n,vv)];
+            if (vv < vIdx)
+                output << vv << "\t" << vIdx << "\n";
+            };
+        };
 
 /*
     //possibly save output in netCDF format

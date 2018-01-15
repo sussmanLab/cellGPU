@@ -48,7 +48,11 @@ class vertexModelGenericBase : public simpleVertexModelBase
         virtual void enforceTopology();
     */
 
-    protected:
+//    protected:
+
+
+
+
         //!Eventually we will be including vertex-edge merging events; to make this efficient we will maintain a separate edge structure
         //GPUArray<EDGE> edgeList;
         //!The largest highet coordination number of any vertex
