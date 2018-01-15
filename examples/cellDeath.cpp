@@ -65,18 +65,12 @@ int main(int argc, char*argv[])
             default:
                        abort();
         };
+    //clocks for timing information
     clock_t t1,t2;
-
+    // if you want random numbers with a more random seed each run, set this to false
     bool reproducible = true;
-    bool initializeGPU = true;
-    if (USE_GPU >= 0)
-        {
-        bool gpu = chooseGPU(USE_GPU);
-        if (!gpu) return 0;
-        cudaSetDevice(USE_GPU);
-        }
-    else
-        initializeGPU = false;
+    //check to see if we should run on a GPU
+    bool initializeGPU = setCudaDevice(USE_GPU);
 
     char dataname[256];
     sprintf(dataname,"../test1.nc");

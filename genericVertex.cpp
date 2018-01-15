@@ -4,24 +4,19 @@
 
 #define ENABLE_CUDA
 
-#include "vertexQuadraticEnergy.h"
-#include "selfPropelledCellVertexDynamics.h"
-#include "brownianParticleDynamics.h"
-#include "DatabaseNetCDFAVM.h"
+//#include "vertexQuadraticEnergy.h"
+//#include "selfPropelledCellVertexDynamics.h"
+//#include "brownianParticleDynamics.h"
+//#include "DatabaseNetCDFAVM.h"
+
 /*!
-This file compiles to produce an executable that can be used to reproduce the timing information
-for the 2D AVM model found in the "cellGPU" paper, using the following parameters:
-i = 1000
-t = 4000
-e = 0.01
-dr = 1.0,
-along with a range of v0 and p0. This program also demonstrates the use of brownian dynamics
-applied to the vertices themselves.
+This file is for building and testing a more generic version of 2D vertex models, capable of having
+vertices of arbitrary coordination number.
 */
 int main(int argc, char*argv[])
 {
     int numpts = 200; //number of cells
-    int USE_GPU = 0; //0 or greater uses a gpu, any negative number runs on the cpu
+    int USE_GPU = -1; //0 or greater uses a gpu, any negative number runs on the cpu
     int tSteps = 5; //number of time steps to run after initialization
     int initSteps = 1; //number of initialization steps
 
@@ -37,15 +32,8 @@ int main(int argc, char*argv[])
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
-            case 't': tSteps = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
-            case 'i': initSteps = atoi(optarg); break;
             case 'z': program_switch = atoi(optarg); break;
-            case 'e': dt = atof(optarg); break;
-            case 'p': p0 = atof(optarg); break;
-            case 'a': a0 = atof(optarg); break;
-            case 'v': v0 = atof(optarg); break;
-            case 'd': Dr = atof(optarg); break;
             case '?':
                     if(optopt=='c')
                         std::cerr<<"Option -" << optopt << "requires an argument.\n";
@@ -57,13 +45,13 @@ int main(int argc, char*argv[])
             default:
                        abort();
         };
-    //clocks for timing information
-    clock_t t1,t2;
+
     // if you want random numbers with a more random seed each run, set this to false
     bool reproducible = true;
     //check to see if we should run on a GPU
     bool initializeGPU = setCudaDevice(USE_GPU);
 
+/*
     //possibly save output in netCDF format
     char dataname[256];
     sprintf(dataname,"../test.nc");
@@ -127,7 +115,7 @@ int main(int argc, char*argv[])
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
     avm->reportMeanVertexForce();
     cout << "Mean q = " << avm->reportq() << endl;
-
+*/
     if(initializeGPU)
         cudaDeviceReset();
     return 0;

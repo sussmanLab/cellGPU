@@ -55,17 +55,12 @@ int main(int argc, char*argv[])
                        abort();
         };
 
+    //clocks for timing information
     clock_t t1,t2;
+    // if you want random numbers with a more random seed each run, set this to false
     bool reproducible = true;
-    bool initializeGPU = true;
-    if (USE_GPU >= 0)
-        {
-        bool gpu = chooseGPU(USE_GPU);
-        if (!gpu) return 0;
-        cudaSetDevice(USE_GPU);
-        }
-    else
-        initializeGPU = false;
+    //check to see if we should run on a GPU
+    bool initializeGPU = setCudaDevice(USE_GPU);
 
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
     shared_ptr<VoronoiQuadraticEnergyWithTension> spv = make_shared<VoronoiQuadraticEnergyWithTension>(numpts,1.0,4.0,reproducible);

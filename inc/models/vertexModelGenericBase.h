@@ -25,7 +25,14 @@ class vertexModelGenericBase : public simpleVertexModelBase
         //!"Remove" a cell...This function will delete a cell but leave its vertices (as long as the vertex is part of at least one cell...useful for creating open boundaries
         virtual void removeCell(int cellIndex);
         
+        //!Merge two vertices (connected by an edge) into a single vertex
+        virtual void mergeVertices(int vertex1, int vertex2);
 
+        //!Take a vertex and divide it into two vertices
+        virtual void splitVertex(int vertexIndxer, Dscalar separation, Dscalar theta);
+
+    */
+    /*
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
         virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams = {});
 
@@ -42,6 +49,8 @@ class vertexModelGenericBase : public simpleVertexModelBase
     */
 
     protected:
+        //!Eventually we will be including vertex-edge merging events; to make this efficient we will maintain a separate edge structure
+        //GPUArray<EDGE> edgeList;
         //!The largest highet coordination number of any vertex
         int vertexCoordinationMaximum;
         //!The number of vertices that vertex[i] is connected to

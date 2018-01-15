@@ -52,18 +52,12 @@ int main(int argc, char*argv[])
                        abort();
         };
 
-    clock_t t1,t2; //clocks for timing information
-    bool reproducible = true; // if you want random numbers with a more random seed each run, set this to false
+    //clocks for timing information
+    clock_t t1,t2;
+    // if you want random numbers with a more random seed each run, set this to false
+    bool reproducible = true;
     //check to see if we should run on a GPU
-    bool initializeGPU = true;
-    if (USE_GPU >= 0)
-        {
-        bool gpu = chooseGPU(USE_GPU);
-        if (!gpu) return 0;
-        cudaSetDevice(USE_GPU);
-        }
-    else
-        initializeGPU = false;
+    bool initializeGPU = setCudaDevice(USE_GPU);
 
     //define an equation of motion object...here for self-propelled cells
     EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);

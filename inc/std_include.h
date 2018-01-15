@@ -156,6 +156,54 @@ inline bool fileExists(const std::string& name)
     return f.good();
     }
 
+//!Get basic stats about the chosen GPU (if it exists)
+__host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
+    {
+    int nDev;
+    cudaGetDeviceCount(&nDev);
+    if (USE_GPU >= nDev)
+        {
+        cout << "Requested GPU (device " << USE_GPU<<") does not exist. Stopping triangulation" << endl;
+        return false;
+        };
+    if (USE_GPU <nDev)
+        cudaSetDevice(USE_GPU);
+    if(verbose)    cout << "Device # \t\t Device Name \t\t MemClock \t\t MemBusWidth" << endl;
+    for (int ii=0; ii < nDev; ++ii)
+        {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop,ii);
+        if (verbose)
+            {
+            if (ii == USE_GPU) cout << "********************************" << endl;
+            if (ii == USE_GPU) cout << "****Using the following gpu ****" << endl;
+            cout << ii <<"\t\t\t" << prop.name << "\t\t" << prop.memoryClockRate << "\t\t" << prop.memoryBusWidth << endl;
+            if (ii == USE_GPU) cout << "*******************************" << endl;
+            };
+        };
+    if (!verbose)
+        {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop,USE_GPU);
+        cout << "using " << prop.name << "\t ClockRate = " << prop.memoryClockRate << " memBusWidth = " << prop.memoryBusWidth << endl << endl;
+        };
+    return true;
+    };
+
+//!calls the above function, setting the cuda-capable device corresponding to the integer passed in (or returning false if USE_GPU < 0)
+__host__ inline bool setCudaDevice(int USE_GPU,bool verbose = false)
+    {
+    if (USE_GPU >= 0)
+        {
+        bool gpu = chooseGPU(USE_GPU,verbose);
+        if (!gpu) return 0;
+        cudaSetDevice(USE_GPU);
+        return true;
+        }
+    else
+        return false;
+    };
+
 //A macro to wrap cuda calls
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
 //spot-checking of code for debugging
