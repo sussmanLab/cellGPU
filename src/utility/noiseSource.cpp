@@ -59,3 +59,14 @@ void noiseSource::initializeGPURNGs(int globalSeed,int tempSeed)
     gpu_initialize_RNG_array(d_curandRNGs.data,N,tempSeed,globalseed);
     };
 
+void noiseSource::setReproducibleSeed(int _seed)
+    {
+    RNGSeed = _seed;
+    mt19937 Gener(13377);
+    gen = Gener;
+#ifdef DEBUGFLAGUP
+    mt19937 GenerRd(13377);
+    genrd=GenerRd;
+#endif
+    };
+
