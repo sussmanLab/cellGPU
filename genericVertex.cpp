@@ -63,6 +63,7 @@ int main(int argc, char*argv[])
     Index2D vni = modelBase->vertexNeighborIndexer;
     ArrayHandle<Dscalar2> pos(modelBase->vertexPositions);
     ArrayHandle<int> vn(modelBase->vertexNeighbors);
+    ArrayHandle<int> vcn(modelBase->vertexCellNeighbors);
 
     ofstream output(dataname);
     output << modelBase->Nvertices << "\n";
@@ -82,7 +83,19 @@ int main(int argc, char*argv[])
                 output << vv << "\t" << vIdx << "\n";
             };
         };
-
+/*
+    modelBase->computeGeometryCPU();
+    ArrayHandle<Dscalar2> ap(modelBase->returnAreaPeri());
+    for (int ii = 0; ii < numpts; ++ii)
+        {
+        //if(ap.data[ii].x > .95 && ap.data[ii].x < 1.52)
+        if(true)
+            {
+            modelBase->printCellGeometry(ii);
+            printf("\n");
+            }
+        };
+*/
 /*
     //possibly save output in netCDF format
     char dataname[256];

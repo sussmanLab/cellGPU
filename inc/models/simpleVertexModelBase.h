@@ -91,5 +91,8 @@ class simpleVertexModelBase : public Simple2DActiveCell
         //! data structure to help with not simultaneously trying to flip nearby edges
         GPUArray<int> finishedFlippingEdges;
 
+    public:
+        //!A function for debugging geometry
+        void printCellGeometry(int i);
     };
 #endif

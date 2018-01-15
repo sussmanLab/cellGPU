@@ -70,3 +70,59 @@ void vertexModelGenericBase::growVertexNeighborLists(int newCoordinationMax)
     voroCur.resize(vertexCoordinationMaximum*Nvertices);
     voroLastNext.resize(vertexCoordinationMaximum*Nvertices);
     };
+
+/*!
+Compute the area and perimeter of every cell on the CPU
+*/
+void vertexModelGenericBase::computeGeometryCPU()
+    {
+    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_cv(cellVertices,access_location::host,access_mode::read);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<Dscalar2> h_vc(voroCur,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar4> h_vln(voroLastNext,access_location::host,access_mode::readwrite);
+    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_vnn(vertexNeighborNum,access_location::host,access_mode::read);
+
+    //compute the geometry for each cell
+    for (int i = 0; i < Ncells; ++i)
+        {
+        int neighs = h_cvn.data[i];
+//      Define the vertices of a cell relative to some (any) of its verties to take care of periodic boundaries
+        Dscalar2 cellPos = h_v.data[h_cv.data[cellNeighborIndexer(neighs-2,i)]];
+        Dscalar2 vlast, vcur,vnext;
+        Dscalar Varea = 0.0;
+        Dscalar Vperi = 0.0;
+        //compute the vertex position relative to the cell position
+        vlast.x=0.;vlast.y=0.0;
+        int vidx = h_cv.data[cellNeighborIndexer(neighs-1,i)];
+        Box->minDist(h_v.data[vidx],cellPos,vcur);
+        for (int nn = 0; nn < neighs; ++nn)
+            {
+            //for easy force calculation, save the current, last, and next vertex position in the approprate spot.
+            int forceSetIdx= -1;
+            int vertexCoordination = h_vnn.data[vidx];
+            for (int ff = 0; ff < vertexCoordination; ++ff)
+                if(h_vcn.data[vertexNeighborIndexer(ff,vidx)] == i)
+                    forceSetIdx = vertexNeighborIndexer(ff,vidx);
+            vidx = h_cv.data[cellNeighborIndexer(nn,i)];
+            Box->minDist(h_v.data[vidx],cellPos,vnext);
+            //contribution to cell's area is
+            // 0.5* (vcur.x+vnext.x)*(vnext.y-vcur.y)
+            Varea += SignedPolygonAreaPart(vcur,vnext);
+            Dscalar dx = vcur.x-vnext.x;
+            Dscalar dy = vcur.y-vnext.y;
+            Vperi += sqrt(dx*dx+dy*dy);
+            //save vertex positions in a convenient form
+            h_vc.data[forceSetIdx] = vcur;
+            h_vln.data[forceSetIdx] = make_Dscalar4(vlast.x,vlast.y,vnext.x,vnext.y);
+            //advance the loop
+            vlast = vcur;
+            vcur = vnext;
+            };
+        h_AP.data[i].x = Varea;
+        h_AP.data[i].y = Vperi;
+        };
+    };  
+

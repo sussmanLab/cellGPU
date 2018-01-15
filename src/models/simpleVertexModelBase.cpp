@@ -343,3 +343,29 @@ void simpleVertexModelBase::getCellPositionsGPU()
                                cellNeighborIndexer,
                                *(Box));
     };
+
+/*!
+To help with debugging: print out the position of each vertex associated with a cell, as well as
+its area and perimeter
+*/
+void simpleVertexModelBase::printCellGeometry(int i)
+    {
+    ArrayHandle<int> cnn(cellVertexNum);
+    ArrayHandle<int> cv(cellVertices);
+    ArrayHandle<Dscalar2> pos(vertexPositions);
+    ArrayHandle<Dscalar2> ap(AreaPeri);
+    int neigh = cnn.data[i];
+    for (int n = 0; n < neigh; ++n)
+        {
+        int vidx = cv.data[cellNeighborIndexer(n,i)];
+        printf("{%f,%f},",pos.data[vidx].x,pos.data[vidx].y);
+        };
+    printf("\n");
+    for (int n = 0; n < neigh; ++n)
+        {
+        int vidx = cv.data[cellNeighborIndexer(n,i)];
+        printf("%i,",vidx);
+        };
+    printf("\n Area = %f, peri = %f\n",ap.data[i].x,ap.data[i].y);
+    };
+
