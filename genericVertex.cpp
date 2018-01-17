@@ -17,11 +17,10 @@ void saveConfig(ofstream &output, shared_ptr<vertexModelGenericBase> modelBase)
     Index2D vni = modelBase->vertexNeighborIndexer;
     ArrayHandle<Dscalar2> pos(modelBase->vertexPositions);
     ArrayHandle<int> vn(modelBase->vertexNeighbors);
-    ArrayHandle<int> vcn(modelBase->vertexCellNeighbors);
     int Nv = modelBase->Nvertices;
     int Nc = modelBase->Ncells;
     output << Nv << "\n";
-    //write the verte coordinates
+    //write the vertex coordinates
     for (int vv = 0; vv < Nv; ++vv)
         {
         output << pos.data[vv].x <<"\t" <<pos.data[vv].y << "\n";
@@ -117,13 +116,22 @@ int main(int argc, char*argv[])
     t1=clock();
     modelBase->removeCells(cellsToRemove);
     t2=clock();
+    modelBase->computeGeometry();
     printf("cell removal time: %f\n",(t2-t1)/(Dscalar)CLOCKS_PER_SEC);
 
     ofstream output(dataname);
 
     saveConfig(output,modelBase);
 
-/*
+    vector<int> vMerge(2); vMerge[0]=45;vMerge[1]=47;
+    t1=clock();
+    modelBase->mergeVertices(vMerge);
+    t2=clock();
+    modelBase->computeGeometry();
+    printf("vertex merging time: %f\n",(t2-t1)/(Dscalar)CLOCKS_PER_SEC);
+
+    saveConfig(output,modelBase);
+
     modelBase->computeGeometryCPU();
     ArrayHandle<Dscalar2> ap(modelBase->returnAreaPeri());
     int Nc = modelBase->Ncells;
@@ -135,7 +143,6 @@ int main(int argc, char*argv[])
             printf("\n");
             }
         };
-*/
 /*
     //possibly save output in netCDF format
     char dataname[256];

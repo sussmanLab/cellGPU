@@ -63,6 +63,10 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
     };
 
 //!When deleting an element from the middle of an array, one often wants a map from old to new indices
+/*!
+e.g., indexMap[100] = the new index of what used to be cell 100, or is -1 if it was to be removed
+indexMapInverse is a vector of length new Ncells. cellMapInverse[10] gives the index of the cell that will be mapped to the 10th cell
+*/
 inline __attribute__((always_inline)) void createIndexMapAndInverse(vector<int> &indexMap, vector<int> &indexMapInverse, vector<int> &indicesToRemove, int oldSize)
     {
     if(indicesToRemove.size()==0) return;

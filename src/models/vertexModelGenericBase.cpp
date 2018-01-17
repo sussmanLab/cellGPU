@@ -311,8 +311,6 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
 
     //create a list of the new vertex and cell neighbors of the merged vertex... for convenience, this list contains the future vertex indexing, not the current one
     vector<int> vNeighbors, cNeighbors;
-    int vNeighNum = 0;
-    int cNeighNum = 0;
     vNeighbors.reserve(vertexCoordinationMaximum*verticesToMerge.size());
     cNeighbors.reserve(vertexCoordinationMaximum*verticesToMerge.size());
     {//array handle scope
@@ -328,40 +326,137 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
             {
             int neighbor = vcn.data[vertexNeighborIndexer(nn,vidx)];
             cNeighbors.push_back(neighbor);
-            cNeighNum +=1;
             };
         int vneigh = vnn.data[vidx];
         for (int nn = 0; nn < vneigh; ++nn)
             {
             int neighbor = vn.data[vertexNeighborIndexer(nn,vidx)];
-            if (vertexMap[neighbor] != -1)
+            if (vertexMap[neighbor] != -1 && neighbor != vertexIdx)
                 {
                 vNeighbors.push_back(vertexMap[neighbor]);
-                vNeighNum +=1;
-                }
+                };
             };
         };
     };
     removeDuplicateVectorElements(vNeighbors);
+    int vNeighNum = vNeighbors.size();
     removeDuplicateVectorElements(cNeighbors);
+    int cNeighNum = cNeighbors.size();
 
     if(vNeighNum > vertexCoordinationMaximum)
         {
         growVertexNeighborLists(vNeighNum);
         };
 
+    //arrays that don't require logic
+    removeGPUArrayElement(vertexPositions,verticesToRemove);
+    removeGPUArrayElement(vertexMasses,verticesToRemove);
+    removeGPUArrayElement(vertexForces,verticesToRemove);
+    removeGPUArrayElement(vertexVelocities,verticesToRemove);
+    removeGPUArrayElement(displacements,verticesToRemove);
 
-    //resize data structures as necessary...
-    //note that cellNeighborIndexer will not need to change, but verteNeighborIndexer might
+    //vertex neighbor arrays: the merged vertex will be neighbors with all of the vertices and cells of the original vertices
+    {//array handles
+    ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_vnn(vertexNeighborNum,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_vcnn(vertexCellNeighborNum,access_location::host,access_mode::readwrite);
+    //account for the shift in vertex indices everywhere
+    for (int vv = 0; vv < Nvertices; ++vv)
+        {
+        int neigh= h_vnn.data[vv];
+        int newNeigh = 0;
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            int vidx = h_vn.data[vertexNeighborIndexer(nn,vv)];
+            if(vertexMap[vidx] != -1)
+                {
+                h_vn.data[vertexNeighborIndexer(newNeigh,vv)] = vertexMap[vidx];
+                newNeigh += 1;
+                };
+            };
+        };
 
-    //the new, combined vertex will be neighbors with all of the cells of the original vertex
+    //edit the vertex and cell neighbors of the merged vertex
+    h_vnn.data[vertexIdx] = vNeighNum;
+    h_vcnn.data[vertexIdx] = cNeighNum;
+    for (int nn = 0; nn < vNeighNum; ++nn)
+        h_vn.data[vertexNeighborIndexer(nn,vertexIdx)] = vertexMap[vNeighbors[nn]];
+    for (int nn = 0; nn < cNeighNum; ++nn)
+        h_vcn.data[vertexNeighborIndexer(nn,vertexIdx)] = cNeighbors[nn];
+    //edit the vertex neighbors of vNeighbors
+    for (int vv = 0; vv < vNeighNum; ++vv)
+        {
+        int vidx = vNeighbors[vv];
+        int neigh = h_vnn.data[vidx];
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            int v2 = h_vn.data[vertexNeighborIndexer(nn,vidx)];
+            if(vertexMap[v2] == -1)
+                h_vn.data[vertexNeighborIndexer(nn,vidx)] = vertexIdx;
+            };
+        };
+    }//array handles
 
-    //each cell that neighbored any of the merged vertices is neighbors only with the remaining vertex
-
-    //update 
+    removeGPUArrayElement(vertexNeighborNum,verticesToRemove);
+    removeGPUArrayElement(vertexCellNeighborNum,verticesToRemove);
     
+    vector<int> vinds; vinds.resize(vertexCoordinationMaximum*verticesToRemove.size());
+    int vTempIdx=0;
+    for (int vv = 0; vv < verticesToRemove.size();++vv)
+        for (int nn = 0; nn < vertexCoordinationMaximum; ++nn)
+            {
+            vinds[vTempIdx] = vertexNeighborIndexer(nn,verticesToRemove[vv]);
+            vTempIdx+=1;
+            };
+    removeGPUArrayElement(vertexNeighbors,vinds);
+    removeGPUArrayElement(vertexCellNeighbors,vinds);
 
+    //cell-based arrays: each cell that neighbored any of the merged vertices is neighbors only with the remaining vertex
+    {//array handle
+    ArrayHandle<int> cv(cellVertices);
+    ArrayHandle<int> cvn(cellVertexNum);
+    for (int cc = 0; cc < Ncells; ++cc)
+        {
+        int neighs = cvn.data[cc];
+        int newNeighs = 0;
+        for (int vv = 0; vv < neighs; ++vv)
+            {
+            int vidx = cv.data[cellNeighborIndexer(vv,cc)];
+            //edit in place if the vertex still exists
+            if(vertexMap[vidx] != -1)
+                {
+                cv.data[cellNeighborIndexer(newNeighs,cc)] = vertexMap[vidx];
+                newNeighs += 1;
+                };
+            };
+        cvn.data[cc] = newNeighs;
+        };
+    }//array handle
 
+    //resize remaining arrays
+    Nvertices = Nvertices - verticesToRemove.size();
+    vertexNeighborIndexer = Index2D(vertexCoordinationMaximum,Nvertices);
+
+    vertexForceSets.resize(vertexCoordinationMaximum*Nvertices);
+    voroCur.resize(vertexCoordinationMaximum*Nvertices);
+    voroLastNext.resize(vertexCoordinationMaximum*Nvertices);
+
+    //update vertex sorting arrays
+    vector<int> newittv, newttiv, newidxtotagv, newtagtoidxv;
+    newittv.resize(Nvertices);newttiv.resize(Nvertices);newidxtotagv.resize(Nvertices);newtagtoidxv.resize(Nvertices);
+    for (int vv = 0; vv < Nvertices; ++vv)
+        {
+        int oldVidx = vertexMapInverse[vv];
+        newittv[vv] = vertexMap[ittVertex[oldVidx]];
+        newttiv[vv] = vertexMap[ttiVertex[oldVidx]];
+        newidxtotagv[vv] = vertexMap[idxToTagVertex[oldVidx]];
+        newtagtoidxv[vv] = vertexMap[tagToIdxVertex[oldVidx]];
+        };
+    ittVertex=newittv;
+    ttiVertex=newttiv;
+    idxToTagVertex=newidxtotagv;
+    tagToIdxVertex=newtagtoidxv;
     };
 
 /*!
@@ -375,4 +470,3 @@ void vertexModelGenericBase::cellDeath(int cellIndex)
     //use vertexMap and vertexMapInverse to figure out the new vertex labels
     //merge those vertices together
     };
-
