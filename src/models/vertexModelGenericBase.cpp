@@ -24,6 +24,11 @@ void vertexModelGenericBase::initializeVertexGenericModelBase(int n)
     //growCellVertexListAssist.resize(1);
     //ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);
     //h_grow.data[0]=0;
+    //initialize the maps and inverses to lists from 0 to Ncells-1 (or Nvertices - 1)
+    cellMap = itt;
+    cellMapInverse=itt;
+    vertexMap = ittVertex;
+    vertexMapInverse = ittVertex;
     };
 
 /*!
@@ -39,9 +44,7 @@ void vertexModelGenericBase::growVertexNeighborLists(int newCoordinationMax)
     Index2D old_indexer = vertexNeighborIndexer;
     vertexNeighborIndexer = Index2D(vertexCoordinationMaximum,Nvertices);
 
-    copyReIndexed2DGPUArray(vertexNeighborNum,old_indexer,vertexNeighborIndexer);
     copyReIndexed2DGPUArray(vertexNeighbors,old_indexer,vertexNeighborIndexer);
-    copyReIndexed2DGPUArray(vertexCellNeighborNum,old_indexer,vertexNeighborIndexer);
     copyReIndexed2DGPUArray(vertexCellNeighbors,old_indexer,vertexNeighborIndexer);
 
     //resize per-vertex-coordination lists
@@ -112,6 +115,8 @@ GPUArrays
 */
 void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     {
+    if(cellIndices.size()<1)
+        return;
     //figure out the cells and vertices left
     sort(cellIndices.begin(), cellIndices.end());
     vector<int> verticesToRemove;
@@ -139,7 +144,8 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     //so, e.g., cellMap[100] is the new index of what used to be cell 100, or is -1 if it was to be removed
     //cellMapInverse is a vector of length new Ncells. cellMapInverse[10] gives the index of the cell that will be mapped to the 10th cell
     createIndexMapAndInverse(cellMap,cellMapInverse,cellIndices,Ncells);
-    createIndexMapAndInverse(vertexMap,vertexMapInverse,verticesToRemove,Nvertices);
+    if(verticesToRemove.size()>0)
+        createIndexMapAndInverse(vertexMap,vertexMapInverse,verticesToRemove,Nvertices);
 
     //Great... now we need to correct basically all of the data structures
     int NvOld = Nvertices;
@@ -148,12 +154,14 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     Ncells = NcOld - cellIndices.size();
 
     //first, let's handle the arrays that don't require any logic
-    removeGPUArrayElement(vertexPositions,verticesToRemove);
-    removeGPUArrayElement(vertexMasses,verticesToRemove);
-    removeGPUArrayElement(vertexForces,verticesToRemove);
-    removeGPUArrayElement(vertexVelocities,verticesToRemove);
-    removeGPUArrayElement(displacements,verticesToRemove);
-
+    if(verticesToRemove.size()>0)
+        {
+        removeGPUArrayElement(vertexPositions,verticesToRemove);
+        removeGPUArrayElement(vertexMasses,verticesToRemove);
+        removeGPUArrayElement(vertexForces,verticesToRemove);
+        removeGPUArrayElement(vertexVelocities,verticesToRemove);
+        removeGPUArrayElement(displacements,verticesToRemove);
+        }
     removeGPUArrayElement(cellDirectors,cellIndices);
     removeGPUArrayElement(Motility,cellIndices);
     removeGPUArrayElement(AreaPeri,cellIndices);
@@ -339,8 +347,7 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
 
     if(vNeighNum > vertexCoordinationMaximum)
         {
-        vertexCoordinationMaximum = vNeighNum;
-        growVertexNeighborLists(vertexCoordinationMaximum);
+        growVertexNeighborLists(vNeighNum);
         };
 
 

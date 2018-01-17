@@ -3,6 +3,7 @@
 
 #include "std_include.h"
 #include "Matrix.h"
+#include "indexer.h"
 #include "gpuarray.h"
 #include <set>
 
@@ -64,6 +65,7 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
 //!When deleting an element from the middle of an array, one often wants a map from old to new indices
 inline __attribute__((always_inline)) void createIndexMapAndInverse(vector<int> &indexMap, vector<int> &indexMapInverse, vector<int> &indicesToRemove, int oldSize)
     {
+    if(indicesToRemove.size()==0) return;
     indexMap.resize(oldSize);
     indexMapInverse.resize(oldSize - indicesToRemove.size());
     int idx  = 0;
@@ -130,6 +132,7 @@ inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &da
 template<typename T>
 inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &data, vector<int> indices)
     {
+    if (indices.size() == 0) return;
     std::sort(indices.begin(),indices.end());
     int n = data.getNumElements();
     GPUArray<T> newData;
@@ -179,9 +182,8 @@ template<typename T>
 inline __attribute__((always_inline)) void copyReIndexed2DGPUArray(GPUArray<T> &data, Index2D &oldIndexer, Index2D &newIndexer)
     {
     int oldN = oldIndexer.getNumElements();
-    int N = newIndexer.getNumElements();
     GPUArray<T> newData;
-    newData.resize(N);
+    newData.resize(newIndexer.getNumElements());
     {//scope for array handles
     ArrayHandle<T> h(data,access_location::host,access_mode::read);
     ArrayHandle<T> hnew(newData,access_location::host,access_mode::overwrite);

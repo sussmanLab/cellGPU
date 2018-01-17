@@ -54,7 +54,7 @@ int main(int argc, char*argv[])
     int numpts = 200; //number of cells
     int USE_GPU = -1; //0 or greater uses a gpu, any negative number runs on the cpu
     int tSteps = 5; //number of time steps to run after initialization
-    int initSteps = 1; //number of initialization steps
+    int initSteps = 3; //number of initialization steps
 
     Dscalar dt = 0.01; //the time step size
     Dscalar p0 = 4.0;  //the preferred perimeter
@@ -70,6 +70,7 @@ int main(int argc, char*argv[])
             case 'n': numpts = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
             case 'z': program_switch = atoi(optarg); break;
+            case 'i': initSteps = atoi(optarg); break;
             case '?':
                     if(optopt=='c')
                         std::cerr<<"Option -" << optopt << "requires an argument.\n";
@@ -81,6 +82,8 @@ int main(int argc, char*argv[])
             default:
                        abort();
         };
+    //clocks for timing information
+    clock_t t1,t2;
 
     // if you want random numbers with a more random seed each run, set this to false
     bool reproducible = true;
@@ -110,14 +113,17 @@ int main(int argc, char*argv[])
             cellsToRemove.push_back(n);
         };
     };
+
+    t1=clock();
     modelBase->removeCells(cellsToRemove);
-
-
+    t2=clock();
+    printf("cell removal time: %f\n",(t2-t1)/(Dscalar)CLOCKS_PER_SEC);
 
     ofstream output(dataname);
 
     saveConfig(output,modelBase);
 
+/*
     modelBase->computeGeometryCPU();
     ArrayHandle<Dscalar2> ap(modelBase->returnAreaPeri());
     int Nc = modelBase->Ncells;
@@ -129,7 +135,7 @@ int main(int argc, char*argv[])
             printf("\n");
             }
         };
-
+*/
 /*
     //possibly save output in netCDF format
     char dataname[256];
