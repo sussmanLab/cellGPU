@@ -114,6 +114,13 @@ HOSTDEVICE Dscalar2 operator*(const Dscalar &a, const Dscalar2 &b)
     return make_Dscalar2(a*b.x,a*b.y);
     }
 
+//!print a Dscalar2 to screen
+inline __attribute__((always_inline)) void printDscalar2(Dscalar2 a)
+    {
+    printf("%f\t%f\n",a.x,a.y);
+    };
+
+
 //!return a Dscalar3 from three Dscalars
 HOSTDEVICE Dscalar3 make_Dscalar3(Dscalar x, Dscalar y,Dscalar z)
     {

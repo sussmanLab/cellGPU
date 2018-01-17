@@ -263,7 +263,6 @@ template<class T> GPUArray<T>& GPUArray<T>::operator=(const GPUArray& rhs)
             memcpy(h_data, h_handle.data, sizeof(T)*Num_elements);
             }
         }
-
     return *this;
     }
 

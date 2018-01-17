@@ -10,6 +10,41 @@
 //#include "brownianParticleDynamics.h"
 //#include "DatabaseNetCDFAVM.h"
 
+
+void saveConfig(ofstream &output, shared_ptr<vertexModelGenericBase> modelBase)
+    {
+    ArrayHandle<int> vnn(modelBase->vertexNeighborNum);
+    Index2D vni = modelBase->vertexNeighborIndexer;
+    ArrayHandle<Dscalar2> pos(modelBase->vertexPositions);
+    ArrayHandle<int> vn(modelBase->vertexNeighbors);
+    ArrayHandle<int> vcn(modelBase->vertexCellNeighbors);
+    int Nv = modelBase->Nvertices;
+    int Nc = modelBase->Ncells;
+    output << Nv << "\n";
+    //write the verte coordinates
+    for (int vv = 0; vv < Nv; ++vv)
+        {
+        output << pos.data[vv].x <<"\t" <<pos.data[vv].y << "\n";
+        };
+    vector<int2> vertexVertexConnections;
+    for (int vv = 0; vv < Nv; ++vv)
+        {
+        int neighs = vnn.data[vv];
+        for (int n = 0; n < neighs; ++n)
+            {
+            int vIdx = vn.data[vni(n,vv)];
+            if (vv < vIdx)
+                {
+                int2 vvc; vvc.x=vv; vvc.y=vIdx;
+                vertexVertexConnections.push_back(vvc);
+                }
+            };
+        };
+    output << vertexVertexConnections.size() << "\n";
+    for (int vv = 0; vv < vertexVertexConnections.size(); ++vv)
+        output << vertexVertexConnections[vv].x << "\t" << vertexVertexConnections[vv].y << "\n";
+    };
+
 /*!
 This file is for building and testing a more generic version of 2D vertex models, capable of having
 vertices of arbitrary coordination number.
@@ -79,34 +114,13 @@ int main(int argc, char*argv[])
 
 
 
-    ArrayHandle<int> vnn(modelBase->vertexNeighborNum);
-    Index2D vni = modelBase->vertexNeighborIndexer;
-    ArrayHandle<Dscalar2> pos(modelBase->vertexPositions);
-    ArrayHandle<int> vn(modelBase->vertexNeighbors);
-    ArrayHandle<int> vcn(modelBase->vertexCellNeighbors);
-    int Nv = modelBase->Nvertices;
-    int Nc = modelBase->Ncells;
     ofstream output(dataname);
-    output << Nv << "\n";
-    //write the verte coordinates
-    for (int vv = 0; vv < Nv; ++vv)
-        {
-        output << pos.data[vv].x <<"\t" <<pos.data[vv].y << "\n";
-        };
-    //write vertex-vertex connections (only lower index to higher index)
-    for (int vv = 0; vv < Nv; ++vv)
-        {
-        int neighs = vnn.data[vv];
-        for (int n = 0; n < neighs; ++n)
-            {
-            int vIdx = vn.data[vni(n,vv)];
-            if (vv < vIdx)
-                output << vv << "\t" << vIdx << "\n";
-            };
-        };
+
+    saveConfig(output,modelBase);
 
     modelBase->computeGeometryCPU();
     ArrayHandle<Dscalar2> ap(modelBase->returnAreaPeri());
+    int Nc = modelBase->Ncells;
     for (int ii = 0; ii < Nc; ++ii)
         {
         if(true)
@@ -115,6 +129,7 @@ int main(int argc, char*argv[])
             printf("\n");
             }
         };
+
 /*
     //possibly save output in netCDF format
     char dataname[256];

@@ -27,7 +27,7 @@ enum class neighborType {self, first, second};
  * Delaunay neighbors, this puts the neighbors in clockwise order and calculates the Voronoi vertices
  * of the Voronoi cell. Also calculates the area and perimeter of the Voronoi cell.
  */
-//! A legacy structure (for use with non-CGAL implementations of the SPV branch)
+//! A legacy structure (for use with non-CGAL implementations of the Voronoi model branch)
 struct DelaunayCell
     {
     public:

@@ -61,6 +61,33 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
 
     };
 
+//!When deleting an element from the middle of an array, one often wants a map from old to new indices
+inline __attribute__((always_inline)) void createIndexMapAndInverse(vector<int> &indexMap, vector<int> &indexMapInverse, vector<int> &indicesToRemove, int oldSize)
+    {
+    indexMap.resize(oldSize);
+    indexMapInverse.resize(oldSize - indicesToRemove.size());
+    int idx  = 0;
+    int newIdx = 0;
+    int shift = 0;
+    for (int ii = 0; ii < oldSize; ++ii)
+        {
+        int nextToRemove = indicesToRemove[idx];
+        if(ii != nextToRemove)
+            {
+            indexMap[ii] = ii - shift;
+            indexMapInverse[newIdx] = ii;
+            newIdx += 1;
+            }
+        else
+            {
+            indexMap[ii] = -1;
+            shift += 1;
+            if(idx < indicesToRemove.size()-1)
+                idx += 1;
+            }
+        };
+    };
+
 //!remove duplicate elements from a vector, preserving the order, using sets
 template<typename T>
 inline __attribute__((always_inline)) void removeDuplicateVectorElements(vector<T> &data)
@@ -130,12 +157,6 @@ inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &da
     data = newData;
     };
 
-//!print a Dscalar2 to screen
-inline __attribute__((always_inline)) void printDscalar2(Dscalar2 a)
-    {
-    printf("%f\t%f\n",a.x,a.y);
-    };
-
 //!grow a GPUArray, leaving the current elements the same but with extra capacity at the end of the array
 template<typename T>
 inline __attribute__((always_inline)) void growGPUArray(GPUArray<T> &data, int extraElements)
@@ -150,6 +171,24 @@ inline __attribute__((always_inline)) void growGPUArray(GPUArray<T> &data, int e
         hnew.data[i] = h.data[i];
     };
     //no need to resize?
+    data.swap(newData);
+    };
+
+//!Copy over the old data for a GPUArray, accessed by and Index2D object, when the indexer changes size
+template<typename T>
+inline __attribute__((always_inline)) void copyReIndexed2DGPUArray(GPUArray<T> &data, Index2D &oldIndexer, Index2D &newIndexer)
+    {
+    int oldN = oldIndexer.getNumElements();
+    int N = newIndexer.getNumElements();
+    GPUArray<T> newData;
+    newData.resize(N);
+    {//scope for array handles
+    ArrayHandle<T> h(data,access_location::host,access_mode::read);
+    ArrayHandle<T> hnew(newData,access_location::host,access_mode::overwrite);
+    for (int i = 0; i < oldIndexer.getH(); ++i)
+        for (int j = 0; j < oldIndexer.getW(); ++j)
+            hnew.data[newIndexer(j,i)] = h.data[oldIndexer(j,i)];
+    };
     data.swap(newData);
     };
 
