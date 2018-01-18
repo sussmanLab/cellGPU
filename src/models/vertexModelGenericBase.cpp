@@ -144,8 +144,7 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     //so, e.g., cellMap[100] is the new index of what used to be cell 100, or is -1 if it was to be removed
     //cellMapInverse is a vector of length new Ncells. cellMapInverse[10] gives the index of the cell that will be mapped to the 10th cell
     createIndexMapAndInverse(cellMap,cellMapInverse,cellIndices,Ncells);
-    if(verticesToRemove.size()>0)
-        createIndexMapAndInverse(vertexMap,vertexMapInverse,verticesToRemove,Nvertices);
+    createIndexMapAndInverse(vertexMap,vertexMapInverse,verticesToRemove,Nvertices);
 
     //Great... now we need to correct basically all of the data structures
     int NvOld = Nvertices;
@@ -282,7 +281,7 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
     vector<int> verticesToRemove(verticesToMerge.begin()+1,verticesToMerge.end());
     createIndexMapAndInverse(vertexMap,vertexMapInverse,verticesToRemove,Nvertices);
 
-    //create a list of the new vertex and cell neighbors of the merged vertex... for convenience, this list contains the future vertex indexing, not the current one
+    //create a list of the new vertex and cell neighbors of the merged vertex...
     vector<int> vNeighbors, cNeighbors;
     vNeighbors.reserve(vertexCoordinationMaximum*verticesToMerge.size());
     cNeighbors.reserve(vertexCoordinationMaximum*verticesToMerge.size());
@@ -306,7 +305,7 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
             int neighbor = vn.data[vertexNeighborIndexer(nn,vidx)];
             if (vertexMap[neighbor] != -1 && neighbor != vertexIdx)
                 {
-                vNeighbors.push_back(vertexMap[neighbor]);
+                vNeighbors.push_back(neighbor);
                 };
             };
         };
@@ -334,27 +333,12 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
     ArrayHandle<int> h_vnn(vertexNeighborNum,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vcnn(vertexCellNeighborNum,access_location::host,access_mode::readwrite);
-    //account for the shift in vertex indices everywhere
-    for (int vv = 0; vv < Nvertices; ++vv)
-        {
-        int neigh= h_vnn.data[vv];
-        int newNeigh = 0;
-        for (int nn = 0; nn < neigh; ++nn)
-            {
-            int vidx = h_vn.data[vertexNeighborIndexer(nn,vv)];
-            if(vertexMap[vidx] != -1)
-                {
-                h_vn.data[vertexNeighborIndexer(newNeigh,vv)] = vertexMap[vidx];
-                newNeigh += 1;
-                };
-            };
-        };
 
     //edit the vertex and cell neighbors of the merged vertex
     h_vnn.data[vertexIdx] = vNeighNum;
     h_vcnn.data[vertexIdx] = cNeighNum;
     for (int nn = 0; nn < vNeighNum; ++nn)
-        h_vn.data[vertexNeighborIndexer(nn,vertexIdx)] = vertexMap[vNeighbors[nn]];
+        h_vn.data[vertexNeighborIndexer(nn,vertexIdx)] = vNeighbors[nn];
     for (int nn = 0; nn < cNeighNum; ++nn)
         h_vcn.data[vertexNeighborIndexer(nn,vertexIdx)] = cNeighbors[nn];
     //edit the vertex neighbors of vNeighbors
@@ -369,6 +353,24 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
                 h_vn.data[vertexNeighborIndexer(nn,vidx)] = vertexIdx;
             };
         };
+
+    //account for the shift in vertex indices everywhere
+    for (int vv = 0; vv < Nvertices; ++vv)
+        {
+        int neigh= h_vnn.data[vv];
+        int newNeigh = 0;
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            int vidx = h_vn.data[vertexNeighborIndexer(nn,vv)];
+            if(vertexMap[vidx] != -1)
+                {
+                h_vn.data[vertexNeighborIndexer(newNeigh,vv)] = vertexMap[vidx];
+                newNeigh += 1;
+                };
+            };
+        h_vnn.data[vv] = newNeigh;
+        };
+
     }//array handles
 
     removeGPUArrayElement(vertexNeighborNum,verticesToRemove);
@@ -426,9 +428,28 @@ tissue. This is accomplished by subsequent calls to removeCell and then mergeVer
 void vertexModelGenericBase::cellDeath(int cellIndex)
     {
     //get a list of vertices that make up the cell
+    vector<int> vertices;
+    vertices.reserve(vertexMax);
+    {
+    ArrayHandle<int> cv(cellVertices,access_location::host,access_mode::read);
+    ArrayHandle<int> cvn(cellVertexNum,access_location::host,access_mode::read);
+    int neigh = cvn.data[cellIndex];
+    for (int nn = 0; nn < neigh; ++nn)
+        vertices.push_back(cv.data[cellNeighborIndexer(nn,cellIndex)]);
+    };
+
     //call removeCell
+    vector<int> cellsToRemove(1,cellIndex);
+    removeCells(cellsToRemove);
+
     //use vertexMap and vertexMapInverse to figure out the new vertex labels
+    vector<int> verticesToMerge;
+    verticesToMerge.reserve(vertexCoordinationMaximum);
+    for (int vv = 0; vv < vertices.size(); ++vv)
+        if (vertexMap[vertices[vv]] != -1)
+            verticesToMerge.push_back(vertices[vv]);
     //merge those vertices together
+    mergeVertices(verticesToMerge);
     };
 
 /*!

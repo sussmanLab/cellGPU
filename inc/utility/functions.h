@@ -69,7 +69,17 @@ indexMapInverse is a vector of length new Ncells. cellMapInverse[10] gives the i
 */
 inline __attribute__((always_inline)) void createIndexMapAndInverse(vector<int> &indexMap, vector<int> &indexMapInverse, vector<int> &indicesToRemove, int oldSize)
     {
-    if(indicesToRemove.size()==0) return;
+    if(indicesToRemove.size()==0)
+        {
+        indexMap.resize(oldSize); 
+        indexMapInverse.resize(oldSize);
+        for (int ii = 0; ii < oldSize; ++ii)
+            {
+            indexMap[ii] = ii;
+            indexMapInverse[ii] = ii;
+            };
+        return;
+        };
     indexMap.resize(oldSize);
     indexMapInverse.resize(oldSize - indicesToRemove.size());
     int idx  = 0;

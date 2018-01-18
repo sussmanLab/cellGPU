@@ -132,23 +132,36 @@ int main(int argc, char*argv[])
 
     saveConfig(output,modelBase);
 
+    vMerge[0]=75;
+    vMerge[1]=26;
+    modelBase->mergeVertices(vMerge);
     modelBase->computeGeometryCPU();
+    saveConfig(output,modelBase);
+
+    modelBase->cellDeath(31);
+    modelBase->computeGeometryCPU();
+    saveConfig(output,modelBase);
+
+
     ArrayHandle<Dscalar2> ap(modelBase->returnAreaPeri());
     int Nc = modelBase->Ncells;
     for (int ii = 0; ii < Nc; ++ii)
         {
         if(true)
             {
+            printf("cell %i: ",ii);
             modelBase->printCellGeometry(ii);
             printf("\n");
             }
         };
 /*
-    //possibly save output in netCDF format
-    char dataname[256];
-    sprintf(dataname,"../test.nc");
+    //vMerge.resize(4);
+    vMerge[0]=26;
+    vMerge[1]=66;
+    modelBase->mergeVertices(vMerge);
+    modelBase->computeGeometryCPU();
+    saveConfig(output,modelBase);
     int Nvert = 2*numpts;
-    AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
     //We will define two potential equations of motion, and choose which later on.
     //define an equation of motion object...here for self-propelled cells
