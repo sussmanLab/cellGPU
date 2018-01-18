@@ -93,12 +93,15 @@ int main(int argc, char*argv[])
     modelBase->setGPU(initializeGPU);
     modelBase->setReproducible(reproducible);
     modelBase->initializeVertexGenericModelBase(numpts);
+    modelBase->computeGeometryCPU();
 
     //possibly save output in netCDF format
     char dataname[256];
     sprintf(dataname,"../test.txt");
 
-    modelBase->computeGeometryCPU();
+    ofstream output(dataname);
+    saveConfig(output,modelBase);
+
     modelBase->getCellPositions();
     vector<int> cellsToRemove;
     {
@@ -113,13 +116,13 @@ int main(int argc, char*argv[])
         };
     };
 
+
     t1=clock();
     modelBase->removeCells(cellsToRemove);
     t2=clock();
     modelBase->computeGeometry();
     printf("cell removal time: %f\n",(t2-t1)/(Dscalar)CLOCKS_PER_SEC);
 
-    ofstream output(dataname);
 
     saveConfig(output,modelBase);
 
