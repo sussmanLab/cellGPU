@@ -259,35 +259,8 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     cellVertices.swap(newCellVertices);
 
     //handle the spatial sorting arrays
-    vector<int> newitt, newtti, newidxtotag, newtagtoidx;
-    newitt.resize(Ncells);newtti.resize(Ncells);newidxtotag.resize(Ncells);newtagtoidx.resize(Ncells);
-    for (int cc = 0; cc < Ncells; ++cc)
-        {
-        int oldCidx = cellMapInverse[cc];
-        newitt[cc] = cellMap[itt[oldCidx]];
-        newtti[cc] = cellMap[tti[oldCidx]];
-        newidxtotag[cc] = cellMap[idxToTag[oldCidx]];
-        newtagtoidx[cc] = cellMap[tagToIdx[oldCidx]];
-        };
-    itt=newitt;
-    tti=newtti;
-    idxToTag=newidxtotag;
-    tagToIdx=newtagtoidx;
-
-    vector<int> newittv, newttiv, newidxtotagv, newtagtoidxv;
-    newittv.resize(Nvertices);newttiv.resize(Nvertices);newidxtotagv.resize(Nvertices);newtagtoidxv.resize(Nvertices);
-    for (int vv = 0; vv < Nvertices; ++vv)
-        {
-        int oldVidx = vertexMapInverse[vv];
-        newittv[vv] = vertexMap[ittVertex[oldVidx]];
-        newttiv[vv] = vertexMap[ttiVertex[oldVidx]];
-        newidxtotagv[vv] = vertexMap[idxToTagVertex[oldVidx]];
-        newtagtoidxv[vv] = vertexMap[tagToIdxVertex[oldVidx]];
-        };
-    ittVertex=newittv;
-    ttiVertex=newttiv;
-    idxToTagVertex=newidxtotagv;
-    tagToIdxVertex=newtagtoidxv;
+    remapCellSorting();
+    remapVertexSorting();
     
     //edgeFlipLists
     computeGeometry();
@@ -443,6 +416,49 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
     voroLastNext.resize(vertexCoordinationMaximum*Nvertices);
 
     //update vertex sorting arrays
+    remapVertexSorting();
+    };
+
+/*!
+cell death, as opposed to cell removal, removes a cell but maintains the confluent nature of the
+tissue. This is accomplished by subsequent calls to removeCell and then mergeVertices.
+*/
+void vertexModelGenericBase::cellDeath(int cellIndex)
+    {
+    //get a list of vertices that make up the cell
+    //call removeCell
+    //use vertexMap and vertexMapInverse to figure out the new vertex labels
+    //merge those vertices together
+    };
+
+/*!
+uses an up-to-date cellMap and cellMapInverse to relabel the cell sorting arrays.
+Requires that Ncells is the new, not old, value
+*/
+void vertexModelGenericBase::remapCellSorting()
+    {
+    vector<int> newitt, newtti, newidxtotag, newtagtoidx;
+    newitt.resize(Ncells);newtti.resize(Ncells);newidxtotag.resize(Ncells);newtagtoidx.resize(Ncells);
+    for (int cc = 0; cc < Ncells; ++cc)
+        {
+        int oldCidx = cellMapInverse[cc];
+        newitt[cc] = cellMap[itt[oldCidx]];
+        newtti[cc] = cellMap[tti[oldCidx]];
+        newidxtotag[cc] = cellMap[idxToTag[oldCidx]];
+        newtagtoidx[cc] = cellMap[tagToIdx[oldCidx]];
+        };
+    itt=newitt;
+    tti=newtti;
+    idxToTag=newidxtotag;
+    tagToIdx=newtagtoidx;
+    };
+
+/*!
+uses an up-to-date vertexMap and vertexMapInverse to relabel the vertex sorting arrays.
+Requires that Nvertices is the new, not old, value
+*/
+void vertexModelGenericBase::remapVertexSorting()
+    {
     vector<int> newittv, newttiv, newidxtotagv, newtagtoidxv;
     newittv.resize(Nvertices);newttiv.resize(Nvertices);newidxtotagv.resize(Nvertices);newtagtoidxv.resize(Nvertices);
     for (int vv = 0; vv < Nvertices; ++vv)
@@ -457,16 +473,4 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
     ttiVertex=newttiv;
     idxToTagVertex=newidxtotagv;
     tagToIdxVertex=newtagtoidxv;
-    };
-
-/*!
-cell death, as opposed to cell removal, removes a cell but maintains the confluent nature of the
-tissue. This is accomplished by subsequent calls to removeCell and then mergeVertices.
-*/
-void vertexModelGenericBase::cellDeath(int cellIndex)
-    {
-    //get a list of vertices that make up the cell
-    //call removeCell
-    //use vertexMap and vertexMapInverse to figure out the new vertex labels
-    //merge those vertices together
     };

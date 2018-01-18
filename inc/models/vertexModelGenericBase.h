@@ -99,6 +99,11 @@ class vertexModelGenericBase : public simpleVertexModelBase
         //!Same as cellMap, but for vertices
         vector<int> vertexMap;
         //!Same as cellMapInverse, but for vertices
-        vector<int> vertexMapInverse;;
+        vector<int> vertexMapInverse;
+
+        //!Reindex the cell sorting arrays based on cellMap an cellMapInverse
+        void remapCellSorting();
+        //!Reindex the vertex sorting arrays based on vertexMap an vertexMapInverse
+        void remapVertexSorting();
     };
 #endif
