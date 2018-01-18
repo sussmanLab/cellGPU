@@ -438,6 +438,8 @@ void vertexModelGenericBase::cellDeath(int cellIndex)
         vertices.push_back(cv.data[cellNeighborIndexer(nn,cellIndex)]);
     };
 
+    //merge those vertices together
+    mergeVertices(vertices);
     //call removeCell
     vector<int> cellsToRemove(1,cellIndex);
     removeCells(cellsToRemove);
@@ -448,8 +450,6 @@ void vertexModelGenericBase::cellDeath(int cellIndex)
     for (int vv = 0; vv < vertices.size(); ++vv)
         if (vertexMap[vertices[vv]] != -1)
             verticesToMerge.push_back(vertices[vv]);
-    //merge those vertices together
-    mergeVertices(verticesToMerge);
     };
 
 /*!
