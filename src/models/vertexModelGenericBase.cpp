@@ -8,7 +8,7 @@
 /*!
 Take care of all base class initialization functions, this involves setting arrays to the right size, etc.
 */
-void vertexModelGenericBase::initializeVertexGenericModelBase(int n)
+void vertexModelGenericBase::initializeVertexModelGenericBase(int n)
     {
     //call initializer chain...sets Ncells = n
     //Note that this, by default, uses a random voronoi construction with every vertex being three-fold coordinated

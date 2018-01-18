@@ -4,7 +4,7 @@
 #include "vertexModelBase.h"
 
 /*! \file vertexQuadraticEnergy.h */
-//!Implement a 2D active vertex model, using kernels in \ref avmKernels
+//!Implement a 2D vertex model, using kernels in \ref avmKernels
 /*!
 A class that implements a simple active vertex model in 2D. This involves calculating forces on
 vertices, moving them around, and updating the topology of the cells according to some criteria.

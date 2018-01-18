@@ -14,7 +14,7 @@ class vertexModelGenericBase : public simpleVertexModelBase
     {
     public:
         //!Initialize vertexModelBase,  prepare data structures
-        void initializeVertexGenericModelBase(int n);
+        void initializeVertexModelGenericBase(int n);
 
         //!Compute the geometry (area & perimeter) of the cells on the CPU
         virtual void computeGeometryCPU();
