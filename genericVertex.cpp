@@ -84,7 +84,7 @@ int main(int argc, char*argv[])
     //save output
     char dataname[256];
     sprintf(dataname,"../test.txt");
-    int sparsity = 50;
+    int sparsity = 40;
     ofstream output(dataname);
 
     //clocks for timing information
@@ -119,7 +119,7 @@ int main(int argc, char*argv[])
         sim->performTimestep();
         if(timestep%((int)(initSteps/sparsity))==0)
             {
-            cout << timestep << endl;
+//            cout << timestep << endl;
             saveConfig(output,modelBase);
             };
         };
@@ -151,7 +151,7 @@ int main(int argc, char*argv[])
         sim->performTimestep();
         if(timestep%((int)(initSteps/sparsity))==0)
             {
-            cout << timestep << endl;
+//            cout << timestep << endl;
             saveConfig(output,modelBase);
             };
         };
@@ -170,39 +170,38 @@ int main(int argc, char*argv[])
         sim->performTimestep();
         if(timestep%((int)(initSteps/sparsity))==0)
             {
-            cout << timestep << endl;
+  //          cout << timestep << endl;
             saveConfig(output,modelBase);
             };
         };
 
-    int NcNew = modelBase->Ncells;
-    vector<Dscalar2> prefs(NcNew,make_Dscalar2(1.0,3.8));
-    int cellToDie = 30;
-    prefs[cellToDie].x=0.1;
-    prefs[cellToDie].x=1.1;
-    modelBase->setCellPreferences(prefs);
-    for (int timestep = 0; timestep < initSteps; ++timestep)
+    //tests by killing lots of cells
+    int Ncells = modelBase->Ncells;
+    noiseSource noise;
+    noise.Reproducible = reproducible;
+    for (int iteration = 0; iteration < Ncells/10; ++iteration)
         {
-        sim->performTimestep();
-        if(timestep%((int)(initSteps/sparsity))==0)
+        int NcNew = modelBase->Ncells;
+        vector<Dscalar2> prefs(NcNew,make_Dscalar2(1.0,3.8));
+        int cellToDie = noise.getInt(0,Ncells-1);
+        printf("about to kill cell %i\n",cellToDie);
+        prefs[cellToDie].x=0.1;
+        prefs[cellToDie].x=1.1;
+        modelBase->setCellPreferences(prefs);
+        for (int timestep = 0; timestep < initSteps; ++timestep)
             {
-            cout << timestep << endl;
-            saveConfig(output,modelBase);
+            sim->performTimestep();
+            if(timestep%((int)(initSteps/sparsity))==0)
+                {
+                //              cout << timestep << endl;
+                saveConfig(output,modelBase);
+                };
             };
+        modelBase->cellDeath(cellToDie);
+        modelBase->computeGeometryCPU();
         };
-    modelBase->cellDeath(cellToDie);
-    modelBase->computeGeometryCPU();
-
-    for (int timestep = 0; timestep < 2*initSteps; ++timestep)
-        {
-        sim->performTimestep();
-        if(timestep%((int)(initSteps/sparsity))==0)
-            {
-            cout << timestep << endl;
-            saveConfig(output,modelBase);
-            };
-        };
-    /*
+    
+    saveConfig(output,modelBase);
     ArrayHandle<Dscalar2> ap(modelBase->returnAreaPeri());
     int Nc = modelBase->Ncells;
     for (int ii = 0; ii < Nc; ++ii)
@@ -214,7 +213,7 @@ int main(int argc, char*argv[])
             printf("\n");
             }
         };
-    */
+    
 /*
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
 //    sim->setSortPeriod(initSteps/10);

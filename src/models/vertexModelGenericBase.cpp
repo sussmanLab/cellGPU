@@ -341,17 +341,25 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
         h_vn.data[vertexNeighborIndexer(nn,vertexIdx)] = vNeighbors[nn];
     for (int nn = 0; nn < cNeighNum; ++nn)
         h_vcn.data[vertexNeighborIndexer(nn,vertexIdx)] = cNeighbors[nn];
-    //edit the vertex neighbors of vNeighbors
+    //edit the vertex neighbors of vNeighbors...if a vNeighbor neighbored more than one merged vertex,
+    //only add the merged vertex once
     for (int vv = 0; vv < vNeighNum; ++vv)
         {
         int vidx = vNeighbors[vv];
         int neigh = h_vnn.data[vidx];
+        vector<int> VN; VN.reserve(neigh);
         for (int nn = 0; nn < neigh; ++nn)
             {
             int v2 = h_vn.data[vertexNeighborIndexer(nn,vidx)];
             if(vertexMap[v2] == -1)
-                h_vn.data[vertexNeighborIndexer(nn,vidx)] = vertexIdx;
+                VN.push_back(vertexIdx);
+            else
+                VN.push_back(v2);
             };
+        removeDuplicateVectorElements(VN);
+        h_vnn.data[vidx] = VN.size();
+        for (int nn = 0; nn < VN.size(); ++nn)
+            h_vn.data[vertexNeighborIndexer(nn,vidx)] = VN[nn];
         };
 
     //account for the shift in vertex indices everywhere
@@ -391,21 +399,43 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
     {//array handle
     ArrayHandle<int> cv(cellVertices);
     ArrayHandle<int> cvn(cellVertexNum);
+    //first, shift the indices of all of the cell vertices for uninvolved cells
+    sort(cNeighbors.begin(),cNeighbors.end());
+    int cNidx = 0;
     for (int cc = 0; cc < Ncells; ++cc)
         {
+        if(cc == cNeighbors[cNidx])
+            {
+            if (cNidx < cNeighbors.size()-1)
+                cNidx += 1;
+            continue;
+            };
         int neighs = cvn.data[cc];
-        int newNeighs = 0;
         for (int vv = 0; vv < neighs; ++vv)
             {
             int vidx = cv.data[cellNeighborIndexer(vv,cc)];
-            //edit in place if the vertex still exists
-            if(vertexMap[vidx] != -1)
-                {
-                cv.data[cellNeighborIndexer(newNeighs,cc)] = vertexMap[vidx];
-                newNeighs += 1;
-                };
+            cv.data[cellNeighborIndexer(vv,cc)] = vertexMap[vidx];
             };
-        cvn.data[cc] = newNeighs;
+        };
+    //now, handle the cells which neighbored one of the merged vertices
+    for (int cc  = 0; cc < cNeighbors.size(); ++cc)
+        {
+        int cidx = cNeighbors[cc];
+        int neighs = cvn.data[cidx];
+        vector<int> CV; CV.reserve(neighs);
+        for (int vv = 0; vv < neighs; ++vv)
+            {
+            int vidx = cv.data[cellNeighborIndexer(vv,cidx)];
+            //edit in place if the vertex still exists
+            if(vertexMap[vidx] == -1)
+                CV.push_back(vertexIdx);
+            else
+                CV.push_back(vertexMap[vidx]);
+            };
+        removeDuplicateVectorElements(CV);
+        for (int vv = 0; vv < CV.size(); ++vv)
+            cv.data[cellNeighborIndexer(vv,cidx)] = CV[vv];
+        cvn.data[cidx] = CV.size();
         };
     }//array handle
 
@@ -438,8 +468,6 @@ void vertexModelGenericBase::cellDeath(int cellIndex)
         vertices.push_back(cv.data[cellNeighborIndexer(nn,cellIndex)]);
     };
 
-    //merge those vertices together
-    mergeVertices(vertices);
     //call removeCell
     vector<int> cellsToRemove(1,cellIndex);
     removeCells(cellsToRemove);
@@ -450,6 +478,8 @@ void vertexModelGenericBase::cellDeath(int cellIndex)
     for (int vv = 0; vv < vertices.size(); ++vv)
         if (vertexMap[vertices[vv]] != -1)
             verticesToMerge.push_back(vertices[vv]);
+    //merge those vertices together
+    mergeVertices(verticesToMerge);
     };
 
 /*!
