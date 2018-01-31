@@ -1066,7 +1066,7 @@ void vertexModelBase::cellDeath(int cellIndex)
     for (int ii = 0; ii < Nvertices+2;++ii)
         {
         int vIdx = tagToIdxVertex[ii]; //vIdx is the current position of the vertex that was originally ii
-        if (ii != v1 && ii != v2)
+        if (vIdx != v1 && vIdx != v2)
             {
             if (vIdx >= v1) vIdx = vIdx - 1;
             if (vIdx >= v2) vIdx = vIdx - 1;
