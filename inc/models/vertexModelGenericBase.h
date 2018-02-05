@@ -22,19 +22,19 @@ class vertexModelGenericBase : public simpleVertexModelBase
 
         //!"Remove" cells whose index matches those in the vector...This function will delete a cell but leave its vertices (as long as the vertex is part of at least one cell...useful for creating open boundaries
         virtual void removeCells(vector<int> cellIndices);
+        //!Kill the indexed cell...cell can have any number of vertices
+        virtual void cellDeath(int cellIndex);
         
         //!Merge a number of vertices into a single vertex...this construction means T2s are easy
         virtual void mergeVertices(vector<int> verticesToMerge);
+        //!Take a vertex and divide it into two vertices
+        virtual void splitVertex(int vertexIndex, Dscalar separation, Dscalar theta);
 
-        //!Kill the indexed cell...cell can have any number of vertices
-        virtual void cellDeath(int cellIndex);
     /*
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         virtual void computeGeometryGPU();
 
 
-        //!Take a vertex and divide it into two vertices
-        virtual void splitVertex(int vertexIndex, Dscalar separation, Dscalar theta);
 
     */
     /*
@@ -77,6 +77,8 @@ class vertexModelGenericBase : public simpleVertexModelBase
 
         //!if the maximum vertex coordination increases, grow the vertexNeighbor and force set lists
         void growVertexNeighborLists(int newCoordinationMax);
+        //!If the number of vertices changes, per-coordination-number lists should be resized
+        void resizePerCoordinationLists();
 
     /*
         //!Initialize the data structures for edge flipping...should also be called if Nvertices changes

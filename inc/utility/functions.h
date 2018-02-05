@@ -174,6 +174,24 @@ inline __attribute__((always_inline)) void removeGPUArrayElement(GPUArray<T> &da
     data = newData;
     };
 
+//!Mimic a "vec.push_back(value)" operation on a GPUArray. The GPUArray grows by one, existing elements are the same, and value is in the final element
+template<typename T>
+inline __attribute__((always_inline)) void GPUArrayPushBack(GPUArray<T> &data, T value)
+    {
+    int n = data.getNumElements();
+    GPUArray<T> newData;
+    newData.resize(n+1);
+    {//scope for array handles
+    ArrayHandle<T> h(data,access_location::host,access_mode::readwrite);
+    ArrayHandle<T> hnew(newData,access_location::host,access_mode::overwrite);
+    for (int i = 0; i < n; ++i)
+        hnew.data[i] = h.data[i];
+    hnew.data[n] = value;
+    };
+    //no need to resize?
+    data.swap(newData);
+    };
+
 //!grow a GPUArray, leaving the current elements the same but with extra capacity at the end of the array
 template<typename T>
 inline __attribute__((always_inline)) void growGPUArray(GPUArray<T> &data, int extraElements)

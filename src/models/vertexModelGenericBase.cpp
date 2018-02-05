@@ -48,6 +48,14 @@ void vertexModelGenericBase::growVertexNeighborLists(int newCoordinationMax)
     copyReIndexed2DGPUArray(vertexCellNeighbors,old_indexer,vertexNeighborIndexer);
 
     //resize per-vertex-coordination lists
+    resizePerCoordinationLists();
+    };
+
+/*!
+Whenever vertexCoordinationMaximum or Nvertices changes, the per-vertex-coordination lists are resized
+*/
+void vertexModelGenericBase::resizePerCoordinationLists()
+    {
     vertexForceSets.resize(vertexCoordinationMaximum*Nvertices);
     voroCur.resize(vertexCoordinationMaximum*Nvertices);
     voroLastNext.resize(vertexCoordinationMaximum*Nvertices);
@@ -221,10 +229,7 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     vertexNeighborNum.swap(newVertexNeighborNum);
     vertexCellNeighborNum.swap(newVertexCellNeighborNum);
 
-    vertexForceSets.resize(vertexCoordinationMaximum*Nvertices);
-    voroCur.resize(vertexCoordinationMaximum*Nvertices);
-    voroLastNext.resize(vertexCoordinationMaximum*Nvertices);
-
+    resizePerCoordinationLists();
     
     //Great! Now the cell-based lists
 
@@ -443,13 +448,82 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
     Nvertices = Nvertices - verticesToRemove.size();
     vertexNeighborIndexer = Index2D(vertexCoordinationMaximum,Nvertices);
 
-    vertexForceSets.resize(vertexCoordinationMaximum*Nvertices);
-    voroCur.resize(vertexCoordinationMaximum*Nvertices);
-    voroLastNext.resize(vertexCoordinationMaximum*Nvertices);
-
+    //resize per-vertex-coordination lists
+    resizePerCoordinationLists();
     //update vertex sorting arrays
     remapVertexSorting();
     };
+
+/*!
+This function "splits" a vertex, which I'll note in this comment as V0, into two vertices (V0 and V0'),
+such that the bond between them has angle "theta" and norm "separation".
+This function is meant to be quite generic, so the coordination number of the target vertex can be
+anything (other than one, of course). Because of this, a choice has to be made about how to partition
+the original set of vertex Neighbors of V0 into the new neighbors of V0 and those of V0'. I have made
+the "geometric" choice. Let v_{ij} be the vector from i to j. Create a list of v_{0i} for all i
+corresponding to original neighbors of V0. Then, if the dot product (v_{00'}.v_{0i})>0 i will be a
+neighbor of V0', otherwise it'll be a neighbor of V0.
+Cell neighbors of V0 and V0' are computed accordingly; some trickery is played to correctly do this
+in arbitrary coordination settings.
+
+As a note, the vertices are moved so that the center of the edge between them is where the original
+vertex was.
+\param vertexIndex The index of the vertex to split
+\param separation The desired length of the bond between the original vertex and the new one
+\param theta The desired angle (in the lab frame) from the original vertex and the new one
+*/
+void vertexModelGenericBase::splitVertex(int vertexIndex, Dscalar separation, Dscalar theta)
+    {
+    //Let's start with the easy parts: growing the relevant lists and assigning positions
+    Nvertices += 1;
+    //add a new index for the spatial sorters
+    ittVertex.push_back(Nvertices-1);
+    ttiVertex.push_back(Nvertices-1);
+    tagToIdxVertex.push_back(Nvertices-1);
+    idxToTagVertex.push_back(Nvertices-1);
+    //resize per-vertex-coordination lists
+    resizePerCoordinationLists();
+    //take care of the per-vertex lists
+    vertexForces.resize(Nvertices);
+    displacements.resize(Nvertices);
+    growGPUArray(vertexPositions,1);
+    growGPUArray(vertexMasses,1);
+    growGPUArray(vertexVelocities,1);
+    //mass is the same as the dividing vertex. velocities of the new vertex is zero. Positions are set
+    {//Array Handle scope
+        ArrayHandle<Dscalar> masses(vertexMasses);
+        ArrayHandle<Dscalar2> velocities(vertexVelocities);
+        ArrayHandle<Dscalar2> positions(vertexPositions);
+        masses.data[Nvertices-1] = masses.data[vertexIndex];
+        Dscalar2 zero = make_Dscalar2(0.0,0.0);
+        velocities.data[Nvertices-1] = zero;
+        Dscalar2 edge = make_Dscalar2(cos(theta),sin(theta));
+        edge = 0.5*separation*edge;
+        Dscalar2 newV0Pos,newV1Pos;
+        newV0Pos = positions.data[vertexIndex]-edge;
+        Box->putInBoxReal(newV0Pos);
+        newV1Pos = positions.data[vertexIndex]+edge;
+        Box->putInBoxReal(newV1Pos);
+        positions.data[vertexIndex] = newV0Pos;
+        positions.data[Nvertices-1] = newV1Pos;
+    }//end array handle scope
+
+    vertexNeighborIndexer = Index2D(vertexCoordinationMaximum,Nvertices);
+    Index2D oldVNI = Index2D(vertexCoordinationMaximum,Nvertices-1);
+
+    //vertex neighbors
+    //vertex neighbor num
+    //vertex cell neighbors
+    //vertex cell neighbor num
+    //
+    
+    //does the maximum number of vertices around a cell need to be incremented?
+    //cellNeighborIndexer = Index2D(vertexMax,Ncells);  
+    //Index2D oldCNI = Index2D(vertexMaxOld????,Ncells);
+    //cellVertices
+    //cellVertexNum
+
+    }
 
 /*!
 cell death, as opposed to cell removal, removes a cell but maintains the confluent nature of the
@@ -524,4 +598,8 @@ void vertexModelGenericBase::remapVertexSorting()
     ttiVertex=newttiv;
     idxToTagVertex=newidxtotagv;
     tagToIdxVertex=newtagtoidxv;
+    printf("VertexMapping results:\n");
+    for (int tt = 0; tt  <Nvertices; ++tt)
+        printf("%i\t %i\t %i \n",tt,tagToIdxVertex[tt],idxToTagVertex[tt]);
+    printf("\n");
     };

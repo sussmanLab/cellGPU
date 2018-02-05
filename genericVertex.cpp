@@ -113,6 +113,7 @@ int main(int argc, char*argv[])
     sim->setIntegrationTimestep(dt);
     sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);
+    //sim->setSortPeriod(initSteps/5);
 
     for (int timestep = 0; timestep < initSteps; ++timestep)
         {
@@ -158,7 +159,7 @@ int main(int argc, char*argv[])
 
 
 
-    vector<int> vMerge(2); vMerge[0]=80;vMerge[1]=3;
+    vector<int> vMerge(2); vMerge[0]=80;vMerge[1]=81;
     t1=clock();
     modelBase->mergeVertices(vMerge);
     t2=clock();
