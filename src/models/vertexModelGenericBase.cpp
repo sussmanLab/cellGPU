@@ -562,15 +562,27 @@ Requires that Ncells is the new, not old, value
 */
 void vertexModelGenericBase::remapCellSorting()
     {
+    //get a map from the tags
+    vector<int> tagsToRemove,tagMap,tagMapInverse;
+    for (int cc = 0; cc < cellMap.size(); ++cc)
+        if( cellMap[cc] == -1)
+            tagsToRemove.push_back(idxToTag[cc]);
+    sort(tagsToRemove.begin(),tagsToRemove.end());
+    createIndexMapAndInverse(tagMap,tagMapInverse,tagsToRemove,cellMap.size());
+
     vector<int> newitt, newtti, newidxtotag, newtagtoidx;
     newitt.resize(Ncells);newtti.resize(Ncells);newidxtotag.resize(Ncells);newtagtoidx.resize(Ncells);
     for (int cc = 0; cc < Ncells; ++cc)
         {
-        int oldCidx = cellMapInverse[cc];
-        newitt[cc] = cellMap[itt[oldCidx]];
-        newtti[cc] = cellMap[tti[oldCidx]];
-        newidxtotag[cc] = cellMap[idxToTag[oldCidx]];
-        newtagtoidx[cc] = cellMap[tagToIdx[oldCidx]];
+        int newCellIndex = cellMapInverse[cc];
+        int newTagIndex = idxToTag[newCellIndex];
+        newidxtotag[cc]=tagMap[newTagIndex];
+        //newitt[cc] = tagMap[itt[newCellIndex]];
+        };
+    for (int cc = 0; cc < Ncells;++cc)
+        {
+        //newtti[newitt[cc]]=cc;
+        newtagtoidx[newidxtotag[cc]]=cc;
         };
     itt=newitt;
     tti=newtti;
@@ -584,22 +596,29 @@ Requires that Nvertices is the new, not old, value
 */
 void vertexModelGenericBase::remapVertexSorting()
     {
+    //get a map from the tags
+    vector<int> tagsToRemove,tagMap,tagMapInverse;
+    for (int vv = 0; vv < vertexMap.size(); ++vv)
+        if( vertexMap[vv] == -1)
+            tagsToRemove.push_back(idxToTagVertex[vv]);
+    sort(tagsToRemove.begin(),tagsToRemove.end());
+    createIndexMapAndInverse(tagMap,tagMapInverse,tagsToRemove,vertexMap.size());
     vector<int> newittv, newttiv, newidxtotagv, newtagtoidxv;
     newittv.resize(Nvertices);newttiv.resize(Nvertices);newidxtotagv.resize(Nvertices);newtagtoidxv.resize(Nvertices);
     for (int vv = 0; vv < Nvertices; ++vv)
         {
-        int oldVidx = vertexMapInverse[vv];
-        newittv[vv] = vertexMap[ittVertex[oldVidx]];
-        newttiv[vv] = vertexMap[ttiVertex[oldVidx]];
-        newidxtotagv[vv] = vertexMap[idxToTagVertex[oldVidx]];
-        newtagtoidxv[vv] = vertexMap[tagToIdxVertex[oldVidx]];
+        int newVertexIndex = vertexMapInverse[vv];
+        int newTagIndex = idxToTagVertex[newVertexIndex];
+        newidxtotagv[vv] = tagMap[newTagIndex];
+        //newittv[vv] = tagMap[ittVertex[newVertexIndex]];
+        };
+    for (int vv = 0; vv < Nvertices; ++vv)
+        {
+        //newttiv[newittv[vv]]=vv;
+        newtagtoidxv[newidxtotagv[vv]]=vv;
         };
     ittVertex=newittv;
     ttiVertex=newttiv;
     idxToTagVertex=newidxtotagv;
     tagToIdxVertex=newtagtoidxv;
-    printf("VertexMapping results:\n");
-    for (int tt = 0; tt  <Nvertices; ++tt)
-        printf("%i\t %i\t %i \n",tt,tagToIdxVertex[tt],idxToTagVertex[tt]);
-    printf("\n");
     };

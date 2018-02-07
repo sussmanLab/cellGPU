@@ -66,13 +66,15 @@ HOSTDEVICE void Circumcenter(const Dscalar2 &x1, const Dscalar2 &x2, const Dscal
 /*!
 e.g., indexMap[100] = the new index of what used to be cell 100, or is -1 if it was to be removed
 indexMapInverse is a vector of length new Ncells. cellMapInverse[10] gives the index of the cell that will be mapped to the 10th cell
+\pre indicesToRemove *must* be a sorted list
 */
 inline __attribute__((always_inline)) void createIndexMapAndInverse(vector<int> &indexMap, vector<int> &indexMapInverse, vector<int> &indicesToRemove, int oldSize)
     {
+    indexMap.resize(oldSize);
+    indexMapInverse.resize(oldSize - indicesToRemove.size());
+    //indexMapInverse.resize(oldSize);
     if(indicesToRemove.size()==0)
         {
-        indexMap.resize(oldSize); 
-        indexMapInverse.resize(oldSize);
         for (int ii = 0; ii < oldSize; ++ii)
             {
             indexMap[ii] = ii;
@@ -80,8 +82,6 @@ inline __attribute__((always_inline)) void createIndexMapAndInverse(vector<int> 
             };
         return;
         };
-    indexMap.resize(oldSize);
-    indexMapInverse.resize(oldSize - indicesToRemove.size());
     int idx  = 0;
     int newIdx = 0;
     int shift = 0;

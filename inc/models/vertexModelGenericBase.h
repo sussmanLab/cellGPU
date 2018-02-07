@@ -30,7 +30,11 @@ class vertexModelGenericBase : public simpleVertexModelBase
         //!Take a vertex and divide it into two vertices
         virtual void splitVertex(int vertexIndex, Dscalar separation, Dscalar theta);
 
-    /*
+        //!spatially sort the *vertices* along a Hilbert curve for data locality...cannot call underlying routines!
+        //virtual void spatialSorting();
+
+
+/*
         //!Compute the geometry (area & perimeter) of the cells on the GPU
         virtual void computeGeometryGPU();
 
