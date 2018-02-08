@@ -31,9 +31,8 @@ void Simple2DActiveCell::initializeSimple2DActiveCell(int n)
 Calls the spatial vertex sorting routine in Simple2DCell, and re-indexes the arrays for the cell
 RNGS, as well as the cell motility and cellDirector arrays
 */
-void Simple2DActiveCell::spatiallySortVerticesAndCellActivity()
+void Simple2DActiveCell::spatiallySortCellActivity()
     {
-    spatiallySortVertices();
     reIndexCellArray(Motility);
     reIndexCellArray(cellDirectors);
     };
@@ -45,8 +44,7 @@ RNGS, as well as the cell motility and cellDirector arrays
 void Simple2DActiveCell::spatiallySortCellsAndCellActivity()
     {
     spatiallySortCells();
-    reIndexCellArray(Motility);
-    reIndexCellArray(cellDirectors);
+    spatiallySortCellActivity();
     };
 
 /*!

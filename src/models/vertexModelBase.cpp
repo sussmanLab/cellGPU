@@ -20,6 +20,92 @@ void vertexModelBase::initializeVertexModelBase(int n)
     };
 
 /*!
+ *When sortPeriod < 0 this routine does not get called
+ \post vertices are re-ordered according to a Hilbert sorting scheme, cells are reordered according
+ to what vertices they are near, and all data structures are updated
+ */
+void vertexModelBase::spatialSorting()
+    {
+    //call the simpleVertexModelBase to get the basic vertex sorting done
+    simpleVertexModelBase::spatialSorting();
+
+    //and then take care of cell and neighbor structures
+    GPUArray<int> TEMP_vertexNeighbors = vertexNeighbors;
+    GPUArray<int> TEMP_vertexCellNeighbors = vertexCellNeighbors;
+    GPUArray<int> TEMP_cellVertices = cellVertices;
+    ArrayHandle<int> temp_vn(TEMP_vertexNeighbors,access_location::host, access_mode::read);
+    ArrayHandle<int> temp_vcn(TEMP_vertexCellNeighbors,access_location::host, access_mode::read);
+    ArrayHandle<int> temp_cv(TEMP_cellVertices,access_location::host, access_mode::read);
+    ArrayHandle<int> vn(vertexNeighbors,access_location::host, access_mode::readwrite);
+    ArrayHandle<int> vcn(vertexCellNeighbors,access_location::host, access_mode::readwrite);
+    ArrayHandle<int> cv(cellVertices,access_location::host, access_mode::readwrite);
+    ArrayHandle<int> cvn(cellVertexNum,access_location::host,access_mode::read);
+
+    //Great, now use the vertex ordering to derive a cell spatial ordering
+    vector<pair<int,int> > idxCellSorter(Ncells);
+
+    vector<bool> cellOrdered(Ncells,false);
+    int cellOrdering = 0;
+    for (int vv = 0; vv < Nvertices; ++vv)
+        {
+        if(cellOrdering == Ncells) continue;
+        int vertexIndex = ittVertex[vv];
+        for (int ii = 0; ii < 3; ++ii)
+            {
+            int cellIndex = vcn.data[3*vertexIndex +ii];
+            if(!cellOrdered[cellIndex])
+                {
+                cellOrdered[cellIndex] = true;
+                idxCellSorter[cellIndex].first=cellOrdering;
+                idxCellSorter[cellIndex].second = cellIndex;
+                cellOrdering += 1;
+                };
+            };
+        };
+    sort(idxCellSorter.begin(),idxCellSorter.end());
+    //update tti and itt
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        int newidx = idxCellSorter[ii].second;
+        itt[ii] = newidx;
+        tti[newidx] = ii;
+        };
+    //update points, idxToTag, and tagToIdx
+    vector<int> tempiCell = idxToTag;
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        idxToTag[ii] = tempiCell[itt[ii]];
+        tagToIdx[tempiCell[itt[ii]]] = ii;
+        };
+    //update cell property structures
+    cellStructureSort();
+    spatiallySortCellActivity();
+    reIndexCellArray(cellVertexNum);
+
+    //Finally, now that both cell and vertex re-indexing is known, update auxiliary data structures
+    //Start with everything that can be done with just the cell indexing
+    //Now the rest
+    for (int vv = 0; vv < Nvertices; ++vv)
+        {
+        int vertexIndex = ttiVertex[vv];
+        for (int ii = 0; ii < 3; ++ii)
+            {
+            vn.data[3*vertexIndex+ii] = ttiVertex[temp_vn.data[3*vv+ii]];
+            vcn.data[3*vertexIndex+ii] = tti[temp_vcn.data[3*vv+ii]];
+            };
+        };
+
+    for (int cc = 0; cc < Ncells; ++cc)
+        {
+        int cellIndex = tti[cc];
+        //the cellVertexNeigh array is already sorted
+        int neighs = cvn.data[cellIndex];
+        for (int nn = 0; nn < neighs; ++nn)
+            cv.data[cellNeighborIndexer(nn,cellIndex)] = ttiVertex[temp_cv.data[cellNeighborIndexer(nn,cc)]];
+        };
+    };
+
+/*!
 enforce and update topology of vertex wiring on either the GPU or CPU
 */
 void vertexModelBase::enforceTopology()

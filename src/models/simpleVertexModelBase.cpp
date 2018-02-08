@@ -174,17 +174,46 @@ void simpleVertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacemen
     };
 
 /*!
- *When sortPeriod < 0 this routine does not get called
- \post vertices are re-ordered according to a Hilbert sorting scheme, cells are reordered according
- to what vertices they are near, and all data structures are updated
+This function takes care of the parts of spatial sorting that are common to both simple and generic
+vertex models. This includes calling the hilbert sorting routines, and re-ordering the vertices
+(positions, velocities, masses) and cells (positions, cell properties).
  */
 void simpleVertexModelBase::spatialSorting()
     {
-    //the base vertex model class doesn't need to change any other unusual data structures at the moment
-    spatiallySortVerticesAndCellActivity();
-    reIndexVertexArray(vertexMasses);
+    //ittVertex and ttiVertex are the changes that happen in the current sort
+    //idxToTagVertex and tagToIdxVertex relate the current indexes to the original ones
+    HilbertSorter hs(*(Box));
+
+    vector<pair<int,int> > idxSorterVertex(Nvertices);
+
+    {//sort points by Hilbert Curve location
+    ArrayHandle<Dscalar2> h_p(vertexPositions,access_location::host, access_mode::readwrite);
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        idxSorterVertex[ii].first=hs.getIdx(h_p.data[ii]);
+        idxSorterVertex[ii].second = ii;
+        };
+    sort(idxSorterVertex.begin(),idxSorterVertex.end());
+    }
+    //update tti and itt
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        int newidx = idxSorterVertex[ii].second;
+        ittVertex[ii] = newidx;
+        ttiVertex[newidx] = ii;
+        };
+
+    //update points, idxToTag, and tagToIdx
+    vector<int> tempi = idxToTagVertex;
+    for (int ii = 0; ii < Nvertices; ++ii)
+        {
+        idxToTagVertex[ii] = tempi[ittVertex[ii]];
+        tagToIdxVertex[tempi[ittVertex[ii]]] = ii;
+        };
+    reIndexVertexArray(vertexPositions);
     reIndexVertexArray(vertexVelocities);
-    };
+    reIndexVertexArray(vertexMasses);
+    }
 
 /*!
 when a transition increases the maximum number of vertices around any cell in the system,

@@ -42,6 +42,9 @@ class vertexModelBase : public simpleVertexModelBase
         //!update/enforce the topology, performing simple T1 transitions
         virtual void enforceTopology();
 
+        //!spatially sort the *vertices* along a Hilbert curve for data locality
+        virtual void spatialSorting();
+
     protected:
         //!Initialize the data structures for edge flipping...should also be called if Nvertices changes
         void initializeEdgeFlipLists();

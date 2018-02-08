@@ -43,8 +43,8 @@ class Simple2DActiveCell : public Simple2DCell
 
     //protected functions
     protected:
-        //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
-        void spatiallySortVerticesAndCellActivity();
+        //!re-index arrays of cell activity according to current reindexing structures
+        void spatiallySortCellActivity();
 
         //!call the Simple2DCell spatial cell sorter, and re-index arrays of cell activity
         void spatiallySortCellsAndCellActivity();

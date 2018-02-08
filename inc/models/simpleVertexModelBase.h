@@ -31,7 +31,8 @@ class simpleVertexModelBase : public Simple2DActiveCell
         virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements,Dscalar scale = 1.);
         //!In vertex models the number of degrees of freedom is the number of vertices
         virtual int getNumberOfDegreesOfFreedom(){return Nvertices;};
-        //!spatially sort the *vertices* along a Hilbert curve for data locality
+
+        //!common to both simple and generic vertex models: sort the vertices (positions, velocities, masses)
         virtual void spatialSorting();
 
         //!return the forces

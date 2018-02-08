@@ -31,8 +31,8 @@ class vertexModelGenericBase : public simpleVertexModelBase
         virtual void splitVertex(int vertexIndex, Dscalar separation, Dscalar theta);
 
         //!spatially sort the *vertices* along a Hilbert curve for data locality...cannot call underlying routines!
-        //virtual void spatialSorting();
-
+        virtual void spatialSorting(){};
+        //NEED TO WRITE THE ABOVE FUNCTION
 
 /*
         //!Compute the geometry (area & perimeter) of the cells on the GPU

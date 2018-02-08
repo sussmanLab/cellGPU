@@ -21,14 +21,14 @@ applied to the vertices themselves.
 int main(int argc, char*argv[])
 {
     int numpts = 200; //number of cells
-    int USE_GPU = 0; //0 or greater uses a gpu, any negative number runs on the cpu
-    int tSteps = 5; //number of time steps to run after initialization
-    int initSteps = 1; //number of initialization steps
+    int USE_GPU = -1; //0 or greater uses a gpu, any negative number runs on the cpu
+    int tSteps = 1000; //number of time steps to run after initialization
+    int initSteps = 1000; //number of initialization steps
 
-    Dscalar dt = 0.01; //the time step size
-    Dscalar p0 = 4.0;  //the preferred perimeter
+    Dscalar dt = 0.001; //the time step size
+    Dscalar p0 = 3.85;  //the preferred perimeter
     Dscalar a0 = 1.0;  // the preferred area
-    Dscalar v0 = 0.1;  // the self-propulsion
+    Dscalar v0 = 0.05;  // the self-propulsion
     Dscalar Dr = 1.0;  //the rotational diffusion constant of the cell directors
     int program_switch = 0; //various settings control output
 
@@ -94,7 +94,7 @@ int main(int argc, char*argv[])
     //set the time step size
     sim->setIntegrationTimestep(dt);
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
-//    sim->setSortPeriod(initSteps/10);
+    sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
     sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);

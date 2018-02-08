@@ -148,9 +148,8 @@ class Simple2DCell : public Simple2DModel
         void reIndexVertexArray(GPUArray<Dscalar2> &array);
         //!Perform a spatial sorting of the cells to try to maintain data locality
         void spatiallySortCells();
-        //!Perform a spatial sorting of the vertices to try to maintain data locality
-        void spatiallySortVertices();
-
+        //!A utility for the above, reIndexes a lot of cell arrays
+        void cellStructureSort();
 
     //public member variables
     public:
