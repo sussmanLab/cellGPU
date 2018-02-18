@@ -233,6 +233,14 @@ given that rij and rik tell you where the other two Delaunay vertices are.
 */
 HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     {
+    Dscalar denominator = 1.0/((rij.y*rik.x-rij.x*rik.y)*(rij.y*rik.x-rij.x*rik.y));
+    Dscalar rik2 = rik.x*rik.x+rik.y*rik.y;
+    Dscalar rij2 = rij.x*rij.x+rij.y*rij.y;
+    dhdr.x11 = 0.5*denominator*(rik.y-rij.y)*(rik.y*rij2-rij.y*rik2);
+    dhdr.x12 = 0.5*denominator*(rij.y-rik.y)*(rik.x*rij2-rij.x*rik2);
+    dhdr.x21 = 0.5*denominator*(rij.x-rik.x)*(rik.y*rij2-rij.y*rik2);
+    dhdr.x22 = 0.5*denominator*(rik.x-rij.x)*(rik.x*rij2-rij.x*rik2);
+    /*
     Matrix2x2 Id;
     dhdr=Id;
 
@@ -273,7 +281,7 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     dDdriOD.y = D*(-2.0*rikDotrjk*rij.y-rij2*rjk.y);
 
     dhdr += dyad(rik,dDdriOD);
-    //dhdr = Id+D*(dyad(rij,dbDdri)+dyad(rik,dgDdri)-(betaD+gammaD)*Id-dyad(z,dDdriOD));
+    */
     return;
     };
 
