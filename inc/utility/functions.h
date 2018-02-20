@@ -240,6 +240,7 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
     dhdr.x12 = 0.5*denominator*(rij.y-rik.y)*(rik.x*rij2-rij.x*rik2);
     dhdr.x21 = 0.5*denominator*(rij.x-rik.x)*(rik.y*rij2-rij.y*rik2);
     dhdr.x22 = 0.5*denominator*(rik.x-rij.x)*(rik.x*rij2-rij.x*rik2);
+    //The code below is a more physical derivation leading to an identical answer as the above seven lines
     /*
     Matrix2x2 Id;
     dhdr=Id;
@@ -289,7 +290,7 @@ HOSTDEVICE void getdhdr(Matrix2x2 &dhdr,const Dscalar2 &rij,const Dscalar2 &rik)
 /*!
 Have you ever wanted to know the derivative of the position of a Voronoi vertex with respect to a 
 deformation of positions
-E(\gamma) = 
+E(\gamma) =
 1   \gamma
 0   1
 ? If so, this function is for you! Assumes that one Delaunay vertex is at the origin, and rij and
