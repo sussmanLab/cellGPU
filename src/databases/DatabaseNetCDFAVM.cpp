@@ -68,7 +68,7 @@ void AVMDatabaseNetCDF::GetDimVar()
     vcneighVar          = File.get_var("VertexCellNeighbors");
     directorVar          = File.get_var("director");
     BoxMatrixVar    = File.get_var("BoxMatrix");
-    meanqVar          = File.add_var("meanQ",     ncDscalar,recDim, unitDim);
+    meanqVar  = File.get_var("meanQ");
     timeVar    = File.get_var("time");
 }
 
