@@ -1,6 +1,6 @@
 # Citations for cellGPU {#cite}
 
-If you use cellGPU for a publication or project, please site the main cellGPU paper:
+If you use cellGPU for a publication or project, please cite the main cellGPU paper:
 
 (1) "cellGPU: massively parallel simulations of dynamic vertex models" Daniel M. Sussman; Computer Physics Communications, volume 219, pages 400-406, (2017)
 
