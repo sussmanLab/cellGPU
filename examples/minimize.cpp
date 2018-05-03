@@ -108,8 +108,8 @@ int main(int argc, char*argv[])
         sim->setConfiguration(spv);
         sim->addUpdater(fireMinimizer,spv);
         sim->setIntegrationTimestep(dt);
-        if(initSteps > 0)
-            sim->setSortPeriod(initSteps/10);
+        //if(initSteps > 0)
+            //sim->setSortPeriod(initSteps/10);
         sim->setCPUOperation(!initializeGPU);
 
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
