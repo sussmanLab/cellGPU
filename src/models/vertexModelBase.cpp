@@ -756,7 +756,7 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                         };
                     h_cvn.data[cellSet.z] -= 1;
 
-                    //cell l gains v1 in between v2 and c
+                    //cell l gains v1 in between v2 and a
                     cneigh = h_cvn.data[cellSet.w];
                     vector<int> cvcopy2(cneigh+1);
                     cidx = 0;

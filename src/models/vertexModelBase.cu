@@ -411,15 +411,17 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
             d_vertexCellNeighbors[3*vertex1+vert] = cellSet.w;
         if(d_vertexCellNeighbors[3*vertex2+vert] == cellSet.x)
             d_vertexCellNeighbors[3*vertex2+vert] = cellSet.y;
+
         //vertex-vertex neighbors
-        if(d_vertexNeighbors[3*vertexSet.x+vert] == vertex1)
-            d_vertexNeighbors[3*vertexSet.x+vert] = vertex2;
-        if(d_vertexNeighbors[3*vertexSet.y+vert] == vertex2)
-            d_vertexNeighbors[3*vertexSet.y+vert] = vertex1;
         if(d_vertexNeighbors[3*vertex1+vert] == vertexSet.x)
             d_vertexNeighbors[3*vertex1+vert] = vertexSet.y;
         if(d_vertexNeighbors[3*vertex2+vert] == vertexSet.y)
             d_vertexNeighbors[3*vertex2+vert] = vertexSet.x;
+
+        if(d_vertexNeighbors[3*vertexSet.x+vert] == vertex1)
+            d_vertexNeighbors[3*vertexSet.x+vert] = vertex2;
+        if(d_vertexNeighbors[3*vertexSet.y+vert] == vertex2)
+            d_vertexNeighbors[3*vertexSet.y+vert] = vertex1;
         };
 
     //now rewire the cells...
@@ -437,23 +439,18 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
 
     //cell j gains v2 in between v1 and b, so step through list backwards and insert
     cneigh = d_cellVertexNum[cellSet.y];
-    cidx = cneigh;
-    int vLocation = cneigh;
-    for (int cc = cneigh-1;cc >=0; --cc)
+    bool found0 = false;
+    for (int cc = cneigh-1; cc >= 0; --cc)
         {
         int cellIndex = d_cellVertices[n_idx(cc,cellSet.y)];
-        if(cellIndex == vertex1)
+        if(!found0)
+            d_cellVertices[n_idx(cc+1,cellSet.y)] = cellIndex;
+        if(cellIndex == vertexSet.x)
             {
-            vLocation = cidx;
-            cidx -= 1;
-            };
-        d_cellVertices[n_idx(cidx,cellSet.y)] = cellIndex;
-        cidx -= 1;
-        };
-    if(cidx ==0)
-        d_cellVertices[n_idx(0,cellSet.y)] = vertex2;
-    else
-        d_cellVertices[n_idx(vLocation,cellSet.y)] = vertex2;
+            found0 = true;
+            d_cellVertices[n_idx(cc,cellSet.y)] = vertex2;
+            }
+        }
     d_cellVertexNum[cellSet.y] += 1;
 
     //cell k loses v1 as a neighbor
@@ -468,25 +465,20 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         };
     d_cellVertexNum[cellSet.z] -= 1;
 
-    //cell l gains v1 in between v2 and c...copy the logic of cell j
+    //cell l gains v1 in between v2 and a...copy the logic of cell j
     cneigh = d_cellVertexNum[cellSet.w];
-    cidx = cneigh;
-    vLocation = cneigh;
-    for (int cc = cneigh-1;cc >=0; --cc)
+    bool found = false;
+    for (int cc = cneigh-1; cc >= 0; --cc)
         {
         int cellIndex = d_cellVertices[n_idx(cc,cellSet.w)];
-        if(cellIndex == vertex2)
+        if(!found)
+            d_cellVertices[n_idx(cc+1,cellSet.w)] = cellIndex;
+        if(cellIndex == vertexSet.y)
             {
-            vLocation = cidx;
-            cidx -= 1;
-            };
-        d_cellVertices[n_idx(cidx,cellSet.w)] = cellIndex;
-        cidx -= 1;
-        };
-    if(cidx ==0)
-        d_cellVertices[n_idx(0,cellSet.w)] = vertex1;
-    else
-        d_cellVertices[n_idx(vLocation,cellSet.w)] = vertex1;
+            found = true;
+            d_cellVertices[n_idx(cc,cellSet.w)] = vertex1;
+            }
+        }
     d_cellVertexNum[cellSet.w] += 1;
     };
 
