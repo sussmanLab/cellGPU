@@ -250,7 +250,6 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
                                       int      *d_vertexCellNeighbors,
                                       int      *d_cellVertexNum,
                                       int      *d_cellVertices,
-                                      Dscalar  T1Threshold,
                                       gpubox   Box,
                                       Index2D  n_idx,
                                       int      NvTimes3)
@@ -264,36 +263,12 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     int vertex2 = d_vertexNeighbors[idx];
     d_vertexEdgeFlipsCurrent[idx] = 0;
 
-    //Rotate the vertices in the edge and set them at twice their original distance
-    Dscalar2 edge;
-    Dscalar2 v1 = d_vertexPositions[vertex1];
-    Dscalar2 v2 = d_vertexPositions[vertex2];
-    Box.minDist(v1,v2,edge);
-    if(norm(edge) < T1Threshold) return;
-
-    //Dscalar2 midpoint;
-    //midpoint.x = v2.x + 0.5*edge.x;
-    //midpoint.y = v2.y + 0.5*edge.y;
-
-    //v1.x = midpoint.x-edge.y;v1.y = midpoint.y+edge.x;
-    //v2.x = midpoint.x+edge.y;v2.y = midpoint.y-edge.x;
-    v1.x = v2.x + 0.5*edge.x-edge.y;
-    v1.y = v2.y + 0.5*edge.y+edge.x;
-    v2.x = v2.x + 0.5*edge.x+edge.y;
-    v2.y = v2.y + 0.5*edge.y-edge.x;
-    Box.putInBoxReal(v1);
-    Box.putInBoxReal(v2);
-    d_vertexPositions[vertex1] = v1;
-    d_vertexPositions[vertex2] = v2;
-
-    //now, do the gross work of cell and vertex rewiring
+    //first, identify the cell and vertex set involved...
     int4 cellSet;cellSet.x=-1;cellSet.y=-1;cellSet.z=-1;cellSet.w=-1;
     //int4 vertexSet;
     int2 vertexSet;
     /*
     The following is fairly terrible GPU code, and should be considered for refactoring
-    On the other hand, revising or improving the multiple-call structure of the edge-flipping
-    routine would be a much large optimization
     */
     int cell1,cell2,cell3,ctest;
     int vlast, vcur, vnext, cneigh;
@@ -378,7 +353,6 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         {
         cellSet.y = cell3;
         };
-
     //get the vertexSet by examining cells j and l
     cneigh = d_cellVertexNum[cellSet.y];
     vlast = d_cellVertices[ n_idx(cneigh-2,cellSet.y) ];
@@ -390,8 +364,6 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         vlast = vcur;
         vcur = vnext;
         };
-    //vertexSet.x=vlast;
-    //vertexSet.y=vnext;
     vertexSet.x=vnext;
     cneigh = d_cellVertexNum[cellSet.w];
     vlast = d_cellVertices[ n_idx(cneigh-2,cellSet.w) ];
@@ -403,15 +375,34 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         vlast = vcur;
         vcur = vnext;
         };
-    //vertexSet.w=vlast;
-    //vertexSet.z=vnext;
     vertexSet.y=vnext;
 
-    /*
-    Great, that was the first chunk of terrible code... but the nightmare isn't over
-    */
+    //forbid a T1 transition that would shrink a triangular cell
+    if (d_cellVertexNum[cellSet.x] ==3 || d_cellVertexNum[cellSet.z] ==3)
+        return;
 
-    //re-wire the cells and vertices
+    //okay, we're ready to go. First, rotate the vertices in the edge and set them at twice their original distance
+    Dscalar2 edge;
+    Dscalar2 v1 = d_vertexPositions[vertex1];
+    Dscalar2 v2 = d_vertexPositions[vertex2];
+    Box.minDist(v1,v2,edge);
+
+    //Dscalar2 midpoint;
+    //midpoint.x = v2.x + 0.5*edge.x;
+    //midpoint.y = v2.y + 0.5*edge.y;
+
+    //v1.x = midpoint.x-edge.y;v1.y = midpoint.y+edge.x;
+    //v2.x = midpoint.x+edge.y;v2.y = midpoint.y-edge.x;
+    v1.x = v2.x + 0.5*edge.x-edge.y;
+    v1.y = v2.y + 0.5*edge.y+edge.x;
+    v2.x = v2.x + 0.5*edge.x+edge.y;
+    v2.y = v2.y + 0.5*edge.y-edge.x;
+    Box.putInBoxReal(v1);
+    Box.putInBoxReal(v2);
+    d_vertexPositions[vertex1] = v1;
+    d_vertexPositions[vertex2] = v2;
+
+    //now, re-wire the cells and vertices
     //start with the vertex-vertex and vertex-cell  neighbors
     for (int vert = 0; vert < 3; ++vert)
         {
@@ -610,7 +601,6 @@ bool gpu_vm_flip_edges(
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
-                    Dscalar  T1Threshold,
                     gpubox   &Box,
                     Index2D  &n_idx,
                     int      Nvertices,
@@ -627,7 +617,7 @@ bool gpu_vm_flip_edges(
     vm_flip_edges_kernel<<<nblocks,block_size>>>(
                                                   d_vertexEdgeFlipsCurrent,d_vertexPositions,d_vertexNeighbors,
                                                   d_vertexCellNeighbors,d_cellVertexNum,d_cellVertices,
-                                                  T1Threshold,Box,
+                                                  Box,
                                                   n_idx,NvTimes3);
 
     HANDLE_ERROR(cudaGetLastError());

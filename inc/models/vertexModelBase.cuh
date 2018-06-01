@@ -69,7 +69,6 @@ bool gpu_vm_flip_edges(
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
-                    Dscalar  T1Threshold,
                     gpubox   &Box,
                     Index2D  &n_idx,
                     int      Nvertices,

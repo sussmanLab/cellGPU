@@ -864,7 +864,6 @@ void vertexModelBase::flipEdgesGPU()
                                d_vcn.data,
                                d_cvn.data,
                                d_cv.data,
-                               T1Threshold,
                                *(Box),
                                n_idx,
                                Nvertices,
