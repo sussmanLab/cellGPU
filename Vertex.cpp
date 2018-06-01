@@ -141,7 +141,6 @@ int main(int argc, char*argv[])
 
     t2=clock();
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
-    sim->setCPUOperation(true);
     avm->reportMeanVertexForce();
     cout << "Mean q = " << avm->reportq() << endl;
 
