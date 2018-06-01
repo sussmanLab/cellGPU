@@ -93,6 +93,14 @@ int main(int argc, char*argv[])
     //when an edge gets less than this long, perform a simple T1 transition
     avm->setT1Threshold(0.04);
 
+    vector<int> vi(3*Nvert);
+    vector<int> vf(3*Nvert);
+    {
+    ArrayHandle<int> vcn(avm->vertexCellNeighbors);
+    for (int ii = 0; ii < 3*Nvert; ++ii)
+        vi[ii]=vcn.data[ii];
+    };
+
     //combine the equation of motion and the cell configuration in a "Simulation"
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(avm);
@@ -135,6 +143,15 @@ int main(int argc, char*argv[])
     cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
     avm->reportMeanVertexForce();
     cout << "Mean q = " << avm->reportq() << endl;
+
+    {
+    ArrayHandle<int> vcn(avm->vertexCellNeighbors);
+    for (int ii = 0; ii < 3*Nvert; ++ii)
+        vf[ii]=vcn.data[ii];
+    };
+    for (int ii = 0; ii < 100;++ii)
+        printf("%i\t",vf[ii]-vi[ii]);
+    cout << endl;
 
     if(initializeGPU)
         cudaDeviceReset();
