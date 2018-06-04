@@ -151,6 +151,7 @@ int main(int argc, char*argv[])
     avm->reportMeanVertexForce();
     cout << "Mean q = " << avm->reportq() << endl;
 
+    /*
     {
     ArrayHandle<int> vcn(avm->vertexCellNeighbors);
     for (int ii = 0; ii < 3*Nvert; ++ii)
@@ -159,7 +160,7 @@ int main(int argc, char*argv[])
     for (int ii = 0; ii < 100;++ii)
         printf("%i\t",vf[ii]-vi[ii]);
     cout << endl;
-
+    */
     if(initializeGPU)
         cudaDeviceReset();
     return 0;
