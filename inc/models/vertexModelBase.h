@@ -129,6 +129,8 @@ class vertexModelBase : public Simple2DActiveCell
         //! data structure to help with not simultaneously trying to flip nearby edges
         GPUArray<int> finishedFlippingEdges;
 
+        //! data structure per cell for not simulataneously flipping nearby edges
+        GPUArray<int> cellEdgeFlips;
     //reporting functions
     public:
         //!Handy for debugging T1 transitions...report the vertices owned by cell i

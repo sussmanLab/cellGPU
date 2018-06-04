@@ -60,6 +60,9 @@ void vertexModelBase::initializeVertexModelBase(int n,bool spvInitialize)
     setT1Threshold(0.01);
     //initializes per-cell lists
     initializeCellSorting();
+    cellEdgeFlips.resize(Ncells);
+    vector<int> ncz(Ncells,0);
+    fillGPUArrayWithVector(ncz,cellEdgeFlips);
 
     vertexMasses.resize(Nvertices);
     vertexVelocities.resize(Nvertices);
@@ -838,6 +841,7 @@ void vertexModelBase::flipEdgesGPU()
             ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_ffe(finishedFlippingEdges,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_ef(cellEdgeFlips,access_location::device,access_mode::readwrite);
 
             gpu_vm_parse_multiple_flips(d_vflip.data,
                                d_vflipcur.data,
@@ -846,6 +850,7 @@ void vertexModelBase::flipEdgesGPU()
                                d_cvn.data,
                                d_cv.data,
                                d_ffe.data,
+                               d_ef.data,
                                n_idx,
                                Ncells);
             };
@@ -859,12 +864,15 @@ void vertexModelBase::flipEdgesGPU()
             ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_ef(cellEdgeFlips,access_location::device,access_mode::readwrite);
+            
             gpu_vm_flip_edges(d_vflipcur.data,
                                d_v.data,
                                d_vn.data,
                                d_vcn.data,
                                d_cvn.data,
                                d_cv.data,
+                               d_ef.data,
                                *(Box),
                                n_idx,
                                Nvertices,
