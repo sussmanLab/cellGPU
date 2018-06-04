@@ -266,7 +266,7 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     //first, identify the cell and vertex set involved...
     int4 cellSet;cellSet.x=-1;cellSet.y=-1;cellSet.z=-1;cellSet.w=-1;
     //int4 vertexSet;
-    int2 vertexSet;
+    int2 vertexSet;//vertexSet.x = "b", vertexSet.y = "a"
     /*
     The following is fairly terrible GPU code, and should be considered for refactoring
     */
@@ -275,6 +275,13 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     cell1 = d_vertexCellNeighbors[3*vertex1];
     cell2 = d_vertexCellNeighbors[3*vertex1+1];
     cell3 = d_vertexCellNeighbors[3*vertex1+2];
+
+//    printf("v1 = %i, v2 = %i\n",vertex1, vertex2);
+//    printf("vertex 1 v neighs: (%i,%i,%i)\n",d_vertexNeighbors[3*vertex1],d_vertexNeighbors[3*vertex1+1],d_vertexNeighbors[3*vertex1+2]);
+//    printf("vertex 2 v neighs: (%i,%i,%i)\n",d_vertexNeighbors[3*vertex2],d_vertexNeighbors[3*vertex2+1],d_vertexNeighbors[3*vertex2+2]);
+
+
+
     //cell_l doesn't contain vertex 1, so it is the cell neighbor of vertex 2 we haven't found yet
     for (int ff = 0; ff < 3; ++ff)
         {
@@ -333,6 +340,18 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         {
         cellSet.y = cell2;
         };
+    for (int cn = 0; cn < cneigh; ++cn)
+        {
+        vnext = d_cellVertices[n_idx(cn,cell1)];
+        }
+    for (int cn = 0; cn < cneigh; ++cn)
+        {
+        vnext = d_cellVertices[n_idx(cn,cell2)];
+        }
+    for (int cn = 0; cn < cneigh; ++cn)
+        {
+        vnext = d_cellVertices[n_idx(cn,cell3)];
+        }
 
     //classify cell3
     cneigh = d_cellVertexNum[cell3];
@@ -377,6 +396,23 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         };
     vertexSet.y=vnext;
 
+//printf("icells %i %i %i\n",cellSet.x, cellSet.y, cellSet.z,cellSet.w);
+/*
+cneigh = d_cellVertexNum[cellSet.x];
+printf("cell i: ");
+for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSet.x)]);
+cneigh = d_cellVertexNum[cellSet.y];
+printf("\ncell j: ");
+for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSet.y)]);
+cneigh = d_cellVertexNum[cellSet.z];
+printf("\ncell k: ");
+for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSet.z)]);
+cneigh = d_cellVertexNum[cellSet.w];
+printf("\ncell l: ");
+for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSet.w)]);
+*/
+
+
     //forbid a T1 transition that would shrink a triangular cell
     if (d_cellVertexNum[cellSet.x] ==3 || d_cellVertexNum[cellSet.z] ==3)
         return;
@@ -387,20 +423,18 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     Dscalar2 v2 = d_vertexPositions[vertex2];
     Box.minDist(v1,v2,edge);
 
-    //Dscalar2 midpoint;
-    //midpoint.x = v2.x + 0.5*edge.x;
-    //midpoint.y = v2.y + 0.5*edge.y;
+    Dscalar2 midpoint;
+    midpoint.x = v2.x + 0.5*edge.x;
+    midpoint.y = v2.y + 0.5*edge.y;
 
-    //v1.x = midpoint.x-edge.y;v1.y = midpoint.y+edge.x;
-    //v2.x = midpoint.x+edge.y;v2.y = midpoint.y-edge.x;
-    v1.x = v2.x + 0.5*edge.x-edge.y;
-    v1.y = v2.y + 0.5*edge.y+edge.x;
-    v2.x = v2.x + 0.5*edge.x+edge.y;
-    v2.y = v2.y + 0.5*edge.y-edge.x;
+    v1.x = midpoint.x-edge.y;v1.y = midpoint.y+edge.x;
+    v2.x = midpoint.x+edge.y;v2.y = midpoint.y-edge.x;
     Box.putInBoxReal(v1);
     Box.putInBoxReal(v2);
     d_vertexPositions[vertex1] = v1;
     d_vertexPositions[vertex2] = v2;
+
+//if(v1.x > 10) printf("%i %i, (%i,%i)\n",vertex1,vertex2,vertexSet.x,vertexSet.y);
 
     //now, re-wire the cells and vertices
     //start with the vertex-vertex and vertex-cell  neighbors
@@ -423,7 +457,8 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         if(d_vertexNeighbors[3*vertexSet.y+vert] == vertex2)
             d_vertexNeighbors[3*vertexSet.y+vert] = vertex1;
         };
-
+//printf("c123(%i,%i,%i)\n",cell1,cell2,cell3);
+//printf("cells and vertices: c(%i,%i,%i,%i) v(%i,%i,%i,%i)\n",cellSet.x,cellSet.y,cellSet.z,cellSet.w,vertex1,vertex2,vertexSet.x,vertexSet.y);
     //now rewire the cells...
     //cell i loses v2 as a neighbor
     cneigh = d_cellVertexNum[cellSet.x];
@@ -480,6 +515,26 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
             }
         }
     d_cellVertexNum[cellSet.w] += 1;
+    
+   /* 
+    printf("\n post swap \n");
+    printf("v1 = %i, v2 = %i\n",vertex1, vertex2);
+    printf("vertex 1 v neighs: (%i,%i,%i)\n",d_vertexNeighbors[3*vertex1],d_vertexNeighbors[3*vertex1+1],d_vertexNeighbors[3*vertex1+2]);
+    printf("vertex 2 v neighs: (%i,%i,%i)\n",d_vertexNeighbors[3*vertex2],d_vertexNeighbors[3*vertex2+1],d_vertexNeighbors[3*vertex2+2]);
+    
+cneigh = d_cellVertexNum[cellSet.x];
+printf("cell i: ");
+for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSet.x)]);
+cneigh = d_cellVertexNum[cellSet.y];
+printf("\ncell j: ");
+for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSet.y)]);
+cneigh = d_cellVertexNum[cellSet.z];
+printf("\ncell k: ");
+for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSet.z)]);
+cneigh = d_cellVertexNum[cellSet.w];
+printf("\ncell l: ");
+for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSet.w)]);
+    */
     };
 
 //!Call the kernel to calculate the area and perimeter of each cell

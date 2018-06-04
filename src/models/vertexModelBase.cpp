@@ -202,7 +202,8 @@ void vertexModelBase::setCellsVoronoiTesselation(bool spvInitialize)
         if (neighs > vertexMax) vertexMax = neighs;
         nnum += neighs;
         };
-    vertexMax += 2;
+    vertexMax += 4;
+    vertexMax = 30;
     cout << "Total number of neighs = " << nnum << endl;
     cellVertices.resize(vertexMax*Ncells);
     n_idx = Index2D(vertexMax,Ncells);

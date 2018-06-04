@@ -76,7 +76,7 @@ int main(int argc, char*argv[])
     int Nvert = 2*numpts;
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
-    bool runSPV = false;//setting this to true will relax the random cell positions to something more uniform before running vertex model dynamics
+    bool runSPV = true;//setting this to true will relax the random cell positions to something more uniform before running vertex model dynamics
 
     //We will define two potential equations of motion, and choose which later on.
     //define an equation of motion object...here for self-propelled cells
@@ -114,6 +114,10 @@ int main(int argc, char*argv[])
     //set appropriate CPU and GPU flags
     sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);
+
+    avm->reportMeanVertexForce();
+
+            ncdat.WriteState(avm);
     //perform some initial time steps. If program_switch < 0, save periodically to a netCDF database
     for (int timestep = 0; timestep < initSteps+1; ++timestep)
         {
@@ -124,12 +128,15 @@ int main(int argc, char*argv[])
             //ncdat.WriteState(avm);
             };
         };
+    avm->reportMeanVertexForce();
+            ncdat.WriteState(avm);
 
     //run for additional timesteps, and record timing information. Save frames to a database if desired
     cudaProfilerStart();
     t1=clock();
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
+            ncdat.WriteState(avm);
         sim->performTimestep();
         if(program_switch <0 && timestep%((int)(100/dt))==0)
             {
