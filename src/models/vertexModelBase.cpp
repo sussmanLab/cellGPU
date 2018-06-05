@@ -80,6 +80,7 @@ void vertexModelBase::initializeVertexModelBase(int n,bool spvInitialize)
     vertexForceSets.resize(3*Nvertices);
     voroCur.resize(3*Nvertices);
     voroLastNext.resize(3*Nvertices);
+    cellSets.resize(3*Nvertices);
 
     growCellVertexListAssist.resize(1);
     ArrayHandle<int> h_grow(growCellVertexListAssist,access_location::host,access_mode::overwrite);
@@ -842,6 +843,9 @@ void vertexModelBase::flipEdgesGPU()
             ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_ffe(finishedFlippingEdges,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_ef(cellEdgeFlips,access_location::device,access_mode::readwrite);
+            ArrayHandle<int4> d_cs(cellSets,access_location::device,access_mode::readwrite);
+
+            gpu_zero_array(d_ef.data,Ncells);
 
             gpu_vm_parse_multiple_flips(d_vflip.data,
                                d_vflipcur.data,
@@ -851,6 +855,7 @@ void vertexModelBase::flipEdgesGPU()
                                d_cv.data,
                                d_ffe.data,
                                d_ef.data,
+                               d_cs.data,
                                n_idx,
                                Ncells);
             };
@@ -865,6 +870,7 @@ void vertexModelBase::flipEdgesGPU()
             ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_ef(cellEdgeFlips,access_location::device,access_mode::readwrite);
+            ArrayHandle<int4> d_cs(cellSets,access_location::device,access_mode::readwrite);
             
             gpu_vm_flip_edges(d_vflipcur.data,
                                d_v.data,
@@ -873,6 +879,7 @@ void vertexModelBase::flipEdgesGPU()
                                d_cvn.data,
                                d_cv.data,
                                d_ef.data,
+                               d_cs.data,
                                *(Box),
                                n_idx,
                                Nvertices,
