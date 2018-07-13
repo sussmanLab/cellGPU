@@ -60,6 +60,7 @@ bool gpu_vm_parse_multiple_flips(
                     int      *d_cellVertices,
                     int      *d_finishedFlippingEdges,
                     int      *d_edgeFlips,
+                    int4     *d_cellSets,
                     Index2D  &n_idx,
                     int      Ncells);
 
@@ -71,6 +72,7 @@ bool gpu_vm_flip_edges(
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      *d_edgeFlips,
+                    int4     *d_cellSets,
                     gpubox   &Box,
                     Index2D  &n_idx,
                     int      Nvertices,

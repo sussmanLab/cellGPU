@@ -178,6 +178,7 @@ __global__ void vm_one_T1_per_cell_per_vertex_kernel(
                                         const int * __restrict__ d_cellVertices,
                                         int *d_finishedFlippingEdges,
                                         int *d_cellEdgeFlips,
+                                        int4 *d_cellSets,
                                         Index2D n_idx,
                                         int Ncells)
     {
@@ -225,11 +226,14 @@ __global__ void vm_one_T1_per_cell_per_vertex_kernel(
                 int cc2 = atomicExch(&(d_cellEdgeFlips[c2]),1);
                 int cc3 = atomicExch(&(d_cellEdgeFlips[c3]),1);
                 int cc4 = atomicExch(&(d_cellEdgeFlips[c4]),1);
+                flipFound = true;
                 if(cc1 ==0 && cc2 ==0 &&cc3==0&&cc4==0)
                     {
-                    d_vertexEdgeFlipsCurrent[idx]=1;
-                    d_vertexEdgeFlips[idx]=0;
-                    flipFound = true;
+//                printf("(%i,%i,%i,%i)\t(%i,%i)\n",c1,c2,c3,c4,vertex,vertex2);
+                    atomicExch(&d_vertexEdgeFlipsCurrent[idx],1);
+                    atomicExch(&d_vertexEdgeFlips[idx],0);
+                    int4 cs;cs.x=c1;cs.y=c2;cs.z=c3;cs.w=c4;
+                    d_cellSets[idx] = cs;
                     };
                 }
             };
@@ -252,6 +256,7 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
                                       int      *d_cellVertexNum,
                                       int      *d_cellVertices,
                                       int      *d_cellEdgeFlips,
+                                      int4 *d_cellSets,
                                       gpubox   Box,
                                       Index2D  n_idx,
                                       int      NvTimes3)
@@ -272,30 +277,13 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
     /*
     The following is fairly terrible GPU code, and should be considered for refactoring
     */
-    int cell1,cell2,cell3,ctest;
+    int4 cells = d_cellSets[idx];
+    int cell1,cell2,cell3;
     int vlast, vcur, vnext, cneigh;
-    cell1 = d_vertexCellNeighbors[3*vertex1];
-    cell2 = d_vertexCellNeighbors[3*vertex1+1];
-    cell3 = d_vertexCellNeighbors[3*vertex1+2];
-
-    //cell_l doesn't contain vertex 1, so it is the cell neighbor of vertex 2 we haven't found yet
-    for (int ff = 0; ff < 3; ++ff)
-        {
-        ctest = d_vertexCellNeighbors[3*vertex2+ff];
-        if(ctest != cell1 && ctest != cell2 && ctest != cell3)
-            cellSet.w=ctest;
-        };
-    //find vertices "c" and "d"
-    cneigh = d_cellVertexNum[cellSet.w];
-    vlast = d_cellVertices[ n_idx(cneigh-2,cellSet.w) ];
-    vcur = d_cellVertices[ n_idx(cneigh-1,cellSet.w) ];
-    for (int cn = 0; cn < cneigh; ++cn)
-        {
-        vnext = d_cellVertices[n_idx(cn,cell1)];
-        if(vcur == vertex2) break;
-        vlast = vcur;
-        vcur = vnext;
-        };
+    cell1 = cells.x;
+    cell2 = cells.y;
+    cell3 = cells.z;
+    cellSet.w = cells.w;
 
     //classify cell1
     cneigh = d_cellVertexNum[cell1];
@@ -396,10 +384,10 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
         };
     vertexSet.y=vnext;
 
-    d_cellEdgeFlips[cellSet.x] = 0;
-    d_cellEdgeFlips[cellSet.y] = 0;
-    d_cellEdgeFlips[cellSet.z] = 0;
-    d_cellEdgeFlips[cellSet.w] = 0;
+    d_cellEdgeFlips[cells.x] = 0;
+    d_cellEdgeFlips[cells.y] = 0;
+    d_cellEdgeFlips[cells.z] = 0;
+    d_cellEdgeFlips[cells.w] = 0;
     /*
 if(vertex1 < 10)
 {
@@ -430,6 +418,8 @@ for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSe
 */
     //forbid a T1 transition that would shrink a triangular cell
     if (d_cellVertexNum[cellSet.x] ==3 || d_cellVertexNum[cellSet.z] ==3)
+        return;
+    if(cellSet.x <0 || cellSet.y < 0 || cellSet.z <0 || cellSet.w <0)
         return;
 
     //okay, we're ready to go. First, rotate the vertices in the edge and set them at twice their original distance
@@ -623,6 +613,7 @@ bool gpu_vm_parse_multiple_flips(
                     int      *d_cellVertices,
                     int      *d_finishedFlippingEdges,
                     int      *d_cellEdgeFlips,
+                    int4     *d_cellSets,
                     Index2D  &n_idx,
                     int      Ncells)
     {
@@ -651,6 +642,7 @@ bool gpu_vm_parse_multiple_flips(
                                                                 d_cellVertices,
                                                                 d_finishedFlippingEdges,
                                                                 d_cellEdgeFlips,
+                                                                d_cellSets,
                                                                 n_idx,
                                                                 Ncells);
     HANDLE_ERROR(cudaGetLastError());
@@ -667,6 +659,7 @@ bool gpu_vm_flip_edges(
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      *d_cellEdgeFlips,
+                    int4     *d_cellSets,
                     gpubox   &Box,
                     Index2D  &n_idx,
                     int      Nvertices,
@@ -682,7 +675,7 @@ bool gpu_vm_flip_edges(
 
     vm_flip_edges_kernel<<<nblocks,block_size>>>(
                                                   d_vertexEdgeFlipsCurrent,d_vertexPositions,d_vertexNeighbors,
-                                                  d_vertexCellNeighbors,d_cellVertexNum,d_cellVertices,d_cellEdgeFlips,
+                                                  d_vertexCellNeighbors,d_cellVertexNum,d_cellVertices,d_cellEdgeFlips,d_cellSets,
                                                   Box,
                                                   n_idx,NvTimes3);
 
