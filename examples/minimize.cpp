@@ -42,12 +42,12 @@ int main(int argc, char*argv[])
     int numpts = 200;
     int USE_GPU = 0;
     int c;
-    int tSteps = 5;
-    int initSteps = 0;
+    int tSteps = 1000;
+    int initSteps = 1000;
 
     Dscalar dt = 0.1;
     Dscalar KA = 1.0;
-    Dscalar p0 = 4.0;
+    Dscalar p0 = 3.8;
     Dscalar a0 = 1.0;
     Dscalar v0 = 0.1;
 
@@ -78,7 +78,7 @@ int main(int argc, char*argv[])
         };
 
     clock_t t1,t2;
-    bool reproducible = true;
+    bool reproducible = false;
     bool initializeGPU = true;
     if (USE_GPU >= 0)
         {
@@ -131,27 +131,22 @@ int main(int argc, char*argv[])
     //program_switch == 1 --> vertex model
     if(program_switch == 1)
         {
-        shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible);
+        shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,p0,reproducible);
 
         shared_ptr<EnergyMinimizerFIRE> fireMinimizer = make_shared<EnergyMinimizerFIRE>(avm);
-
-        avm->setCellPreferencesUniform(1.0,p0);
-        avm->setModuliUniform(KA,1.0);
-        avm->setv0Dr(v0,1.0);
 
         SimulationPtr sim = make_shared<Simulation>();
         sim->setConfiguration(avm);
         sim->addUpdater(fireMinimizer,avm);
         sim->setIntegrationTimestep(dt);
-        if(initSteps > 0)
-            sim->setSortPeriod(initSteps/10);
+//        if(initSteps > 0)
+//           sim->setSortPeriod(initSteps/10);
         //set appropriate CPU and GPU flags
         sim->setCPUOperation(!initializeGPU);
 
-        AVMDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
+        AVMDatabaseNetCDF ncdat(2*numpts,dataname,NcFile::Replace);
         ncdat.WriteState(avm);
         Dscalar mf;
-
         for (int i = 0; i <initSteps;++i)
             {
             setFIREParameters(fireMinimizer,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
