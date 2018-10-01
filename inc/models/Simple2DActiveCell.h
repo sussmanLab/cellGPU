@@ -41,6 +41,19 @@ class Simple2DActiveCell : public Simple2DCell
         //!Kill the indexed cell
         virtual void cellDeath(int cellIndex);
 
+        //!measure the viscek order parameter N^-1 \sum \frac{v_i}{|v_i}
+        Dscalar vicsekOrderParameter()
+            {
+            ArrayHandle<Dscalar2> vel(returnVelocities());
+            Dscalar2 globalV = make_Dscalar2(0.0,0.0);
+            for(int ii = 0; ii < getNumberOfDegreesOfFreedom(); ++ii)
+                {
+                Dscalar2 v = (1.0/norm(vel.data[ii]))*vel.data[ii];
+                globalV = globalV+v;
+                };
+            return norm(globalV)/getNumberOfDegreesOfFreedom();
+            };
+
     //protected functions
     protected:
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity

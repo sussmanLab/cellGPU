@@ -12,8 +12,9 @@ selfPropelledAligningParticleDynamics::selfPropelledAligningParticleDynamics(int
     {
     Timestep = 0;
     deltaT = 0.01;
-    GPUcompute = true;
+    GPUcompute = false;
     mu = 1.0;
+    J=0.0;
     Ndof = _N;
     noise.initialize(Ndof);
     displacements.resize(Ndof);
@@ -78,15 +79,22 @@ void selfPropelledAligningParticleDynamics::integrateEquationsOfMotionCPU()
         {
         //displace according to current velocities and forces
         Dscalar theta = h_cd.data[ii];
+        if(theta < -PI)
+            theta += 2*PI;
+        if(theta > PI)
+            theta -= 2*PI;
+
         Dscalar v0i = h_motility.data[ii].x;
         Dscalar Dri = h_motility.data[ii].y;
-        h_disp.data[ii].x = deltaT*(v0i * cos(theta) + mu * h_f.data[ii].x);
-        h_disp.data[ii].y = deltaT*(v0i * sin(theta) + mu * h_f.data[ii].y);
+        h_v.data[ii].x = (v0i * cos(theta) + mu * h_f.data[ii].x);
+        h_v.data[ii].y = (v0i * sin(theta) + mu * h_f.data[ii].y);
+        h_disp.data[ii] = deltaT*h_v.data[ii];
 
-        Dscalar phi = atan2(h_disp.data[ii].y,h_disp.data[ii].x);
+        Dscalar phi = atan2(h_v.data[ii].y,h_v.data[ii].x);
         //rotate the velocity vector a bit
         Dscalar randomNumber = noise.getRealNormal();
-        h_cd.data[ii] = theta+randomNumber*sqrt(2.0*deltaT*Dri) - J*sin(theta-phi);
+        h_cd.data[ii] = theta+ randomNumber*sqrt(2.0*deltaT*Dri) - deltaT*J*sin(theta-phi);
+
         h_v.data[ii] = h_disp.data[ii];
         };
     }//end array handle scoping

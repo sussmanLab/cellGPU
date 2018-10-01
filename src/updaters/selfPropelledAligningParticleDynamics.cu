@@ -42,19 +42,19 @@ __global__ void spp_aligning_eom_integration_kernel(Dscalar2 *forces,
     RNGs[idx] = randState;
 
     Dscalar currentTheta = cellDirectors[idx];
+    if(currentTheta < -PI)
+        currentTheta += 2*PI;
+    if(currentTheta > PI)
+        currentTheta -= 2*PI;
     //update displacements
-    displacements[idx].x = deltaT*(v0*Cos(currentTheta) + mu*forces[idx].x);
-    displacements[idx].y = deltaT*(v0*Sin(currentTheta) + mu*forces[idx].y);
-    velocities[idx].x = displacements[idx].x;
-    velocities[idx].y = displacements[idx].y;
+    velocities[idx].x = v0*Cos(currentTheta) + mu*forces[idx].x;
+    velocities[idx].y = v0*Sin(currentTheta) + mu*forces[idx].y;
+    displacements[idx] = deltaT*velocities[idx];
 
     Dscalar currentPhi = atan2(displacements[idx].y,displacements[idx].x);
 
     //update director
-    cellDirectors[idx] = currentTheta + angleDiff - J*Sin(currentTheta-currentPhi);
-
-
-
+    cellDirectors[idx] = currentTheta + angleDiff - deltaT*J*Sin(currentTheta-currentPhi);
     return;
     };
 

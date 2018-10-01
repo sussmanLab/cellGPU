@@ -7,7 +7,7 @@
 
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
-#include "selfPropelledParticleDynamics.h"
+#include "selfPropelledAligningParticleDynamics.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -18,7 +18,7 @@ int main(int argc, char*argv[])
 {
     //...some default parameters
     int numpts = 200; //number of cells
-    int USE_GPU = 0; //0 or greater uses a gpu, any negative number runs on the cpu
+    int USE_GPU = -1; //0 or greater uses a gpu, any negative number runs on the cpu
     int c;
     int tSteps = 5; //number of time steps to run after initialization
     int initSteps = 1; //number of initialization steps
@@ -27,15 +27,17 @@ int main(int argc, char*argv[])
     Dscalar p0 = 3.8;  //the preferred perimeter
     Dscalar a0 = 1.0;  // the preferred area
     Dscalar v0 = 0.1;  // the self-propulsion
-
+    Dscalar Dr  =0.5;  // rotational diffusion
+    Dscalar J = 0.0;   //alignment coupling
     //The defaults can be overridden from the command line
-    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
+    while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:j:x:y:z:p:t:e:")) != -1)
         switch(c)
         {
             case 'n': numpts = atoi(optarg); break;
             case 't': tSteps = atoi(optarg); break;
             case 'g': USE_GPU = atoi(optarg); break;
             case 'i': initSteps = atoi(optarg); break;
+            case 'j': J = atof(optarg); break;
             case 'e': dt = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
@@ -66,14 +68,16 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     //define an equation of motion object...here for self-propelled cells
-    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+    shared_ptr<selfPropelledAligningParticleDynamics> spp = make_shared<selfPropelledAligningParticleDynamics>(numpts);
+    spp->setJ(J);
+    cout << "setting the alignment coupling at " << J << endl;
     //define a voronoi configuration with a quadratic energy functional
     shared_ptr<VoronoiQuadraticEnergy> spv  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible);
 
     //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
     spv->setCellPreferencesUniform(1.0,p0);
     //set the cell activity to have D_r = 1. and a given v_0
-    spv->setv0Dr(v0,1.0);
+    spv->setv0Dr(v0,Dr);
 
 
     //combine the equation of motion and the cell configuration in a "Simulation"
@@ -100,20 +104,29 @@ int main(int argc, char*argv[])
     spv->reportMeanCellForce(false);
 
     //run for additional timesteps, and record timing information
+    //Additionally, every tau record the Vicsek order parameter
+    int averages = 0;
+    Dscalar Phi = 0.0;
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
-        if(ii%100 ==0)
+        if(ii%((int)(1.0/dt))==0)
             {
+            averages +=1;
+            Phi += spv->vicsekOrderParameter();
             printf("timestep %i\t\t energy %f \n",ii,spv->computeEnergy());
             };
         sim->performTimestep();
         };
+    Phi /= averages;
     t2=clock();
+
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
     cout << spv->reportq() << endl;
+    printf("<Phi> = %f\n",Phi);
+
 
     if(initializeGPU)
         cudaDeviceReset();
