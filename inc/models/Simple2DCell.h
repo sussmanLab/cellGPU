@@ -42,7 +42,7 @@ class Simple2DCell : public Simple2DModel
         virtual void computeGeometryCPU(){};
         //!let computeGeometryGPU be defined in derived classes
         virtual void computeGeometryGPU(){};
-        
+
 
         //!do everything necessary to compute the energy for the current model
         virtual Dscalar computeEnergy(){Energy = 0.0; return 0.0;};
@@ -120,6 +120,8 @@ class Simple2DCell : public Simple2DModel
         //!Return a reference to Masses on cells
         virtual GPUArray<Dscalar> & returnMasses(){return cellMasses;};
 
+        //!Return other data just returns the masses; in this class it's not needed
+        virtual GPUArray<Dscalar> & returnOtherData(){return cellMasses;};
         //!Set the simulation time stepsize
         void setDeltaT(Dscalar dt){deltaT = dt;};
 

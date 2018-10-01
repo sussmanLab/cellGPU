@@ -53,6 +53,8 @@ class Simple2DActiveCell : public Simple2DCell
     public:
         //!An array of angles (relative to the x-axis) that the cell directors point
         GPUArray<Dscalar> cellDirectors;
+        //!An array of forces acting on the cell directors
+        GPUArray<Dscalar> cellDirectorForces;
 
         //!velocity of cells in mono-motile systems
         Dscalar v0;
