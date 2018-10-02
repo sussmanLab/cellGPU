@@ -42,17 +42,23 @@ class Simple2DActiveCell : public Simple2DCell
         virtual void cellDeath(int cellIndex);
 
         //!measure the viscek order parameter N^-1 \sum \frac{v_i}{|v_i}
-        Dscalar vicsekOrderParameter()
+        Dscalar vicsekOrderParameter(Dscalar2 &vParallel, Dscalar2 &vPerpendicular)
             {
             ArrayHandle<Dscalar2> vel(returnVelocities());
             Dscalar2 globalV = make_Dscalar2(0.0,0.0);
             for(int ii = 0; ii < getNumberOfDegreesOfFreedom(); ++ii)
                 {
                 Dscalar2 v = (1.0/norm(vel.data[ii]))*vel.data[ii];
+                vParallel = vParallel+vel.data[ii];
                 globalV = globalV+v;
                 };
+
+            vParallel = (1.0/norm(vParallel))*vParallel;
+            vPerpendicular.x= -vParallel.y;
+            vPerpendicular.y=  vParallel.x;
             return norm(globalV)/getNumberOfDegreesOfFreedom();
             };
+
 
     //protected functions
     protected:
