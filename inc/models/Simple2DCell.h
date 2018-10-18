@@ -183,6 +183,10 @@ class Simple2DCell : public Simple2DModel
         the indices of the three cells are neighbors of vertex i
         */
         GPUArray<int> vertexCellNeighbors;
+        //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices
+        Index2D n_idx;
+        //!The number of CELL neighbors of each cell. For simple models this is the same as cellVertexNum, but does not have to be
+        GPUArray<int> cellNeighborNum;
         //! CELL neighbors of every cell
         GPUArray<int> cellNeighbors;
         //!The number of vertices defining each cell
@@ -264,8 +268,6 @@ class Simple2DCell : public Simple2DModel
         GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
         //!The area and perimeter preferences of each cell
         GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
-        //!The number of CELL neighbors of each cell. For simple models this is the same as cellVertexNum, but does not have to be
-        GPUArray<int> cellNeighborNum;
         //!A structure that indexes the vertices defining each cell
         /*!
         cellVertices is a large, 1D array containing the vertices associated with each cell.
@@ -275,8 +277,6 @@ class Simple2DCell : public Simple2DModel
         cellVertices[n_idx(k,c)];
         */
         GPUArray<int> cellVertices;
-        //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices
-        Index2D n_idx;
         //!An upper bound for the maximum number of neighbors that any cell has
         int vertexMax;
         //!3*Nvertices length array of the position of vertices around cells
