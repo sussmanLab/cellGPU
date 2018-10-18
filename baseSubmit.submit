@@ -1,0 +1,9 @@
+executable = /usr/local/bin/singularity
+arguments  = exec /home/gerdemci/sl7.img /home/dmsussma/aligningVoronoi/script/run_n{number}_p{perimeter}_T{temperature}_Ts{tSteps}_J{coupling}.sh $(Process)
+
+output = /home/dmsussma/aligningVoronoi/submit/run_n{number}_p{perimeter}_T{temperature}_Ts{tSteps}_J{coupling}_$(Process).out
+error =  /home/dmsussma/aligningVoronoi/submit/run_n{number}_p{perimeter}_T{temperature}_Ts{tSteps}_J{coupling}_$(Process).err
+
+Requirements = TARGET.vm_version >= 11
+priority = {priority}
+queue {iterationsPerSubmission}
