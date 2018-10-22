@@ -8,7 +8,7 @@
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
 #include "selfPropelledParticleDynamics.h"
-#include "dynamicalFeatures.h"
+#include "analysisPackage.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -102,13 +102,16 @@ int main(int argc, char*argv[])
 
     //run for additional timesteps, compute dynamical features, and record timing information
     dynamicalFeatures dynFeat(spv->returnPositions(),spv->Box);
+    logSpacedIntegers logInts(0,0.05);
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
-        if(ii%100 ==0)
+        //if(ii%100 ==0)
+        if(ii == logInts.nextSave)
             {
             printf("timestep %i\t\t energy %f \t msd %f \t overlap %f \n",ii,spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()));
+            logInts.update();
             };
         sim->performTimestep();
         };
