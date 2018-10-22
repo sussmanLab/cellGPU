@@ -8,6 +8,7 @@
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
 #include "selfPropelledParticleDynamics.h"
+#include "dynamicalFeatures.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -99,14 +100,15 @@ int main(int argc, char*argv[])
     //the reporting of the force should yield a number that is numerically close to zero.
     spv->reportMeanCellForce(false);
 
-    //run for additional timesteps, and record timing information
+    //run for additional timesteps, compute dynamical features, and record timing information
+    dynamicalFeatures dynFeat(spv->returnPositions(),spv->Box);
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
         if(ii%100 ==0)
             {
-            printf("timestep %i\t\t energy %f \n",ii,spv->computeEnergy());
+            printf("timestep %i\t\t energy %f \t msd %f \t overlap %f \n",ii,spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()));
             };
         sim->performTimestep();
         };
