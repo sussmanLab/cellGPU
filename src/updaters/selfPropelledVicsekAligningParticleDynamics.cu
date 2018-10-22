@@ -40,7 +40,7 @@ __global__ void spp_vicsek_aligning_eom_integration_kernel(Dscalar2 *forces,
     curandState_t randState;
     randState=RNGs[idx];
     Dscalar v0 = motility[idx].x;
-    Dscalar Dr = motility[idx].y;
+    //Dscalar Dr = motility[idx].y;
     Dscalar randomAngle = 2.0*PI*curand_uniform(&randState);
     RNGs[idx] = randState;
 
