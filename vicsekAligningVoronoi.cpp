@@ -9,6 +9,7 @@
 #include "voronoiQuadraticEnergy.h"
 #include "selfPropelledVicsekAligningParticleDynamics.h"
 #include "vectorValueDatabase.h"
+#include "dynamicalFeatures.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information

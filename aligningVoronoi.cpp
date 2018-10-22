@@ -9,6 +9,7 @@
 #include "voronoiQuadraticEnergy.h"
 #include "selfPropelledAligningParticleDynamics.h"
 #include "vectorValueDatabase.h"
+#include "dynamicalFeatures.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -117,6 +118,7 @@ int main(int argc, char*argv[])
     Dscalar Phi = 0.0;
     Dscalar2 vPar, vPerp;
     t1=clock();
+    dynamicalFeatures dynFeat(spv->returnPositions(),spv->Box);
     vectorValueDatabase vvdat(3,dataname2,NcFile::Replace);   
     for(int ii = 0; ii < tSteps; ++ii)
         {
