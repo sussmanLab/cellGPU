@@ -17,6 +17,10 @@ e = 0.01
 dr = 1.0,
 along with a range of v0 and p0. This program also demonstrates the use of brownian dynamics
 applied to the vertices themselves.
+NOTE that in the output, the forces and the positions are not, by default, synchronized! The NcFile
+records the force from the last time "computeForces()" was called, and generally the equations of motion will 
+move the positions. If you want the forces and the positions to be sync'ed, you should call the
+vertex model's computeForces() funciton right before saving a state.
 */
 int main(int argc, char*argv[])
 {
