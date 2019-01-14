@@ -109,7 +109,7 @@ void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionCPU(
         for (int nn = 0; nn < neigh; ++nn)
             {
             int neighbor = cellNeighs[nn];
-            Dscalar curTheta =  atan2(h_v.data[neighbor].y,h_v.data[neighbor].x)
+            Dscalar curTheta =  atan2(h_v.data[neighbor].y,h_v.data[neighbor].x);
             //Dscalar curTheta = h_cd.data[neighbor];
             direction.x += Cos(curTheta);
             direction.y += Sin(curTheta);
