@@ -8,13 +8,14 @@
 An extremely simple constructor that does nothing, but enforces default GPU operation
 \param the number of points in the system (cells or particles)
 */
-selfPropelledVicsekAligningParticleDynamics::selfPropelledVicsekAligningParticleDynamics(int _N)
+selfPropelledVicsekAligningParticleDynamics::selfPropelledVicsekAligningParticleDynamics(int _N, Dscalar _eta, Dscalar _tau)
     {
     Timestep = 0;
     deltaT = 0.01;
     GPUcompute = false;
     mu = 1.0;
-    Eta=0.0;
+    Eta= _eta;
+    tau = _tau;
     Ndof = _N;
     noise.initialize(Ndof);
     displacements.resize(Ndof);
@@ -68,6 +69,9 @@ The straightforward CPU implementation
 void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionCPU()
     {
     activeModel->computeForces();
+    //a vector for storing the new directors
+    vector<Dscalar> newCD(Ndof);
+    vector<int> cellNeighs;
     {//scope for array Handles
     ArrayHandle<Dscalar2> h_f(activeModel->returnForces(),access_location::host,access_mode::read);
     ArrayHandle<Dscalar> h_cd(activeModel->cellDirectors);
@@ -77,14 +81,14 @@ void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionCPU(
     ArrayHandle<int> h_nn(activeModel->cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(activeModel->cellNeighbors,access_location::host,access_mode::read);
 
+
+    Dscalar2 direction;
+    Dscalar theta;
     for (int ii = 0; ii < Ndof; ++ii)
         {
         //displace according to current velocities and forces
-        Dscalar theta = h_cd.data[ii];
-        if(theta < -PI)
-            theta += 2*PI;
-        if(theta > PI)
-            theta -= 2*PI;
+        //theta = h_cd.data[ii];
+        
 
         Dscalar v0i = h_motility.data[ii].x;
         Dscalar Dri = h_motility.data[ii].y;
@@ -93,26 +97,40 @@ void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionCPU(
         h_disp.data[ii] = deltaT*h_v.data[ii];
         h_v.data[ii] = h_disp.data[ii];
 
-        //calculate the average direction of the neighbors
-        Dscalar2 direction = make_Dscalar2(0.0,0.0);
-        int neigh = h_nn.data[ii];
+        //current direction cell is moving
+        theta = atan2(h_v.data[ii].y,h_v.data[ii].x);
+
+        //calculate the average direction of the neighbors' motion
+        direction.x=0.;direction.y=0.;
+
+        //int neigh = h_nn.data[ii];
+        int neigh;
+        activeModel->getCellNeighs(ii,neigh,cellNeighs);
         for (int nn = 0; nn < neigh; ++nn)
             {
-            Dscalar curTheta = h_cd.data[h_n.data[activeModel->n_idx(nn,ii)]];
-            direction.x += cos(curTheta);
-            direction.y += sin(curTheta);
+            int neighbor = cellNeighs[nn];
+            Dscalar curTheta =  atan2(h_v.data[neighbor].y,h_v.data[neighbor].x)
+            //Dscalar curTheta = h_cd.data[neighbor];
+            direction.x += Cos(curTheta);
+            direction.y += Sin(curTheta);
             }
-        Dscalar randomNumber = noise.getRealUniform(0.0,2*PI);
-        direction.x += neigh*Eta*cos(randomNumber); 
-        direction.y += neigh*Eta*sin(randomNumber); 
+        Dscalar randomNumber = noise.getRealUniform(-PI,PI);
+        Dscalar neighborFactor = neigh*Eta;
+        direction.x += neighborFactor*Cos(randomNumber); 
+        direction.y += neighborFactor*Sin(randomNumber); 
 
+        //phi is the target direction for the cell director
         Dscalar phi = atan2(direction.y,direction.x);
-
-        //change the velocity vector to this new direction
-        h_cd.data[ii] = phi; //theta+ randomNumber*sqrt(2.0*deltaT*Dri) - deltaT*J*sin(theta-phi);
-
+        newCD[ii] = theta  - (deltaT/tau)*sin(theta-phi);
         };
+    for (int ii = 0; ii < Ndof; ++ii)
+        {
+        //change the velocity vector to this new direction
+        //theta+ randomNumber*sqrt(2.0*deltaT*Dri) - deltaT*J*sin(theta-phi);
+        h_cd.data[ii] =newCD[ii];
+        }
     }//end array handle scoping
+
     activeModel->moveDegreesOfFreedom(displacements);
     activeModel->enforceTopology();
     //vector of displacements is mu*forces*timestep + v0's*timestep
@@ -123,6 +141,8 @@ The straightforward GPU implementation
 */
 void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionGPU()
     {
+    printf("code note updated... sorry!\n");
+    throw std::exception();
     activeModel->computeForces();
     {//scope for array Handles
     ArrayHandle<Dscalar2> d_f(activeModel->returnForces(),access_location::device,access_mode::read);

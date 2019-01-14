@@ -59,6 +59,39 @@ class Simple2DActiveCell : public Simple2DCell
             return norm(globalV)/getNumberOfDegreesOfFreedom();
             };
 
+        //!measure the viscek order parameter N^-1 \sum \frac{v_i}{|v_i} from the director only
+        Dscalar vicsekOrderParameterDirector(Dscalar2 &vParallel, Dscalar2 &vPerpendicular)
+            {
+            ArrayHandle<Dscalar> cd(cellDirectors);
+            Dscalar2 globalV = make_Dscalar2(0.0,0.0);
+            Dscalar thetaAve = 0.0;
+            for(int ii = 0; ii < getNumberOfDegreesOfFreedom(); ++ii)
+                {
+                Dscalar theta=cd.data[ii];
+                if(theta < -PI)
+                    theta += 2*PI;
+                if(theta > PI)
+                    theta -= 2*PI;
+                thetaAve += theta;
+                Dscalar2 v;
+                v.x = cos(theta);
+                v.y = sin(theta);
+                globalV = globalV+v;
+                };
+
+            globalV.x /= getNumberOfDegreesOfFreedom();
+            globalV.y /= getNumberOfDegreesOfFreedom();
+            thetaAve /= getNumberOfDegreesOfFreedom();
+
+            vParallel.x= cos(thetaAve);
+            vParallel.y= sin(thetaAve);
+            
+            vPerpendicular.x= -vParallel.y;
+            vPerpendicular.y=  vParallel.x;
+            
+            return sqrt(globalV.x*globalV.x + globalV.y*globalV.y);
+            };
+
 
     //protected functions
     protected:

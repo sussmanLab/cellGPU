@@ -176,6 +176,17 @@ class Simple2DCell : public Simple2DModel
         of the three vertices that are connected to vertex i
         */
         GPUArray<int> vertexNeighbors;
+
+        void getCellNeighs(int idx, int &nNeighs, vector<int> &neighs)
+            {
+            ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+            ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+            nNeighs = h_nn.data[idx];
+            neighs.resize(nNeighs);
+            for (int nn = 0; nn < nNeighs;++nn)
+                neighs[nn] = h_n.data[n_idx(nn,idx)];
+            }
+
         //! Cell neighbors of every vertex
         /*!
         in general, we have:

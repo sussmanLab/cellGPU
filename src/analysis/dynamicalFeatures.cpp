@@ -32,7 +32,6 @@ Dscalar dynamicalFeatures::computeMSD(GPUArray<Dscalar2> &currentPos)
 Dscalar dynamicalFeatures::computeOverlapFunction(GPUArray<Dscalar2> &currentPos, Dscalar cutoff)
     {
     Dscalar overlap = 0.0;
-    Dscalar oneOverN = 1.0/((Dscalar)N);
     ArrayHandle<Dscalar2> fPos(currentPos,access_location::host,access_mode::read);
     Dscalar2 disp,cur,init;
     for (int ii = 0; ii < N; ++ii)
@@ -41,7 +40,8 @@ Dscalar dynamicalFeatures::computeOverlapFunction(GPUArray<Dscalar2> &currentPos
         init = iPos[ii];
         Box->minDist(init,cur,disp);
         if(norm(disp) < cutoff)
-            overlap += oneOverN;
+            overlap += 1;
         };
+    overlap = overlap / N;
     return overlap;
     }
