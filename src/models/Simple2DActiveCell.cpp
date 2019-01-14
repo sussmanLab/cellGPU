@@ -63,7 +63,7 @@ void Simple2DActiveCell::setCellDirectorsRandomly()
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_cd.data[ii] =noise.getRealUniform(0.0,2.0*PI);
-//        h_cd.data[ii] = 0.0;
+        //h_cd.data[ii] = 0.0;
         h_v.data[ii].x = 0.0*cos(h_cd.data[ii]);
         h_v.data[ii].y = 0.0*sin(h_cd.data[ii]);
         };
