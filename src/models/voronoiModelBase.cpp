@@ -63,6 +63,8 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     anyCircumcenterTestFailed.resize(1);
     ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::overwrite);
     h_actf.data[0]=0;
+
+    localTopologyUpdates = 0;
     };
 
 /*!
@@ -584,6 +586,7 @@ void voronoiModelBase::testTriangulationCPU()
                 {
                 h_repair.data[nn] = 1;
                 h_actf.data[0]=1;
+                localTopologyUpdates += 1;
                 };
             };
         };

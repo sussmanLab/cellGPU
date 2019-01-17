@@ -103,6 +103,8 @@ int main(int argc, char*argv[])
     cout << "current q = " << spv->reportq() << endl;
     //the reporting of the force should yield a number that is numerically close to zero.
     spv->reportMeanCellForce(false);
+    if(!initializeGPU)
+        spv->setCPU(false);//turn off globabl-ony mode
 
     //run for additional timesteps, compute dynamical features, and record timing information
     dynamicalFeatures dynFeat(spv->returnPositions(),spv->Box);
@@ -114,7 +116,7 @@ int main(int argc, char*argv[])
         //if(ii%100 ==0)
         if(ii == logInts.nextSave)
             {
-            printf("timestep %i\t\t energy %f \t msd %f \t overlap %f \n",ii,spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()));
+            printf("timestep %i\t\t energy %f \t msd %f \t overlap %f topoUpdates %i \n",ii,spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()),spv->localTopologyUpdates);
             logInts.update();
             };
         sim->performTimestep();
@@ -123,6 +125,7 @@ int main(int argc, char*argv[])
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
     cout << spv->reportq() << endl;
+    cout << "number of local topology updates per cell per tau = " << spv->localTopologyUpdates*(1.0/numpts)*(1.0/tSteps/dt) << endl;
 
     if(initializeGPU)
         cudaDeviceReset();
