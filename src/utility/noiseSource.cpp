@@ -62,7 +62,7 @@ void noiseSource::initializeGPURNGs(int globalSeed,int tempSeed)
 void noiseSource::setReproducibleSeed(int _seed)
     {
     RNGSeed = _seed;
-    mt19937 Gener(13377);
+    mt19937 Gener(RNGSeed);
     gen = Gener;
 #ifdef DEBUGFLAGUP
     mt19937 GenerRd(13377);
