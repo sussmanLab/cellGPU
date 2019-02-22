@@ -627,7 +627,7 @@ Dscalar4 Simple2DCell::computeKineticPressure()
     };
 
 /*!
-E = \sum 0.2*m_i v_i^2
+E = \sum 0.5*m_i v_i^2
 */
 Dscalar Simple2DCell::computeKineticEnergy()
     {
