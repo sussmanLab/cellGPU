@@ -95,7 +95,7 @@ int main(int argc, char*argv[])
         sim->setConfiguration(spv);
         sim->addUpdater(bd,spv);
         sim->setIntegrationTimestep(dt);
-        sim->setSortPeriod(initSteps/2);
+        //sim->setSortPeriod(initSteps/2);
         sim->setCPUOperation(!initializeGPU);
         sim->setReproducible(reproducible);
 

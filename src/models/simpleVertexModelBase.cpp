@@ -15,10 +15,16 @@ void simpleVertexModelBase::initializeSimpleVertexModelBase(int n)
     Ncells=n;
     initializeSimple2DActiveCell(Ncells);
 
+    setT1Threshold(0.01);
     //derive the vertices from a voronoi tesselation
     setCellsVoronoiTesselation();
     //initializes per-cell lists
     initializeCellSorting();
+
+    cellEdgeFlips.resize(Ncells);
+    vector<int> ncz(Ncells,0);
+    fillGPUArrayWithVector(ncz,cellEdgeFlips);
+
 
     vertexMasses.resize(Nvertices);
     vertexVelocities.resize(Nvertices);
@@ -34,6 +40,8 @@ void simpleVertexModelBase::initializeSimpleVertexModelBase(int n)
     vertexForceSets.resize(3*Nvertices);
     voroCur.resize(3*Nvertices);
     voroLastNext.resize(3*Nvertices);
+
+    cellSets.resize(3*Nvertices);
     };
 
 /*!

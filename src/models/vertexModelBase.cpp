@@ -485,7 +485,7 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                         };
                     h_cvn.data[cellSet.z] -= 1;
 
-                    //cell l gains v1 in between v2 and c
+                    //cell l gains v1 in between v2 and a
                     cneigh = h_cvn.data[cellSet.w];
                     vector<int> cvcopy2(cneigh+1);
                     cidx = 0;
@@ -566,6 +566,10 @@ void vertexModelBase::flipEdgesGPU()
             ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_ffe(finishedFlippingEdges,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_ef(cellEdgeFlips,access_location::device,access_mode::readwrite);
+            ArrayHandle<int4> d_cs(cellSets,access_location::device,access_mode::readwrite);
+
+            gpu_zero_array(d_ef.data,Ncells);
 
             gpu_vm_parse_multiple_flips(d_vflip.data,
                                d_vflipcur.data,
@@ -574,6 +578,8 @@ void vertexModelBase::flipEdgesGPU()
                                d_cvn.data,
                                d_cv.data,
                                d_ffe.data,
+                               d_ef.data,
+                               d_cs.data,
                                cellNeighborIndexer,
                                Ncells);
             };
@@ -587,13 +593,17 @@ void vertexModelBase::flipEdgesGPU()
             ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::readwrite);
+            ArrayHandle<int> d_ef(cellEdgeFlips,access_location::device,access_mode::readwrite);
+            ArrayHandle<int4> d_cs(cellSets,access_location::device,access_mode::readwrite);
+
             gpu_vm_flip_edges(d_vflipcur.data,
                                d_v.data,
                                d_vn.data,
                                d_vcn.data,
                                d_cvn.data,
                                d_cv.data,
-                               T1Threshold,
+                               d_ef.data,
+                               d_cs.data,
                                *(Box),
                                cellNeighborIndexer,
                                Nvertices,
@@ -795,7 +805,7 @@ void vertexModelBase::cellDeath(int cellIndex)
     for (int ii = 0; ii < Nvertices+2;++ii)
         {
         int vIdx = tagToIdxVertex[ii]; //vIdx is the current position of the vertex that was originally ii
-        if (ii != v1 && ii != v2)
+        if (vIdx != v1 && vIdx != v2)
             {
             if (vIdx >= v1) vIdx = vIdx - 1;
             if (vIdx >= v2) vIdx = vIdx - 1;

@@ -22,11 +22,11 @@ class noiseSource
         noiseSource()
             {
             Reproducible = false;
-            mt19937 Gener(rand());
+            mt19937 Gener(13377);
         #ifndef DEBUGFLAGUP
             mt19937 GenerRd(rd());
         #else
-            mt19937 GenerRd(rand());
+            mt19937 GenerRd(13377);
         #endif
             gen = Gener;
             genrd=GenerRd;
@@ -47,6 +47,8 @@ class noiseSource
             };
         //!set reproducibility
         void setReproducible(bool _rep){Reproducible = _rep;};
+        //!set the seed on a reproducible RNG run
+        void setReproducibleSeed(int _seed);
         //!should the dynamics be reproducible?
         bool Reproducible;
         //!number of entries for the cuda RNG

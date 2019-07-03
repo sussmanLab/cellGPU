@@ -57,5 +57,27 @@ class vertexModelBase : public simpleVertexModelBase
         //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
         void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
 
+        //! data structure to help with not simultaneously trying to flip nearby edges
+        GPUArray<int> finishedFlippingEdges;
+
+        //! data structure per cell for not simulataneously flipping nearby edges
+        GPUArray<int> cellEdgeFlips;
+        //! data structure per cell for not simulataneously flipping nearby edges
+        GPUArray<int4> cellSets;
+    //reporting functions
+    public:
+        //!Handy for debugging T1 transitions...report the vertices owned by cell i
+        void reportNeighborsCell(int i)
+            {
+            ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::read);
+            ArrayHandle<int> h_cv(cellVertices,access_location::host,access_mode::read);
+            int cn = h_cvn.data[i];
+            printf("Cell %i's neighbors:\n",i);
+            for (int n = 0; n < cn; ++n)
+                {
+                printf("%i, ",h_cv.data[cellNeighborIndexer(n,i)]);
+                }
+            cout <<endl;
+            };
     };
 #endif

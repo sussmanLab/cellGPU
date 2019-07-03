@@ -73,7 +73,7 @@ class simpleVertexModelBase : public Simple2DActiveCell
         */
         //!an array containing (typically) three contributions to the force on each vertex
         GPUArray<Dscalar2> vertexForceSets;
-    
+
         /*!
         if vertexEdgeFlips[3*i+j]=1 (where j runs from 0 to 2), the the edge connecting vertex i and vertex
         vertexNeighbors[3*i+j] has been marked for a T1 transition
@@ -83,7 +83,14 @@ class simpleVertexModelBase : public Simple2DActiveCell
         //! it is important to not flip edges concurrently, so this data structure helps flip edges sequentially
         GPUArray<int> vertexEdgeFlipsCurrent;
 
-    
+        //! data structure to help with not simultaneously trying to flip nearby edges
+        GPUArray<int> finishedFlippingEdges;
+
+        //! data structure per cell for not simulataneously flipping nearby edges
+        GPUArray<int> cellEdgeFlips;
+        //! data structure per cell for not simulataneously flipping nearby edges
+        GPUArray<int4> cellSets;
+        
     protected:
         //! data structure to help with cell-vertex list
         GPUArray<int> growCellVertexListAssist;

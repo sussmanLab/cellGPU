@@ -34,7 +34,7 @@ class Simple2DCell : public Simple2DModel
         virtual void setGPU(bool usegpu){GPUcompute = usegpu;};
         //!Allow for a reproducibility call to be made
         virtual void setReproducible(bool rep){Reproducible = rep;};
-        
+
         //!get the number of degrees of freedom, defaulting to the number of cells
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 
@@ -47,7 +47,7 @@ class Simple2DCell : public Simple2DModel
         virtual void computeGeometryCPU(){};
         //!let computeGeometryGPU be defined in derived classes
         virtual void computeGeometryGPU(){};
-        
+
 
         //!do everything necessary to compute the energy for the current model
         virtual Dscalar computeEnergy(){Energy = 0.0; return 0.0;};
@@ -125,6 +125,8 @@ class Simple2DCell : public Simple2DModel
         //!Return a reference to Masses on cells
         virtual GPUArray<Dscalar> & returnMasses(){return cellMasses;};
 
+        //!Return other data just returns the masses; in this class it's not needed
+        virtual GPUArray<Dscalar> & returnOtherData(){return cellMasses;};
         //!Set the simulation time stepsize
         void setDeltaT(Dscalar dt){deltaT = dt;};
 
@@ -178,6 +180,17 @@ class Simple2DCell : public Simple2DModel
         of the three vertices that are connected to vertex i
         */
         GPUArray<int> vertexNeighbors;
+
+        void getCellNeighs(int idx, int &nNeighs, vector<int> &neighs)
+            {
+            ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
+            ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+            nNeighs = h_nn.data[idx];
+            neighs.resize(nNeighs);
+            for (int nn = 0; nn < nNeighs;++nn)
+                neighs[nn] = h_n.data[cellNeighborIndexer(nn,idx)];
+            }
+
         //! Cell neighbors of every vertex
         /*!
         in general, we have:
@@ -185,6 +198,8 @@ class Simple2DCell : public Simple2DModel
         the indices of the three cells are neighbors of vertex i
         */
         GPUArray<int> vertexCellNeighbors;
+        //!The number of CELL neighbors of each cell. For simple models this is the same as cellVertexNum, but does not have to be
+        GPUArray<int> cellNeighborNum;
         //! CELL neighbors of every cell
         GPUArray<int> cellNeighbors;
         //!The number of vertices defining each cell
@@ -266,8 +281,6 @@ class Simple2DCell : public Simple2DModel
         GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
         //!The area and perimeter preferences of each cell
         GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
-        //!The number of CELL neighbors of each cell. For simple models this is the same as cellVertexNum, but does not have to be
-        GPUArray<int> cellNeighborNum;
         //!A structure that indexes the vertices defining each cell
         /*!
         cellVertices is a large, 1D array containing the vertices associated with each cell.

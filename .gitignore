@@ -8,3 +8,6 @@ callgrind*
 *.sh
 doc/html/*
 doc/latex/*
+data/*
+script/*
+submit/*

@@ -513,7 +513,7 @@ Dscalar4 Simple2DCell::computeKineticPressure()
     };
 
 /*!
-E = \sum 0.2*m_i v_i^2
+E = \sum 0.5*m_i v_i^2
 */
 Dscalar Simple2DCell::computeKineticEnergy()
     {
@@ -672,7 +672,7 @@ void Simple2DCell::cellDeath(int cellIndex)
     for (int ii = 0; ii < Ncells+1;++ii)
         {
         int pIdx = tagToIdx[ii]; //pIdx is the current position of the cell that was originally ii
-        if(ii != cellIndex)
+        if(pIdx != cellIndex)
             {
             if (pIdx >= cellIndex) pIdx = pIdx-1;
             newTagToIdx[loopIndex] = pIdx;

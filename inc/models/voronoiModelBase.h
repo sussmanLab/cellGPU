@@ -141,6 +141,8 @@ class voronoiModelBase : public Simple2DActiveCell
         GPUArray<Dscalar2> external_forces;
         //!An array containing the indices of excluded particles
         GPUArray<int> exclusions;
+        //!The number of topology updates performed at the individual particle level
+        int localTopologyUpdates;
 
 
     protected:

@@ -8,11 +8,16 @@
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
 #include "selfPropelledParticleDynamics.h"
+#include "analysisPackage.h"
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
 in the main cellGPU paper. It sets up a simulation that takes control of a voronoi model and a simple
 model of active motility
+NOTE that in the output, the forces and the positions are not, by default, synchronized! The NcFile
+records the force from the last time "computeForces()" was called, and generally the equations of motion will 
+move the positions. If you want the forces and the positions to be sync'ed, you should call the
+Voronoi model's computeForces() funciton right before saving a state.
 */
 int main(int argc, char*argv[])
 {
@@ -77,7 +82,7 @@ int main(int argc, char*argv[])
     //set the time step size
     sim->setIntegrationTimestep(dt);
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
-    sim->setSortPeriod(initSteps/10);
+    //sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
     sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);
@@ -92,15 +97,21 @@ int main(int argc, char*argv[])
     cout << "current q = " << spv->reportq() << endl;
     //the reporting of the force should yield a number that is numerically close to zero.
     spv->reportMeanCellForce(false);
+    if(!initializeGPU)
+        spv->setCPU(false);//turn off globabl-ony mode
 
-    //run for additional timesteps, and record timing information
+    //run for additional timesteps, compute dynamical features, and record timing information
+    dynamicalFeatures dynFeat(spv->returnPositions(),spv->Box);
+    logSpacedIntegers logInts(0,0.05);
     t1=clock();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
-        if(ii%100 ==0)
+        //if(ii%100 ==0)
+        if(ii == logInts.nextSave)
             {
-            printf("timestep %i\t\t energy %f \n",ii,spv->computeEnergy());
+            printf("timestep %i\t\t energy %f \t msd %f \t overlap %f topoUpdates %i \n",ii,spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()),spv->localTopologyUpdates);
+            logInts.update();
             };
         sim->performTimestep();
         };
@@ -108,6 +119,7 @@ int main(int argc, char*argv[])
     Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
     cout << spv->reportq() << endl;
+    cout << "number of local topology updates per cell per tau = " << spv->localTopologyUpdates*(1.0/numpts)*(1.0/tSteps/dt) << endl;
 
     if(initializeGPU)
         cudaDeviceReset();

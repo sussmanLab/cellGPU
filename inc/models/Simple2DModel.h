@@ -21,6 +21,7 @@ S.enforceTopology();
 S.spatialSorting();
 S.returnVelocities();
 S.returnMasses();
+S.returnOtherData(); //this last will be a flat GPUArray of Dscalars...
 */
 class Simple2DModel
     {
@@ -47,6 +48,8 @@ class Simple2DModel
         virtual GPUArray<Dscalar2> & returnPositions() = 0;
         //!return a reference to the GPUArray of the masses
         virtual GPUArray<Dscalar> & returnMasses() = 0;
+        //!return a reference to the GPUArray of other data (definable as needed in child classes)
+        virtual GPUArray<Dscalar> & returnOtherData() = 0;
         //!return a reference to the GPUArray of the current velocities
         virtual GPUArray<Dscalar2> & returnVelocities() = 0;
         //!return a reference to the GPUArray of the current forces

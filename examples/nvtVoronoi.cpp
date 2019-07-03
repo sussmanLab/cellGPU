@@ -87,7 +87,7 @@ int main(int argc, char*argv[])
     //set the time step size
     sim->setIntegrationTimestep(dt);
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
-    sim->setSortPeriod(initSteps/10);
+    //sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
     sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);

@@ -17,6 +17,10 @@ e = 0.01
 dr = 1.0,
 along with a range of v0 and p0. This program also demonstrates the use of brownian dynamics
 applied to the vertices themselves.
+NOTE that in the output, the forces and the positions are not, by default, synchronized! The NcFile
+records the force from the last time "computeForces()" was called, and generally the equations of motion will
+move the positions. If you want the forces and the positions to be sync'ed, you should call the
+vertex model's computeForces() funciton right before saving a state.
 */
 int main(int argc, char*argv[])
 {
@@ -85,6 +89,14 @@ int main(int argc, char*argv[])
     //when an edge gets less than this long, perform a simple T1 transition
     avm->setT1Threshold(0.04);
 
+    vector<int> vi(3*Nvert);
+    vector<int> vf(3*Nvert);
+    {
+    ArrayHandle<int> vcn(avm->vertexCellNeighbors);
+    for (int ii = 0; ii < 3*Nvert; ++ii)
+        vi[ii]=vcn.data[ii];
+    };
+
     //combine the equation of motion and the cell configuration in a "Simulation"
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(avm);
@@ -98,6 +110,10 @@ int main(int argc, char*argv[])
     //set appropriate CPU and GPU flags
     sim->setCPUOperation(!initializeGPU);
     sim->setReproducible(reproducible);
+
+    avm->reportMeanVertexForce();
+
+            ncdat.WriteState(avm);
     //perform some initial time steps. If program_switch < 0, save periodically to a netCDF database
     for (int timestep = 0; timestep < initSteps+1; ++timestep)
         {
@@ -108,12 +124,15 @@ int main(int argc, char*argv[])
             //ncdat.WriteState(avm);
             };
         };
+    avm->reportMeanVertexForce();
+            ncdat.WriteState(avm);
 
     //run for additional timesteps, and record timing information. Save frames to a database if desired
     cudaProfilerStart();
     t1=clock();
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
+            ncdat.WriteState(avm);
         sim->performTimestep();
         if(program_switch <0 && timestep%((int)(100/dt))==0)
             {
@@ -128,6 +147,16 @@ int main(int argc, char*argv[])
     avm->reportMeanVertexForce();
     cout << "Mean q = " << avm->reportq() << endl;
 
+    /*
+    {
+    ArrayHandle<int> vcn(avm->vertexCellNeighbors);
+    for (int ii = 0; ii < 3*Nvert; ++ii)
+        vf[ii]=vcn.data[ii];
+    };
+    for (int ii = 0; ii < 100;++ii)
+        printf("%i\t",vf[ii]-vi[ii]);
+    cout << endl;
+    */
     if(initializeGPU)
         cudaDeviceReset();
     return 0;

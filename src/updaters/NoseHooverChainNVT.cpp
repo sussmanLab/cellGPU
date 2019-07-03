@@ -158,7 +158,7 @@ void NoseHooverChainNVT::propagateChain()
 
     //partially update bath velocities and accelerations (quarter-timestep), from Nchain to 0
     ArrayHandle<Dscalar4> Bath(BathVariables);
-    for (int ii = Nchain; ii > 0; --ii)
+    for (int ii = Nchain-1; ii > 0; --ii)
         {
         //update the acceleration: G = (Q_{i-1}*v_{i-1}^2 - T)/Q_i
         Bath.data[ii].z = (Bath.data[ii-1].w*Bath.data[ii-1].y*Bath.data[ii-1].y-Temperature)/Bath.data[ii].w;
