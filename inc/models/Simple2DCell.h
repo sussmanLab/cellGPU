@@ -221,6 +221,8 @@ class Simple2DCell : public Simple2DModel
         determine when to apply an additional line tension between cells.
         */
         GPUArray<int> cellType;
+        //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices (or cell neighbors)
+        Index2D cellNeighborIndexer;
         //!A indexer for turning a pair of cell types into a 1-D index
         Index2D cellTypeIndexer;
 
@@ -290,8 +292,6 @@ class Simple2DCell : public Simple2DModel
         cellVertices[cellNeighborIndexer(k,c)];
         */
         GPUArray<int> cellVertices;
-        //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices (or cell neighbors)
-        Index2D cellNeighborIndexer;
         //!An upper bound for the maximum number of neighbors that any cell has
         int vertexMax;
         //!3*Nvertices length array of the position of vertices around cells

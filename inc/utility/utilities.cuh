@@ -13,6 +13,15 @@ A file providing an interface to the relevant cuda calls for some simple GPU arr
  * \brief CUDA kernels and callers for the utilities base
  */
 
+ //!convenience function to zero out an array on the GPU
+ bool gpu_zero_array(int *arr,
+                     int N
+                     );
+ //!convenience function to zero out an array on the GPU
+ bool gpu_zero_array(unsigned int *arr,
+                     int      N
+                     );
+                     
 //! (Dscalar) ans = (Dscalar2) vec1 . vec2
 bool gpu_dot_Dscalar2_vectors(Dscalar2 *d_vec1,
                               Dscalar2 *d_vec2,

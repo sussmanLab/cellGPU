@@ -90,14 +90,12 @@ class simpleVertexModelBase : public Simple2DActiveCell
         GPUArray<int> cellEdgeFlips;
         //! data structure per cell for not simulataneously flipping nearby edges
         GPUArray<int4> cellSets;
-        
+
     protected:
         //! data structure to help with cell-vertex list
         GPUArray<int> growCellVertexListAssist;
         //!if the maximum number of vertices per cell increases, grow the cellVertices list
         void growCellVerticesList(int newVertexMax);
-        //! data structure to help with not simultaneously trying to flip nearby edges
-        GPUArray<int> finishedFlippingEdges;
 
     public:
         //!A function for debugging geometry

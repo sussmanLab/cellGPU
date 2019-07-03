@@ -161,7 +161,7 @@ void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionGPU(
                  d_cd.data,
                  d_nn.data,
                  d_n.data,
-                 activeModel->cellNeighborIndexer,,
+                 activeModel->cellNeighborIndexer,
                  d_RNG.data,
                  Ndof,
                  deltaT,

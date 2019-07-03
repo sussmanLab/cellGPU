@@ -2,6 +2,7 @@
 
 #include "vertexModelBase.h"
 #include "vertexModelBase.cuh"
+#include "utilities.cuh"
 /*! \file vertexModelBase.cpp */
 
 /*!
