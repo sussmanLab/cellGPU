@@ -1,7 +1,7 @@
 #define ENABLE_CUDA
 
 #include "vertexModelGenericBase.h"
-#include "DelaunayCGAL.h" 
+#include "DelaunayCGAL.h"
 #include "vertexModelGenericBase.cuh"
 /*! \file vertexModelGenericBase.cpp */
 
@@ -114,7 +114,7 @@ void vertexModelGenericBase::computeGeometryCPU()
         h_AP.data[i].x = Varea;
         h_AP.data[i].y = Vperi;
         };
-    };  
+    };
 
 /*!
 Remove any cell whose index is in the list. Also discard any vertices which are now no longer part
@@ -130,7 +130,7 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     vector<int> verticesToRemove;
     vector<int> newVertexNeighborNumber;
     copyGPUArrayData(vertexNeighborNum,newVertexNeighborNumber);
-    
+
     {//array handle scope
     ArrayHandle<int> cvn(cellVertexNum);
     ArrayHandle<int> cv(cellVertices);
@@ -230,10 +230,10 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     vertexCellNeighborNum.swap(newVertexCellNeighborNum);
 
     resizePerCoordinationLists();
-    
+
     //Great! Now the cell-based lists
 
-    cellNeighborIndexer = Index2D(vertexMax,Ncells);  
+    cellNeighborIndexer = Index2D(vertexMax,Ncells);
     Index2D oldCNI = Index2D(vertexMax,NcOld);
     GPUArray<int> newCellVertices,newCellVertexNum;
     newCellVertices.resize(vertexMax*Ncells);
@@ -265,7 +265,7 @@ void vertexModelGenericBase::removeCells(vector<int> cellIndices)
     //handle the spatial sorting arrays
     remapCellSorting();
     remapVertexSorting();
-    
+
     //edgeFlipLists
     computeGeometry();
     };
@@ -388,7 +388,7 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
 
     removeGPUArrayElement(vertexNeighborNum,verticesToRemove);
     removeGPUArrayElement(vertexCellNeighborNum,verticesToRemove);
-    
+
     vector<int> vinds; vinds.resize(vertexCoordinationMaximum*verticesToRemove.size());
     int vTempIdx=0;
     for (int vv = 0; vv < verticesToRemove.size();++vv)
@@ -475,20 +475,26 @@ vertex was.
 void vertexModelGenericBase::splitVertex(int vertexIndex, Dscalar separation, Dscalar theta)
     {
     //Let's start with the easy parts: growing the relevant lists and assigning positions
+    int newVertexIndex = Nvertices;
     Nvertices += 1;
+
     //add a new index for the spatial sorters
     ittVertex.push_back(Nvertices-1);
     ttiVertex.push_back(Nvertices-1);
     tagToIdxVertex.push_back(Nvertices-1);
     idxToTagVertex.push_back(Nvertices-1);
+
     //resize per-vertex-coordination lists
     resizePerCoordinationLists();
+
     //take care of the per-vertex lists
     vertexForces.resize(Nvertices);
     displacements.resize(Nvertices);
     growGPUArray(vertexPositions,1);
     growGPUArray(vertexMasses,1);
     growGPUArray(vertexVelocities,1);
+
+    Dscalar2 newV0Pos,newV1Pos;
     //mass is the same as the dividing vertex. velocities of the new vertex is zero. Positions are set
     {//Array Handle scope
         ArrayHandle<Dscalar> masses(vertexMasses);
@@ -499,7 +505,6 @@ void vertexModelGenericBase::splitVertex(int vertexIndex, Dscalar separation, Ds
         velocities.data[Nvertices-1] = zero;
         Dscalar2 edge = make_Dscalar2(cos(theta),sin(theta));
         edge = 0.5*separation*edge;
-        Dscalar2 newV0Pos,newV1Pos;
         newV0Pos = positions.data[vertexIndex]-edge;
         Box->putInBoxReal(newV0Pos);
         newV1Pos = positions.data[vertexIndex]+edge;
@@ -511,14 +516,75 @@ void vertexModelGenericBase::splitVertex(int vertexIndex, Dscalar separation, Ds
     vertexNeighborIndexer = Index2D(vertexCoordinationMaximum,Nvertices);
     Index2D oldVNI = Index2D(vertexCoordinationMaximum,Nvertices-1);
 
-    //vertex neighbors
-    //vertex neighbor num
+    //vertex neighbors and vertex neighbor num
+    vector<int> v0vertexNeighs,v0primeVertexNeighs;
+    {//scope for array handles
+    Dscalar2 disp;
+    Dscalar2 v00p;
+    Box->minDist(newV0Pos,newV1Pos,v00p);
+    ArrayHandle<int> vn(vertexNeighbors);
+    ArrayHandle<int> vnn(vertexNeighborNum);
+    ArrayHandle<Dscalar2> positions(vertexPositions);
+
+    //what is the list of vertex neighbors that will be assigned to one of the two resolving vertices?
+    int neighs = vnn.data[vertexIndex];
+    vector<pair<Dscalar, int> > relativeDistanceList;
+    for (int nn = 0; nn < neighs; ++nn)
+        {
+        int neighbor = vn.data[oldVNI(nn,vertexIndex)];
+        Dscalar2 vPos = positions.data[neighbor];
+        Box->minDist(newV0Pos,vPos,disp);
+        Dscalar norm0 = disp.x*disp.x + disp.y*disp.y;
+        Box->minDist(newV1Pos,vPos,disp);
+        Dscalar norm1 = disp.x*disp.x + disp.y*disp.y;
+
+        relativeDistanceList.push_back(make_pair(norm1 - norm0,neighbor));
+        //Dscalar dotProduct = v00p.x*disp.x+v00p.y*disp.y;
+        //if(norm1 > norm0)
+        //    v0vertexNeighs.push_back(neighbor);
+        //else
+        //    v0primeVertexNeighs.push_back(neighbor);
+        };
+    //make sure each vertex always inherits at least one of the two
+    //     neighbors -- no vertices of coordination 1 in this code!!!
+    std::sort(relativeDistanceList.begin(),relativeDistanceList.end());
+    v0primeVertexNeighs.push_back(relativeDistanceList[0].second);
+    for (int ii = 1; ii < relativeDistanceList.size()-1; ++ii)
+        {
+        if(relativeDistanceList[ii].first >= 0)
+            v0vertexNeighs.push_back(relativeDistanceList[ii].second);
+        else
+            v0primeVertexNeighs.push_back(relativeDistanceList[ii].second);
+        };
+    v0vertexNeighs.push_back(relativeDistanceList[relativeDistanceList.size()-1].second);
+
+    //don't forget the new and old vertices themselves
+    v0vertexNeighs.push_back(newVertexIndex);
+    v0primeVertexNeighs.push_back(vertexIndex);
+    vnn.data[vertexIndex] = v0vertexNeighs.size();
+    vnn.data[newVertexIndex] = v0primeVertexNeighs.size();
+    //limit vertex neighbors of V0 to just the given subset
+    for (int nn = 0; nn < v0vertexNeighs.size(); ++nn)
+        vn.data[vertexNeighborIndexer(nn,vertexIndex)] = v0vertexNeighs[nn];
+    //add relevant vertex neighbors for the new vertex. Also rewire the connected vertices
+    for (int nn = 0; nn < v0primeVertexNeighs.size(); ++nn)
+        {
+        vn.data[vertexNeighborIndexer(nn,newVertexIndex)] = v0primeVertexNeighs[nn];
+        int otherIdx = v0primeVertexNeighs[nn];
+        int otherNeighs =  vnn.data[otherIdx];
+        for (int jj = 0; jj < otherNeighs; ++jj)
+            if (vn.data[vertexNeighborIndexer(jj,otherIdx)] == vertexIndex)
+                vn.data[vertexNeighborIndexer(jj,otherIdx)] = newVertexIndex;
+        }
+    }//end scope
+
+
     //vertex cell neighbors
     //vertex cell neighbor num
     //
-    
+
     //does the maximum number of vertices around a cell need to be incremented?
-    //cellNeighborIndexer = Index2D(vertexMax,Ncells);  
+    //cellNeighborIndexer = Index2D(vertexMax,Ncells);
     //Index2D oldCNI = Index2D(vertexMaxOld????,Ncells);
     //cellVertices
     //cellVertexNum

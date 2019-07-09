@@ -57,13 +57,6 @@ class vertexModelBase : public simpleVertexModelBase
         //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
         void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
 
-        //! data structure to help with not simultaneously trying to flip nearby edges
-        GPUArray<int> finishedFlippingEdges;
-
-        //! data structure per cell for not simulataneously flipping nearby edges
-        GPUArray<int> cellEdgeFlips;
-        //! data structure per cell for not simulataneously flipping nearby edges
-        GPUArray<int4> cellSets;
     //reporting functions
     public:
         //!Handy for debugging T1 transitions...report the vertices owned by cell i

@@ -54,10 +54,9 @@ int main(int argc, char*argv[])
     int initSteps = 100; //number of initialization steps
 
     Dscalar dt = 0.001; //the time step size
-    Dscalar p0 = 4.0;  //the preferred perimeter
+    Dscalar p0 = 3.6;  //the preferred perimeter
     Dscalar a0 = 1.0;  // the preferred area
     Dscalar T = 0.01;  // the temperature
-    Dscalar Dr = 1.0;  //the rotational diffusion constant of the cell directors
     int program_switch = 0; //various settings control output
 
     int c;
@@ -84,7 +83,7 @@ int main(int argc, char*argv[])
     //save output
     char dataname[256];
     sprintf(dataname,"../test.txt");
-    int sparsity = 40;
+    int sparsity = 10;
     ofstream output(dataname);
 
     //clocks for timing information
@@ -212,6 +211,11 @@ int main(int argc, char*argv[])
             }
         };
     
+    saveConfig(output,modelBase);
+    modelBase->splitVertex(6,0.1,1.4*PI);
+    modelBase->splitVertex(16,0.1,.0*PI);
+        modelBase->computeGeometryCPU();
+    saveConfig(output,modelBase);
 /*
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
 //    sim->setSortPeriod(initSteps/10);

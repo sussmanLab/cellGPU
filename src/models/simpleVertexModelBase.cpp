@@ -1,7 +1,7 @@
 #define ENABLE_CUDA
 
 #include "simpleVertexModelBase.h"
-#include "DelaunayCGAL.h" 
+#include "DelaunayCGAL.h"
 #include "simpleVertexModelBase.cuh"
 /*! \file simpleVertexModelBase.cpp */
 
@@ -405,4 +405,3 @@ void simpleVertexModelBase::printCellGeometry(int i)
         };
     printf("\n Area = %f, peri = %f\n",ap.data[i].x,ap.data[i].y);
     };
-
