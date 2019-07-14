@@ -24,11 +24,13 @@ class vertexModelGenericBase : public simpleVertexModelBase
         virtual void removeCells(vector<int> cellIndices);
         //!Kill the indexed cell...cell can have any number of vertices
         virtual void cellDeath(int cellIndex);
-        
+
         //!Merge a number of vertices into a single vertex...this construction means T2s are easy
         virtual void mergeVertices(vector<int> verticesToMerge);
         //!Take a vertex and divide it into two vertices
         virtual void splitVertex(int vertexIndex, Dscalar separation, Dscalar theta);
+        //!Take an edge (specified by it's two vertices) and add a new vertex in the middle
+        virtual void subdivideEdge(int vertexIndex1, int vertexIndex2);
 
         //!spatially sort the *vertices* along a Hilbert curve for data locality...cannot call underlying routines!
         virtual void spatialSorting(){};

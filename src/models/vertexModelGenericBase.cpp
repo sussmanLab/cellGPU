@@ -59,6 +59,14 @@ void vertexModelGenericBase::resizePerCoordinationLists()
     vertexForceSets.resize(vertexCoordinationMaximum*Nvertices);
     voroCur.resize(vertexCoordinationMaximum*Nvertices);
     voroLastNext.resize(vertexCoordinationMaximum*Nvertices);
+    if(vertexNeighborNum.getNumElements() < Nvertices)
+        {
+        int vToAdd = Nvertices-vertexNeighborNum.getNumElements();
+        growGPUArray(vertexCellNeighborNum,vToAdd);
+        growGPUArray(vertexNeighborNum,vToAdd);
+        growGPUArray(vertexCellNeighbors,vToAdd*vertexCoordinationMaximum);
+        growGPUArray(vertexNeighbors,vToAdd*vertexCoordinationMaximum);
+        }
     };
 
 /*!
@@ -452,6 +460,158 @@ void vertexModelGenericBase::mergeVertices(vector<int> verticesToMerge)
     resizePerCoordinationLists();
     //update vertex sorting arrays
     remapVertexSorting();
+    };
+
+/*!
+This function inserts a new vertex in between two existing vertices.
+All relevant data structures are updated.
+*/
+void vertexModelGenericBase::subdivideEdge(int vertexIndex1, int vertexIndex2)
+    {
+    //before indices change, what are the (one or two) cells that share this edge?
+
+    //what are the (possibly one or two) cells that have both v1 and v2 as vertices?
+    vector<int> cellsInvolved;
+    vector<int> cellsVertexNumbers;
+    {
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_vcnn(vertexCellNeighborNum,access_location::host,access_mode::readwrite);
+    int cNeighs1 = h_vcnn.data[vertexIndex1];
+    vector<int> cellsToTest(cNeighs1);
+    for (int ii = 0; ii < cNeighs1; ++ii)
+        cellsToTest[ii] = h_vcn.data[vertexNeighborIndexer(ii,vertexIndex1)];
+    removeDuplicateVectorElements(cellsToTest);
+    //which of those cells also have v2?
+    ArrayHandle<int> cv(cellVertices);
+    ArrayHandle<int> cvn(cellVertexNum);
+    for (int cc = 0; cc < cellsToTest.size(); ++cc)
+        {
+        int cIdx = cellsToTest[cc];
+        int vNeighs = cvn.data[cIdx];
+        for (int vv = 0; vv < vNeighs; ++vv)
+            if(cv.data[cellNeighborIndexer(vv,cIdx)] == vertexIndex2)
+                {
+                cellsInvolved.push_back(cIdx);
+                cellsVertexNumbers.push_back(vNeighs);
+                printf("cell to test: %i \n", cIdx);
+                }
+        }
+    }//end array handle scope
+
+    int newVertexIndex = Nvertices;
+    Nvertices += 1;
+    //add a new index for the spatial sorters
+    ittVertex.push_back(newVertexIndex);
+    ttiVertex.push_back(newVertexIndex);
+    tagToIdxVertex.push_back(newVertexIndex);
+    idxToTagVertex.push_back(newVertexIndex);
+    //resize per-vertex-coordination lists
+    resizePerCoordinationLists();
+
+    //take care of the per-vertex lists
+    vertexForces.resize(Nvertices);
+    displacements.resize(Nvertices);
+    growGPUArray(vertexPositions,1);
+    growGPUArray(vertexMasses,1);
+    growGPUArray(vertexVelocities,1);
+
+    //find the new position
+    Dscalar2 newVertexPos;
+    {
+    ArrayHandle<Dscalar2> velocities(vertexVelocities);
+    ArrayHandle<Dscalar2> positions(vertexPositions);
+    Dscalar2 zero = make_Dscalar2(0.0,0.0);
+    velocities.data[newVertexIndex] = zero;
+    Dscalar2 disp;
+    Box->minDist(positions.data[vertexIndex1],positions.data[vertexIndex2],disp);
+    newVertexPos = positions.data[vertexIndex2] + 0.5*disp;
+printf("%f %f\t %f %f\n",disp.x,disp.y,newVertexPos.x,newVertexPos.y);
+    Box->putInBoxReal(newVertexPos);
+    positions.data[newVertexIndex] = newVertexPos;
+    }//end array handle scope
+
+    //update vertex connectivity
+    vertexNeighborIndexer = Index2D(vertexCoordinationMaximum,Nvertices);
+    Index2D oldVNI = Index2D(vertexCoordinationMaximum,Nvertices-1);
+
+    //vertex neighbors and vertex neighbor num
+    {//scope for array handles
+    ArrayHandle<int> vn(vertexNeighbors);
+    ArrayHandle<int> vnn(vertexNeighborNum);
+
+    //First, rewire the vertices formerly connected by an edge
+    int neighs1 = vnn.data[vertexIndex1];
+    for (int nn = 0; nn < neighs1; ++nn)
+        {
+        int otherIdx = vn.data[oldVNI(nn,vertexIndex1)];
+        if (otherIdx == vertexIndex2)
+            vn.data[oldVNI(nn,vertexIndex1)] = newVertexIndex;
+        };
+    int neighs2 = vnn.data[vertexIndex2];
+    for (int nn = 0; nn < neighs2; ++nn)
+        {
+        int otherIdx = vn.data[oldVNI(nn,vertexIndex2)];
+        if (otherIdx == vertexIndex1)
+            vn.data[oldVNI(nn,vertexIndex2)] = newVertexIndex;
+        };
+    //...and give the new vertex its two Neighbors
+    vnn.data[newVertexIndex] = 2;
+    vn.data[vertexNeighborIndexer(0,newVertexIndex)] = vertexIndex1;
+    vn.data[vertexNeighborIndexer(1,newVertexIndex)] = vertexIndex2;
+    }
+
+
+    //update cell vertex number...
+
+    //first, do sizes need to be redone?
+    int newVertexMax = vertexMax;
+    for (int cc = 0; cc < cellsVertexNumbers.size();++cc)
+        if (cellsVertexNumbers[cc]+1 > newVertexMax)
+            newVertexMax = cellsVertexNumbers[cc]+1;
+    if(newVertexMax > vertexMax)
+        growCellVerticesList(newVertexMax);
+
+    //update cell composition and number of composing vertices
+    {
+    ArrayHandle<int> cv(cellVertices);
+    ArrayHandle<int> cvn(cellVertexNum);
+    for (int cc = 0; cc < cellsInvolved.size();++cc)
+        {
+        int cIdx = cellsInvolved[cc];
+        int vCur, vNext;
+        int vNeighs = cvn.data[cIdx];
+        int insertionPosition = 0;
+        for (int vv = 0; vv < vNeighs-1; ++vv)
+            {
+            vCur = cv.data[cellNeighborIndexer(vv,cIdx)];
+            vNext = cv.data[cellNeighborIndexer(vv+1,cIdx)];
+            if((vCur==vertexIndex1 && vNext==vertexIndex2) || (vCur==vertexIndex2 && vNext==vertexIndex1) )
+                insertionPosition = vv + 1;
+            }
+        cout << "insert vertex " << newVertexIndex << " at position " << insertionPosition << endl;
+
+        int vIndex = 0;
+        vector<int> cellComp(vNeighs+1);
+        for (int vv = 0; vv < vNeighs; ++vv)
+            {
+            if(vv == insertionPosition)
+                {
+                cellComp[vIndex] = newVertexIndex;
+                vIndex +=1;
+                }
+            cellComp[vIndex] = cv.data[cellNeighborIndexer(vv,cIdx)];
+            vIndex += 1;
+            }
+        cvn.data[cIdx] = cellComp.size();
+        for (int vv = 0; vv < cellComp.size();++vv)
+            {
+            cv.data[cellNeighborIndexer(vv,cIdx)] = cellComp[vv];
+            printf("new vertex %i: %i\n", vv, cellComp[vv]);
+            }
+        }
+
+    }//end arrayhandle scope
+
     };
 
 /*!

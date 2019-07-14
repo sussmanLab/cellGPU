@@ -123,7 +123,7 @@ int main(int argc, char*argv[])
             saveConfig(output,modelBase);
             };
         };
-    
+
     modelBase->getCellPositions();
     vector<int> cellsToRemove;
     {
@@ -197,7 +197,7 @@ int main(int argc, char*argv[])
         modelBase->cellDeath(cellToDie);
         modelBase->computeGeometryCPU();
         };
-    
+
     saveConfig(output,modelBase);
     ArrayHandle<Dscalar2> ap(modelBase->returnAreaPeri());
     int Nc = modelBase->Ncells;
@@ -210,12 +210,24 @@ int main(int argc, char*argv[])
             printf("\n");
             }
         };
-    
+
     saveConfig(output,modelBase);
     modelBase->splitVertex(6,0.1,1.4*PI);
     modelBase->splitVertex(16,0.1,.0*PI);
+
+    modelBase->computeGeometryCPU();
+    DEBUGCODEHELPER;
+saveConfig(output,modelBase);
+
+    cout << "first subdivision" << endl;
+    modelBase->subdivideEdge(33,35);
+
+    modelBase->subdivideEdge(32,38);
+
         modelBase->computeGeometryCPU();
+
     saveConfig(output,modelBase);
+
 /*
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
 //    sim->setSortPeriod(initSteps/10);
