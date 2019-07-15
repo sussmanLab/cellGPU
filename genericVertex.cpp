@@ -214,25 +214,27 @@ int main(int argc, char*argv[])
     saveConfig(output,modelBase);
     modelBase->splitVertex(6,0.1,1.4*PI);
 
-    modelBase->splitVertex(16,0.1,.0*PI);
-
     modelBase->computeGeometryCPU();
     DEBUGCODEHELPER;
 saveConfig(output,modelBase);
 
     cout << "first subdivision" << endl;
     modelBase->subdivideEdge(33,35);
+
 modelBase->computeGeometryCPU();
     modelBase->subdivideEdge(32,38);
 
         modelBase->computeGeometryCPU();
 
+        vMerge[0]=39;vMerge[1]=47;
+        modelBase->mergeVertices(vMerge);
+        modelBase->computeGeometryCPU();
     saveConfig(output,modelBase);
 
     modelBase->performT1Transition(27,37);
     modelBase->computeGeometryCPU();
     saveConfig(output,modelBase);
-    for (int timestep = 0; timestep < initSteps; ++timestep)
+    for (int timestep = 0; timestep < 3*initSteps; ++timestep)
         {
         sim->performTimestep();
         if(timestep%((int)(initSteps/sparsity))==0)

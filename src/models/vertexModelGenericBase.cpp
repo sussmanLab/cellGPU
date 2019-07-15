@@ -621,18 +621,27 @@ A future edit will perform T1 transitions "in place" on the existing data struct
 */
 void vertexModelGenericBase::performT1Transition(int vertexIndex1, int vertexIndex2)
     {
+
+
+    vector<int> vsToMerge(2);
+    vsToMerge[0]=vertexIndex1;
+    vsToMerge[1]=vertexIndex2;
+    std::sort(vsToMerge.begin(),vsToMerge.end());
+
     //first find the current theta
     Dscalar2 separation;
     {
     ArrayHandle<Dscalar2> positions(vertexPositions);
-    Box->minDist(positions.data[vertexIndex1], positions.data[vertexIndex2],separation);
+    Box->minDist(positions.data[vsToMerge[0]], positions.data[vsToMerge[1]],separation);
     }//end array handle scope
-    Dscalar currentTheta = atan2(separation.y,separation.x);
-    vector<int> vsToMerge(2);
-    vsToMerge[0]=vertexIndex1 < vertexIndex2 ? vertexIndex1 : vertexIndex2;
-    vsToMerge[1]=vertexIndex1 < vertexIndex2 ? vertexIndex2 : vertexIndex1;
+    Dscalar currentTheta = atan2(separation.y,separation.x)+PI;
+
     mergeVertices(vsToMerge);
-    splitVertex(vertexIndex1,1.05*T1Threshold,currentTheta+PI*0.5);
+    
+    Dscalar newTheta=currentTheta+PI*0.5;
+    if(newTheta > PI)
+        newTheta-=PI;
+    splitVertex(vsToMerge[0],1.05*T1Threshold,newTheta);
     };
 /*!
 This function "splits" a vertex, which I'll note in this comment as V0, into two vertices (V0 and V0'),
