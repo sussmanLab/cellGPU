@@ -1,7 +1,7 @@
 #ifndef vertexGenericQuadraticEnergy_H
 #define vertexGenericQuadraticEnergy_H
 
-#include "vertexModelGenericBase.h"
+#include "vertexModelGeneric.h"
 
 /*! \file vertexGenericQuadraticEnergy.h */
 //!Implement a 2D vertex model, using kernels in \ref avmKernels
@@ -9,7 +9,7 @@
 A simple class that implements a particular force law (from the quadratic vertex model functional)
 in the context of a generic vertex model
 */
-class VertexGenericQuadraticEnergy : public vertexModelGenericBase
+class VertexGenericQuadraticEnergy : public vertexModelGeneric
     {
     public:
         //! the constructor: initialize as a Delaunay configuration with random positions and set all cells to have uniform target A_0 and P_0 parameters
@@ -28,4 +28,3 @@ class VertexGenericQuadraticEnergy : public vertexModelGenericBase
         void computeForcesGPU();
     };
 #endif
-

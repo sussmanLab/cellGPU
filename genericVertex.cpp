@@ -213,6 +213,7 @@ int main(int argc, char*argv[])
 
     saveConfig(output,modelBase);
     modelBase->splitVertex(6,0.1,1.4*PI);
+
     modelBase->splitVertex(16,0.1,.0*PI);
 
     modelBase->computeGeometryCPU();
@@ -221,12 +222,26 @@ saveConfig(output,modelBase);
 
     cout << "first subdivision" << endl;
     modelBase->subdivideEdge(33,35);
-
+modelBase->computeGeometryCPU();
     modelBase->subdivideEdge(32,38);
 
         modelBase->computeGeometryCPU();
 
     saveConfig(output,modelBase);
+
+    modelBase->performT1Transition(27,37);
+    modelBase->computeGeometryCPU();
+    saveConfig(output,modelBase);
+    for (int timestep = 0; timestep < initSteps; ++timestep)
+        {
+        sim->performTimestep();
+        if(timestep%((int)(initSteps/sparsity))==0)
+            {
+            //              cout << timestep << endl;
+            saveConfig(output,modelBase);
+            };
+        }
+        saveConfig(output,modelBase);
 
 /*
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number

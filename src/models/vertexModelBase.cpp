@@ -646,7 +646,7 @@ void vertexModelBase::cellDeath(int cellIndex)
     //Our strategy will be to completely re-wire everything, and then get rid of the dead entries
     //get the cell and vertex identities of the triangular cell and the cell neighbors
     vector<int> cells(3);
-    //For conveniences, we will rotate the elements of "vertices" so that the smallest integer is first
+    //For convenience, we will rotate the elements of "vertices" so that the smallest integer is first
     vector<int> vertices(3);
     //also get the vertex neighbors of the vertices (that aren't already part of "vertices")
     vector<int> newVertexNeighbors;

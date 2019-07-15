@@ -31,39 +31,19 @@ class vertexModelGenericBase : public simpleVertexModelBase
         virtual void splitVertex(int vertexIndex, Dscalar separation, Dscalar theta);
         //!Take an edge (specified by it's two vertices) and add a new vertex in the middle
         virtual void subdivideEdge(int vertexIndex1, int vertexIndex2);
-
-        //!spatially sort the *vertices* along a Hilbert curve for data locality...cannot call underlying routines!
-        virtual void spatialSorting(){};
-        //NEED TO WRITE THE ABOVE FUNCTION
-
-/*
-        //!Compute the geometry (area & perimeter) of the cells on the GPU
-        virtual void computeGeometryGPU();
-
-
-
-    */
-    /*
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
         virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams = {});
+        virtual void performT1Transition(int vertexIndex1, int vertexIndex2);
 
 
-        //!Simple test for T1 transitions (edge length less than threshold) on the CPU
-        void testAndPerformT1TransitionsCPU();
-        //!Simple test for T1 transitions (edge length less than threshold) on the GPU...calls the following functions
-        void testAndPerformT1TransitionsGPU();
+        //!spatially sort the *vertices* along a Hilbert curve for data locality...cannot call underlying routines!
+        virtual void spatialSorting(){
+            UNWRITTENCODE("spatial sorting not done");
+        };
 
-        //!update/enforce the topology, performing simple T1 transitions
-        virtual void enforceTopology();
-    */
+        //!Compute the geometry (area & perimeter) of the cells on the GPU
+        virtual void computeGeometryGPU(){UNWRITTENCODE("generalized VM geometry on GPU not done");};
 
-//    protected:
-
-
-
-
-        //!Eventually we will be including vertex-edge merging events; to make this efficient we will maintain a separate edge structure
-        //GPUArray<EDGE> edgeList;
         //!The largest  coordination number of any vertex
         int vertexCoordinationMaximum;
         //!The number of vertices that vertex[i] is connected to
@@ -81,23 +61,12 @@ class vertexModelGenericBase : public simpleVertexModelBase
         */
         Index2D vertexNeighborIndexer;
 
+    protected:
+
         //!if the maximum vertex coordination increases, grow the vertexNeighbor and force set lists
         void growVertexNeighborLists(int newCoordinationMax);
         //!If the number of vertices changes, per-coordination-number lists should be resized
         void resizePerCoordinationLists();
-
-    /*
-        //!Initialize the data structures for edge flipping...should also be called if Nvertices changes
-        void initializeEdgeFlipLists();
-
-        //!test the edges for a T1 event, and grow the cell-vertex list if necessary
-        void testEdgesForT1GPU();
-        //!perform the edge flips found in the previous step
-        void flipEdgesGPU();
-
-        //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
-        void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
-    */
 
         //The following are data structures that help manage topology after removals
         //!cellMap[i] is the index of what was cell i before a removal, or is -1 if it was removed
@@ -113,5 +82,21 @@ class vertexModelGenericBase : public simpleVertexModelBase
         void remapCellSorting();
         //!Reindex the vertex sorting arrays based on vertexMap an vertexMapInverse
         void remapVertexSorting();
+
+    /*
+        //Things we might add to facilitate T1s later...
+        //!Eventually we will be including vertex-edge merging events; to make this efficient we will maintain a separate edge structure
+        //GPUArray<EDGE> edgeList;
+        //!Initialize the data structures for edge flipping...should also be called if Nvertices changes
+        void initializeEdgeFlipLists();
+
+        //!perform the edge flips found in the previous step
+        void flipEdgesGPU();
+
+        //!For finding T1s on the CPU; find the set of vertices and cells involved in the transition
+        void getCellVertexSetForT1(int v1, int v2, int4 &cellSet, int4 &vertexSet, bool &growList);
+    */
+
+
     };
 #endif

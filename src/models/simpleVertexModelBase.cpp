@@ -15,7 +15,7 @@ void simpleVertexModelBase::initializeSimpleVertexModelBase(int n)
     Ncells=n;
     initializeSimple2DActiveCell(Ncells);
 
-    setT1Threshold(0.01);
+    setT1Threshold(0.04);
     //derive the vertices from a voronoi tesselation
     setCellsVoronoiTesselation();
     //initializes per-cell lists
@@ -141,7 +141,7 @@ void simpleVertexModelBase::setCellsVoronoiTesselation()
    };
 
 /*!
-move vertices according to an input GPUarray
+move vertices according to an input GPUarray, also now always calculate the cell positions
 */
 void simpleVertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale)
     {
@@ -179,6 +179,7 @@ void simpleVertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacemen
                 };
             }
         };
+    getCellPositions();
     };
 
 /*!

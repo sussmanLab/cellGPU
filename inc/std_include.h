@@ -211,6 +211,15 @@ __host__ inline bool setCudaDevice(int USE_GPU,bool verbose = false)
         return false;
     };
 
+//!Report somewhere that code needs to be written
+static void unwrittenCode(const char *message, const char *file, int line)
+    {
+    printf("\nCode unwritten (file %s; line %d)\nMessage: %s\n",file,line,message);
+    throw std::exception();
+    }
+//A macro to say code needs to be written
+#define UNWRITTENCODE(message) (unwrittenCode(message,__FILE__,__LINE__))
+
 //A macro to wrap cuda calls
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
 //spot-checking of code for debugging

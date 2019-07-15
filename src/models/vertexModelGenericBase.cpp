@@ -615,6 +615,26 @@ printf("%f %f\t %f %f\n",disp.x,disp.y,newVertexPos.x,newVertexPos.y);
     };
 
 /*!
+Note that the current (slow) implementation works by merging and splitting, which invokes costly
+memory reallocations
+A future edit will perform T1 transitions "in place" on the existing data structures
+*/
+void vertexModelGenericBase::performT1Transition(int vertexIndex1, int vertexIndex2)
+    {
+    //first find the current theta
+    Dscalar2 separation;
+    {
+    ArrayHandle<Dscalar2> positions(vertexPositions);
+    Box->minDist(positions.data[vertexIndex1], positions.data[vertexIndex2],separation);
+    }//end array handle scope
+    Dscalar currentTheta = atan2(separation.y,separation.x);
+    vector<int> vsToMerge(2);
+    vsToMerge[0]=vertexIndex1 < vertexIndex2 ? vertexIndex1 : vertexIndex2;
+    vsToMerge[1]=vertexIndex1 < vertexIndex2 ? vertexIndex2 : vertexIndex1;
+    mergeVertices(vsToMerge);
+    splitVertex(vertexIndex1,1.05*T1Threshold,currentTheta+PI*0.5);
+    };
+/*!
 This function "splits" a vertex, which I'll note in this comment as V0, into two vertices (V0 and V0'),
 such that the bond between them has angle "theta" and norm "separation".
 This function is meant to be quite generic, so the coordination number of the target vertex can be
@@ -634,6 +654,37 @@ vertex was.
 */
 void vertexModelGenericBase::splitVertex(int vertexIndex, Dscalar separation, Dscalar theta)
     {
+    //before anything gets changed, what is the set of cells bordering the target vertex? If necessary, resize cellVertices list
+    vector<pair<Dscalar, int> > cellsInvolved;
+    Dscalar2 edgeCenterPosition;
+    {
+    ArrayHandle<Dscalar2> vPositions(vertexPositions);
+    ArrayHandle<Dscalar2> cPositions(cellPositions);
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_vcnn(vertexCellNeighborNum,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> cvn(cellVertexNum);
+    edgeCenterPosition = vPositions.data[vertexIndex];
+    int cNeighs = h_vcnn.data[vertexIndex];
+    cellsInvolved.resize(cNeighs);
+    Dscalar2 disp;
+    int newVertexMax = vertexMax;
+    for (int ii = 0; ii < cNeighs; ++ii)
+        {
+        int cIdx=h_vcn.data[vertexNeighborIndexer(ii,vertexIndex)];
+        Box->minDist(cPositions.data[cIdx],edgeCenterPosition,disp);
+        cellsInvolved[ii] = make_pair((0.5*PI-theta) + atan2(disp.y,disp.x),cIdx);
+
+        int vNeigh = cvn.data[cIdx];
+        if(vNeigh +1 > newVertexMax)
+            newVertexMax = vNeigh+1;
+        }
+    if(newVertexMax > vertexMax)
+        {
+        growCellVerticesList(newVertexMax);
+        }
+    }//end scope
+    std::sort(cellsInvolved.begin(),cellsInvolved.end());
+
     //Let's start with the easy parts: growing the relevant lists and assigning positions
     int newVertexIndex = Nvertices;
     Nvertices += 1;
@@ -665,9 +716,9 @@ void vertexModelGenericBase::splitVertex(int vertexIndex, Dscalar separation, Ds
         velocities.data[Nvertices-1] = zero;
         Dscalar2 edge = make_Dscalar2(cos(theta),sin(theta));
         edge = 0.5*separation*edge;
-        newV0Pos = positions.data[vertexIndex]-edge;
+        newV0Pos = edgeCenterPosition-edge;
         Box->putInBoxReal(newV0Pos);
-        newV1Pos = positions.data[vertexIndex]+edge;
+        newV1Pos = edgeCenterPosition+edge;
         Box->putInBoxReal(newV1Pos);
         positions.data[vertexIndex] = newV0Pos;
         positions.data[Nvertices-1] = newV1Pos;
@@ -699,12 +750,8 @@ void vertexModelGenericBase::splitVertex(int vertexIndex, Dscalar separation, Ds
         Dscalar norm1 = disp.x*disp.x + disp.y*disp.y;
 
         relativeDistanceList.push_back(make_pair(norm1 - norm0,neighbor));
-        //Dscalar dotProduct = v00p.x*disp.x+v00p.y*disp.y;
-        //if(norm1 > norm0)
-        //    v0vertexNeighs.push_back(neighbor);
-        //else
-        //    v0primeVertexNeighs.push_back(neighbor);
         };
+
     //make sure each vertex always inherits at least one of the two
     //     neighbors -- no vertices of coordination 1 in this code!!!
     std::sort(relativeDistanceList.begin(),relativeDistanceList.end());
@@ -738,17 +785,115 @@ void vertexModelGenericBase::splitVertex(int vertexIndex, Dscalar separation, Ds
         }
     }//end scope
 
-
-    //vertex cell neighbors
-    //vertex cell neighbor num
     //
+    //Now, let's figure out where the cells are relative to the new edge
+    //
+    int closestToZero = 0;
+    double distToZero = 4*PI;
+    int closestToPi = 0;
+    double distToPi = 4*PI;
+    for (int cc = 0; cc < cellsInvolved.size();++cc)
+        {
+        if(fabs(cellsInvolved[cc].first) < distToZero)
+            {
+            distToZero = fabs(cellsInvolved[cc].first);
+            closestToZero = cc;
+            }
+        if(fabs(PI-fabs(cellsInvolved[cc].first)) < distToPi)
+            {
+            distToPi=fabs(PI-fabs(cellsInvolved[cc].first));
+            closestToPi=cellsInvolved[cc].second;
+            }
+        }
+    std::rotate(cellsInvolved.begin(),cellsInvolved.begin()+closestToZero,cellsInvolved.end());
+    vector<int> bordersOnlyV1;
+    vector<int> bordersOnlyV2;
+    bool listSwitched = false;
+    for(int cc = 1; cc < cellsInvolved.size(); ++cc)
+        {
+        if(cellsInvolved[cc].second != closestToPi && listSwitched == false)
+            bordersOnlyV2.push_back(cellsInvolved[cc].second);
+        if(cellsInvolved[cc].second != closestToPi && listSwitched == true)
+            bordersOnlyV1.push_back(cellsInvolved[cc].second);
+        if(cellsInvolved[cc].second == closestToPi)
+            listSwitched= true;
+        }
 
-    //does the maximum number of vertices around a cell need to be incremented?
-    //cellNeighborIndexer = Index2D(vertexMax,Ncells);
-    //Index2D oldCNI = Index2D(vertexMaxOld????,Ncells);
-    //cellVertices
-    //cellVertexNum
+    //vertexCellNeighbors and vertexCellNeighborNum
+    {
+    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_vcnn(vertexCellNeighborNum,access_location::host,access_mode::readwrite);
+    h_vcnn.data[vertexIndex] = 2 + bordersOnlyV1.size();
+    h_vcnn.data[newVertexIndex] = 2 + bordersOnlyV2.size();
 
+    //get the cell neighbors of vertex 1
+    h_vcn.data[vertexNeighborIndexer(0,vertexIndex)] = closestToPi;
+    for (int cc = 0; cc < bordersOnlyV1.size(); ++cc)
+        h_vcn.data[vertexNeighborIndexer(cc+1,vertexIndex)]=bordersOnlyV1[cc];
+    h_vcn.data[vertexNeighborIndexer(h_vcnn.data[vertexIndex]-1,vertexIndex)] = cellsInvolved[0].second;
+
+    //get the cell neighbors of vertex 2
+    h_vcn.data[vertexNeighborIndexer(0,newVertexIndex)] = cellsInvolved[0].second;
+    for (int cc = 0; cc < bordersOnlyV2.size(); ++cc)
+        h_vcn.data[vertexNeighborIndexer(cc+1,newVertexIndex)]=bordersOnlyV2[cc];
+    h_vcn.data[vertexNeighborIndexer(h_vcnn.data[newVertexIndex]-1,newVertexIndex)] = closestToPi;
+    }//end array handle scope
+
+
+
+    //Finally, fix cellVertices and cellVertexNum
+    {
+    ArrayHandle<int> cv(cellVertices,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> cvn(cellVertexNum,access_location::host,access_mode::readwrite);
+    //cell closest to theta' = 0
+    int cIdx = cellsInvolved[0].second;
+    int vNeigh = cvn.data[cIdx];
+    vector<int> verts; verts.reserve(vNeigh+1);
+    for (int vv = 0; vv < vNeigh; ++vv)
+        {
+        int vIdx = cv.data[cellNeighborIndexer(vv,cIdx)];
+        if(vIdx == vertexIndex)
+            verts.push_back(newVertexIndex);
+        verts.push_back(vIdx);
+        }
+    cvn.data[cIdx] = vNeigh+1;
+    for (int vv = 0; vv < verts.size();++vv)
+        cv.data[cellNeighborIndexer(vv,cIdx)] = verts[vv];
+    //cell closets to theta' = Pi
+    cIdx = closestToPi;
+    vNeigh = cvn.data[cIdx];
+    vector<int> verts2; verts2.reserve(vNeigh+1);
+    for (int vv = 0; vv < vNeigh; ++vv)
+        {
+        int vIdx = cv.data[cellNeighborIndexer(vv,cIdx)];
+        verts2.push_back(vIdx);
+        if(vIdx == vertexIndex)
+            verts2.push_back(newVertexIndex);
+        }
+    cvn.data[cIdx] = vNeigh+1;
+    for (int vv = 0; vv < verts.size();++vv)
+        cv.data[cellNeighborIndexer(vv,cIdx)] = verts[vv];
+
+    //correct the cells that now border the new vertex only
+    for (int cc = 0; cc < bordersOnlyV2.size(); ++cc)
+        {
+        cIdx = bordersOnlyV2[cc];
+        vNeigh = cvn.data[cIdx];
+        for (int vv = 0; vv < vNeigh; ++vv)
+            {
+            int vIdx = cv.data[cellNeighborIndexer(vv,cIdx)];
+            if (vIdx == vertexIndex)
+                cv.data[cellNeighborIndexer(vv,cIdx)] = newVertexIndex;
+            }
+        }
+
+    }//end array handle scope
+
+    }
+
+void vertexModelGenericBase::cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams)
+    {
+        UNWRITTENCODE("cellDivision not quite done yet");
     }
 
 /*!
