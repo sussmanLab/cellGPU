@@ -37,6 +37,8 @@ range of parameters.
 
 # Mac OS X Instructions
 
+IMPORTANT NOTE: Current versions of Mac OsX do not support CUDA installation... it may be possible to hack some solution together, but for the moment it looks like Mac will not be supported. As such, these mac install instructions are for historical reference for systems running OsX 12 and earlier.
+
 The following instructions for compiling cellGPU on Mac OSX  were contributed by Gonca Erdemci-Tandogan (https://goncaerdemci.wordpress.com/).
 It does not include how to get Eigen (for the dynamical matrix diagonalization), but that is a header-only library.
 

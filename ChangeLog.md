@@ -2,7 +2,11 @@
 
 ### Changes in progress
 
+### version 0.8.0 
+
 * A directory to put common MD data analysis tools has been added
+* Changed strategy for handling multiple T1 transitions per cell / vertex
+* Numerous small changes
 
 ### version 0.7.1
 

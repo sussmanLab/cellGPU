@@ -10,10 +10,10 @@ NVCC := nvcc
 
 INCLUDES = -I. -I./src/ -I./ext_src/ -I./inc/ -I$(CUDA_INC) -I/home/user/CGAL/CGAL-4.9/include -I/opt/local/include
 INCLUDES += -I/usr/local/Cellar/cgal/4.9/include -I/usr/local/Cellar/boost/1.62.0/include -I/usr/local/Cellar/gmp/6.1.2/include -I/usr/local/Cellar/mpfr/3.1.5/include -I/usr/local/Cellar/netcdf/4.4.1.1_4/include -I/home/dmsussma/eigen-eigen-8d1ccfd9c5a0 -I/usr/local/include/eigen3
-LIB_CUDA = -L. -L/home/gerdemci/cudalibs -L$(CUDA_LIB) -L$(CUDA_LIB2) -lcuda -lcudart
+LIB_CUDA = -L. -L$(CUDA_LIB) -L$(CUDA_LIB2) -lcuda -lcudart
 LIB_CGAL += -L/usr/local/Cellar/cgal/4.9/lib -L/usr/local/Cellar/gmp/6.1.2/lib -L/usr/local/Cellar/mpfr/3.1.5/lib
 LIB_CGAL += -L/home/user/CGAL/CGAL-4.9/lib -lCGAL -lCGAL_Core -lgmp -lmpfr
-LIB_NETCDF = -lnetcdf -lnetcdf_c++ -L/opt/local/lib -L/usr/local/Cellar/netcdf/4.4.1.1_4/lib
+LIB_NETCDF = -lnetcdf -lnetcdf_c++ -L/opt/local/lib
 
 #common flags
 COMMONFLAGS += $(INCLUDES) -std=c++11 -DCGAL_DISABLE_ROUNDING_MATH_CHECK -O3

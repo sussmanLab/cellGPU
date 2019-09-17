@@ -32,7 +32,7 @@ int main(int argc, char*argv[])
     Dscalar dt = 0.01; //the time step size
     Dscalar p0 = 4.0;  //the preferred perimeter
     Dscalar a0 = 1.0;  // the preferred area
-    Dscalar v0 = 0.1;  // the self-propulsion
+    Dscalar v0 = 0.05;  // the self-propulsion
     Dscalar Dr = 1.0;  //the rotational diffusion constant of the cell directors
     int program_switch = 0; //various settings control output
 
@@ -76,7 +76,7 @@ int main(int argc, char*argv[])
 
     //possibly save output in netCDF format
     char dataname[256];
-    sprintf(dataname,"../test.nc");
+    sprintf(dataname,"./data/test_p%.3f.nc",p0);
     int Nvert = 2*numpts;
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
@@ -95,7 +95,7 @@ int main(int argc, char*argv[])
     //set the cell activity to have D_r = 1. and a given v_0
     avm->setv0Dr(v0,1.0);
     //when an edge gets less than this long, perform a simple T1 transition
-    avm->setT1Threshold(0.04);
+    avm->setT1Threshold(0.1);
 
     vector<int> vi(3*Nvert);
     vector<int> vf(3*Nvert);
