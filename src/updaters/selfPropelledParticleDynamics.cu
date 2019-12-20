@@ -44,13 +44,13 @@ __global__ void spp_eom_integration_kernel(Dscalar2 *forces,
     RNGs[idx] = randState;
     //update director and velocity vector
     Dscalar currentTheta = cellDirectors[idx];
+    velocities[idx].x = v0 * Cos(cellDirectors[idx]);
+    velocities[idx].y = v0 * Sin(cellDirectors[idx]);
     if(velocities[idx].y != 0. && velocities[idx].x != 0.)
         {
         currentTheta = atan2(velocities[idx].y,velocities[idx].x);
         };
     cellDirectors[idx] = currentTheta + angleDiff;
-    velocities[idx].x = v0 * Cos(cellDirectors[idx]);
-    velocities[idx].y = v0 * Sin(cellDirectors[idx]);
 
 
     return;
