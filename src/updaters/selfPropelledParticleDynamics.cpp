@@ -77,22 +77,22 @@ void selfPropelledParticleDynamics::integrateEquationsOfMotionCPU()
     for (int ii = 0; ii < Ndof; ++ii)
         {
         //displace according to current velocities and forces
+        Dscalar v0i = h_motility.data[ii].x;
+        Dscalar Dri = h_motility.data[ii].y;
+        h_v.data[ii].x =  v0i * cos(h_cd.data[ii]);
+        h_v.data[ii].y =  v0i * sin(h_cd.data[ii]);
         Dscalar2 Vcur = h_v.data[ii];
         h_disp.data[ii].x = deltaT*(Vcur.x + mu * h_f.data[ii].x);
         h_disp.data[ii].y = deltaT*(Vcur.y + mu * h_f.data[ii].y);
 
         Dscalar theta = h_cd.data[ii];
         //rotate the velocity vector a bit
-        if (Vcur.x != 0. && Vcur.y != 0.)
+        if (!(Vcur.x == 0. && Vcur.y == 0.))
             {
             theta = atan2(Vcur.y,Vcur.x);
             };
-        Dscalar v0i = h_motility.data[ii].x;
-        Dscalar Dri = h_motility.data[ii].y;
         Dscalar randomNumber = noise.getRealNormal();
         h_cd.data[ii] =theta+randomNumber*sqrt(2.0*deltaT*Dri);
-        h_v.data[ii].x =  v0i * cos(h_cd.data[ii]);
-        h_v.data[ii].y =  v0i * sin(h_cd.data[ii]);
         };
     }//end array handle scoping
     activeModel->moveDegreesOfFreedom(displacements);
