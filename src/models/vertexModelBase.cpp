@@ -1069,6 +1069,11 @@ void vertexModelBase::cellDeath(int cellIndex)
     removeGPUArrayElement(cellVertexNum,cellIndex);
     removeGPUArrayElement(cellVertices,cvDeletions);
 
+    removeGPUArrayElement(vertexEdgeFlips,vnDeletions);
+    removeGPUArrayElement(vertexEdgeFlipsCurrent,vnDeletions);
+    removeGPUArrayElement(cellSets,vnDeletions);
+    removeGPUArrayElement(cellEdgeFlips,cellIndex);
+
     Nvertices -= 2;
     //phenomenal... let's handle the tag-to-index structures
     ittVertex.resize(Nvertices);
@@ -1261,6 +1266,8 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
     growGPUArray(vertexNeighbors,6); //(3*nv)
     growGPUArray(vertexCellNeighbors,6); //(3*nv)
     growGPUArray(cellVertexNum,1); //(nc)
+    growGPUArray(cellSets,6);//(3*nv)
+    growGPUArray(cellEdgeFlips,1);
     //the index cellVertices array needs more care...
     vector<int>  cellVerticesVec;
     copyGPUArrayData(cellVertices,cellVerticesVec);
