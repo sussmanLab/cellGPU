@@ -1,4 +1,3 @@
-#define ENABLE_CUDA
 #include "DatabaseNetCDFSPV.h"
 /*! \file DatabaseNetCDFSPV.cpp */
 

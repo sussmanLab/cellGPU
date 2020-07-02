@@ -1,4 +1,3 @@
-#define ENABLE_CUDA
 #include "DatabaseTextVoronoi.h"
 /*! \file DatabaseTextVoronoi.cpp */
 

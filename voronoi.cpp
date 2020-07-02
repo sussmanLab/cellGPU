@@ -3,7 +3,6 @@
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
-#define ENABLE_CUDA
 
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"

@@ -1,4 +1,3 @@
-#define ENABLE_CUDA
 #include "vectorValueDatabase.h"
 /*! \file vectorValueDatabase.cpp */
 

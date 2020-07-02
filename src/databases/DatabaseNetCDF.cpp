@@ -1,4 +1,3 @@
-#define ENABLE_CUDA
 #include "DatabaseNetCDF.h"
 /*! \file DatabaseNetCDF.cpp */
 

@@ -118,7 +118,7 @@ void vertexModelBase::setCellsVoronoiTesselation(bool spvInitialize)
         {
         EOMPtr spp = make_shared<selfPropelledParticleDynamics>(Ncells);
 
-        ForcePtr spv = make_shared<Voronoi2D>(Ncells,1.0,3.8,Reproducible);
+        ForcePtr spv = make_shared<VoronoiQuadraticEnergy>(Ncells,1.0,3.8,Reproducible);
         spv->setCellPreferencesUniform(1.0,3.8);
         spv->setv0Dr(.1,1.0);
 

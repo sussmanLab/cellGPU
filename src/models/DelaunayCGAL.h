@@ -1,30 +1,30 @@
 #ifndef DELAUNAYCGAL_H
 #define DELAUNAYCGAL_H
 
-#include "std_include.h"
 #include "vector_types.h"
+#include "vector_functions.h"
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Periodic_2_triangulation_filtered_traits_2.h>
+#include <CGAL/Periodic_2_Delaunay_triangulation_traits_2.h>
+#include <CGAL/Periodic_2_triangulation_face_base_2.h>
+#include <CGAL/Periodic_2_triangulation_vertex_base_2.h>
 #include <CGAL/Periodic_2_Delaunay_triangulation_2.h>
 #include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include <CGAL/Triangulation_2.h>
 #include <CGAL/Delaunay_triangulation_2.h>
-
 /*! \file DelaunayCGAL.h */
 //provides an interface to periodic and non-periodic 2D Delaunay triangulations via the CGAL library
 using namespace std;
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef CGAL::Periodic_2_triangulation_filtered_traits_2<K> GT;
+typedef CGAL::Periodic_2_Delaunay_triangulation_traits_2<K>             Gt;
 
-typedef CGAL::Periodic_2_triangulation_vertex_base_2<GT>    Vb;
-typedef CGAL::Triangulation_vertex_base_with_info_2<int, GT, Vb> VbInfo;
+typedef CGAL::Periodic_2_triangulation_vertex_base_2<Gt>                Vbb;
+typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned, Gt, Vbb>  Vb;
+typedef CGAL::Periodic_2_triangulation_face_base_2<Gt>                  Fb;
+typedef CGAL::Triangulation_data_structure_2<Vb, Fb>                    Tds;
+typedef CGAL::Periodic_2_Delaunay_triangulation_2<Gt, Tds>              PDT;
 
-typedef CGAL::Periodic_2_triangulation_face_base_2<GT>      Fb;
-
-typedef CGAL::Triangulation_data_structure_2<VbInfo, Fb>    Tds;
-typedef CGAL::Periodic_2_Delaunay_triangulation_2<GT, Tds>  PDT;
 
 
 typedef CGAL::Triangulation_vertex_base_with_info_2<int, K> NVb;
@@ -54,11 +54,11 @@ class DelaunayCGAL
         vector< vector<int> > allneighs; //!<The list of neighbors of every point in the periodic triangulation
 
         //! Given a vector of points (in the form of pair<PDT::Point p ,int index>), fill the allneighs structure with the neighbor list. Calls one of the routines below
-        void PeriodicTriangulation(vector<pair<Point,int> > &points,Dscalar bxx, Dscalar bxy, Dscalar byx, Dscalar byy);
+        void PeriodicTriangulation(vector<pair<Point,int> > &points,double bxx, double bxy, double byx, double byy);
         //! Given a vector of points (in the form of pair<PDT::Point p ,int index>), explicitly constructing the covering and using CGAL's non-periodic routines
-        void PeriodicTriangulationNineSheeted(vector<pair<Point,int> > &points,Dscalar bxx, Dscalar bxy, Dscalar byx, Dscalar byy);
+        void PeriodicTriangulationNineSheeted(vector<pair<Point,int> > &points,double bxx, double bxy, double byx, double byy);
         //! Given a vector of points (in the form of pair<PDT::Point p ,int index>), fill the allneighs structure with the neighbor list
-        void PeriodicTriangulationSquareDomain(vector<pair<Point,int> > &points,Dscalar boxX, Dscalar boxY);
+        void PeriodicTriangulationSquareDomain(vector<pair<Point,int> > &points,double boxX, double boxY);
         //! given a similar vector of points, calculate the neighbors of the first point in a non-periodic domain.
         bool LocalTriangulation(const vector<pair<LPoint,int> > &points, vector<int> &neighs);
     };

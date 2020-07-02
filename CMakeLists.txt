@@ -44,32 +44,18 @@ include_directories(
 add_subdirectory(src)
 
 set(myLibs
-    utility
-    utilityGPU
-    updaters
-    updatersGPU
-    simulation
     model
     modelGPU
+    updaters
+    updatersGPU
     analysis
-    #database
+    database
+    simulation
+    utility
+    utilityGPU
     )
 
-
-#inc ${CUDA_INCLUDE_DIRS} 
-#                    src
-                    #src/utility
-                   # src/analysis
-                    #src/models
-                    #src/forces
-                    #src/updaters
-                    #src/simulation
-                    #)
-
 link_directories(${CUDA_LIBRARY_DIRS})
-
-message("libraries = " "${myLibs}")
-message("cuda include = " "${CUDA_INCLUDE_DIRS}")
 
 set(SOURCES )
 set(HEADERS
@@ -81,8 +67,9 @@ foreach(ARG
         #Vertex
         )
 add_executable("${ARG}.out" "${ARG}.cpp" )
-target_link_libraries("${ARG}.out" ${myLibs} 
+target_link_libraries("${ARG}.out"
     ${CUDA_LIBRARIES}
     CGAL::CGAL
+    ${myLibs} 
     )
 endforeach()
