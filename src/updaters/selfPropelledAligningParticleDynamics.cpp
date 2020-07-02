@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "selfPropelledAligningParticleDynamics.h"
 #include "selfPropelledAligningParticleDynamics.cuh"
 /*! \file selfPropelledAligningParticleDynamics.cpp */

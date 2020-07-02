@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "brownianParticleDynamics.h"
 #include "brownianParticleDynamics.cuh"
 /*! \file brownianParticleDynamics.cpp */

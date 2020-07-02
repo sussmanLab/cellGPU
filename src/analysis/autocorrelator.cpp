@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "autocorrelator.h"
 /*! \file autocorrelator.cpp */
 

@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
 

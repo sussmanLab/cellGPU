@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "Simple2DCell.h"
 #include "Simple2DCell.cuh"
 #include "Simple2DActiveCell.h"

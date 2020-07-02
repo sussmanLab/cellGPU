@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "Simulation.h"
 /*! \file Simulation.cpp */
 

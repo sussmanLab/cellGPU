@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "selfPropelledCellVertexDynamics.h"
 #include "selfPropelledParticleDynamics.cuh"
 #include "selfPropelledCellVertexDynamics.cuh"

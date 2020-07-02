@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "NoseHooverChainNVT.h"
 #include "NoseHooverChainNVT.cuh"
 #include "utilities.cuh"

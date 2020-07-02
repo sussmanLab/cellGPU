@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "vertexQuadraticEnergyWithTension.h"
 #include "vertexQuadraticEnergyWithTension.cuh"
 /*! \file vertexQuadraticEnergyWithTension.cpp */

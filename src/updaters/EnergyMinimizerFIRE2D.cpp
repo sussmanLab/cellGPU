@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "EnergyMinimizerFIRE2D.h"
 #include "EnergyMinimizerFIRE2D.cuh"
 #include "utilities.cuh"

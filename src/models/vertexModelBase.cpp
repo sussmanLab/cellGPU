@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "vertexModelBase.h"
 #include "vertexModelBase.cuh"
 #include "voronoiQuadraticEnergy.h"

@@ -1,6 +1,3 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include "utilities.cuh"
 
 /*! \file utilities.cu

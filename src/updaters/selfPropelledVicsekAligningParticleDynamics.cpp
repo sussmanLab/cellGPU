@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "selfPropelledVicsekAligningParticleDynamics.h"
 #include "selfPropelledVicsekAligningParticleDynamics.cuh"
 /*! \file selfPropelledVicsekAligningParticleDynamics.cpp */

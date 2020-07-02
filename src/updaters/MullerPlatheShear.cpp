@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "MullerPlatheShear.h"
 /*! \file MullerPlatheShear.cpp */
 

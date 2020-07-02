@@ -1,6 +1,3 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include "EnergyMinimizerFIRE2D.cuh"
 
 /*! \file EnergyMinimizerFIRE2D.cu

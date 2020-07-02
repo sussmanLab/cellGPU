@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "voronoiQuadraticEnergy.h"
 #include "voronoiQuadraticEnergy.cuh"
 #include "cuda_profiler_api.h"

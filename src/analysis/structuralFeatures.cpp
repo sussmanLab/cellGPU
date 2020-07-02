@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "structuralFeatures.h"
 /*! \file structuralFeatures.cpp */
 

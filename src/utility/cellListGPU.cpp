@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "std_include.h"
 #include "gpubox.h"
 #include "gpuarray.h"

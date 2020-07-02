@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "selfPropelledParticleDynamics.h"
 #include "selfPropelledParticleDynamics.cuh"
 /*! \file selfPropelledParticleDynamics.cpp */

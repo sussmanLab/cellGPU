@@ -36,10 +36,8 @@ how the program is compiled
 
 using namespace std;
 
-#include <cuda_runtime.h>
 #include "vector_types.h"
 #include "vector_functions.h"
-#include "deprecated.h"
 
 #define PI 3.14159265358979323846
 

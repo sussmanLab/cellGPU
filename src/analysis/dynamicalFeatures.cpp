@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "dynamicalFeatures.h"
 #include "functions.h"
 /*! \file dynamicalFeatures.cpp */

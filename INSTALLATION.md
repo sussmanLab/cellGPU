@@ -35,6 +35,10 @@ This repository comes with sample main cpp files that can be compiled into execu
 and in examples/. Please see the [examples](@ref code) documentation for details on each.
 range of parameters.
 
+#Ubuntu installation
+
+Most requirements can be obtained by the usual apt-get method; netcdf is more finicky. Diogo Pinto has provided an install script, included in the cmakeHelp directory. Modify the directory paths to be more appropriate for your system, and use this if you prefer not to go through by hand the steps outlined on the netcdf page below
+
 # Windows Subsystem for Linux 2
 
 This code has been tested on WSL 2, running Ubuntu 18.04, gcc-6, g++-6, and using the CUDA 11.0 toolkit

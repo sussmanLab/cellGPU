@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "cuda_runtime.h"
 #include "voronoiModelBase.h"
 #include "voronoiModelBase.cuh"

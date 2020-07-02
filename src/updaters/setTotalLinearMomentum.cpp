@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "setTotalLinearMomentum.h"
 #include "setTotalLinearMomentum.cuh"
 #include "utilities.cuh"

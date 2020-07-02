@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "voronoiQuadraticEnergyWithTension.h"
 #include "voronoiQuadraticEnergyWithTension.cuh"
 /*! \file voronoiQuadraticEnergyWithTension.cpp */
