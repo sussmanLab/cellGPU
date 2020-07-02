@@ -18,7 +18,7 @@ CUDA-8.0. The code has been tested with CUDA versions as early as 6.5, and uses 
 The Voronoi model branch uses the CGAL library; this dependency can be removed, if necessary, by monkeying
 with the code to run "fullTriangulation()" rather than "globalTriangulationCGAL()" in the relevant
 spots. This is highly discouraged, and the code may be much less stable as a result. In any event,
-CGAL-4.9 was used, which in turn requires up-to-date versions of the gmp and mpfr libraries.
+CGAL-5.0.2 was used, which in turn requires up-to-date versions of the gmp and mpfr libraries.
 The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.
 
 The default database class uses the netCDF-4 C++  library (tested on version 4.1.3).The dependency on netCDF
@@ -34,6 +34,10 @@ Documentation is maintained via doxygen, but is not required for compilation of 
 This repository comes with sample main cpp files that can be compiled into executables in both the root directory
 and in examples/. Please see the [examples](@ref code) documentation for details on each.
 range of parameters.
+
+# Windows Subsystem for Linux 2
+
+This code has been tested on WSL 2, running Ubuntu 18.04, gcc-6, g++-6, and using the CUDA 11.0 toolkit
 
 # Mac OS X Instructions
 

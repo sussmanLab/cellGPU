@@ -2,6 +2,13 @@
 
 ### Changes in progress
 
+## version 1.0.0
+
+* cmake build system
+* update cgal to use header-only versions
+* Retire the use of Dscalars... everything is a double
+* assorted bug fixes and clean-ups
+
 ### version 0.8.0 
 
 * A directory to put common MD data analysis tools has been added

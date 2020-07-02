@@ -9,7 +9,7 @@ also allow the possibility of cell division and death.
 
 ## Directory structure of the project
 
-Both the "/inc" and "/src" directories have the subdirectories "analysis", "databases", "models",
+The "/src" directories have the subdirectories "analysis", "databases", "models",
 "updaters", and "utilities". Below is a very brief description of the kinds of things in each, more
 detailed descriptions of key classes are further down in this file.
 
