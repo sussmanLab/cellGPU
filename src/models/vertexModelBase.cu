@@ -24,7 +24,7 @@ __global__ void vm_geometry_kernel(
                                    double2*  __restrict__ d_AreaPerimeter,
                                    int N,
                                    Index2D n_idx,
-                                   gpubox Box
+                                   periodicBoundaries Box
                                     )
     {
     // read in the cell index that belongs to this thread
@@ -83,7 +83,7 @@ __global__ void vm_get_cell_positions_kernel(double2* d_cellPositions,
                                               int    * d_n,
                                               int N,
                                               Index2D n_idx,
-                                              gpubox Box)
+                                              periodicBoundaries Box)
     {
     // read in the cell index that belongs to this thread
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -117,7 +117,7 @@ __global__ void vm_simple_T1_test_kernel(double2* d_vertexPositions,
                                         int      *d_vertexEdgeFlips,
                                         int      *d_vertexCellNeighbors,
                                         int      *d_cellVertexNum,
-                                        gpubox   Box,
+                                        periodicBoundaries   Box,
                                         double  T1THRESHOLD,
                                         int      NvTimes3,
                                         int      vertexMax,
@@ -254,7 +254,7 @@ __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
                                       int      *d_cellVertices,
                                       int      *d_cellEdgeFlips,
                                       int4 *d_cellSets,
-                                      gpubox   Box,
+                                      periodicBoundaries   Box,
                                       Index2D  n_idx,
                                       int      NvTimes3)
     {
@@ -551,7 +551,7 @@ bool gpu_vm_geometry(
                     double2 *d_AreaPerimeter,
                     int      N,
                     Index2D  &n_idx,
-                    gpubox   &Box)
+                    periodicBoundaries   &Box)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
@@ -575,7 +575,7 @@ bool gpu_vm_test_edges_for_T1(
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
-                    gpubox   &Box,
+                    periodicBoundaries   &Box,
                     double  T1THRESHOLD,
                     int      Nvertices,
                     int      vertexMax,
@@ -657,7 +657,7 @@ bool gpu_vm_flip_edges(
                     int      *d_cellVertices,
                     int      *d_cellEdgeFlips,
                     int4     *d_cellSets,
-                    gpubox   &Box,
+                    periodicBoundaries   &Box,
                     Index2D  &n_idx,
                     int      Nvertices,
                     int      Ncells)
@@ -688,7 +688,7 @@ bool gpu_vm_get_cell_positions(
                     int      *d_cellVertices,
                     int      N,
                     Index2D  &n_idx,
-                    gpubox   &Box)
+                    periodicBoundaries   &Box)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;

@@ -2,7 +2,7 @@
 #include "functions.h"
 /*! \file dynamicalFeatures.cpp */
 
-dynamicalFeatures::dynamicalFeatures(GPUArray<double2> &initialPos, BoxPtr _bx, double fractionAnalyzed)
+dynamicalFeatures::dynamicalFeatures(GPUArray<double2> &initialPos, PeriodicBoxPtr _bx, double fractionAnalyzed)
     {
     Box = _bx;
     copyGPUArrayData(initialPos,iPos);

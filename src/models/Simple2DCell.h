@@ -3,7 +3,7 @@
 
 #include "Simple2DModel.h"
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "HilbertSort.h"
 #include "noiseSource.h"
 #include "functions.h"
@@ -95,11 +95,11 @@ class Simple2DCell : public Simple2DModel
         //!An uncomfortable function to allow the user to set vertex topology "by hand"
         void setVertexTopologyFromCells(vector< vector<int> > cellVertexIndices);
 
-        //!return the gpubox
-        virtual gpubox & returnBox(){return *(Box);};
+        //!return the periodicBoundaries
+        virtual periodicBoundaries & returnBox(){return *(Box);};
 
         //!This can be used, but should not normally be. This re-assigns the pointer
-        void setBox(BoxPtr _box){Box = _box;};
+        void setBox(PeriodicBoxPtr _box){Box = _box;};
 
         //!return the base "itt" re-indexing vector
         virtual vector<int> & returnItt(){return itt;};
@@ -249,7 +249,7 @@ class Simple2DCell : public Simple2DModel
         vector<int> tagToIdxVertex;
 
         //!the box defining the periodic domain
-        BoxPtr Box;
+        PeriodicBoxPtr Box;
 
         //! Count the number of times "performTimeStep" has been called
         int Timestep;

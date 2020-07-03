@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 #include "std_include.h"
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*!
  \file voronoiModelBase.cuh
@@ -28,7 +28,7 @@ bool gpu_test_circumcenters(
                             int xsize,
                             int ysize,
                             double boxsize,
-                            gpubox &Box,
+                            periodicBoundaries &Box,
                             Index2D &ci,
                             Index2D &cli,
                             int *fail
@@ -44,7 +44,7 @@ bool gpu_compute_voronoi_geometry(
                     double4 *d_vln,
                     int    N,
                     Index2D &n_idx,
-                    gpubox &Box
+                    periodicBoundaries &Box
                     );
 
 /** @} */ //end of group declaration

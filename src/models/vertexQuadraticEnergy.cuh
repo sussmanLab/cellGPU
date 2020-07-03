@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 #include "functions.h"
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*!
  \file

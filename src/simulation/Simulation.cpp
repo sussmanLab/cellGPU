@@ -7,7 +7,7 @@ Initialize all of the shared points, set default values of things
 Simulation::Simulation(): integerTimestep(0), Time(0.),integrationTimestep(0.01),spatialSortThisStep(false),
 sortPeriod(-1)
     {
-    Box = make_shared<gpubox>();
+    Box = make_shared<periodicBoundaries>();
     };
 
 /*!
@@ -23,13 +23,13 @@ void Simulation::addUpdater(UpdaterPtr _upd, ForcePtr _config)
 /*!
 Set a new Box for the simulation...This is the function that should be called to propagate a change
 in the box dimensions throughout the simulation...By this time the Box pointed to in the Simulation
-is the same one pointed to by the BoxPtrs of Simple2DCell (and, in the Voronoi models, by DelaunayLoc
+is the same one pointed to by the PeriodicBoxPtrs of Simple2DCell (and, in the Voronoi models, by DelaunayLoc
 and cellListGPU), so when we modify it the changes will run through the rest of the simulation
 components
 */
-void Simulation::setBox(BoxPtr _box)
+void Simulation::setBox(PeriodicBoxPtr _box)
     {
-        //here, instead, get the elements of the BoxPtr and set the contents of Box according to _box's elements... possibly propagate this change throughout
+        //here, instead, get the elements of the PeriodicBoxPtr and set the contents of Box according to _box's elements... possibly propagate this change throughout
     double b11,b12,b21,b22;
     _box->getBoxDims(b11,b12,b21,b22);
     if (_box->isBoxSquare())

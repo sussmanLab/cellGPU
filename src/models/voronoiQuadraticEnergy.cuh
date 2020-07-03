@@ -4,7 +4,7 @@
 #include "std_include.h"
 #include <cuda_runtime.h>
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*!
  \file
@@ -31,7 +31,7 @@ bool gpu_force_sets(
                     double  KP,
                     int    NeighIdxNum,
                     Index2D &n_idx,
-                    gpubox &Box
+                    periodicBoundaries &Box
                     );
 //!Add up the force contributions to get the net force on each particle
 bool gpu_sum_force_sets(

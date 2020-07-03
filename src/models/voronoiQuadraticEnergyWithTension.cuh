@@ -4,7 +4,7 @@
 #include "std_include.h"
 #include <cuda_runtime.h>
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "voronoiQuadraticEnergy.cuh"
 
 /*!
@@ -35,7 +35,7 @@ bool gpu_VoronoiTension_force_sets(
                     double  KP,
                     int    NeighIdxNum,
                     Index2D &n_idx,
-                    gpubox &Box
+                    periodicBoundaries &Box
                     );
 
 //!Compute the contribution to the net force on vertex i from each of i's voronoi vertices
@@ -55,7 +55,7 @@ bool gpu_VoronoiSimpleTension_force_sets(
                     double  gamma,
                     int    NeighIdxNum,
                     Index2D &n_idx,
-                    gpubox &Box
+                    periodicBoundaries &Box
                     );
 
 /** @} */ //end of group declaration

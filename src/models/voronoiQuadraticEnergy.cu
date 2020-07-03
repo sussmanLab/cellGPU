@@ -4,7 +4,7 @@
 #include "voronoiQuadraticEnergy.cuh"
 
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "functions.h"
 #include <iostream>
 #include <stdio.h>
@@ -106,7 +106,7 @@ __global__ void gpu_force_sets_kernel(const double2* __restrict__ d_points,
                                       double   KP,
                                       int     computations,
                                       Index2D n_idx,
-                                      gpubox Box
+                                      periodicBoundaries Box
                                      )
     {
     unsigned int tidx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -249,7 +249,7 @@ bool gpu_force_sets(double2 *d_points,
                     double  KP,
                     int    NeighIdxNum,
                     Index2D &n_idx,
-                    gpubox &Box
+                    periodicBoundaries &Box
                     )
     {
     unsigned int block_size = 128;

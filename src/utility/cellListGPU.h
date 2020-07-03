@@ -2,7 +2,7 @@
 #define GPUCELLLIST
 
 #include "std_include.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "gpuarray.h"
 #include "indexer.h"
 
@@ -18,20 +18,20 @@ class cellListGPU
     {
     public:
         //!Blank constructor
-        cellListGPU(){Nmax=0;Box = make_shared<gpubox>();};
+        cellListGPU(){Nmax=0;Box = make_shared<periodicBoundaries>();};
         //!construct with a given set of points
         cellListGPU(vector<double> &points);
         //! constructor with points, a box, and a size for the underlying grid
-        cellListGPU(double a, vector<double> &points, gpubox &bx);
+        cellListGPU(double a, vector<double> &points, periodicBoundaries &bx);
 
         //!Set the object's points to a given vector
         void setParticles(const vector<double> &points);
         //!Set the object's points to a given vector of double2s
         void setParticles(const vector<double2> &points);
         //!Set the objects box object
-        void setBox(gpubox &bx);
-        //!Set the BoxPtr to point to an existing one
-        void setBox(BoxPtr bx){Box=bx;};
+        void setBox(periodicBoundaries &bx);
+        //!Set the PeriodicBoxPtr to point to an existing one
+        void setBox(PeriodicBoxPtr bx){Box=bx;};
         //!Set the number of particles to put in the buckets
         void setNp(int nn);
 
@@ -117,7 +117,7 @@ class cellListGPU
         //! the maximum number of particles found in any bin
         int Nmax;
         //!The Box used to compute periodic distances
-        BoxPtr Box;
+        PeriodicBoxPtr Box;
     };
 
 #endif

@@ -3,7 +3,7 @@
 
 #include "std_include.h"
 #include <cuda_runtime.h>
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*!
  \file EnergyMinimizerFIRE2D.cuh

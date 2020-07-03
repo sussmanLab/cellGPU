@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
 #include "cellListGPU.cuh"
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include <iostream>
 #include <stdio.h>
 /*! \file cellListGPU.cu */
@@ -22,7 +22,7 @@ __global__ void gpu_compute_cell_list_kernel(double2 *d_pt,
                                               int xsize,
                                               int ysize,
                                               double boxsize,
-                                              gpubox Box,
+                                              periodicBoundaries Box,
                                               Index2D ci,
                                               Index2D cli,
                                               int *d_assist
@@ -130,7 +130,7 @@ bool gpu_compute_cell_list(double2 *d_pt,
                                   int xsize,
                                   int ysize,
                                   double boxsize,
-                                  gpubox &Box,
+                                  periodicBoundaries &Box,
                                   Index2D &ci,
                                   Index2D &cli,
                                   int *d_assist

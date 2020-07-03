@@ -3,7 +3,7 @@
 
 #include "Delaunay1.h"
 #include "gpuarray.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "cellListGPU.h"
 using namespace std;
 
@@ -24,18 +24,18 @@ using namespace std;
 class DelaunayLoc
     {
     public:
-        DelaunayLoc(){triangulated=false;cellsize=2.0;Box = make_shared<gpubox>();};
+        DelaunayLoc(){triangulated=false;cellsize=2.0;Box = make_shared<periodicBoundaries>();};
         //!constructor via a vector of double2 objects
-        DelaunayLoc(std::vector<double2> &points, gpubox &bx){setPoints(points);setBox(bx);};
+        DelaunayLoc(std::vector<double2> &points, periodicBoundaries &bx){setPoints(points);setBox(bx);};
         //!constructor via a vector of scalars, {x1,y1,x2,y2,...}
-        DelaunayLoc(std::vector<double> &points,gpubox &bx){setPoints(points);setBox(bx);};
+        DelaunayLoc(std::vector<double> &points,periodicBoundaries &bx){setPoints(points);setBox(bx);};
 
         void setPoints(ArrayHandle<double2> &points, int N); //!<Set points by passing an ArrayHandle
         void setPoints(GPUArray<double2> &points); //!<Set points via a GPUarray of double2's
         void setPoints(std::vector<double2> &points); //!<Set points via a vector of double2's
         void setPoints(std::vector<double> &points);   //!<Set the points via a vector of double's
-        void setBox(gpubox &bx);                        //!<Set the box
-        void setBox(BoxPtr bx){Box=bx;};                        //!<Set the box
+        void setBox(periodicBoundaries &bx);                        //!<Set the box
+        void setBox(PeriodicBoxPtr bx){Box=bx;};                        //!<Set the box
         void setCellSize(double cs){cellsize=cs;};     //!<Set the cell size of the underlying grid
 
         void initialize(double csize);                 //!<Initialize various things, based on a given cell size for the underlying grid
@@ -60,8 +60,8 @@ class DelaunayLoc
         bool testPointTriangulation(int i, vector<int> &neighbors, bool timing=false);
         //!Given a vector of circumcircle indices, label particles that are part of non-empty circumcircles
         void testTriangulation(vector< int > &ccs, vector<bool> &points, bool timing=false);
-        //!return the gpubox
-        virtual gpubox & returnBox(){return *(Box);};
+        //!return the periodicBoundaries
+        virtual periodicBoundaries & returnBox(){return *(Box);};
 
         //!A public variable that stores the triangulation as sets of (i,j,k) vertices when this class is used to generate the entire triangulation of the periodic point set.
         triangulation DT;
@@ -84,7 +84,7 @@ class DelaunayLoc
         bool triangulated;            //!<has a triangulation been performed?
 
         double cellsize;               //!<Sets how fine a grid to use in the cell list
-        BoxPtr Box;             //!< A box to calculate relative distances in a periodic domain.
+        PeriodicBoxPtr Box;             //!< A box to calculate relative distances in a periodic domain.
 
         vector<int> DTringIdxCGAL; //!<A vector of Delaunay neighbor indicies that can be repeatedly re-written
         vector<double2> DTringCGAL;//!<A vector of Delaunay neighbors that can be repeatedly re-written

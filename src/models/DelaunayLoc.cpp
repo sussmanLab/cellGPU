@@ -71,11 +71,11 @@ void DelaunayLoc::setPoints(vector<double2> &points)
     };
 
 /*!
-\param bx a gpubox that the DelaunayLoc object should use in internal computations
+\param bx a periodicBoundaries that the DelaunayLoc object should use in internal computations
 */
-void DelaunayLoc::setBox(gpubox &bx)
+void DelaunayLoc::setBox(periodicBoundaries &bx)
     {
-    Box = make_shared<gpubox>();
+    Box = make_shared<periodicBoundaries>();
     double b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
     if (bx.isBoxSquare())
@@ -689,7 +689,7 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
     cout << "Timing DelaunayLoc routine..." << endl;
     nV = numpts;
     double boxa = sqrt(numpts)+1.0;
-    gpubox Bx(boxa,boxa);
+    periodicBoundaries Bx(boxa,boxa);
     setBox(Bx);
     vector<double> ps2(2*numpts);
     vector<double> ps3(2*numpts);

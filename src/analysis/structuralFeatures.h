@@ -3,7 +3,7 @@
 
 #include "std_include.h"
 #include "functions.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*! \file structuralFeatures.h */
 
@@ -12,7 +12,7 @@ class structuralFeatures
     {
     public:
         //!The constructor takes in a defining set of boundary conditions
-        structuralFeatures(BoxPtr _bx){Box = _bx;};
+        structuralFeatures(PeriodicBoxPtr _bx){Box = _bx;};
 
         //!Compute the (isotropic) radial distribution function of the point pattern
         void computeRadialDistributionFunction(vector<double2> &points,vector<double2> &GofR, double binWidth = 0.1);
@@ -21,6 +21,6 @@ class structuralFeatures
         void computeStructureFactor(vector<double2> &points, vector<double2> &SofK, double intKMax = 1.0,double dk = 0.5);
     protected:
         //!the box defining the periodic domain
-        BoxPtr Box;
+        PeriodicBoxPtr Box;
     };
 #endif

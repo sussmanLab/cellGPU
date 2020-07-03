@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 #include "functions.h"
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*!
  \file
@@ -26,7 +26,7 @@ bool gpu_vm_geometry(
                     double2 *d_AreaPeri,
                     int      N,
                     Index2D  &n_idx,
-                    gpubox   &Box);
+                    periodicBoundaries   &Box);
 
 bool gpu_vm_get_cell_positions(
                     double2 *d_cellPositions,
@@ -35,7 +35,7 @@ bool gpu_vm_get_cell_positions(
                     int      *d_cellVertices,
                     int      N,
                     Index2D  &n_idx,
-                    gpubox   &Box);
+                    periodicBoundaries   &Box);
 
 bool gpu_vm_test_edges_for_T1(
                     double2 *d_vertexPositions,
@@ -44,7 +44,7 @@ bool gpu_vm_test_edges_for_T1(
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
-                    gpubox   &Box,
+                    periodicBoundaries   &Box,
                     double  T1THRESHOLD,
                     int      Nvertices,
                     int      vertexMax,
@@ -73,7 +73,7 @@ bool gpu_vm_flip_edges(
                     int      *d_cellVertices,
                     int      *d_edgeFlips,
                     int4     *d_cellSets,
-                    gpubox   &Box,
+                    periodicBoundaries   &Box,
                     Index2D  &n_idx,
                     int      Nvertices,
                     int      Ncells);

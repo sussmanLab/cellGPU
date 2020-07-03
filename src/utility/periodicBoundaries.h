@@ -1,5 +1,5 @@
-#ifndef GPUBOX
-#define GPUBOX
+#ifndef PERIODICBOX_H
+#define PERIODICBOX_H
 
 #include "std_include.h"
 
@@ -9,27 +9,27 @@
 #define HOSTDEVICE inline __attribute__((always_inline))
 #endif
 
-/*! \file gpubox.h */
+/*! \file periodicBoundaries.h */
 //!A simple box defining a 2D periodic domain
 /*!
-gpubox  periodic boundary conditions in 2D, computing minimum distances between
+periodicBoundaries  periodic boundary conditions in 2D, computing minimum distances between
 periodic images, displacing particles and putting them back in the central unit cell, etc.
 The workhorse of this class is calling
 Box.minDist(vecA,vecB,&disp),
 which computes the displacement between vecA and the closest periodic image of vecB and
 stores the result in disp. Also
 Box.putInBoxReal(&point), which will take the point and put it back in the primary unit cell.
-Please note that while the gpubox class can handle generic 2D periodic domains, many of the other classes
+Please note that while the periodicBoundaries class can handle generic 2D periodic domains, many of the other classes
 that interface with it do not yet have this functionality implemented.
 */
-struct gpubox
+struct periodicBoundaries
     {
     public:
-        HOSTDEVICE gpubox(){isSquare = false;};
+        HOSTDEVICE periodicBoundaries(){isSquare = false;};
         //!Construct a rectangular box containing the unit cell ((0,0),(x,0),(x,y),(0,y))
-        HOSTDEVICE gpubox(double x, double y){setSquare(x,y);};
+        HOSTDEVICE periodicBoundaries(double x, double y){setSquare(x,y);};
         //!Construct a non-rectangular box
-        HOSTDEVICE gpubox(double a, double b, double c, double d){setGeneral(a,b,c,d);};
+        HOSTDEVICE periodicBoundaries(double a, double b, double c, double d){setGeneral(a,b,c,d);};
         //!Get the dimensions of the box
         HOSTDEVICE void getBoxDims(double &xx, double &xy, double &yx, double &yy)
             {xx=x11;xy=x12;yx=x21;yy=x22;};
@@ -55,7 +55,7 @@ struct gpubox
         //!Move p1 by the amount disp, then put it in the box
         HOSTDEVICE void move(double2 &p1, const double2 &disp);
 
-        HOSTDEVICE void operator=(gpubox &other)
+        HOSTDEVICE void operator=(periodicBoundaries &other)
             {
             double b11,b12,b21,b22;
             other.getBoxDims(b11,b12,b21,b22);
@@ -72,7 +72,7 @@ struct gpubox
         HOSTDEVICE void putInBox(double2 &vp);
     };
 
-void gpubox::setSquare(double x, double y)
+void periodicBoundaries::setSquare(double x, double y)
     {
     x11=x;x22=y;
     x12=0.0;x21=0.0;
@@ -83,7 +83,7 @@ void gpubox::setSquare(double x, double y)
     halfx22 = x22*0.5;
     };
 
-void gpubox::setGeneral(double a, double b,double c, double d)
+void periodicBoundaries::setGeneral(double a, double b,double c, double d)
     {
     x11=a;x12=b;x21=c;x22=d;
     xi11 = 1./x11;xi22=1./x22;
@@ -100,7 +100,7 @@ void gpubox::setGeneral(double a, double b,double c, double d)
     isSquare = false;
     };
 
-void gpubox::Trans(const double2 &p1, double2 &pans)
+void periodicBoundaries::Trans(const double2 &p1, double2 &pans)
     {
     if(isSquare)
         {
@@ -114,7 +114,7 @@ void gpubox::Trans(const double2 &p1, double2 &pans)
         };
     };
 
-void gpubox::invTrans(const double2 p1, double2 &pans)
+void periodicBoundaries::invTrans(const double2 p1, double2 &pans)
     {
     if(isSquare)
         {
@@ -128,7 +128,7 @@ void gpubox::invTrans(const double2 p1, double2 &pans)
         };
     };
 
-void gpubox::putInBoxReal(double2 &p1)
+void periodicBoundaries::putInBoxReal(double2 &p1)
     {//assume real space entries. Puts it back in box
     double2 vP;
     invTrans(p1,vP);
@@ -136,7 +136,7 @@ void gpubox::putInBoxReal(double2 &p1)
     Trans(vP,p1);
     };
 
-void gpubox::putInBox(double2 &vp)
+void periodicBoundaries::putInBox(double2 &vp)
     {//acts on points in the virtual space
     while(vp.x < 0) vp.x +=1.0;
     while(vp.y < 0) vp.y +=1.0;
@@ -151,7 +151,7 @@ void gpubox::putInBox(double2 &vp)
         };
     };
 
-void gpubox::minDist(const double2 &p1, const double2 &p2, double2 &pans)
+void periodicBoundaries::minDist(const double2 &p1, const double2 &p2, double2 &pans)
     {
     if (isSquare)
         {
@@ -178,7 +178,7 @@ void gpubox::minDist(const double2 &p1, const double2 &p2, double2 &pans)
         };
     };
 
-void gpubox::move(double2 &p1, const double2 &disp)
+void periodicBoundaries::move(double2 &p1, const double2 &disp)
     {//assume real space entries. Moves p1 by disp, and puts it back in box
     double2 vP;
     p1.x = p1.x+disp.x;
@@ -188,7 +188,7 @@ void gpubox::move(double2 &p1, const double2 &disp)
     Trans(vP,p1);
     };
 
-typedef shared_ptr<gpubox> BoxPtr;
+typedef shared_ptr<periodicBoundaries> PeriodicBoxPtr;
 
 #undef HOSTDEVICE
 #endif

@@ -12,7 +12,7 @@
 #include "DatabaseNetCDFAVM.h"
 #include "DatabaseNetCDFSPV.h"
 #include "DatabaseTextVoronoi.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*!
 This file demonstrates simulations in the vertex or voronoi models in which a cell divides.
@@ -158,7 +158,7 @@ int main(int argc, char*argv[])
                 printf("Ncells = %i\t <A> = %f \t p0 = %f\n",Ncells,meanA,scaledP0);
 /*
  //An alternative would be to use something like the following to rescale the box size to keep <A> = 1, and not rescale the preferred perimeter
-BoxPtr newbox = make_shared<gpubox>(sqrt(Ncells),sqrt(Ncells));
+PeriodicBoxPtr newbox = make_shared<periodicBoundaries>(sqrt(Ncells),sqrt(Ncells));
 sim->setBox(newbox);
 */
                 };

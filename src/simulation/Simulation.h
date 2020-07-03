@@ -5,7 +5,7 @@
 #include "Simple2DCell.h"
 #include "simpleEquationOfMotion.h"
 #include "updater.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "cellListGPU.h"
 
 /*! \file Simulation.h */
@@ -47,9 +47,9 @@ class Simulation : public enable_shared_from_this<Simulation>
         void clearUpdaters(){updaters.clear();};
 
         //!The domain of the simulation
-        BoxPtr Box;
+        PeriodicBoxPtr Box;
         //!This changes the contents of the Box pointed to by Box to match that of _box
-        void setBox(BoxPtr _box);
+        void setBox(PeriodicBoxPtr _box);
 
         //!A neighbor list assisting the simulation
         cellListGPU *cellList;;

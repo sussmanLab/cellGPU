@@ -11,7 +11,7 @@
 #include "DatabaseNetCDFAVM.h"
 #include "DatabaseNetCDFSPV.h"
 #include "DatabaseTextVoronoi.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*!
 This file demonstrates simulations in the vertex or voronoi models in which a cell dies.
@@ -133,7 +133,7 @@ int main(int argc, char*argv[])
                 spv->cellDeath(deadIdx);
                 Ncells = spv->getNumberOfDegreesOfFreedom();
                 //rescale the box size to sqrt(N) by sqrt(N)
-                BoxPtr newbox = make_shared<gpubox>(sqrt(Ncells),sqrt(Ncells));
+                PeriodicBoxPtr newbox = make_shared<periodicBoundaries>(sqrt(Ncells),sqrt(Ncells));
                 sim->setBox(newbox);
                 };
             if(program_switch == 2 && timestep%((int)(1/dt))==0)

@@ -1,5 +1,5 @@
 #include "std_include.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "gpuarray.h"
 #include "indexer.h"
 #include "cuda_runtime.h"
@@ -14,11 +14,11 @@
 \param points the positions of points to populate the cell list with
 \param bx the period box for the system
  */
-cellListGPU::cellListGPU(double a, vector<double> &points,gpubox &bx)
+cellListGPU::cellListGPU(double a, vector<double> &points,periodicBoundaries &bx)
     {
     Nmax = 0;
     setParticles(points);
-    Box = make_shared<gpubox>();
+    Box = make_shared<periodicBoundaries>();
     setGridSize(a);
     }
 
@@ -28,7 +28,7 @@ cellListGPU::cellListGPU(double a, vector<double> &points,gpubox &bx)
 cellListGPU::cellListGPU(vector<double> &points)
     {
     Nmax = 0;
-    Box = make_shared<gpubox>();
+    Box = make_shared<periodicBoundaries>();
     setParticles(points);
     }
 
@@ -80,7 +80,7 @@ void cellListGPU::setParticles(const vector<double2> &points)
 /*!
 \param bx the box defining the periodic unit cell
  */
-void cellListGPU::setBox(gpubox &bx)
+void cellListGPU::setBox(periodicBoundaries &bx)
     {
     double b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);

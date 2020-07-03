@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
 #include "cellListGPU.cuh"
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "functions.h"
 #include <iostream>
 #include <stdio.h>
@@ -27,7 +27,7 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                                               int xsize,
                                               int ysize,
                                               double boxsize,
-                                              gpubox Box,
+                                              periodicBoundaries Box,
                                               Index2D ci,
                                               Index2D cli,
                                               int *anyFail
@@ -117,7 +117,7 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const double2* __restrict__ 
                                           double4* __restrict__ d_vln,
                                           int N,
                                           Index2D n_idx,
-                                          gpubox Box
+                                          periodicBoundaries Box
                                         )
     {
     // read in the particle that belongs to this thread
@@ -210,7 +210,7 @@ bool gpu_test_circumcenters(int *d_repair,
                             int xsize,
                             int ysize,
                             double boxsize,
-                            gpubox &Box,
+                            periodicBoundaries &Box,
                             Index2D &ci,
                             Index2D &cli,
                             int *fail)
@@ -248,7 +248,7 @@ bool gpu_compute_voronoi_geometry(double2 *d_points,
                         double4 *d_vln,
                         int      N,
                         Index2D  &n_idx,
-                        gpubox &Box
+                        periodicBoundaries &Box
                         )
     {
     unsigned int block_size = 128;

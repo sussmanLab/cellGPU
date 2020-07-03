@@ -28,7 +28,7 @@ struct HilbertSorter
     {
     public:
         //!The only constructor requires a box
-        HOSTDEVICE HilbertSorter(gpubox Box)
+        HOSTDEVICE HilbertSorter(periodicBoundaries Box)
             {
             double x11,x12,x21,x22;
             Box.getBoxDims(x11,x12,x21,x22);
@@ -44,7 +44,7 @@ struct HilbertSorter
             setOrder((int)min(30,mm+4));
             }
 
-        gpubox box; //!<A box to put the particles in the unit square for easy sorting
+        periodicBoundaries box; //!<A box to put the particles in the unit square for easy sorting
         int M;      //!<The integer order of the Hilbert curve to use
         //some functions to help out...
 

@@ -9,7 +9,7 @@ Simple2DCell::Simple2DCell() :
     Ncells(0), Nvertices(0),GPUcompute(true),Energy(-1.0)
     {
     forcesUpToDate = false;
-    Box = make_shared<gpubox>();
+    Box = make_shared<periodicBoundaries>();
     };
 
 /*!

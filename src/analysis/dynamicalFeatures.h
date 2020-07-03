@@ -3,7 +3,7 @@
 
 #include "std_include.h"
 #include "functions.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*! \file dynamicalFeatures.h */
 
@@ -12,7 +12,7 @@ class dynamicalFeatures
     {
     public:
         //!The constructor takes in a defining set of boundary conditions
-        dynamicalFeatures(GPUArray<double2> &initialPos, BoxPtr _bx, double fractionAnalyzed = 1.0);
+        dynamicalFeatures(GPUArray<double2> &initialPos, PeriodicBoxPtr _bx, double fractionAnalyzed = 1.0);
 
         //!Compute the mean squared displacement of the passed vector from the initial positions
         double computeMSD(GPUArray<double2> &currentPos);
@@ -21,7 +21,7 @@ class dynamicalFeatures
         double computeOverlapFunction(GPUArray<double2> &currentPos, double cutoff = 0.5);
     protected:
         //!the box defining the periodic domain
-        BoxPtr Box;
+        PeriodicBoxPtr Box;
         //!the initial positions
         vector<double2> iPos;
         //!the number of double2's

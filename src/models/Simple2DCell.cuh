@@ -3,7 +3,7 @@
 
 #include "std_include.h"
 #include <cuda_runtime.h>
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*!
  \file Simple2DCell.cuh
@@ -22,7 +22,7 @@ A file providing an interface to the relevant cuda calls for the Simple2DCell cl
 bool gpu_move_degrees_of_freedom(double2 *d_points,
                     double2 *d_disp,
                     int N,
-                    gpubox &Box
+                    periodicBoundaries &Box
                     );
 
 //!The same as the above, but scale the displacements by a scalar (i.e., x[i] += scale*disp[i]
@@ -30,7 +30,7 @@ bool gpu_move_degrees_of_freedom(double2 *d_points,
                     double2 *d_disp,
                     double  scale,
                     int N,
-                    gpubox &Box
+                    periodicBoundaries &Box
                     );
 
 //!A utility function; set all copmonents of an integer array to value

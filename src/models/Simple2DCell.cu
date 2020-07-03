@@ -18,7 +18,7 @@
 __global__ void gpu_move_degrees_of_freedom_kernel(double2 *d_points,
                                           double2 *d_disp,
                                           int N,
-                                          gpubox Box
+                                          periodicBoundaries Box
                                          )
     {
     // read in the particle that belongs to this thread
@@ -41,7 +41,7 @@ __global__ void gpu_move_degrees_of_freedom_kernel(double2 *d_points,
                                           double2 *d_disp,
                                           double scale,
                                           int N,
-                                          gpubox Box
+                                          periodicBoundaries Box
                                          )
     {
     // read in the particle that belongs to this thread
@@ -72,13 +72,13 @@ __global__ void gpu_set_integer_array_kernel(int *d_array,
 \param d_points double2 array of locations
 \param d_disp   double2 array of displacements
 \param N        The number of degrees of freedom to move
-\param Box      The gpubox in which the new positions must reside
+\param Box      The periodicBoundaries in which the new positions must reside
 */
 bool gpu_move_degrees_of_freedom(double2 *d_points,
                         double2 *d_disp,
                         double  scale,
                         int N,
-                        gpubox &Box
+                        periodicBoundaries &Box
                         )
     {
     unsigned int block_size = 128;
@@ -101,12 +101,12 @@ bool gpu_move_degrees_of_freedom(double2 *d_points,
 \param d_points double2 array of locations
 \param d_disp   double2 array of displacements
 \param N        The number of degrees of freedom to move
-\param Box      The gpubox in which the new positions must reside
+\param Box      The periodicBoundaries in which the new positions must reside
 */
 bool gpu_move_degrees_of_freedom(double2 *d_points,
                         double2 *d_disp,
                         int N,
-                        gpubox &Box
+                        periodicBoundaries &Box
                         )
     {
     unsigned int block_size = 128;
