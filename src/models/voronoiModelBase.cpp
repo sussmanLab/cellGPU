@@ -52,7 +52,7 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
 
     //make a full triangulation
     completeRetriangulationPerformed = 1;
-    cellNeighborNum.resize(Ncells);
+    neighborNum.resize(Ncells);
     globalTriangulationCGAL();
     resetLists();
     allDelSets();
@@ -209,7 +209,7 @@ void voronoiModelBase::fullTriangulation(bool verbose)
 
     //get neighbors of each cell in CW order
 
-    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
     vector< vector<int> > allneighs(Ncells);
     int oldNmax = neighMax;
@@ -233,7 +233,7 @@ void voronoiModelBase::fullTriangulation(bool verbose)
     n_idx = Index2D(neighMax,Ncells);
     if(neighMax != oldNmax)
         {
-        cellNeighbors.resize(neighMax*Ncells);
+        neighbors.resize(neighMax*Ncells);
         neighMaxChange = true;
         };
     updateNeighIdxs();
@@ -241,7 +241,7 @@ void voronoiModelBase::fullTriangulation(bool verbose)
 
     //store data in gpuarray
     {
-    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> ns(neighbors,access_location::host,access_mode::overwrite);
     for (int nn = 0; nn < Ncells; ++nn)
         {
         int imax = neighnum.data[nn];
@@ -291,7 +291,7 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
     Box->getBoxDims(b1,b2,b3,b4);
     dcgal.PeriodicTriangulation(Psnew,b1,b2,b3,b4);
 
-    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
 
     int oldNmax = neighMax;
@@ -310,16 +310,16 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
         neighMax = nmax+1;
 
     n_idx = Index2D(neighMax,Ncells);
-    if(cellNeighbors.getNumElements() != Ncells*neighMax)
+    if(neighbors.getNumElements() != Ncells*neighMax)
         {
-        cellNeighbors.resize(neighMax*Ncells);
+        neighbors.resize(neighMax*Ncells);
         neighMaxChange = true;
         };
     updateNeighIdxs();
 
     //store data in gpuarrays
     {
-    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::overwrite);
+    ArrayHandle<int> ns(neighbors,access_location::host,access_mode::overwrite);
 
     for (int nn = 0; nn < Ncells; ++nn)
         {
@@ -354,7 +354,7 @@ threads in the force set computation function
 */
 void voronoiModelBase::updateNeighIdxs()
     {
-    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::read);
     ArrayHandle<int2> h_nidx(NeighIdxs,access_location::host,access_mode::overwrite);
     int idx = 0;
     for (int ii = 0; ii < Ncells; ++ii)
@@ -377,8 +377,8 @@ allows for fast testing of what points need to be retriangulated.
 */
 void voronoiModelBase::getCircumcenterIndices(bool secondtime, bool verbose)
     {
-    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> ns(neighbors,access_location::host,access_mode::read);
     ArrayHandle<int3> h_ccs(circumcenters,access_location::host,access_mode::overwrite);
 
     int totaln = 0;
@@ -430,7 +430,7 @@ void voronoiModelBase::repairTriangulation(vector<int> &fixlist)
     repPerFrame += ((double) fixes/(double)Ncells);
     resetDelLocPoints();
 
-    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::readwrite);
 
     //First, retriangulate the target points, and check if the neighbor list needs to be reset
     //the structure you want is vector<vector<int> > allneighs(fixes), but below a flattened version is implemented
@@ -482,7 +482,7 @@ void voronoiModelBase::repairTriangulation(vector<int> &fixlist)
         };
 
     //now, edit the right entries of the neighborlist and neighbor size list
-    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> ns(neighbors,access_location::host,access_mode::readwrite);
     for (int nn = 0; nn < fixes; ++nn)
         {
         int pidx = fixlist[nn];
@@ -565,8 +565,8 @@ void voronoiModelBase::testTriangulationCPU()
         resetDelLocPoints();
 
         ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
-        ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::readwrite);
-        ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> ns(neighbors,access_location::host,access_mode::readwrite);
         h_actf.data[0]=0;
         for (int nn = 0; nn < Ncells; ++nn)
             {
@@ -625,8 +625,8 @@ void voronoiModelBase::testAndRepairTriangulation(bool verb)
             };
 
         //add the index and all of its' neighbors
-        ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::readwrite);
-        ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::readwrite);
+        ArrayHandle<int> ns(neighbors,access_location::host,access_mode::readwrite);
         for (int nn = 0; nn < Ncells; ++nn)
             {
             if (h_repair.data[nn] == 1)
@@ -783,8 +783,8 @@ void voronoiModelBase::computeGeometryCPU()
     //read in all the data we'll need
     ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
 
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
     ArrayHandle<double4> h_vln(voroLastNext,access_location::host,access_mode::overwrite);
@@ -851,8 +851,8 @@ void voronoiModelBase::computeGeometryGPU()
     {
     ArrayHandle<double2> d_p(cellPositions,access_location::device,access_mode::read);
     ArrayHandle<double2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
-    ArrayHandle<int> d_n(cellNeighbors,access_location::device,access_mode::read);
+    ArrayHandle<int> d_nn(neighborNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_n(neighbors,access_location::device,access_mode::read);
     ArrayHandle<double2> d_vc(voroCur,access_location::device,access_mode::overwrite);
     ArrayHandle<double4> d_vln(voroLastNext,access_location::device,access_mode::overwrite);
 
@@ -913,8 +913,8 @@ double2 voronoiModelBase::dAidrj(int i, int j)
     double2 answer;
     answer.x = 0.0; answer.y=0.0;
     ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
 
     //how many neighbors does cell i have?
@@ -1000,8 +1000,8 @@ double2 voronoiModelBase::dPidrj(int i, int j)
     double2 answer;
     answer.x = 0.0; answer.y=0.0;
     ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
 
     //how many neighbors does cell i have?
@@ -1233,8 +1233,8 @@ and delSet.data[n_idx(nn,i)].z that isn't cell i
 */
 bool voronoiModelBase::getDelSets(int i)
     {
-    ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> ns(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> ns(neighbors,access_location::host,access_mode::read);
     ArrayHandle<int2> ds(delSets,access_location::host,access_mode::readwrite);
     ArrayHandle<int> dother(delOther,access_location::host,access_mode::readwrite);
 
@@ -1299,7 +1299,7 @@ void voronoiModelBase::resizeAndReset()
 
     celllist.setNp(Ncells);
     resetDelLocPoints();
-    cellNeighborNum.resize(Ncells);
+    neighborNum.resize(Ncells);
     //brute force fix of triangulation
     globalTriangulationCGAL();
     resetLists();
@@ -1349,8 +1349,8 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     {//arrayHandle scope
     ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
     initialCellPosition = h_p.data[cellIdx];
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
     neigh = h_nn.data[cellIdx];
     vector<int> ns(neigh);
     for (int nn = 0; nn < neigh; ++nn)

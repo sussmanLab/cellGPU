@@ -191,15 +191,15 @@ int cellListGPU::positionToCellIndex(double x, double y)
 /*!
 \param cellIndex the base cell index to find the neighbors of
 \param width the distance (in cells) to search
-\param cellNeighbors a vector of all cell indices that are neighbors of cellIndex
+\param neighbors a vector of all cell indices that are neighbors of cellIndex
  */
-void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
+void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &neighbors)
     {
     int w = min(width,xsize/2);
     int cellix = cellIndex%xsize;
     int celliy = (cellIndex - cellix)/ysize;
-    cellNeighbors.clear();
-    cellNeighbors.reserve(w*w);
+    neighbors.clear();
+    neighbors.reserve(w*w);
     for (int ii = -w; ii <=w; ++ii)
         for (int jj = -w; jj <=w; ++jj)
             {
@@ -207,23 +207,23 @@ void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &c
             if (cx <0) cx+=xsize;
             int cy = (celliy+ii)%ysize;
             if (cy <0) cy+=ysize;
-            cellNeighbors.push_back(cell_indexer(cx,cy));
+            neighbors.push_back(cell_indexer(cx,cy));
             };
     };
 
 /*!
 \param cellIndex the base cell index to find the neighbors of
 \param width the distance (in cells) to search
-\param cellNeighbors a vector of all cell indices that are neighbors of cellIndex
+\param neighbors a vector of all cell indices that are neighbors of cellIndex
 This method returns a square outline of neighbors (the neighbor shell) rather than all neighbors
 within a set distance
  */
-void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
+void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<int> &neighbors)
     {
     int w = min(width,xsize);
     int cellix = cellIndex%xsize;
     int celliy = (cellIndex - cellix)/xsize;
-    cellNeighbors.clear();
+    neighbors.clear();
     for (int ii = -w; ii <=w; ++ii)
         for (int jj = -w; jj <=w; ++jj)
             if(ii ==-w ||ii == w ||jj ==-w ||jj==w)
@@ -232,7 +232,7 @@ void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<in
                 if (cx <0) cx+=xsize;
                 int cy = (celliy+ii)%ysize;
                 if (cy <0) cy+=ysize;
-                cellNeighbors.push_back(cell_indexer(cx,cy));
+                neighbors.push_back(cell_indexer(cx,cy));
                 };
     };
 

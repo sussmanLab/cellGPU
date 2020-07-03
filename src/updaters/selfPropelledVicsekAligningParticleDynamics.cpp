@@ -76,8 +76,8 @@ void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionCPU(
     ArrayHandle<double2> h_v(activeModel->cellVelocities);
     ArrayHandle<double2> h_disp(displacements,access_location::host,access_mode::overwrite);
     ArrayHandle<double2> h_motility(activeModel->Motility,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(activeModel->cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(activeModel->cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(activeModel->neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(activeModel->neighbors,access_location::host,access_mode::read);
 
 
     double2 direction;
@@ -149,8 +149,8 @@ void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionGPU(
     ArrayHandle<double2> d_disp(displacements,access_location::device,access_mode::overwrite);
     ArrayHandle<double2> d_motility(activeModel->Motility,access_location::device,access_mode::read);
     ArrayHandle<curandState> d_RNG(noise.RNGs,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_nn(activeModel->cellNeighborNum,access_location::device,access_mode::read);
-    ArrayHandle<int> d_n(activeModel->cellNeighbors,access_location::device,access_mode::read);
+    ArrayHandle<int> d_nn(activeModel->neighborNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_n(activeModel->neighbors,access_location::device,access_mode::read);
 
     gpu_spp_vicsek_aligning_eom_integration(d_f.data,
                  d_v.data,

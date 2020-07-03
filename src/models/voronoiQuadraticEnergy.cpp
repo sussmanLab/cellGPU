@@ -99,7 +99,7 @@ void VoronoiQuadraticEnergy::SumForcesGPU()
 void VoronoiQuadraticEnergy::sumForceSets()
     {
 
-    ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_nn(neighborNum,access_location::device,access_mode::read);
     ArrayHandle<double2> d_forceSets(forceSets,access_location::device,access_mode::read);
     ArrayHandle<double2> d_forces(cellForces,access_location::device,access_mode::overwrite);
 
@@ -117,7 +117,7 @@ void VoronoiQuadraticEnergy::sumForceSets()
 void VoronoiQuadraticEnergy::sumForceSetsWithExclusions()
     {
 
-    ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_nn(neighborNum,access_location::device,access_mode::read);
     ArrayHandle<double2> d_forceSets(forceSets,access_location::device,access_mode::read);
     ArrayHandle<double2> d_forces(cellForces,access_location::device,access_mode::overwrite);
     ArrayHandle<double2> d_external_forces(external_forces,access_location::device,access_mode::overwrite);
@@ -178,8 +178,8 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
     ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::read);
 
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
 
     ArrayHandle<double2> h_external_forces(external_forces,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_exes(exclusions,access_location::host,access_mode::read);
@@ -420,8 +420,8 @@ double VoronoiQuadraticEnergy::getSigmaXY()
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::read);
 
     ArrayHandle<double4> h_vln(voroLastNext,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
     ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
 
@@ -501,8 +501,8 @@ double VoronoiQuadraticEnergy::getSigmaXY()
 void VoronoiQuadraticEnergy::getDynMatEntries(vector<int2> &rcs, vector<double> &vals,double unstress, double stress)
     {
     printf("evaluating dynamical matrix\n");
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
 
     neighborType nt0 = neighborType::self;
     neighborType nt1 = neighborType::first;
@@ -628,8 +628,8 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
     Matrix2x2  answer;
     answer.x11 = 0.0; answer.x12=0.0; answer.x21=0.0;answer.x22=0.0;
     ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
     ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);

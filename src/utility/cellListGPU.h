@@ -49,9 +49,9 @@ class cellListGPU
         //!If the grid is already initialized, given a spatial position return the cell index
         int positionToCellIndex(double x,double y);
         //! given a target cell and a width, get all cell indices that sit in the surrounding square
-        void getCellNeighbors(int cellIndex, int width, vector<int> &cellNeighbors);
+        void getCellNeighbors(int cellIndex, int width, vector<int> &neighbors);
         //! given a target cell and a width, get all cell indices that sit on the requested shell
-        void getCellShellNeighbors(int cellIndex, int width, vector<int> &cellNeighbors);
+        void getCellShellNeighbors(int cellIndex, int width, vector<int> &neighbors);
 
         //!Initialization and helper without using the GPU
         void resetCellSizesCPU();

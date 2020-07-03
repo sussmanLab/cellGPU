@@ -179,8 +179,8 @@ class Simple2DCell : public Simple2DModel
 
         void getCellNeighs(int idx, int &nNeighs, vector<int> &neighs)
             {
-            ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-            ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+            ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+            ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
             nNeighs = h_nn.data[idx];
             neighs.resize(nNeighs);
             for (int nn = 0; nn < nNeighs;++nn)
@@ -197,9 +197,9 @@ class Simple2DCell : public Simple2DModel
         //!A 2dIndexer for computing where in the GPUArray to look for a given cell's vertices
         Index2D n_idx;
         //!The number of CELL neighbors of each cell. For simple models this is the same as cellVertexNum, but does not have to be
-        GPUArray<int> cellNeighborNum;
+        GPUArray<int> neighborNum;
         //! CELL neighbors of every cell
-        GPUArray<int> cellNeighbors;
+        GPUArray<int> neighbors;
         //!The number of vertices defining each cell
         /*!
         cellVertexNum[c] is an integer storing the number of vertices that make up the boundary of cell c.

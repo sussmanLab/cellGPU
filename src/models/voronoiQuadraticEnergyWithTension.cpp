@@ -114,8 +114,8 @@ double VoronoiQuadraticEnergyWithTension::computeEnergy()
     ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::read);
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::read);
 
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
     ArrayHandle<double> h_tm(tensionMatrix,access_location::host,access_mode::read);
     for (int cell = 0; cell < Ncells; ++cell)
         {
@@ -242,8 +242,8 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiSimpleTensionForceCPU(int 
     ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::read);
 
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
 
     ArrayHandle<double2> h_external_forces(external_forces,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_exes(exclusions,access_location::host,access_mode::read);
@@ -496,8 +496,8 @@ void VoronoiQuadraticEnergyWithTension::computeVoronoiTensionForceCPU(int i)
     ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::read);
 
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
 
     ArrayHandle<double2> h_external_forces(external_forces,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_exes(exclusions,access_location::host,access_mode::read);
