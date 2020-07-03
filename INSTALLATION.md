@@ -1,29 +1,36 @@
 # INSTALLATION {#install}
 
-A general makefile is included with the repository. To install on your system, update the CUDA_LIB,
-CUDA_INC, LIB_CUDA, LIB_CGAL, LIB_NETCDF paths, and make sure the PATH and LD_LIBRARY_PATH
-environment variables are appropriately set. From there a simple "make" will do the trick. See below
-for detailed installation instructions on MacOS. The command "make float" will compile the code with
-everything in floating-point precision (a bit faster on GPUs, but, of course, less numerically precise).
+Version 1.0 has switched to a cmake-based build system. Most dependencies can be apt-get installed, which is convenient, and 
+a script for installing netcdf locally is included. As noted below, you should have the include and lib of netcdf on your PATH and LD_LIBRARY_PATH,
+but as long as that's the case compilation should be straightforward. Just
+
+* $ cd build/
+* $ cmake ..
+* $ make
+
+By default this will compile executables related to the voronoi.cpp and Vertex.cpp files in the root directory.
+To compile a different cpp file, got to the "foreach(ARG " line at the end of the CMakeLists.txt file and add the name of your file, without the .cpp ending, to the list.
+
 The command "make debug" will add common debugging flags, and also enforce always-reproducible random
 number generation.
 
 # Requirements
 
 The current iteration of the code was written using some features of C++11, and was compiled using
-CUDA-8.0. The code has been tested with CUDA versions as early as 6.5, and uses compute capability
+CUDA-11.0. The code has been tested with CUDA versions as early as 6.5, and uses compute capability
 3.5 devices and higher. It ought to work on lower compute capability devices; compile without the
 "-arch=sm_35" flag to run on them.
 
 The Voronoi model branch uses the CGAL library; this dependency can be removed, if necessary, by monkeying
 with the code to run "fullTriangulation()" rather than "globalTriangulationCGAL()" in the relevant
-spots. This is highly discouraged, and the code may be much less stable as a result. In any event,
+spots. This is highly discouraged, and the code may be much less stable as a result. 
+
+In any event,
 CGAL-5.0.2 was used, which in turn requires up-to-date versions of the gmp and mpfr libraries.
-The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.
+The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.All of these, including CGAL now, can be conveniently installed via apt-get
 
 The default database class uses the netCDF-4 C++  library (tested on version 4.1.3).The dependency on netCDF
-can be removed by (1) not including any "Database" class, and (2) commenting out everything after the
-= sign in the LIB_NETCDF entry of the makefile
+can be removed by (1) not including any "Database" class, and (2) removing the database directory and library from the cmake file
 
 The calculation of the dynamical matrix makes use of Eigen3.3.3
 
