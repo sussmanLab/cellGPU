@@ -37,7 +37,11 @@ range of parameters.
 
 #Ubuntu installation
 
-Most requirements can be obtained by the usual apt-get method; netcdf is more finicky. Diogo Pinto has provided an install script, included in the cmakeHelp directory. Modify the directory paths to be more appropriate for your system, and use this if you prefer not to go through by hand the steps outlined on the netcdf page below
+Most requirements can be obtained by the usual apt-get method; netcdf is more finicky. 
+An install script is included in the cmakeHelp/ directory. Modify the directory paths to be more appropriate for your system,
+and use this if you prefer not to go through by hand the steps outlined on the netcdf page below. In
+any event, make sure that the includes and libraries for netcdf and netcdfcxx
+are on your PATH and LD_LIBRARY_PATH, respectively
 
 # Windows Subsystem for Linux 2
 

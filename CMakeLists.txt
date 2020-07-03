@@ -27,7 +27,6 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmakeHelp)
 find_package(Eigen3 REQUIRED)
 find_package(CUDA REQUIRED)
 
-
 include_directories(
             ${EIGEN3_INCLUDE_DIR}
             ${CUDA_INCLUDE_DIRS}
@@ -39,6 +38,8 @@ include_directories(
             ${CMAKE_SOURCE_DIR}/src/models
             ${CMAKE_SOURCE_DIR}/src/analysis
             ${CMAKE_SOURCE_DIR}/src/databases
+            $ENV{PATH}$
+
    )
 
 add_subdirectory(src)
@@ -55,7 +56,7 @@ set(myLibs
     utilityGPU
     )
 
-link_directories(${CUDA_LIBRARY_DIRS})
+link_directories(${CUDA_LIBRARY_DIRS} $ENV{LD_LIBRARY_PATH})
 
 set(SOURCES )
 set(HEADERS
@@ -64,12 +65,14 @@ set(HEADERS
 # list the names of cpp files corresponding to linked executables you'd like...
 foreach(ARG 
         voronoi
-        #Vertex
+        Vertex
         )
 add_executable("${ARG}.out" "${ARG}.cpp" )
 target_link_libraries("${ARG}.out"
     ${CUDA_LIBRARIES}
-    CGAL::CGAL
     ${myLibs} 
+    CGAL::CGAL
+    netcdf
+    netcdf_c++
     )
 endforeach()

@@ -16,7 +16,7 @@ and the set of connections between vertices
 class AVMDatabaseNetCDF : public BaseDatabaseNetCDF
 {
 private:
-    typedef shared_ptr<AVM2D> STATE;
+    typedef shared_ptr<VertexQuadraticEnergy> STATE;
     int Nv; //!< number of vertices in AVM
     int Nc; //!< number of cells in AVM
     int Nvn; //!< the number of vertex-vertex connections

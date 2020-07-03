@@ -14,7 +14,7 @@ and the shape index parameter for each vertex
 class SPVDatabaseNetCDF : public BaseDatabaseNetCDF
 {
 private:
-    typedef shared_ptr<Voronoi2D> STATE;
+    typedef shared_ptr<VoronoiQuadraticEnergy> STATE;
     int Nv; //!< number of vertices in delaunay triangulation
     NcDim *recDim, *NvDim, *dofDim, *boxDim, *unitDim; //!< NcDims we'll use
     NcVar *posVar, *typeVar, *directorVar, *BoxMatrixVar, *timeVar, *means0Var,*exVar; //!<NcVars we'll use
