@@ -10,6 +10,9 @@ very old class names you'll have to update them, but otherwise your code should 
 * Switch to cmake build system -- see installation.md for details
 * Update cgal to use header-only versions
 * Retire the use of Dscalars... switching at compile time was never used, so now everything is a double
+
+### version 0.8.1
+
 * Assorted bug fixes and clean-ups
 
 ### version 0.8.0 

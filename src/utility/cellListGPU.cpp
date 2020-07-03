@@ -5,6 +5,8 @@
 #include "cuda_runtime.h"
 #include "cellListGPU.cuh"
 #include "cellListGPU.h"
+#include "utilities.cuh"
+
 /*! \file cellListGPU.cpp */
 
 /*!
@@ -156,18 +158,15 @@ void cellListGPU::resetCellSizes()
     totalCells=xsize*ysize;
     if(cell_sizes.getNumElements() != totalCells)
         cell_sizes.resize(totalCells);
-
-    ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::overwrite);
-    gpu_zero_array(d_cell_sizes.data,totalCells);
+    ArrayHandle<unsigned int> csizes(cell_sizes,access_location::device,access_mode::overwrite);
+    gpu_set_array<unsigned int>(csizes.data, 0,totalCells);
 
     //set all cell indexes to zero
     cell_list_indexer = Index2D(Nmax,totalCells);
     if(idxs.getNumElements() != cell_list_indexer.getNumElements())
         idxs.resize(cell_list_indexer.getNumElements());
-
-    ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::overwrite);
-    gpu_zero_array(d_idx.data,(int) cell_list_indexer.getNumElements());
-
+    ArrayHandle<int> cidxs(idxs,access_location::device,access_mode::overwrite);
+    gpu_set_array<int>(cidxs.data,0,cell_list_indexer.getNumElements());
 
     if(assist.getNumElements()!= 2)
         assist.resize(2);
