@@ -16,6 +16,9 @@ number generation.
 
 # Requirements
 
+Note that, thanks to the CGAL dependency (which, with some work, can be removed), your compiler needs to support
+features of C++14. This package has been tested with gcc-6 and gcc-7.5 (and equivalent g++ versions)
+
 The current iteration of the code was written using some features of C++11, and was compiled using
 CUDA-11.0. The code has been tested with CUDA versions as early as 6.5, and uses compute capability
 3.5 devices and higher. It ought to work on lower compute capability devices; compile without the
