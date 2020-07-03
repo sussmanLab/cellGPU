@@ -24,8 +24,8 @@
   Each cell has a force contribution due to the derivative of the energy with respect to each of
   its voronoi vertices... add them up to get the force per cell.
   */
-__global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
-                                      Dscalar2* __restrict__ d_forces,
+__global__ void gpu_sum_forces_kernel(const double2* __restrict__ d_forceSets,
+                                      double2* __restrict__ d_forces,
                                       const int* __restrict__      d_nn,
                                       int     N,
                                       Index2D n_idx
@@ -37,11 +37,11 @@ __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
         return;
 
     int neigh = d_nn[idx];
-    Dscalar2 temp;
+    double2 temp;
     temp.x=0.0;temp.y=0.0;
     for (int nn = 0; nn < neigh; ++nn)
         {
-        Dscalar2 val = d_forceSets[n_idx(nn,idx)];
+        double2 val = d_forceSets[n_idx(nn,idx)];
         temp.x+=val.x;
         temp.y+=val.y;
         };
@@ -53,9 +53,9 @@ __global__ void gpu_sum_forces_kernel(const Dscalar2* __restrict__ d_forceSets,
 /*!
   add up force sets, as above, but keep track of exclusions
   */
-__global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict__ d_forceSets,
-                                      Dscalar2* __restrict__ d_forces,
-                                      Dscalar2* __restrict__ d_external_forces,
+__global__ void gpu_sum_forces_with_exclusions_kernel(const double2* __restrict__ d_forceSets,
+                                      double2* __restrict__ d_forces,
+                                      double2* __restrict__ d_external_forces,
                                       const int* __restrict__ d_exes,
                                       const int* __restrict__ d_nn,
                                       int     N,
@@ -68,23 +68,23 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict
         return;
 
     int neigh = d_nn[idx];
-    Dscalar2 temp;
+    double2 temp;
     temp.x=0.0;temp.y=0.0;
     for (int nn = 0; nn < neigh; ++nn)
         {
-        Dscalar2 val = d_forceSets[n_idx(nn,idx)];
+        double2 val = d_forceSets[n_idx(nn,idx)];
         temp.x+=val.x;
         temp.y+=val.y;
         };
     if (d_exes[idx] ==0)
         {
         d_forces[idx]=temp;
-        d_external_forces[idx] = make_Dscalar2(0.0,0.0);
+        d_external_forces[idx] = make_double2(0.0,0.0);
         }
     else
         {
-        d_forces[idx]=make_Dscalar2(0.0,0.0);
-        d_external_forces[idx] = make_Dscalar2(-temp.x,-temp.y);
+        d_forces[idx]=make_double2(0.0,0.0);
+        d_external_forces[idx] = make_double2(-temp.x,-temp.y);
         };
 
     };
@@ -93,17 +93,17 @@ __global__ void gpu_sum_forces_with_exclusions_kernel(const Dscalar2* __restrict
   the force on a particle is decomposable into the force contribution from each of its voronoi
   vertices...calculate those sets of forces
   */
-__global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
-                                      const Dscalar2* __restrict__ d_AP,
-                                      const Dscalar2*  __restrict__ d_APpref,
+__global__ void gpu_force_sets_kernel(const double2* __restrict__ d_points,
+                                      const double2* __restrict__ d_AP,
+                                      const double2*  __restrict__ d_APpref,
                                       const int2* __restrict__ d_delSets,
                                       const int* __restrict__ d_delOther,
-                                      const Dscalar2* __restrict__ d_vc,
-                                      const Dscalar4* __restrict__ d_vln,
-                                      Dscalar2* __restrict__ d_forceSets,
+                                      const double2* __restrict__ d_vc,
+                                      const double4* __restrict__ d_vln,
+                                      double2* __restrict__ d_forceSets,
                                       const int2* __restrict__ d_nidx,
-                                      Dscalar   KA,
-                                      Dscalar   KP,
+                                      double   KA,
+                                      double   KP,
                                       int     computations,
                                       Index2D n_idx,
                                       gpubox Box
@@ -119,15 +119,15 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     int nidx=n_idx(nn,pidx);
 
     //local variables declared...
-    Dscalar2 dAdv,dPdv;
-    Dscalar2 dEdv;
-    Dscalar  Adiff, Pdiff;
-    Dscalar2 dlast, dnext,dcl,dnc;
-    Dscalar  dlnorm,dnnorm,dclnorm,dncnorm;
-    Dscalar2 vlast,vcur,vnext,vother;
+    double2 dAdv,dPdv;
+    double2 dEdv;
+    double  Adiff, Pdiff;
+    double2 dlast, dnext,dcl,dnc;
+    double  dlnorm,dnnorm,dclnorm,dncnorm;
+    double2 vlast,vcur,vnext,vother;
 
     //logically, I want these variables:
-    //Dscalar2 pi, rij, rik,pno;
+    //double2 pi, rij, rik,pno;
     //they will simply re-use
     //     dlast, dnext, dcl, dnc, respectively
     //to reduce register usage
@@ -150,7 +150,7 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
     //finally, compute all of the forces
     //pnm1 is rij (dnext), pn1 is rik
     vcur = d_vc[nidx];
-    Dscalar4 vvv = d_vln[nidx];
+    double4 vvv = d_vln[nidx];
     vlast.x = vvv.x; vlast.y = vvv.y;
     vnext.x = vvv.z; vnext.y = vvv.w;
 
@@ -236,17 +236,17 @@ __global__ void gpu_force_sets_kernel(const Dscalar2* __restrict__ d_points,
 ////////////////
 
 //!Call the kernel to compute the force sets
-bool gpu_force_sets(Dscalar2 *d_points,
-                    Dscalar2 *d_AP,
-                    Dscalar2 *d_APpref,
+bool gpu_force_sets(double2 *d_points,
+                    double2 *d_AP,
+                    double2 *d_APpref,
                     int2   *d_delSets,
                     int    *d_delOther,
-                    Dscalar2 *d_vc,
-                    Dscalar4 *d_vln,
-                    Dscalar2 *d_forceSets,
+                    double2 *d_vc,
+                    double4 *d_vln,
+                    double2 *d_forceSets,
                     int2   *d_nidx,
-                    Dscalar  KA,
-                    Dscalar  KP,
+                    double  KA,
+                    double  KP,
                     int    NeighIdxNum,
                     Index2D &n_idx,
                     gpubox &Box
@@ -279,8 +279,8 @@ bool gpu_force_sets(Dscalar2 *d_points,
 
 //!call the kernel to add up the forces
 bool gpu_sum_force_sets(
-                        Dscalar2 *d_forceSets,
-                        Dscalar2 *d_forces,
+                        double2 *d_forceSets,
+                        double2 *d_forces,
                         int    *d_nn,
                         int     N,
                         Index2D &n_idx
@@ -304,9 +304,9 @@ bool gpu_sum_force_sets(
 
 //!call the kernel to add up forces with particle exclusions
 bool gpu_sum_force_sets_with_exclusions(
-                        Dscalar2 *d_forceSets,
-                        Dscalar2 *d_forces,
-                        Dscalar2 *d_external_forces,
+                        double2 *d_forceSets,
+                        double2 *d_forces,
+                        double2 *d_external_forces,
                         int    *d_exes,
                         int    *d_nn,
                         int     N,

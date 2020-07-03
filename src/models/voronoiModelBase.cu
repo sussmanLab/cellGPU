@@ -20,13 +20,13 @@
   */
 __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                                               const int3* __restrict__ d_circumcircles,
-                                              const Dscalar2* __restrict__ d_pt,
+                                              const double2* __restrict__ d_pt,
                                               const unsigned int* __restrict__ d_cell_sizes,
                                               const int* __restrict__ d_cell_idx,
                                               int Nccs,
                                               int xsize,
                                               int ysize,
-                                              Dscalar boxsize,
+                                              double boxsize,
                                               gpubox Box,
                                               Index2D ci,
                                               Index2D cli,
@@ -41,18 +41,18 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     //the indices of particles forming the circumcircle
     int3 i1 = d_circumcircles[idx];
     //the vertex we will take to be the origin, and its cell position
-    Dscalar2 v = d_pt[i1.x];
+    double2 v = d_pt[i1.x];
     int ib=Floor(v.x/boxsize);
     int jb=Floor(v.y/boxsize);
 
 
-    Dscalar2 pt1,pt2;
+    double2 pt1,pt2;
     Box.minDist(d_pt[i1.y],v,pt1);
     Box.minDist(d_pt[i1.z],v,pt2);
 
     //get the circumcircle
-    Dscalar2 Q;
-    Dscalar rad;
+    double2 Q;
+    double rad;
     Circumcircle(pt1,pt2,Q,rad);
 
     //look through cells for other particles...re-use pt1 and pt2 variables below
@@ -109,12 +109,12 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
   Since the cells are guaranteed to be convex, the area of the cell is the sum of the areas of
   the triangles formed by consecutive Voronoi vertices
   */
-__global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__ d_points,
-                                          Dscalar2* __restrict__ d_AP,
+__global__ void gpu_compute_voronoi_geometry_kernel(const double2* __restrict__ d_points,
+                                          double2* __restrict__ d_AP,
                                           const int* __restrict__ d_nn,
                                           const int* __restrict__ d_n,
-                                          Dscalar2* __restrict__ d_vc,
-                                          Dscalar4* __restrict__ d_vln,
+                                          double2* __restrict__ d_vc,
+                                          double4* __restrict__ d_vln,
                                           int N,
                                           Index2D n_idx,
                                           gpubox Box
@@ -125,11 +125,11 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
     if (idx >= N)
         return;
 
-    Dscalar2  nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
+    double2  nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
 
     int neigh = d_nn[idx];
-    Dscalar Varea = 0.0;
-    Dscalar Vperi= 0.0;
+    double Varea = 0.0;
+    double Vperi= 0.0;
 
     pi = d_points[idx];
     nlastp = d_points[ d_n[n_idx(neigh-1,idx)] ];
@@ -162,14 +162,14 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
 
         //...and back to computing the geometry
         Varea += TriangleArea(vlast,vnext);
-        Dscalar dx = vlast.x - vnext.x;
-        Dscalar dy = vlast.y - vnext.y;
+        double dx = vlast.x - vnext.x;
+        double dy = vlast.y - vnext.y;
         Vperi += sqrt(dx*dx+dy*dy);
         vlast=vnext;
         };
     Varea += TriangleArea(vlast,vfirst);
-    Dscalar dx = vlast.x - vfirst.x;
-    Dscalar dy = vlast.y - vfirst.y;
+    double dx = vlast.x - vfirst.x;
+    double dy = vlast.y - vfirst.y;
     Vperi += sqrt(dx*dx+dy*dy);
 
     //it's more memory-access friendly to now fill in the VoroLastNext structure separately
@@ -203,13 +203,13 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
 bool gpu_test_circumcenters(int *d_repair,
                             int3 *d_ccs,
                             int Nccs,
-                            Dscalar2 *d_pt,
+                            double2 *d_pt,
                             unsigned int *d_cell_sizes,
                             int *d_idx,
                             int Np,
                             int xsize,
                             int ysize,
-                            Dscalar boxsize,
+                            double boxsize,
                             gpubox &Box,
                             Index2D &ci,
                             Index2D &cli,
@@ -240,12 +240,12 @@ bool gpu_test_circumcenters(int *d_repair,
     };
 
 //!Call the kernel to compute the geometry
-bool gpu_compute_voronoi_geometry(Dscalar2 *d_points,
-                        Dscalar2   *d_AP,
+bool gpu_compute_voronoi_geometry(double2 *d_points,
+                        double2   *d_AP,
                         int      *d_nn,
                         int      *d_n,
-                        Dscalar2 *d_vc,
-                        Dscalar4 *d_vln,
+                        double2 *d_vc,
+                        double4 *d_vln,
                         int      N,
                         Index2D  &n_idx,
                         gpubox &Box

@@ -27,10 +27,10 @@ int main(int argc, char*argv[])
     int tSteps = 5; //number of time steps to run after initialization
     int initSteps = 1; //number of initialization steps
 
-    Dscalar dt = 0.01; //the time step size
-    Dscalar p0 = 3.8;  //the preferred perimeter
-    Dscalar a0 = 1.0;  // the preferred area
-    Dscalar v0 = 0.1;  // the self-propulsion
+    double dt = 0.01; //the time step size
+    double p0 = 3.8;  //the preferred perimeter
+    double a0 = 1.0;  // the preferred area
+    double v0 = 0.1;  // the self-propulsion
 
     //The defaults can be overridden from the command line
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
@@ -121,7 +121,7 @@ int main(int argc, char*argv[])
         sim->performTimestep();
         };
     t2=clock();
-    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
+    double steptime = (t2-t1)/(double)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
     cout << spv->reportq() << endl;
     cout << "number of local topology updates per cell per tau = " << spv->localTopologyUpdates*(1.0/numpts)*(1.0/tSteps/dt) << endl;

@@ -20,17 +20,17 @@ class autocorrelator
     {
     public:
         //! The basic constructor
-        autocorrelator(int pp=16, int mm=2, Dscalar deltaT = 1.0);
+        autocorrelator(int pp=16, int mm=2, double deltaT = 1.0);
         //! Add a new data point to the correlator
-        void add(Dscalar w, int k=0);
+        void add(double w, int k=0);
         //! evaluate the current state of the correlator.
         void evaluate(bool normalize = false);
 
         //!After evaluate is called, correlator is filled with the current autocorrelation.
-        vector<Dscalar2> correlator;
+        vector<double2> correlator;
 
         //! Set the time spacing
-        void setDeltaT(Dscalar deltaT){dt=deltaT;};
+        void setDeltaT(double deltaT){dt=deltaT;};
         //! Initialize all data structures to zero
         void initialize();
         //! grow data structures if a new level of the correlation function needs to be added
@@ -38,7 +38,7 @@ class autocorrelator
 
     protected:
         //!The time spacing
-        Dscalar dt;
+        double dt;
         //!points per correlator
         int p;
         //!number of points over which to average
@@ -46,7 +46,7 @@ class autocorrelator
         //!Current number of correlator levels
         int nCorrelators;
         //!Accumulated sum of values added to the correlator
-        Dscalar accumulatedValue;
+        double accumulatedValue;
 
         //!Minimum distance betwee points for correlators other than the zeroth level
         int minimumDistance;
@@ -55,13 +55,13 @@ class autocorrelator
         //!A vector that helps control the accumulation in each correlator
         vector<int> nAccumulator;
         //!The actual values accumulating in each correlator
-        vector<Dscalar> accumulator;
+        vector<double> accumulator;
 
         //!A vector of vectors with the number of values accumulated in each correlator
         vector<vector< int> > nCorrelation;
         //!A vector of vectors with the actual correlation function
-        vector<vector< Dscalar> > correlation;
+        vector<vector< double> > correlation;
         //!A vector of vector where incoming values get stored
-        vector<vector< Dscalar> > shift;
+        vector<vector< double> > shift;
     };
 #endif

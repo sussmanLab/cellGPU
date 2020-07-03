@@ -20,14 +20,14 @@ class cellListGPU
         //!Blank constructor
         cellListGPU(){Nmax=0;Box = make_shared<gpubox>();};
         //!construct with a given set of points
-        cellListGPU(vector<Dscalar> &points);
+        cellListGPU(vector<double> &points);
         //! constructor with points, a box, and a size for the underlying grid
-        cellListGPU(Dscalar a, vector<Dscalar> &points, gpubox &bx);
+        cellListGPU(double a, vector<double> &points, gpubox &bx);
 
         //!Set the object's points to a given vector
-        void setParticles(const vector<Dscalar> &points);
-        //!Set the object's points to a given vector of Dscalar2s
-        void setParticles(const vector<Dscalar2> &points);
+        void setParticles(const vector<double> &points);
+        //!Set the object's points to a given vector of double2s
+        void setParticles(const vector<double2> &points);
         //!Set the objects box object
         void setBox(gpubox &bx);
         //!Set the BoxPtr to point to an existing one
@@ -36,7 +36,7 @@ class cellListGPU
         void setNp(int nn);
 
         //!call setGridSize if the particles and box already set, as this doubles as a general initialization of data structures
-        void setGridSize(Dscalar a);
+        void setGridSize(double a);
         //!Get am upper bound on the maximum number of particles in a given bucket
         int getNmax() {return Nmax;};
         //!The number of cells in the x-direction
@@ -44,10 +44,10 @@ class cellListGPU
         //!The number of cells in the y-direction
         int getYsize() {return ysize;};
         //!Returns the length of the square that forms the base grid size
-        Dscalar getBoxsize() {return boxsize;};
+        double getBoxsize() {return boxsize;};
 
         //!If the grid is already initialized, given a spatial position return the cell index
-        int positionToCellIndex(Dscalar x,Dscalar y);
+        int positionToCellIndex(double x,double y);
         //! given a target cell and a width, get all cell indices that sit in the surrounding square
         void getCellNeighbors(int cellIndex, int width, vector<int> &cellNeighbors);
         //! given a target cell and a width, get all cell indices that sit on the requested shell
@@ -75,16 +75,16 @@ class cellListGPU
         void computeGPU();
 
         //! compute the cell list of the gpuarry passed to it. GPU function
-        void computeGPU(GPUArray<Dscalar2> &points);
+        void computeGPU(GPUArray<double2> &points);
         //! compute the cell list of the gpuarry passed to it. GPU function
-        void compute(GPUArray<Dscalar2> &points);
+        void compute(GPUArray<double2> &points);
 
         //!A debugging function to report where a point is
         void repP(int i)
             {
             if(true)
                 {
-                ArrayHandle<Dscalar2> hh(particles,access_location::host,access_mode::read);
+                ArrayHandle<double2> hh(particles,access_location::host,access_mode::read);
                 cout <<hh.data[i].x << "  " << hh.data[i].y << endl;
                 };
             };
@@ -95,7 +95,7 @@ class cellListGPU
         Index2D cell_list_indexer;
 
         //!The particles that some methods act on
-        GPUArray<Dscalar2> particles;
+        GPUArray<double2> particles;
         //! An array containing the number of elements in each cell
         GPUArray<unsigned int> cell_sizes;
         //!An array containing the indices of particles in various cells. So, idx[cell_list_indexer(nn,bin)] gives the index of the nth particle in the bin "bin" of the cell list
@@ -107,7 +107,7 @@ class cellListGPU
         //!The number of particles to put in cells
         int Np;
         //! The linear size of each grid cell
-        Dscalar boxsize;
+        double boxsize;
         //!The number of bins in the x-direction
         int xsize;
         //!the number of bins in the y-direction

@@ -13,39 +13,39 @@ A file providing an interface to the relevant cuda calls for some simple GPU arr
  * \brief CUDA kernels and callers for the utilities base
  */
 
-//! (Dscalar) ans = (Dscalar2) vec1 . vec2
-bool gpu_dot_Dscalar2_vectors(Dscalar2 *d_vec1,
-                              Dscalar2 *d_vec2,
-                              Dscalar  *d_ans,
+//! (double) ans = (double2) vec1 . vec2
+bool gpu_dot_double2_vectors(double2 *d_vec1,
+                              double2 *d_vec2,
+                              double  *d_ans,
                               int N);
 
 //!A trivial reduction of an array by one thread in serial. Think before you use this.
 bool gpu_serial_reduction(
-                    Dscalar *array,
-                    Dscalar *output,
+                    double *array,
+                    double *output,
                     int helperIdx,
                     int N);
 
 //!A straightforward two-step parallel reduction algorithm.
 bool gpu_parallel_reduction(
-                    Dscalar *input,
-                    Dscalar *intermediate,
-                    Dscalar *output,
+                    double *input,
+                    double *intermediate,
+                    double *output,
                     int helperIdx,
                     int N);
 
-//!A straightforward two-step parallel reduction algorithm for Dscalar2 arrays.
+//!A straightforward two-step parallel reduction algorithm for double2 arrays.
 bool gpu_parallel_reduction(
-                    Dscalar2 *input,
-                    Dscalar2 *intermediate,
-                    Dscalar2 *output,
+                    double2 *input,
+                    double2 *intermediate,
+                    double2 *output,
                     int helperIdx,
                     int N);
 
-//! (Dscalar2) ans = (Dscalar2) vec1 * vec2
-bool gpu_dot_Dscalar_Dscalar2_vectors(Dscalar *d_vec1,
-                              Dscalar2 *d_vec2,
-                              Dscalar2  *d_ans,
+//! (double2) ans = (double2) vec1 * vec2
+bool gpu_dot_double_double2_vectors(double *d_vec1,
+                              double2 *d_vec2,
+                              double2  *d_ans,
                               int N);
 
 /** @} */ //end of group declaration

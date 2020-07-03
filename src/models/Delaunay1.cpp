@@ -2,9 +2,9 @@
 /*! \file Delaunay1.cpp */
 
 /*!
-\param points a vector of Dscalars, formatted as [x1,y1,x2,y2,...,xn,yn]
+\param points a vector of doubles, formatted as [x1,y1,x2,y2,...,xn,yn]
 */
-void DelaunayNP::setPoints(vector<Dscalar> points)
+void DelaunayNP::setPoints(vector<double> points)
     {
     nV=points.size()/2;
     sorted=false;
@@ -16,10 +16,10 @@ void DelaunayNP::setPoints(vector<Dscalar> points)
     pts.resize(nV);
     for (unsigned int ii = 0; ii<nV; ++ii)
         {
-        Dscalar2 point;
+        double2 point;
         point.x=points[ii*2];point.y=points[ii*2+1];
         pts[ii]=point;
-        pair<Dscalar2, int> pp;
+        pair<double2, int> pp;
         pp.first = point;
         pp.second=ii;
         sortmap.push_back(pp);
@@ -27,9 +27,9 @@ void DelaunayNP::setPoints(vector<Dscalar> points)
     };
 
 /*!
-\param points a vector of Dscalar2's
+\param points a vector of double2's
 */
-void DelaunayNP::setPoints(vector<Dscalar2> points)
+void DelaunayNP::setPoints(vector<double2> points)
     {
     nV=points.size();
     pts=points;
@@ -41,7 +41,7 @@ void DelaunayNP::setPoints(vector<Dscalar2> points)
     mapi.resize(nV);
     for (unsigned int ii = 0; ii<nV; ++ii)
         {
-        pair<Dscalar2, int> pp;
+        pair<double2, int> pp;
         pp.first.x=pts[ii].x;
         pp.first.y=pts[ii].y;
         pp.second=ii;
@@ -78,10 +78,10 @@ performance on random point sets.
 void DelaunayNP::naiveBowyerWatson()
     {
     bool incircle;
-    Dscalar xmin,xmax,ymin,ymax,dx,dy,dmax,xcen,ycen;
+    double xmin,xmax,ymin,ymax,dx,dy,dmax,xcen,ycen;
     int ntri;
-    Dscalar2 xtest,c;
-    Dscalar rad;
+    double2 xtest,c;
+    double rad;
     if (!sorted) sortPoints();
     edge nullEdge(-1,-1);
     int emax   = 3*(nV+1); //really 3n-3-k for n points with k points in the convex hull
@@ -97,7 +97,7 @@ void DelaunayNP::naiveBowyerWatson()
     ymin = sortmap[0].first.y;
     xmax=sortmap[nV-1].first.x;
     ymax=ymin;
-    Dscalar xx, yy;
+    double xx, yy;
     for(int ii=0;ii < nV;++ii)
         {
         xx=sortmap[ii].first.x;
@@ -112,8 +112,8 @@ void DelaunayNP::naiveBowyerWatson()
     xcen = 0.5*(xmax+xmin);
     ycen = 0.5*(ymax+ymin);
 
-    Dscalar2 point;
-    pair<Dscalar2, int> newvert;
+    double2 point;
+    pair<double2, int> newvert;
 
     point.x = xcen-0.866*dmax;
     point.y = ycen-0.5*dmax;
@@ -136,12 +136,12 @@ void DelaunayNP::naiveBowyerWatson()
     ntri = 1;
 
     //begin loop to insert each vertex into the triangulation
-    Dscalar xp, yp;
+    double xp, yp;
     for(int ii = 0; ii < nV; ++ii)
         {
         xp = sortmap[ii].first.x;
         yp = sortmap[ii].first.y;
-        Dscalar2 Xp;
+        double2 Xp;
         Xp.x=xp;Xp.y=yp;
         DT.nEdges=0;
 
@@ -152,8 +152,8 @@ void DelaunayNP::naiveBowyerWatson()
                 {
                 triangle tr(DT.triangles[jj].i,DT.triangles[jj].j,DT.triangles[jj].k);
                 Circumcircle(sortmap[tr.i].first,sortmap[tr.j].first,sortmap[tr.k].first,c,rad);
-                Dscalar dx = Xp.x-c.x;
-                Dscalar dy = Xp.y-c.y;
+                double dx = Xp.x-c.x;
+                double dy = Xp.y-c.y;
                 if (sqrt(dx*dx+dy*dy) <= rad)
                     incircle = true;
                 else
@@ -268,14 +268,14 @@ void DelaunayNP::testDel(int numpts, int tmax,bool verbose)
     {
     cout << "Timing the base, non-periodic routine..." << endl;
     nV = numpts;
-    Dscalar boxa = sqrt(numpts)+1.0;
-    vector<Dscalar> ps2(2*numpts);
-    Dscalar maxx = 0.0;
+    double boxa = sqrt(numpts)+1.0;
+    vector<double> ps2(2*numpts);
+    double maxx = 0.0;
     int randmax = 1000000;
     for (int i=0;i<numpts;++i)
         {
-        Dscalar x =EPSILON+boxa/(Dscalar)randmax* (Dscalar)(rand()%randmax);
-        Dscalar y =EPSILON+boxa/(Dscalar)randmax* (Dscalar)(rand()%randmax);
+        double x =EPSILON+boxa/(double)randmax* (double)(rand()%randmax);
+        double y =EPSILON+boxa/(double)randmax* (double)(rand()%randmax);
         ps2[i*2]=x;
         ps2[i*2+1]=y;
         };
@@ -291,7 +291,7 @@ void DelaunayNP::testDel(int numpts, int tmax,bool verbose)
         };
 
     tstop=clock();
-    Dscalar timing = (tstop-tstart)/(Dscalar)CLOCKS_PER_SEC/(Dscalar)tmax;
+    double timing = (tstop-tstart)/(double)CLOCKS_PER_SEC/(double)tmax;
     cout << "average time per complete triangulation = " << timing<< endl;
 
     };

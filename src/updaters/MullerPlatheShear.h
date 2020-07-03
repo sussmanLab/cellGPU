@@ -18,38 +18,38 @@ class MullerPlatheShear : public updater
     {
     public:
         //!The basic call should specify the period, the number of slabs, and the y-height of the box
-        MullerPlatheShear(int period, int slabs,Dscalar boxHeight);
+        MullerPlatheShear(int period, int slabs,double boxHeight);
 
         //!update the slab thicknesses
-        void updateSlabInfo(int slabs,Dscalar boxHeight);
+        void updateSlabInfo(int slabs,double boxHeight);
 
         //!perform the desired swapping
         virtual void performUpdate();
 
         //!The momentum transferred the last time the updater was called
-        Dscalar deltaP;
+        double deltaP;
         //!The momentum transferred since the last time the updater was querried
-        Dscalar accumulatedDeltaP;
+        double accumulatedDeltaP;
 
         //!Returns the total momentum transferred between the slabs since the last time this function was called
-        Dscalar getMomentumTransferred()
+        double getMomentumTransferred()
             {
-            Dscalar answer = accumulatedDeltaP;
+            double answer = accumulatedDeltaP;
             accumulatedDeltaP = 0.0;
             return answer;
             };
         //Averages the x-velocity in each slab and puts it in the vector
-        void getVelocityProfile(vector<Dscalar> &Vx);
+        void getVelocityProfile(vector<double> &Vx);
         //!The number of slabs in the y-direction... this implicitly controls the thickness of the slabs
         int Nslabs;
 
     protected:
         //!The size of the box in the y-directions
-        Dscalar boxY;
+        double boxY;
         //!The thickness of the slabs
-        Dscalar slabThickness;
+        double slabThickness;
         //!The lower and upper boundaries of the two slabs between which we will be swapping momenta
-        Dscalar4 slabBoundaries;
+        double4 slabBoundaries;
 
     };
 #endif

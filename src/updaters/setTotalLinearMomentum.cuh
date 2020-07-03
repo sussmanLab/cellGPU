@@ -13,9 +13,9 @@ This file provides an interface to cuda calls for setting the total linear momen
  */
 
 //! shift the velocities to get the target linear momentum
-bool gpu_shift_momentum(Dscalar2   *velocities,
-                        Dscalar *masses,
-                        Dscalar2 pShift,
+bool gpu_shift_momentum(double2   *velocities,
+                        double *masses,
+                        double2 pShift,
                         int N);
 
 /** @} */ //end of group declaration

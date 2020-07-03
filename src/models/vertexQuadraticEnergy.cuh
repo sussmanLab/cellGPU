@@ -19,17 +19,17 @@ A file providing an interface to the relevant cuda calls for the VertexQuadratic
 
 bool gpu_avm_force_sets(
                     int      *d_vertexCellNeighbors,
-                    Dscalar2 *d_voroCur,
-                    Dscalar4 *d_voroLastNext,
-                    Dscalar2 *d_AreaPerimeter,
-                    Dscalar2 *d_AreaPerimeterPreferences,
-                    Dscalar2 *d_vertexForceSets,
+                    double2 *d_voroCur,
+                    double4 *d_voroLastNext,
+                    double2 *d_AreaPerimeter,
+                    double2 *d_AreaPerimeterPreferences,
+                    double2 *d_vertexForceSets,
                     int nForceSets,
-                    Dscalar KA, Dscalar KP);
+                    double KA, double KP);
 
 bool gpu_avm_sum_force_sets(
-                    Dscalar2 *d_vertexForceSets,
-                    Dscalar2 *d_vertexForces,
+                    double2 *d_vertexForceSets,
+                    double2 *d_vertexForces,
                     int      Nvertices);
 
 /** @} */ //end of group declaration

@@ -28,10 +28,10 @@ class vertexModelBase : public Simple2DActiveCell
         virtual int getNumberOfDegreesOfFreedom(){return Nvertices;};
 
         //!moveDegrees of Freedom calls either the move points or move points CPU routines
-        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements,Dscalar scale = 1.);
+        virtual void moveDegreesOfFreedom(GPUArray<double2> & displacements,double scale = 1.);
 
         //!return the forces
-        virtual void getForces(GPUArray<Dscalar2> &forces){forces = vertexForces;};
+        virtual void getForces(GPUArray<double2> &forces){forces = vertexForces;};
 
         //!Initialize vertexModelBase, set random orientations for vertex directors, prepare data structures
         void initializeVertexModelBase(int n,bool spvInitialize = false);
@@ -40,13 +40,13 @@ class vertexModelBase : public Simple2DActiveCell
         void setCellsVoronoiTesselation(bool spvInitialize = false);
 
         //!return a reference to the GPUArray of the current forces
-        virtual GPUArray<Dscalar2> & returnForces(){return vertexForces;};
+        virtual GPUArray<double2> & returnForces(){return vertexForces;};
         //!return a reference to the GPUArray of the current velocities
-        virtual GPUArray<Dscalar2> & returnVelocities(){return vertexVelocities;};
+        virtual GPUArray<double2> & returnVelocities(){return vertexVelocities;};
         //!return a reference to the GPUArray of the current positions
-        virtual GPUArray<Dscalar2> & returnPositions(){return vertexPositions;};
+        virtual GPUArray<double2> & returnPositions(){return vertexPositions;};
         //!return a reference to the GPUArray of the current masses
-        virtual GPUArray<Dscalar> & returnMasses(){return vertexMasses;};
+        virtual GPUArray<double> & returnMasses(){return vertexMasses;};
 
         //!Compute the geometry (area & perimeter) of the cells on the CPU
         virtual void computeGeometryCPU();
@@ -67,13 +67,13 @@ class vertexModelBase : public Simple2DActiveCell
         void getCellPositionsGPU();
 
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
-        virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams = {});
+        virtual void cellDivision(const vector<int> &parameters,const vector<double> &dParams = {});
 
         //!Kill the indexed cell...cell must have only three associated vertices
         virtual void cellDeath(int cellIndex);
 
         //!Set the length threshold for T1 transitions
-        virtual void setT1Threshold(Dscalar t1t){T1Threshold = t1t;};
+        virtual void setT1Threshold(double t1t){T1Threshold = t1t;};
 
         //!Simple test for T1 transitions (edge length less than threshold) on the CPU
         void testAndPerformT1TransitionsCPU();
@@ -100,10 +100,10 @@ class vertexModelBase : public Simple2DActiveCell
         to the net force on vertex i due to the three cell neighbors of vertex i
         */
         //!an array containing the three contributions to the force on each vertex
-        GPUArray<Dscalar2> vertexForceSets;
+        GPUArray<double2> vertexForceSets;
 
         //!A threshold defining the edge length below which a T1 transition will occur
-        Dscalar T1Threshold;
+        double T1Threshold;
 
         //!Enforce CPU-only operation.
         void setCPU(bool global = true){GPUcompute = false;};

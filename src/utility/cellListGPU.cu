@@ -14,14 +14,14 @@
 /*!
   Assign particles to bins, keep track of the number of particles per bin, etc.
   */
-__global__ void gpu_compute_cell_list_kernel(Dscalar2 *d_pt,
+__global__ void gpu_compute_cell_list_kernel(double2 *d_pt,
                                               unsigned int *d_cell_sizes,
                                               int *d_idx,
                                               int Np,
                                               unsigned int Nmax,
                                               int xsize,
                                               int ysize,
-                                              Dscalar boxsize,
+                                              double boxsize,
                                               gpubox Box,
                                               Index2D ci,
                                               Index2D cli,
@@ -33,7 +33,7 @@ __global__ void gpu_compute_cell_list_kernel(Dscalar2 *d_pt,
     if (idx >= Np)
         return;
 
-    Dscalar2 pos = d_pt[idx];
+    double2 pos = d_pt[idx];
 
     int ibin = max(0,min(xsize-1,(int)floor(pos.x/boxsize)));
     int jbin = max(0,min(xsize-1,(int)floor(pos.y/boxsize)));
@@ -122,14 +122,14 @@ bool gpu_zero_array(int *arr,
 
 
 
-bool gpu_compute_cell_list(Dscalar2 *d_pt,
+bool gpu_compute_cell_list(double2 *d_pt,
                                   unsigned int *d_cell_sizes,
                                   int *d_idx,
                                   int Np,
                                   int &Nmax,
                                   int xsize,
                                   int ysize,
-                                  Dscalar boxsize,
+                                  double boxsize,
                                   gpubox &Box,
                                   Index2D &ci,
                                   Index2D &cli,

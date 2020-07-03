@@ -51,11 +51,11 @@ class voronoiModelBase : public Simple2DActiveCell
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 
         //!moveDegrees of Freedom calls either the move points or move points CPU routines
-        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> & displacements,Dscalar scale = 1.);
+        virtual void moveDegreesOfFreedom(GPUArray<double2> & displacements,double scale = 1.);
         //!return the forces
-        virtual void getForces(GPUArray<Dscalar2> &forces){forces = cellForces;};
+        virtual void getForces(GPUArray<double2> &forces){forces = cellForces;};
         //!return a reference to the GPUArray of the current forces
-        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
+        virtual GPUArray<double2> & returnForces(){return cellForces;};
 
         //!Compute cell geometry on the CPU
         virtual void computeGeometryCPU();
@@ -63,15 +63,15 @@ class voronoiModelBase : public Simple2DActiveCell
         virtual void computeGeometryGPU();
 
         //!allow for cell division, according to a vector of model-dependent parameters
-        virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams);
+        virtual void cellDivision(const vector<int> &parameters,const vector<double> &dParams);
 
         //!Kill the indexed cell by simply removing it from the simulation
         virtual void cellDeath(int cellIndex);
 
         //!move particles on the GPU
-        void movePoints(GPUArray<Dscalar2> &displacements,Dscalar scale);
+        void movePoints(GPUArray<double2> &displacements,double scale);
         //!move particles on the CPU
-        void movePointsCPU(GPUArray<Dscalar2> &displacements,Dscalar scale);
+        void movePointsCPU(GPUArray<double2> &displacements,double scale);
         //!Transfer particle data from the GPU to the CPU for use by delLoc
         void resetDelLocPoints();
 
@@ -114,17 +114,17 @@ class voronoiModelBase : public Simple2DActiveCell
 
         //Some functions associated with derivates of voronoi vertex positions or cell geometries
         //!The derivative of a voronoi vertex position with respect to change in the first cells position
-        Matrix2x2 dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk);
+        Matrix2x2 dHdri(double2 ri, double2 rj, double2 rk);
         //!Derivative of the area of cell i with respect to the position of cell j
-        Dscalar2 dAidrj(int i, int j);
+        double2 dAidrj(int i, int j);
         //!Derivative of the perimeter of cell i with respect to the position of cell j
-        Dscalar2 dPidrj(int i, int j);
+        double2 dPidrj(int i, int j);
         //!Second derivative of area w/r/t voronoi and cell position
         Matrix2x2 d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr);
         //!Second derivative of perimeter w/r/t voronoi and cell position
-        Matrix2x2 d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr, Matrix2x2 &dvpdr,Dscalar2 vm, Dscalar2 v, Dscalar2 vp);
+        Matrix2x2 d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr, Matrix2x2 &dvpdr,double2 vm, double2 v, double2 vp);
         //!second derivatives of voronoi vertex with respect to cell positions
-        vector<Dscalar> d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj);
+        vector<double> d2Hdridrj(double2 rj, double2 rk, int jj);
 
     //public member variables
     public:
@@ -132,13 +132,13 @@ class voronoiModelBase : public Simple2DActiveCell
         DelaunayLoc delLoc;
 
         //!Collect statistics of how many triangulation repairs are done per frame, etc.
-        Dscalar repPerFrame;
+        double repPerFrame;
         //!How often were all circumcenters empty (so that no data transfers and no repairs were necessary)?
         int skippedFrames;
         //!How often were global re-triangulations performed?
         int GlobalFixes;
         //!"exclusions" zero out the force on a cell...the external force needed to do this is stored in external_forces
-        GPUArray<Dscalar2> external_forces;
+        GPUArray<double2> external_forces;
         //!An array containing the indices of excluded particles
         GPUArray<int> exclusions;
         //!The number of topology updates performed at the individual particle level
@@ -149,7 +149,7 @@ class voronoiModelBase : public Simple2DActiveCell
         //!The associated cell list structure
         cellListGPU celllist;        
         //!The size of the cell list's underlying grid
-        Dscalar cellsize;            
+        double cellsize;            
         //!An upper bound for the maximum number of neighbors that any cell has
         int neighMax;
 
@@ -199,7 +199,7 @@ class voronoiModelBase : public Simple2DActiveCell
         GPUArray<int> delOther;
 
         //!In GPU mode, interactions are computed "per voronoi vertex"...forceSets are summed up to get total force on a particle
-        GPUArray<Dscalar2> forceSets;
+        GPUArray<double2> forceSets;
     };
 
 #endif

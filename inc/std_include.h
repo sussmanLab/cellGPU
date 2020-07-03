@@ -2,9 +2,7 @@
 #define STDINCLUDE
 
 /*! \file std_include.h
-a file to be included all the time... carries with it things DMS often uses
-Crucially, it also defines Dscalars as either floats or doubles, depending on
-how the program is compiled
+a file of bad practice to be included all the time... carries with it things DMS often uses
 */
 
 #ifdef NVCC
@@ -42,14 +40,7 @@ using namespace std;
 #define PI 3.14159265358979323846
 
 //decide whether to compute everything in floating point or double precision
-#ifndef SCALARFLOAT
 //double variables types
-#define Dscalar double
-#define Dscalar2 double2
-#define Dscalar3 double3
-#define Dscalar4 double4
-//the netcdf variable type
-#define ncDscalar ncDouble
 //the cuda RNG
 #define cur_norm curand_normal_double
 //trig and special funtions
@@ -58,79 +49,35 @@ using namespace std;
 #define Floor floor
 #define Ceil ceil
 
-#else
-//floats
 
-#define Dscalar float
-#define Dscalar2 float2
-#define Dscalar3 float3
-#define Dscalar4 float4
-#define ncDscalar ncFloat
-#define cur_norm curand_normal
-#define Cos cosf
-#define Sin sinf
-#define Floor floorf
-#define Ceil ceilf
-#endif
-
-//!Less than operator for Dscalars just sorts by the x-coordinate
-HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)
+//!Less than operator for doubles just sorts by the x-coordinate
+HOSTDEVICE bool operator<(const double2 &a, const double2 &b)
     {
     return a.x<b.x;
     }
 
 //!Equality operator tests for.... equality of both elements
-HOSTDEVICE bool operator==(const Dscalar2 &a, const Dscalar2 &b)
+HOSTDEVICE bool operator==(const double2 &a, const double2 &b)
     {
     return (a.x==b.x &&a.y==b.y);
     }
 
-//!return a Dscalar2 from two Dscalars
-HOSTDEVICE Dscalar2 make_Dscalar2(Dscalar x, Dscalar y)
+//!component-wise addition of two double2s
+HOSTDEVICE double2 operator+(const double2 &a, const double2 &b)
     {
-    Dscalar2 ans;
-    ans.x =x;
-    ans.y=y;
-    return ans;
+    return make_double2(a.x+b.x,a.y+b.y);
     }
 
-//!component-wise addition of two Dscalar2s
-HOSTDEVICE Dscalar2 operator+(const Dscalar2 &a, const Dscalar2 &b)
+//!component-wise subtraction of two double2s
+HOSTDEVICE double2 operator-(const double2 &a, const double2 &b)
     {
-    return make_Dscalar2(a.x+b.x,a.y+b.y);
+    return make_double2(a.x-b.x,a.y-b.y);
     }
 
-//!component-wise subtraction of two Dscalar2s
-HOSTDEVICE Dscalar2 operator-(const Dscalar2 &a, const Dscalar2 &b)
+//!multiplication of double2 by double
+HOSTDEVICE double2 operator*(const double &a, const double2 &b)
     {
-    return make_Dscalar2(a.x-b.x,a.y-b.y);
-    }
-
-//!multiplication of Dscalar2 by Dscalar
-HOSTDEVICE Dscalar2 operator*(const Dscalar &a, const Dscalar2 &b)
-    {
-    return make_Dscalar2(a*b.x,a*b.y);
-    }
-
-//!return a Dscalar3 from three Dscalars
-HOSTDEVICE Dscalar3 make_Dscalar3(Dscalar x, Dscalar y,Dscalar z)
-    {
-    Dscalar3 ans;
-    ans.x =x;
-    ans.y=y;
-    ans.z =z;
-    return ans;
-    }
-
-//!return a Dscalar4 from four Dscalars
-HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
-    {
-    Dscalar4 ans;
-    ans.x =x;
-    ans.y=y;
-    ans.z =z;
-    ans.w=w;
-    return ans;
+    return make_double2(a*b.x,a*b.y);
     }
 
 //!Handle errors in kernel calls...returns file and line numbers if cudaSuccess doesn't pan out
@@ -154,10 +101,19 @@ inline bool fileExists(const std::string& name)
     return f.good();
     }
 
+//!Report somewhere that code needs to be written
+static void unwrittenCode(const char *message, const char *file, int line)
+    {
+    printf("\nCode unwritten (file %s; line %d)\nMessage: %s\n",file,line,message);
+    throw std::exception();
+    }
+
 //A macro to wrap cuda calls
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
 //spot-checking of code for debugging
 #define DEBUGCODEHELPER printf("\nReached: file %s at line %d\n",__FILE__,__LINE__);
+//A macro to say code needs to be written
+#define UNWRITTENCODE(message) (unwrittenCode(message,__FILE__,__LINE__))
 
 #undef HOSTDEVICE
 #endif

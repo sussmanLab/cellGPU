@@ -19,7 +19,7 @@ class VoronoiQuadraticEnergy : public voronoiModelBase
         //!initialize with random positions in a square box
         VoronoiQuadraticEnergy(int n,bool reprod = false);
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        VoronoiQuadraticEnergy(int n, Dscalar A0, Dscalar P0,bool reprod = false);
+        VoronoiQuadraticEnergy(int n, double A0, double P0,bool reprod = false);
         //!Blank constructor
         VoronoiQuadraticEnergy(){};
 
@@ -30,7 +30,7 @@ class VoronoiQuadraticEnergy : public voronoiModelBase
         virtual void computeForces();
 
         //!compute the quadratic energy functional
-        virtual Dscalar computeEnergy();
+        virtual double computeEnergy();
 
         //cell-dynamics related functions...these call functions in the next section
         //in general, these functions are the common calls, and test flags to know whether to call specific versions of specialty functions
@@ -58,14 +58,14 @@ class VoronoiQuadraticEnergy : public voronoiModelBase
         void reportForces(bool verbose);
 
         //!Save tuples for half of the dynamical matrix
-        virtual void getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress = 1.0, Dscalar stress = 1.0);
+        virtual void getDynMatEntries(vector<int2> &rcs, vector<double> &vals,double unstress = 1.0, double stress = 1.0);
 
         //!calculate the current global off-diagonal stress
-        virtual Dscalar getSigmaXY();
+        virtual double getSigmaXY();
 
     protected:
         //! Second derivative of the energy w/r/t cell positions...for getting dynMat info
-        Matrix2x2 d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress = 1.0, Dscalar stress = 1.0);
+        Matrix2x2 d2Edridrj(int i, int j, neighborType neighbor,double unstress = 1.0, double stress = 1.0);
 
     //be friends with the associated Database class so it can access data to store or read
     friend class SPVDatabaseNetCDF;

@@ -14,20 +14,20 @@
 /*!
 Each thread calculates the displacement of an individual cell
 */
-__global__ void spp_vicsek_aligning_eom_integration_kernel(Dscalar2 *forces,
-                                           Dscalar2 *velocities,
-                                           Dscalar2 *displacements,
-                                           Dscalar2 *motility,
-                                           Dscalar *cellDirectors,
+__global__ void spp_vicsek_aligning_eom_integration_kernel(double2 *forces,
+                                           double2 *velocities,
+                                           double2 *displacements,
+                                           double2 *motility,
+                                           double *cellDirectors,
                                            int *nNeighbors,
                                            int *neighbors,
                                            Index2D  n_idx,
                                            curandState *RNGs,
                                            int N,
-                                           Dscalar deltaT,
+                                           double deltaT,
                                            int Timestep,
-                                           Dscalar mu,
-                                           Dscalar Eta)
+                                           double mu,
+                                           double Eta)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     if (idx >=N)
@@ -36,28 +36,28 @@ __global__ void spp_vicsek_aligning_eom_integration_kernel(Dscalar2 *forces,
     //get an appropriate random angle displacement
     curandState_t randState;
     randState=RNGs[idx];
-    Dscalar v0 = motility[idx].x;
-    //Dscalar Dr = motility[idx].y;
-    Dscalar randomAngle = 2.0*PI*curand_uniform(&randState);
+    double v0 = motility[idx].x;
+    //double Dr = motility[idx].y;
+    double randomAngle = 2.0*PI*curand_uniform(&randState);
     RNGs[idx] = randState;
 
-    Dscalar currentTheta = cellDirectors[idx];
+    double currentTheta = cellDirectors[idx];
     //update displacements
     velocities[idx].x = v0*Cos(currentTheta) + mu*forces[idx].x;
     velocities[idx].y = v0*Sin(currentTheta) + mu*forces[idx].y;
     displacements[idx] = deltaT*velocities[idx];
 
-    Dscalar2 direction; direction.x = 0.0; direction.y=0.0;
+    double2 direction; direction.x = 0.0; direction.y=0.0;
     int neigh = nNeighbors[idx];
     for (int nn =0; nn < neigh; ++nn)
         {
-        Dscalar curTheta = cellDirectors[neighbors[n_idx(nn,idx)]];
+        double curTheta = cellDirectors[neighbors[n_idx(nn,idx)]];
         direction.x += Cos(curTheta);
         direction.y += Sin(curTheta);
         }
     direction.x += neigh*Eta*Cos(randomAngle);
     direction.y += neigh*Eta*Sin(randomAngle);
-    Dscalar phi = atan2(direction.y,direction.x);
+    double phi = atan2(direction.y,direction.x);
     
     //update director
     cellDirectors[idx] = phi;
@@ -67,20 +67,20 @@ __global__ void spp_vicsek_aligning_eom_integration_kernel(Dscalar2 *forces,
 
 //!get the current timesteps vector of displacements into the displacement vector
 bool gpu_spp_vicsek_aligning_eom_integration(
-                    Dscalar2 *forces,
-                    Dscalar2 *velocities,
-                    Dscalar2 *displacements,
-                    Dscalar2 *motility,
-                    Dscalar *cellDirectors,
+                    double2 *forces,
+                    double2 *velocities,
+                    double2 *displacements,
+                    double2 *motility,
+                    double *cellDirectors,
                     int *nNeighbors,
                     int *neighbors,
                     Index2D  &n_idx,
                     curandState *RNGs,
                     int N,
-                    Dscalar deltaT,
+                    double deltaT,
                     int Timestep,
-                    Dscalar mu,
-                    Dscalar Eta)
+                    double mu,
+                    double Eta)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;

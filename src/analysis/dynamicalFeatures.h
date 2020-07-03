@@ -12,19 +12,19 @@ class dynamicalFeatures
     {
     public:
         //!The constructor takes in a defining set of boundary conditions
-        dynamicalFeatures(GPUArray<Dscalar2> &initialPos, BoxPtr _bx, Dscalar fractionAnalyzed = 1.0);
+        dynamicalFeatures(GPUArray<double2> &initialPos, BoxPtr _bx, double fractionAnalyzed = 1.0);
 
         //!Compute the mean squared displacement of the passed vector from the initial positions
-        Dscalar computeMSD(GPUArray<Dscalar2> &currentPos);
+        double computeMSD(GPUArray<double2> &currentPos);
 
         //!compute the overlap function
-        Dscalar computeOverlapFunction(GPUArray<Dscalar2> &currentPos, Dscalar cutoff = 0.5);
+        double computeOverlapFunction(GPUArray<double2> &currentPos, double cutoff = 0.5);
     protected:
         //!the box defining the periodic domain
         BoxPtr Box;
         //!the initial positions
-        vector<Dscalar2> iPos;
-        //!the number of Dscalar2's
+        vector<double2> iPos;
+        //!the number of double2's
         int N;
     };
 #endif

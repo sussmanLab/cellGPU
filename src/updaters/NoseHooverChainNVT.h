@@ -32,29 +32,29 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
         virtual void integrateEquationsOfMotionGPU();
 
         //!Get temperature, T
-        Dscalar getT(){return Temperature;};
+        double getT(){return Temperature;};
         //!Set temperature, T, and also the bath masses!
-        void setT(Dscalar _T);
+        void setT(double _T);
 
         //!Helper structure for GPU branch. A two-component GPU array that contains the total KE and the velocity scale factor
-        GPUArray<Dscalar> kineticEnergyScaleFactor;
+        GPUArray<double> kineticEnergyScaleFactor;
         //!the (position,velocity,acceleration,mass) of the bath degrees of freedom
-        GPUArray<Dscalar4> BathVariables;
+        GPUArray<double4> BathVariables;
 
         //!Report the current status of the bath
         void reportBathData();
 
     protected:
         //!The targeted temperature
-        Dscalar Temperature;
+        double Temperature;
         //!The length of the NH chain
         int Nchain;
         //!The number of particles in the State
         int Ndof;
         //!A helper vector for the GPU branch...can be asked to store 0.5*m[i]*v[i]^2 as an array
-        GPUArray<Dscalar> keArray;
+        GPUArray<double> keArray;
         //!A helper structure for performing parallel reduction of the keArray
-        GPUArray<Dscalar> keIntermediateReduction;
+        GPUArray<double> keIntermediateReduction;
 
         //!Propagate the chain
         void propagateChain();

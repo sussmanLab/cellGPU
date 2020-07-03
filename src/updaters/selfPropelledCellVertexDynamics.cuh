@@ -15,17 +15,17 @@ A file providing an interface to the relevant cuda calls for the selfPropelledCe
 
 //!set the vector of displacements from forces and activity
 bool gpu_spp_cellVertex_eom_integration(
-                    Dscalar2 *forces,
-                    Dscalar2 *displacements,
-                    Dscalar2 *motility,
-                    Dscalar  *cellDirectors,
+                    double2 *forces,
+                    double2 *displacements,
+                    double2 *motility,
+                    double  *cellDirectors,
                     int      *vertexNeighbors,
                     curandState *RNGs,
                     int Nvertices,
                     int Ncells,
-                    Dscalar deltaT,
+                    double deltaT,
                     int Timestep,
-                    Dscalar mu);
+                    double mu);
 
 /** @} */ //end of group declaration
  #endif

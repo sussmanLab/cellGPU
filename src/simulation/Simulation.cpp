@@ -30,7 +30,7 @@ components
 void Simulation::setBox(BoxPtr _box)
     {
         //here, instead, get the elements of the BoxPtr and set the contents of Box according to _box's elements... possibly propagate this change throughout
-    Dscalar b11,b12,b21,b22;
+    double b11,b12,b21,b22;
     _box->getBoxDims(b11,b12,b21,b22);
     if (_box->isBoxSquare())
         Box->setSquare(b11,b22);
@@ -50,7 +50,7 @@ void Simulation::setConfiguration(ForcePtr _config)
 /*!
 \post the cell configuration and e.o.m. timestep is set to the input value
 */
-void Simulation::setCurrentTime(Dscalar _cTime)
+void Simulation::setCurrentTime(double _cTime)
     {
     Time = _cTime;
     auto cellConf = cellConfiguration.lock();
@@ -60,7 +60,7 @@ void Simulation::setCurrentTime(Dscalar _cTime)
 /*!
 \post the cell configuration and e.o.m. timestep is set to the input value
 */
-void Simulation::setIntegrationTimestep(Dscalar dt)
+void Simulation::setIntegrationTimestep(double dt)
     {
     integrationTimestep = dt;
     auto cellConf = cellConfiguration.lock();
@@ -115,7 +115,7 @@ void Simulation::setReproducible(bool reproducible)
 /*!
 Calls the configuration to displace the degrees of freedom
 */
-void Simulation::computeForces(GPUArray<Dscalar2> &forces)
+void Simulation::computeForces(GPUArray<double2> &forces)
     {
     auto forceComputer = cellConfiguration.lock();
     forceComputer->computeForces();
@@ -125,7 +125,7 @@ void Simulation::computeForces(GPUArray<Dscalar2> &forces)
 /*!
 Calls the configuration to displace the degrees of freedom
 */
-void Simulation::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements)
+void Simulation::moveDegreesOfFreedom(GPUArray<double2> &displacements)
     {
     auto cellConf = cellConfiguration.lock();
     cellConf->moveDegreesOfFreedom(displacements);

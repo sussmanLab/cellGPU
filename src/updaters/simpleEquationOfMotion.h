@@ -39,9 +39,9 @@ class simpleEquationOfMotion : public updaterWithNoise
         //!get the number of timesteps run
         int getTimestep(){return Timestep;};
         //!get the current simulation time
-        Dscalar getTime(){return (Dscalar)Timestep * deltaT;};
+        double getTime(){return (double)Timestep * deltaT;};
         //!Set the simulation time stepsize
-        virtual void setDeltaT(Dscalar dt){deltaT = dt;};
+        virtual void setDeltaT(double dt){deltaT = dt;};
         //! performUpdate just maps to integrateEquationsOfMotion
         virtual void performUpdate(){integrateEquationsOfMotion();};
 
@@ -49,10 +49,10 @@ class simpleEquationOfMotion : public updaterWithNoise
         //! Count the number of integration timesteps
         int Timestep;
         //!The time stepsize of the simulation
-        Dscalar deltaT;
+        double deltaT;
 
         //!an internal GPUArray for holding displacements
-        GPUArray<Dscalar2> displacements;
+        GPUArray<double2> displacements;
     };
 
 typedef shared_ptr<simpleEquationOfMotion> EOMPtr;

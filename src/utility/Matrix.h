@@ -14,21 +14,21 @@
 /*!
 Matrix2x2 provides a simple interface for operations using 2x2 matrices. In particular, it implement
 matrix-maxtrix multiplication, and has specialized matrix-vector and vector-matrix multiplication in
-which Dscalar2 variables take the place of vectors. A dyadic product is implemented which takes two
-Dscalar2s and returns a Matrix2x2
+which double2 variables take the place of vectors. A dyadic product is implemented which takes two
+double2s and returns a Matrix2x2
 */
 struct Matrix2x2
     {
     public:
         //!The entries of the matrix
-        Dscalar x11, x12, x21, x22;
+        double x11, x12, x21, x22;
         //!Default constructor is the identity matrix
         HOSTDEVICE Matrix2x2() : x11(1.0), x12(0.0), x21(0.0),x22(1.0) {};
         //!Generic constructor is whatever you wnat it to be
-        HOSTDEVICE Matrix2x2(Dscalar y11, Dscalar y12, Dscalar y21,Dscalar y22) : x11(y11), x12(y12), x21(y21),x22(y22) {};
+        HOSTDEVICE Matrix2x2(double y11, double y12, double y21,double y22) : x11(y11), x12(y12), x21(y21),x22(y22) {};
 
         //!Set the values to some desired set
-        HOSTDEVICE void set(Dscalar y11, Dscalar y12, Dscalar y21, Dscalar y22)
+        HOSTDEVICE void set(double y11, double y12, double y21, double y22)
                             {
                             x11=y11; x12=y12;x21=y21;x22=y22;
                             };
@@ -36,7 +36,7 @@ struct Matrix2x2
         //!Transpose
         HOSTDEVICE void transpose()
                             {
-                            Dscalar y21,y12;
+                            double y21,y12;
                             y21=x12;
                             y12=x21;
                             x12=y12;
@@ -67,13 +67,13 @@ struct Matrix2x2
                             };
 
         //!scalar multiplication operator
-        HOSTDEVICE void operator*=(Dscalar a)
+        HOSTDEVICE void operator*=(double a)
                             {
                             set(a*x11,a*x12,a*x21,a*x22);
                             };
 
         //!scalar right multiplication operator
-        HOSTDEVICE friend Matrix2x2 operator*(const Matrix2x2 &m,const Dscalar a)
+        HOSTDEVICE friend Matrix2x2 operator*(const Matrix2x2 &m,const double a)
                             {
                             Matrix2x2 temp(m);
                             temp*=a;
@@ -81,7 +81,7 @@ struct Matrix2x2
                             };
 
         //!scalar left multiplication operator
-        HOSTDEVICE friend Matrix2x2 operator*(const Dscalar a, const Matrix2x2 &m)
+        HOSTDEVICE friend Matrix2x2 operator*(const double a, const Matrix2x2 &m)
                             {
                             Matrix2x2 temp(m);
                             temp*=a;
@@ -125,18 +125,18 @@ struct Matrix2x2
                             };
 
         //!matrix-vector multiplication operator
-        HOSTDEVICE friend Dscalar2 operator*(const Dscalar2 &v, const Matrix2x2 &m)
+        HOSTDEVICE friend double2 operator*(const double2 &v, const Matrix2x2 &m)
                             {
-                            Dscalar2 temp;
+                            double2 temp;
                             temp.x = v.x*m.x11 + v.y*m.x21;
                             temp.y = v.x*m.x12 + v.y*m.x22;
                             return temp;
                             };
 
         //!matrix-vector multiplication operator
-        HOSTDEVICE friend Dscalar2 operator*(const Matrix2x2 &m, const Dscalar2 &v)
+        HOSTDEVICE friend double2 operator*(const Matrix2x2 &m, const double2 &v)
                             {
-                            Dscalar2 temp;
+                            double2 temp;
                             temp.x = m.x11*v.x+m.x12*v.y;
                             temp.y = m.x21*v.x+m.x22*v.y;
                             return temp;
@@ -145,7 +145,7 @@ struct Matrix2x2
     };
 
 //! Form a matrix by the dyadic product of two vectors
-HOSTDEVICE Matrix2x2 dyad(const Dscalar2 &v1, const Dscalar2 &v2)
+HOSTDEVICE Matrix2x2 dyad(const double2 &v1, const double2 &v2)
     {
     return Matrix2x2(v1.x*v2.x,v1.x*v2.y,v1.y*v2.x,v1.y*v2.y);
     };

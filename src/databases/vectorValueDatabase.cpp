@@ -34,8 +34,8 @@ void vectorValueDatabase::SetDimVar()
     unitDim = File.add_dim("unit",1);
 
     //Set the variables
-    vecVar = File.add_var("vector", ncDscalar,recDim, dofDim);
-    valVar = File.add_var("value",ncDscalar,recDim);
+    vecVar = File.add_var("vector", ncDouble,recDim, dofDim);
+    valVar = File.add_var("value",ncDouble,recDim);
     }
 
 void vectorValueDatabase::GetDimVar()
@@ -49,7 +49,7 @@ void vectorValueDatabase::GetDimVar()
     valVar = File.get_var("value");
     }
 
-void vectorValueDatabase::WriteState(vector<Dscalar> &vec,Dscalar val)
+void vectorValueDatabase::WriteState(vector<double> &vec,double val)
     {
     int rec = recDim->size();
     valVar->put_rec(&val,rec);

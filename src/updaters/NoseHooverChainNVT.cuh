@@ -12,24 +12,24 @@ This file provides an interface to cuda calls for integrating the NoseHooverChai
  * @{
  */
 
-//! (Dscalar) ans = (Dscalar2) vec1 . vec2
-bool gpu_prepare_KE_vector(Dscalar2   *velocities,
-                              Dscalar *masses,
-                              Dscalar *keArray,
+//! (double) ans = (double2) vec1 . vec2
+bool gpu_prepare_KE_vector(double2   *velocities,
+                              double *masses,
+                              double *keArray,
                               int N);
 
 //!Rescale the velocities according to the given scale factor
 bool gpu_NoseHooverChainNVT_scale_velocities(
-                    Dscalar2 *velocities,
-                    Dscalar  *kineticEnergyScaleFactor,
+                    double2 *velocities,
+                    double  *kineticEnergyScaleFactor,
                     int       N);
 
 //!update the velocities according to the forces and the masses
 bool gpu_NoseHooverChainNVT_update_velocities(
-                    Dscalar2 *velocities,
-                    Dscalar2 *forces,
-                    Dscalar  *masses,
-                    Dscalar  deltaT,
+                    double2 *velocities,
+                    double2 *forces,
+                    double  *masses,
+                    double  deltaT,
                     int       N);
 
 /** @} */ //end of group declaration

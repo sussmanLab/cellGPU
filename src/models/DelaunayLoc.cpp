@@ -6,7 +6,7 @@
 /*!
 \param points references to a vector of new location for points, formatted as {x1,y1,x2,y2,...}
 */
-void DelaunayLoc::setPoints(vector<Dscalar> &points)
+void DelaunayLoc::setPoints(vector<double> &points)
     {
     nV=points.size()/2;
     pts.resize(nV);
@@ -14,17 +14,17 @@ void DelaunayLoc::setPoints(vector<Dscalar> &points)
     cellsize = 2.0;
     for (unsigned int ii = 0; ii<nV; ++ii)
         {
-        Dscalar2 point;
+        double2 point;
         point.x=points[ii*2]; point.y=points[ii*2+1];
         pts[ii]=point;
         };
     };
 /*!
-\param points ArrayHandle of Dscalar2's that has already accessed a GPUArray containing the
+\param points ArrayHandle of double2's that has already accessed a GPUArray containing the
 new desired points
 \param N the number of cells that the ArrayHandle knows about
 */
-void DelaunayLoc::setPoints(ArrayHandle<Dscalar2> &points, int N)
+void DelaunayLoc::setPoints(ArrayHandle<double2> &points, int N)
     {
     nV=N;
     pts.clear();
@@ -38,16 +38,16 @@ void DelaunayLoc::setPoints(ArrayHandle<Dscalar2> &points, int N)
     };
 
 /*!
-\param points a GPUArray of Dscalar2's with the new desired points
+\param points a GPUArray of double2's with the new desired points
 */
-void DelaunayLoc::setPoints(GPUArray<Dscalar2> &points)
+void DelaunayLoc::setPoints(GPUArray<double2> &points)
     {
     nV=points.getNumElements();
     //pts.clear();
     pts.resize(nV);
     triangulated = false;
     cellsize = 2.0;
-    ArrayHandle<Dscalar2> hp(points,access_location::host,access_mode::read);
+    ArrayHandle<double2> hp(points,access_location::host,access_mode::read);
     for (int ii = 0; ii < nV; ++ii)
         {
         pts[ii].x=hp.data[ii].x;
@@ -56,9 +56,9 @@ void DelaunayLoc::setPoints(GPUArray<Dscalar2> &points)
     };
 
 /*!
-\param points a vector of Dscalar2's with the new desired points
+\param points a vector of double2's with the new desired points
 */
-void DelaunayLoc::setPoints(vector<Dscalar2> &points)
+void DelaunayLoc::setPoints(vector<double2> &points)
     {
     nV=points.size();
     pts.clear();pts.reserve(nV);
@@ -76,7 +76,7 @@ void DelaunayLoc::setPoints(vector<Dscalar2> &points)
 void DelaunayLoc::setBox(gpubox &bx)
     {
     Box = make_shared<gpubox>();
-    Dscalar b11,b12,b21,b22;
+    double b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
     if (bx.isBoxSquare())
         Box->setSquare(b11,b22);
@@ -88,7 +88,7 @@ void DelaunayLoc::setBox(gpubox &bx)
 \pre the internal box is already set, and the points are already set
 \post points are sorted into cells
 */
-void DelaunayLoc::initialize(Dscalar csize)
+void DelaunayLoc::initialize(double csize)
     {
     cellsize = csize;
     cList.setNp(nV);
@@ -106,17 +106,17 @@ quadrant around cell i is found.
 \param P0 a reference to the indices of cells that form the enclosing polygon
 \param P1 a reference to the positions of the cells forming the enclosing polygon relative to cell i
 */
-void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
+void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<double2> &P1)
     {
     vector<int> Pt(4,-1);
-    Dscalar2 np;
+    double2 np;
     np.x=-1;np.y=-1;
-    vector<Dscalar2> Pt2(4,np);
+    vector<double2> Pt2(4,np);
     P0.resize(4);
     P1.resize(4);
 
-    vector<Dscalar> dists(4,1e6);
-    Dscalar2 v = pts[i];
+    vector<double> dists(4,1e6);
+    double2 v = pts[i];
     int cidx = cList.positionToCellIndex(v.x,v.y);
     vector<bool> found(4,false);
     int wmax = cList.getXsize();
@@ -124,8 +124,8 @@ void DelaunayLoc::getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1)
     int width = 0;
     vector<int> cellneighs;cellneighs.reserve(25);
     int idx;
-    Dscalar2 disp;
-    Dscalar nrm;
+    double2 disp;
+    double nrm;
     ArrayHandle<unsigned int> h_cs(cList.cell_sizes,access_location::host,access_mode::read);
     ArrayHandle<int> h_idx(cList.idxs,access_location::host,access_mode::read);
     while(!found[0]||!found[1]||!found[2]||!found[3])
@@ -166,22 +166,22 @@ polygon
 \post DTringIdx and DTring contain cells, of which the Delaunay neighbors of cell i are a strict
 subset
 */
-void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
+void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<double2> &DTring)
     {
     //first, find a polygon enclosing vertex i
     vector<int> P0;//index of vertices forming surrounding sqaure
-    vector<Dscalar2> P1;//relative position of vertices forming surrounding square
+    vector<double2> P1;//relative position of vertices forming surrounding square
     getPolygon(i,P0,P1);
 
     //now, get the cells in the circumcircles
-    Dscalar2 v;
+    double2 v;
     v.x=pts[i].x;v.y=pts[i].y;
     DTring.clear();
     DTringIdx.clear();
 
     int reduceSize = 30;
     DTring.reserve(2*reduceSize); DTringIdx.reserve(2*reduceSize);
-    Dscalar2 vc;
+    double2 vc;
     vc.x=0.0; vc.y=0.0;
     DTring.push_back(vc);
     DTringIdx.push_back(i);
@@ -191,15 +191,15 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
         DTring.push_back(P1[jj]);
         };
 
-    vector<Dscalar2> Q0;//vector of circumcenters formed by vertex i and the P_i
-    Dscalar2 Qnew;
+    vector<double2> Q0;//vector of circumcenters formed by vertex i and the P_i
+    double2 Qnew;
     Qnew.x=0.0;Qnew.y=0.0;
     bool valid;
-    vector<Dscalar> rads;
+    vector<double> rads;
     Q0.reserve(4);
     rads.reserve(4);
-    Dscalar radius;
-    Dscalar vx = 0.0;Dscalar vy = 0.0;
+    double radius;
+    double vx = 0.0;double vy = 0.0;
     for (int ii = 0; ii < 4; ++ii)
         {
         Circumcircle(P1[ii],P1[(ii+1)%4],Qnew,radius);
@@ -227,10 +227,10 @@ void DelaunayLoc::getOneRingCandidate(int i, vector<int> &DTringIdx, vector<Dsca
     cellns.erase(unique(cellns.begin(),cellns.end() ), cellns.end() );
     //cellschecked = cellns.size();
 
-    Dscalar2 tocenter;
-    Dscalar2 disp;
+    double2 tocenter;
+    double2 disp;
     bool repeat=false;
-    Dscalar rr;
+    double rr;
     ArrayHandle<unsigned int> h_cs(cList.cell_sizes,access_location::host,access_mode::read);
     ArrayHandle<int> h_idx(cList.idxs,access_location::host,access_mode::read);
     for (int cc = 0; cc < cellns.size(); ++cc)
@@ -282,23 +282,23 @@ this routine will almost never be called.
 \param DTring a reference to a vector of relative cell positions that will make up the candidate 1-ring
 subset
 */
-void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> &DTring)
+void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<double2> &DTring)
     {
     //basically, see if an enclosing polygon with a smaller sum of circumcircle radii can be found
     //start with the vertex i
     vector<int> newRingIdx; newRingIdx.reserve(50);
-    vector<Dscalar2> newRing;     newRing.reserve(50);
-    Dscalar2 v;
+    vector<double2> newRing;     newRing.reserve(50);
+    double2 v;
     v.x=0.0;v.y=0.0;
     newRing.push_back(v);
     newRingIdx.push_back(i);
 
-    vector<Dscalar2> Q0;//vector of circumcenters formed by vertex i and the P_i
-    Dscalar2 Qnew,Qnew2;
+    vector<double2> Q0;//vector of circumcenters formed by vertex i and the P_i
+    double2 Qnew,Qnew2;
     Qnew.x=0.0;Qnew.y=0.0;Qnew2.x=0.0;Qnew2.y=0.0;
     bool valid;
     vector<int> P0(4);
-    vector<Dscalar2> P1(4);
+    vector<double2> P1(4);
     P0[0]=DTringIdx[1];
     P0[1]=DTringIdx[2];
     P0[2]=DTringIdx[3];
@@ -308,11 +308,11 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
     P1[2]=DTring[3];
     P1[3]=DTring[4];
 
-    Dscalar radius;
-    Dscalar vx = 0.0;Dscalar vy = 0.0;
+    double radius;
+    double vx = 0.0;double vy = 0.0;
 
     int Psize=P1.size();
-    vector<Dscalar> rads;
+    vector<double> rads;
     Q0.reserve(4);
     rads.reserve(4);
     for (int ii = 0; ii < Psize; ++ii)
@@ -328,7 +328,7 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
         int polyi1 = (q+1)%Psize;
         int polyi2 = q-1;
         if(polyi2 < 0) polyi2 = Psize -1;
-        Dscalar r1,r2;
+        double r1,r2;
         Circumcircle(DTring[nn],P1[polyi1],Qnew,r1);
         Circumcircle(P1[polyi2],DTring[nn],Qnew2,r2);
         if(r1+r2 < rads[q]+rads[polyi2])
@@ -343,8 +343,8 @@ void DelaunayLoc::reduceOneRing(int i, vector<int> &DTringIdx, vector<Dscalar2> 
         };
 
     bool repeat = false;
-    Dscalar2 tocenter;
-    Dscalar rr;
+    double2 tocenter;
+    double rr;
     for (int pp = 1; pp < DTring.size(); ++pp)
         {
         //check if DTring[pp] is in any of the new circumcircles
@@ -413,7 +413,7 @@ void DelaunayLoc::getNeighbors(int i, vector<int> &neighbors)
     DelaunayCell DCell;
     //first, get candidate 1-ring
     vector<int> DTringIdx;
-    vector<Dscalar2> DTring;
+    vector<double2> DTring;
     getOneRingCandidate(i,DTringIdx,DTring);
 
 
@@ -428,7 +428,7 @@ void DelaunayLoc::getNeighbors(int i, vector<int> &neighbors)
     //get the Delaunay neighbors of that point
     del.DT.getNeighbors(sv,neighbors);
     DCell.setSize(neighbors.size());
-    Dscalar2 pi;
+    double2 pi;
     for (int ii = 0; ii < DCell.n; ++ii)
         {
         del.getSortedPoint(neighbors[ii],pi);
@@ -468,7 +468,7 @@ void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &
     {
     //first, get candidate 1-ring
     vector<int> DTringIdx;
-    vector<Dscalar2> DTring;
+    vector<double2> DTring;
     getOneRingCandidate(i,DTringIdx,DTring);
 
 
@@ -482,7 +482,7 @@ void DelaunayLoc::triangulatePoint(int i, vector<int> &neighbors, DelaunayCell &
     //get the Delaunay neighbors of that point
     del.DT.getNeighbors(sv,neighbors);
     DCell.setSize(neighbors.size());
-    Dscalar2 pi;
+    double2 pi;
     for (int ii = 0; ii < DCell.n; ++ii)
         {
         del.getSortedPoint(neighbors[ii],pi);
@@ -515,26 +515,26 @@ Given a cell index and a propsed set of neighbors in CCW order, see if all circu
 bool DelaunayLoc::testPointTriangulation(int i, vector<int> &neighbors, bool timing)
     {
 
-    Dscalar2 v = pts[i];
+    double2 v = pts[i];
     //for each circumcirlce, see if its empty
     int neigh1 = neighbors[neighbors.size()-1];
     vector<int> cns;
-    Dscalar radius;
-    Dscalar vx = 0.0; Dscalar vy = 0.0;
+    double radius;
+    double vx = 0.0; double vy = 0.0;
     bool repeat = false;
-    Dscalar2 tocenter, disp;
+    double2 tocenter, disp;
 
     for (int nn = 0; nn < neighbors.size(); ++nn)
         {
         if (repeat) continue;
         int neigh2 = neighbors[nn];
-        Dscalar2 pt1, pt2;
+        double2 pt1, pt2;
         Box->minDist(pts[neigh1],v,pt1);
         Box->minDist(pts[neigh2],v,pt2);
 
-        Dscalar2 Q;
+        double2 Q;
         Circumcircle(pt1,pt2,Q,radius);
-        Dscalar rad2 = radius*radius;
+        double rad2 = radius*radius;
 
         //what cell indices to check
         int cix = cList.positionToCellIndex(v.x+Q.x,v.y+Q.y);
@@ -579,7 +579,7 @@ Test all circumcircles to see if they are empty, and flag particles for retriang
 */
 void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool timing)
     {
-    Dscalar vx = 0.0; Dscalar vy = 0.0;
+    double vx = 0.0; double vy = 0.0;
     int circumcircles = ccs.size()/3;
 
     for (int c = 0; c < circumcircles; ++c)
@@ -587,19 +587,19 @@ void DelaunayLoc::testTriangulation(vector<int> &ccs, vector<bool> &points, bool
         int ii = ccs[3*c];
         int neigh1 = ccs[3*c+1];
         int neigh2 = ccs[3*c+2];
-        Dscalar2 v=pts[ii];
-        Dscalar2 pt1,pt2;
+        double2 v=pts[ii];
+        double2 pt1,pt2;
         Box->minDist(pts[neigh1],v,pt1);
         Box->minDist(pts[neigh2],v,pt2);
 
         vector<int> cns;
-        Dscalar radius;
+        double radius;
         bool repeat = false;
 
-        Dscalar2 tocenter,disp;
-        Dscalar2 Q;
+        double2 tocenter,disp;
+        double2 Q;
         Circumcircle(pt1,pt2,Q,radius);
-        Dscalar rad2 = radius*radius;
+        double rad2 = radius*radius;
 
         //what cell indices to check
         int cix = cList.positionToCellIndex(v.x+Q.x,v.y+Q.y);
@@ -688,21 +688,21 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
     {
     cout << "Timing DelaunayLoc routine..." << endl;
     nV = numpts;
-    Dscalar boxa = sqrt(numpts)+1.0;
+    double boxa = sqrt(numpts)+1.0;
     gpubox Bx(boxa,boxa);
     setBox(Bx);
-    vector<Dscalar> ps2(2*numpts);
-    vector<Dscalar> ps3(2*numpts);
-    Dscalar maxx = 0.0;
+    vector<double> ps2(2*numpts);
+    vector<double> ps3(2*numpts);
+    double maxx = 0.0;
     int randmax = 1000000;
     for (int i=0;i<numpts;++i)
         {
-        Dscalar x =EPSILON+boxa/(Dscalar)randmax* (Dscalar)(rand()%randmax);
-        Dscalar y =EPSILON+boxa/(Dscalar)randmax* (Dscalar)(rand()%randmax);
+        double x =EPSILON+boxa/(double)randmax* (double)(rand()%randmax);
+        double y =EPSILON+boxa/(double)randmax* (double)(rand()%randmax);
         ps2[i*2]=x;
         ps2[i*2+1]=y;
-        Dscalar x3 =EPSILON+boxa/(Dscalar)randmax* (Dscalar)(rand()%randmax);
-        Dscalar y3 =EPSILON+boxa/(Dscalar)randmax* (Dscalar)(rand()%randmax);
+        double x3 =EPSILON+boxa/(double)randmax* (double)(rand()%randmax);
+        double y3 =EPSILON+boxa/(double)randmax* (double)(rand()%randmax);
         ps3[i*2]=x3;
         ps3[i*2+1]=y3;
         };
@@ -718,7 +718,7 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
 
 
     geotiming=polytiming=ringcandtiming=reducedtiming=tritiming=tritesttiming=0.;
-    Dscalar timing = 0.;
+    double timing = 0.;
     for (int tt = 0; tt < tmax; ++tt)
         {
         setPoints(ps2);
@@ -731,7 +731,7 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
             triangulatePoint(nn,neighs,cell,true);
             allneighs[nn]=neighs;
             tstop=clock();
-            timing += (tstop-tstart)/(Dscalar)CLOCKS_PER_SEC/(Dscalar)tmax;
+            timing += (tstop-tstart)/(double)CLOCKS_PER_SEC/(double)tmax;
 
 
             for (int jj = 0; jj < neighs.size();++jj)
@@ -752,7 +752,7 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
             };
         for (int nn = 0; nn < ps2.size(); ++nn)
             {
-            Dscalar diff = -err*0.5+err*(Dscalar)(rand()%randmax)/((Dscalar)randmax); 
+            double diff = -err*0.5+err*(double)(rand()%randmax)/((double)randmax); 
             ps3[nn] = ps2[nn] + diff;
             };
         setPoints(ps3);
@@ -767,20 +767,20 @@ void DelaunayLoc::testDel(int numpts, int tmax,double err, bool verbose)
                 };
             };
         tstop=clock();
-        tritesttiming += (tstop-tstart)/(Dscalar)CLOCKS_PER_SEC;
+        tritesttiming += (tstop-tstart)/(double)CLOCKS_PER_SEC;
         };
 
     totaltiming=timing;
     cout << "average time per complete triangulation = " << timing << endl;
     if (verbose)
         {
-        cout << "          mean time for getPolygon = " << polytiming/(Dscalar)tmax << endl;
-        cout << "          mean time for 1ringcandidates = " << (ringcandtiming-polytiming-reducedtiming)/(Dscalar)tmax << endl;
-        cout << "          mean time for reduced ring= " << reducedtiming/(Dscalar)tmax << endl;
-        cout << "          mean time for geometry   = " << geotiming/(Dscalar)tmax << endl;
-        cout << "          mean time for triangulation   = " << tritiming/(Dscalar)tmax << endl;
+        cout << "          mean time for getPolygon = " << polytiming/(double)tmax << endl;
+        cout << "          mean time for 1ringcandidates = " << (ringcandtiming-polytiming-reducedtiming)/(double)tmax << endl;
+        cout << "          mean time for reduced ring= " << reducedtiming/(double)tmax << endl;
+        cout << "          mean time for geometry   = " << geotiming/(double)tmax << endl;
+        cout << "          mean time for triangulation   = " << tritiming/(double)tmax << endl;
         cout << "   ratio of total candidate time to triangulating time:  " <<ringcandtiming/tritiming << endl;
-        cout << "average time to check triangulation   = " << tritesttiming/(Dscalar)tmax << endl;
+        cout << "average time to check triangulation   = " << tritesttiming/(double)tmax << endl;
         };
 
     };

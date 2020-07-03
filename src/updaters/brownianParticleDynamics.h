@@ -27,13 +27,13 @@ class brownianParticleDynamics : public simpleEquationOfMotion
         virtual void integrateEquationsOfMotionGPU();
 
         //!Get temperature, T
-        Dscalar getT(){return Temperature;};
+        double getT(){return Temperature;};
         //!Set temperature, T
-        void setT(Dscalar _T){Temperature=_T;};
+        void setT(double _T){Temperature=_T;};
         //!Get the inverse friction constant, mu
-        Dscalar getMu(){return mu;};
+        double getMu(){return mu;};
         //!Set the value of the inverse friction coefficient
-        void setMu(Dscalar _mu){mu=_mu;};
+        void setMu(double _mu){mu=_mu;};
         
         //! virtual function to allow the model to be a derived class
         virtual void set2DModel(shared_ptr<Simple2DModel> _model);
@@ -45,8 +45,8 @@ class brownianParticleDynamics : public simpleEquationOfMotion
         //!A shared pointer to a simple cell model
         shared_ptr<Simple2DCell> cellModel;
         //!The temperature. That right there is an A-plus level doxygen description
-        Dscalar Temperature;
+        double Temperature;
         //!The value of the inverse friction constant
-        Dscalar mu;
+        double mu;
     };
 #endif

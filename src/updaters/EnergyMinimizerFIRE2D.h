@@ -37,19 +37,19 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         //!Set the maximum number of iterations before terminating (or set to -1 to ignore)
         void setMaximumIterations(int maxIt){maxIterations = maxIt;};
         //!Set the force cutoff
-        void setForceCutoff(Dscalar fc){forceCutoff = fc;};
+        void setForceCutoff(double fc){forceCutoff = fc;};
         //!set the initial value of deltaT
-        void setDeltaT(Dscalar dt){deltaT = dt;deltaTMin=dt*.01;};
+        void setDeltaT(double dt){deltaT = dt;deltaTMin=dt*.01;};
         //!set the initial value of alpha and alphaStart
-        void setAlphaStart(Dscalar as){alphaStart = as;alpha = as;};
+        void setAlphaStart(double as){alphaStart = as;alpha = as;};
         //!Set the maximum deltaT
-        void setDeltaTMax(Dscalar tmax){deltaTMax = tmax;};
+        void setDeltaTMax(double tmax){deltaTMax = tmax;};
         //!Set the fraction by which delta increments
-        void setDeltaTInc(Dscalar dti){deltaTInc = dti;};
+        void setDeltaTInc(double dti){deltaTInc = dti;};
         //!Set the fraction by which delta decrements
-        void setDeltaTDec(Dscalar dtc){deltaTDec = dtc;};
+        void setDeltaTDec(double dtc){deltaTDec = dtc;};
         //!Set the fraction by which alpha decrements
-        void setAlphaDec(Dscalar ad){alphaDec = ad;};
+        void setAlphaDec(double ad){alphaDec = ad;};
         //!Set the number of consecutive steps P must be non-negative before increasing delatT
         void setNMin(int nm){NMin = nm;};
 
@@ -73,10 +73,10 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         virtual void integrateEquationsOfMotion(){minimize();};
 
         //!Test the parallel reduction routines by passing in a known vector
-        void parallelReduce(GPUArray<Dscalar> &vec);
+        void parallelReduce(GPUArray<double> &vec);
 
         //!Return the maximum force
-        Dscalar getMaxForce(){return forceMax;};
+        double getMaxForce(){return forceMax;};
 
     protected:
         //!The number of iterations performed
@@ -84,9 +84,9 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         //!The maximum number of iterations allowed
         int maxIterations;
         //!The cutoff value of the maximum force
-        Dscalar forceMax;
+        double forceMax;
         //!The cutoff value of the maximum force
-        Dscalar forceCutoff;
+        double forceCutoff;
         //!The number of points, or cells, or particles
         int N;
         //!The numer of consecutive time steps the power must be positive before increasing deltaT
@@ -94,40 +94,40 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         //!The numer of consecutive time since the power has be negative
         int NSinceNegativePower;
         //!The internal time step size
-        Dscalar deltaT;
+        double deltaT;
         //!The minimum time step size
-        Dscalar deltaTMin;
+        double deltaTMin;
         //!The maximum time step size
-        Dscalar deltaTMax;
+        double deltaTMax;
         //!The fraction by which deltaT can get bigger
-        Dscalar deltaTInc;
+        double deltaTInc;
         //!The fraction by which deltaT can get smaller
-        Dscalar deltaTDec;
+        double deltaTDec;
         //!The internal value of the "power"
-        Dscalar Power;
+        double Power;
         //!The alpha parameter of the minimization routine
-        Dscalar alpha;
+        double alpha;
         //!The initial value of the alpha parameter
-        Dscalar alphaStart;
+        double alphaStart;
         //!The fraction by which alpha can decrease
-        Dscalar alphaDec;
+        double alphaDec;
         //!The GPUArray containing the force
-        GPUArray<Dscalar2> force;
+        GPUArray<double2> force;
         //!The GPUArray containing the velocity
-        GPUArray<Dscalar2> velocity;
+        GPUArray<double2> velocity;
         //!an array of displacements
-        GPUArray<Dscalar2> displacement;
+        GPUArray<double2> displacement;
 
         //!Utility array for computing force.velocity
-        GPUArray<Dscalar> forceDotVelocity;
+        GPUArray<double> forceDotVelocity;
         //!Utility array for computing force.force
-        GPUArray<Dscalar> forceDotForce;
+        GPUArray<double> forceDotForce;
         //!Utility array for computing velocity.velocity
-        GPUArray<Dscalar> velocityDotVelocity;
+        GPUArray<double> velocityDotVelocity;
 
         //!Utility array for simple reductions
-        GPUArray<Dscalar> sumReductionIntermediate;
+        GPUArray<double> sumReductionIntermediate;
         //!Utility array for simple reductions
-        GPUArray<Dscalar> sumReductions;
+        GPUArray<double> sumReductions;
     };
 #endif

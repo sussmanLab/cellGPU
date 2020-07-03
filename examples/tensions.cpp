@@ -22,11 +22,11 @@ int main(int argc, char*argv[])
     int tSteps = 5;
     int initSteps = 0;
 
-    Dscalar dt = 0.1;
-    Dscalar p0 = 4.0;
-    Dscalar a0 = 1.0;
-    Dscalar v0 = 0.1;
-    Dscalar gamma = 0.0;
+    double dt = 0.1;
+    double p0 = 4.0;
+    double a0 = 1.0;
+    double v0 = 0.1;
+    double gamma = 0.0;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
@@ -76,12 +76,12 @@ int main(int argc, char*argv[])
     vector<int> types(numpts);
     for (int ii = 0; ii < numpts; ++ii) types[ii]=ii;
     spv->setCellType(types);
-    //"setSurfaceTension" with a single Dscalar just declares a single tension value to apply whenever cells of different type are in contact
+    //"setSurfaceTension" with a single double just declares a single tension value to apply whenever cells of different type are in contact
     spv->setSurfaceTension(gamma);
     spv->setUseSurfaceTension(true);
 
     //in contrast, setSurfaceTension with a vector allows an entire matrix of type-type interactions to be specified
-    //vector<Dscalar> gams(numpts*numpts,gamma);
+    //vector<double> gams(numpts*numpts,gamma);
     //spv->setSurfaceTension(gams);
 
     SimulationPtr sim = make_shared<Simulation>();

@@ -14,17 +14,17 @@
 /*!
 Each thread calculates the displacement of an individual cell
 */
-__global__ void spp_aligning_eom_integration_kernel(Dscalar2 *forces,
-                                           Dscalar2 *velocities,
-                                           Dscalar2 *displacements,
-                                           Dscalar2 *motility,
-                                           Dscalar *cellDirectors,
+__global__ void spp_aligning_eom_integration_kernel(double2 *forces,
+                                           double2 *velocities,
+                                           double2 *displacements,
+                                           double2 *motility,
+                                           double *cellDirectors,
                                            curandState *RNGs,
                                            int N,
-                                           Dscalar deltaT,
+                                           double deltaT,
                                            int Timestep,
-                                           Dscalar mu,
-                                           Dscalar J)
+                                           double mu,
+                                           double J)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     if (idx >=N)
@@ -33,12 +33,12 @@ __global__ void spp_aligning_eom_integration_kernel(Dscalar2 *forces,
     //get an appropriate random angle displacement
     curandState_t randState;
     randState=RNGs[idx];
-    Dscalar v0 = motility[idx].x;
-    Dscalar Dr = motility[idx].y;
-    Dscalar angleDiff = cur_norm(&randState)*sqrt(2.0*deltaT*Dr);
+    double v0 = motility[idx].x;
+    double Dr = motility[idx].y;
+    double angleDiff = cur_norm(&randState)*sqrt(2.0*deltaT*Dr);
     RNGs[idx] = randState;
 
-    Dscalar currentTheta = cellDirectors[idx];
+    double currentTheta = cellDirectors[idx];
     if(currentTheta < -PI)
         currentTheta += 2*PI;
     if(currentTheta > PI)
@@ -48,7 +48,7 @@ __global__ void spp_aligning_eom_integration_kernel(Dscalar2 *forces,
     velocities[idx].y = v0*Sin(currentTheta) + mu*forces[idx].y;
     displacements[idx] = deltaT*velocities[idx];
 
-    Dscalar currentPhi = atan2(displacements[idx].y,displacements[idx].x);
+    double currentPhi = atan2(displacements[idx].y,displacements[idx].x);
 
     //update director
     cellDirectors[idx] = currentTheta + angleDiff - deltaT*J*Sin(currentTheta-currentPhi);
@@ -57,17 +57,17 @@ __global__ void spp_aligning_eom_integration_kernel(Dscalar2 *forces,
 
 //!get the current timesteps vector of displacements into the displacement vector
 bool gpu_spp_aligning_eom_integration(
-                    Dscalar2 *forces,
-                    Dscalar2 *velocities,
-                    Dscalar2 *displacements,
-                    Dscalar2 *motility,
-                    Dscalar *cellDirectors,
+                    double2 *forces,
+                    double2 *velocities,
+                    double2 *displacements,
+                    double2 *motility,
+                    double *cellDirectors,
                     curandState *RNGs,
                     int N,
-                    Dscalar deltaT,
+                    double deltaT,
                     int Timestep,
-                    Dscalar mu,
-                    Dscalar J)
+                    double mu,
+                    double J)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;

@@ -9,10 +9,10 @@ class setTotalLinearMomentum : public updater
     {
     public:
         //! By default, target zero total linear momentum
-        setTotalLinearMomentum(Dscalar px = 0.0, Dscalar py = 0.0);
+        setTotalLinearMomentum(double px = 0.0, double py = 0.0);
 
         //!sets the target x and y total system momentum
-        void setMomentumTarget(Dscalar px, Dscalar py);
+        void setMomentumTarget(double px, double py);
 
         //! performUpdate just selects either the GPU or CPU branch
         virtual void performUpdate();
@@ -23,11 +23,11 @@ class setTotalLinearMomentum : public updater
         virtual void setLinearMomentumGPU();
     protected:
         //!A helper vector for the GPU branch...can be asked to store m[i]*v[i] as an array
-        GPUArray<Dscalar2> pArray;
+        GPUArray<double2> pArray;
         //!A helper structure for performing parallel reduction of the keArray
-        GPUArray<Dscalar2> pIntermediateReduction;
+        GPUArray<double2> pIntermediateReduction;
         //!Helper structure for the GPU branch. A 2 component arry that contains the target and current linear momentum
-        GPUArray<Dscalar2> pHelper;
+        GPUArray<double2> pHelper;
 
     };
 #endif

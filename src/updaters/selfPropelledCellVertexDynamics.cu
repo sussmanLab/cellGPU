@@ -16,13 +16,13 @@
   motility of the three adjacent cells
   */
 __global__ void calculate_vertex_displacement_kernel(
-                                        Dscalar2 *d_forces,
-                                        Dscalar2 *d_displacements,
-                                        Dscalar2 *motility,
-                                        Dscalar  *d_cellDirectors,
+                                        double2 *d_forces,
+                                        double2 *d_displacements,
+                                        double2 *motility,
+                                        double  *d_cellDirectors,
                                         int      *d_vertexCellNeighbors,
-                                        Dscalar  deltaT,
-                                        Dscalar  mu,
+                                        double  deltaT,
+                                        double  mu,
                                         int      Nvertices)
     {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -33,13 +33,13 @@ __global__ void calculate_vertex_displacement_kernel(
     int vn1 = d_vertexCellNeighbors[3*idx];
     int vn2 = d_vertexCellNeighbors[3*idx+1];
     int vn3 = d_vertexCellNeighbors[3*idx+2];
-    Dscalar v1 = motility[vn1].x;
-    Dscalar v2 = motility[vn2].x;
-    Dscalar v3 = motility[vn3].x;
+    double v1 = motility[vn1].x;
+    double v2 = motility[vn2].x;
+    double v3 = motility[vn3].x;
 
-    Dscalar directorx =
+    double directorx =
             (v1*Cos(d_cellDirectors[vn1])+v2*Cos(d_cellDirectors[vn2])+v3*Cos(d_cellDirectors[vn3]))/3.0;
-    Dscalar directory =
+    double directory =
             (v1*Sin(d_cellDirectors[vn1])+v2*Sin(d_cellDirectors[vn2])+v3*Sin(d_cellDirectors[vn3]))/3.0;
     //update positions from forces and motility
     d_displacements[idx].x = deltaT*(directorx + mu*d_forces[idx].x);
@@ -50,10 +50,10 @@ __global__ void calculate_vertex_displacement_kernel(
 After the vertices have been moved, the directors of the cells have some noise.
   */
 __global__ void rotate_directors_kernel(
-                                        Dscalar  *d_cellDirectors,
+                                        double  *d_cellDirectors,
                                         curandState *d_curandRNGs,
-                                        Dscalar2 *motility,
-                                        Dscalar  deltaT,
+                                        double2 *motility,
+                                        double  deltaT,
                                         int      Ncells)
     {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -71,17 +71,17 @@ __global__ void rotate_directors_kernel(
 
 //!get the current timesteps vector of displacements into the displacement vector, rotate the cells
 bool gpu_spp_cellVertex_eom_integration(
-                    Dscalar2 *forces,
-                    Dscalar2 *displacements,
-                    Dscalar2 *motility,
-                    Dscalar  *cellDirectors,
+                    double2 *forces,
+                    double2 *displacements,
+                    double2 *motility,
+                    double  *cellDirectors,
                     int      *vertexCellNeighbors,
                     curandState *RNGs,
                     int Nvertices,
                     int Ncells,
-                    Dscalar deltaT,
+                    double deltaT,
                     int Timestep,
-                    Dscalar mu)
+                    double mu)
     {
     unsigned int block_size = 128;
     if (Nvertices < 128) block_size = 32;

@@ -32,11 +32,11 @@ struct DelaunayCell
     {
     public:
         int n; //!<number of delaunay neighbors
-        std::vector< Dscalar2 > Dneighs; //!< The relative positions of the Delaunay neighbors
-        std::vector<std::pair <Dscalar,int> > CWorder; //!< A structure to put the neighbors in oriented order
-        std::vector< Dscalar2> Vpoints; //!< The voronoi vertices
-        Dscalar Varea; //!< The area of the cell
-        Dscalar Vperimeter; //!< The perimeter of the cell
+        std::vector< double2 > Dneighs; //!< The relative positions of the Delaunay neighbors
+        std::vector<std::pair <double,int> > CWorder; //!< A structure to put the neighbors in oriented order
+        std::vector< double2> Vpoints; //!< The voronoi vertices
+        double Varea; //!< The area of the cell
+        double Vperimeter; //!< The perimeter of the cell
         bool Voro; //!<have the voronoi points of the cell already been calculated?
 
         DelaunayCell(){Voro=false;};//!<base constructor
@@ -64,16 +64,16 @@ struct DelaunayCell
             getCW();
 
             //calculate the voronoi points as the circumcenter of the origin,p_i,p_{i+1}
-            Dscalar2 ori;
+            double2 ori;
             ori.x=0.0;ori.y=0.0;
             for (int ii=0; ii < n; ++ii)
                 {
-                Dscalar xc,yc,rad;
+                double xc,yc,rad;
                 bool placeholder; // Circumcircle is a function with a type
-                Dscalar2 p1 = Dneighs[CWorder[ii].second];
-                Dscalar2 p2 = Dneighs[CWorder[((ii+1)%n)].second];
+                double2 p1 = Dneighs[CWorder[ii].second];
+                double2 p2 = Dneighs[CWorder[((ii+1)%n)].second];
                 Circumcircle(p1,p2,Vpoints[ii],rad);
-                Vpoints[ii]=make_Dscalar2(xc,yc);
+                Vpoints[ii]=make_double2(xc,yc);
                 };
 
             Voro=true;
@@ -87,11 +87,11 @@ struct DelaunayCell
             Vperimeter = 0.0;
             for (int ii = 0; ii < n; ++ii)
                 {
-                Dscalar2 p1 = Vpoints[ii];
-                Dscalar2 p2 = Vpoints[((ii+1)%n)];
+                double2 p1 = Vpoints[ii];
+                double2 p2 = Vpoints[((ii+1)%n)];
                 Varea += TriangleArea(p1,p2);
-                Dscalar dx = p1.x-p2.x;
-                Dscalar dy = p1.y-p2.y;
+                double dx = p1.x-p2.x;
+                double dy = p1.y-p2.y;
                 Vperimeter += sqrt(dx*dx+dy*dy);
                 };
             };

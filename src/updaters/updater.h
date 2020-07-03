@@ -54,7 +54,7 @@ class updater
         void setNdof(int _n){Ndof = _n;};
 
         //!allow all updaters to potentially implement an internal time scale
-        virtual void setDeltaT(Dscalar dt){};
+        virtual void setDeltaT(double dt){};
 
     protected:
         //!The period of the updater... the updater will work every Period timesteps
@@ -79,22 +79,22 @@ class updater
                 };
             };
         //!why use templates when you can type more?
-        void reIndexArray(GPUArray<Dscalar> &array)
+        void reIndexArray(GPUArray<double> &array)
             {
-            GPUArray<Dscalar> TEMP = array;
-            ArrayHandle<Dscalar> temp(TEMP,access_location::host,access_mode::read);
-            ArrayHandle<Dscalar> ar(array,access_location::host,access_mode::readwrite);
+            GPUArray<double> TEMP = array;
+            ArrayHandle<double> temp(TEMP,access_location::host,access_mode::read);
+            ArrayHandle<double> ar(array,access_location::host,access_mode::readwrite);
             for (int ii = 0; ii < Ndof; ++ii)
                 {
                 ar.data[ii] = temp.data[reIndexing[ii]];
                 };
             };
         //!why use templates when you can type more?
-        void reIndexArray(GPUArray<Dscalar2> &array)
+        void reIndexArray(GPUArray<double2> &array)
             {
-            GPUArray<Dscalar2> TEMP = array;
-            ArrayHandle<Dscalar2> temp(TEMP,access_location::host,access_mode::read);
-            ArrayHandle<Dscalar2> ar(array,access_location::host,access_mode::readwrite);
+            GPUArray<double2> TEMP = array;
+            ArrayHandle<double2> temp(TEMP,access_location::host,access_mode::read);
+            ArrayHandle<double2> ar(array,access_location::host,access_mode::readwrite);
             for (int ii = 0; ii < Ndof; ++ii)
                 {
                 ar.data[ii] = temp.data[reIndexing[ii]];

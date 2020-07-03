@@ -35,14 +35,14 @@ void SPVDatabaseNetCDF::SetDimVar()
     unitDim = File.add_dim("unit",1);
 
     //Set the variables
-    timeVar          = File.add_var("time",     ncDscalar,recDim, unitDim);
-    means0Var          = File.add_var("means0",     ncDscalar,recDim, unitDim);
-    posVar          = File.add_var("pos",       ncDscalar,recDim, dofDim);
+    timeVar          = File.add_var("time",     ncDouble,recDim, unitDim);
+    means0Var          = File.add_var("means0",     ncDouble,recDim, unitDim);
+    posVar          = File.add_var("pos",       ncDouble,recDim, dofDim);
     typeVar          = File.add_var("type",         ncInt,recDim, NvDim );
-    directorVar          = File.add_var("director",         ncDscalar,recDim, NvDim );
-    BoxMatrixVar    = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
+    directorVar          = File.add_var("director",         ncDouble,recDim, NvDim );
+    BoxMatrixVar    = File.add_var("BoxMatrix", ncDouble,recDim, boxDim);
     if(exclusions)
-        exVar          = File.add_var("externalForce",       ncDscalar,recDim, dofDim);
+        exVar          = File.add_var("externalForce",       ncDouble,recDim, dofDim);
     }
 
 void SPVDatabaseNetCDF::GetDimVar()
@@ -64,35 +64,35 @@ void SPVDatabaseNetCDF::GetDimVar()
         exVar = File.get_var("externalForce");
     }
 
-void SPVDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
+void SPVDatabaseNetCDF::WriteState(STATE s, double time, int rec)
     {
     if(rec<0)   rec = recDim->size();
     if (time < 0) time = s->currentTime;
 
-    std::vector<Dscalar> boxdat(4,0.0);
-    Dscalar x11,x12,x21,x22;
+    std::vector<double> boxdat(4,0.0);
+    double x11,x12,x21,x22;
     s->Box->getBoxDims(x11,x12,x21,x22);
     boxdat[0]=x11;
     boxdat[1]=x12;
     boxdat[2]=x21;
     boxdat[3]=x22;
 
-    std::vector<Dscalar> posdat(2*Nv);
-    std::vector<Dscalar> directordat(Nv);
+    std::vector<double> posdat(2*Nv);
+    std::vector<double> directordat(Nv);
     std::vector<int> typedat(Nv);
     int idx = 0;
-    Dscalar means0=0.0;
+    double means0=0.0;
 
-    ArrayHandle<Dscalar2> h_p(s->cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(s->cellDirectors,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(s->cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<double> h_cd(s->cellDirectors,access_location::host,access_mode::read);
     ArrayHandle<int> h_ct(s->cellType,access_location::host,access_mode::read);
     ArrayHandle<int> h_ex(s->exclusions,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Nv; ++ii)
         {
         int pidx = s->tagToIdx[ii];
-        Dscalar px = h_p.data[pidx].x;
-        Dscalar py = h_p.data[pidx].y;
+        double px = h_p.data[pidx].x;
+        double py = h_p.data[pidx].y;
         posdat[(2*idx)] = px;
         posdat[(2*idx)+1] = py;
         directordat[ii] = h_cd.data[pidx];
@@ -114,14 +114,14 @@ void SPVDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
     BoxMatrixVar->put_rec(&boxdat[0],     rec);
     if(exclusions)
         {
-        ArrayHandle<Dscalar2> h_ef(s->external_forces,access_location::host,access_mode::read);
-        std::vector<Dscalar> exdat(2*Nv);
+        ArrayHandle<double2> h_ef(s->external_forces,access_location::host,access_mode::read);
+        std::vector<double> exdat(2*Nv);
         int id = 0;
         for (int ii = 0; ii < Nv; ++ii)
             {
             int pidx = s->tagToIdx[ii];
-            Dscalar px = h_ef.data[pidx].x;
-            Dscalar py = h_ef.data[pidx].y;
+            double px = h_ef.data[pidx].x;
+            double py = h_ef.data[pidx].y;
             exdat[(2*id)] = px;
             exdat[(2*id)+1] = py;
             id +=1;
@@ -148,20 +148,20 @@ void SPVDatabaseNetCDF::ReadState(STATE t, int rec,bool geometry)
 
     //set the box
     BoxMatrixVar-> set_cur(rec);
-    std::vector<Dscalar> boxdata(4,0.0);
+    std::vector<double> boxdata(4,0.0);
     BoxMatrixVar->get(&boxdata[0],1, boxDim->size());
     t->Box->setGeneral(boxdata[0],boxdata[1],boxdata[2],boxdata[3]);
 
     //get the positions
     posVar-> set_cur(rec);
-    std::vector<Dscalar> posdata(2*Nv,0.0);
+    std::vector<double> posdata(2*Nv,0.0);
     posVar->get(&posdata[0],1, dofDim->size());
 
-    ArrayHandle<Dscalar2> h_p(t->cellPositions,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_p(t->cellPositions,access_location::host,access_mode::overwrite);
     for (int idx = 0; idx < Nv; ++idx)
         {
-        Dscalar px = posdata[(2*idx)];
-        Dscalar py = posdata[(2*idx)+1];
+        double px = posdata[(2*idx)];
+        double py = posdata[(2*idx)+1];
         h_p.data[idx].x=px;
         h_p.data[idx].y=py;
         };
@@ -173,9 +173,9 @@ void SPVDatabaseNetCDF::ReadState(STATE t, int rec,bool geometry)
     ArrayHandle<int> h_ct(t->cellType,access_location::host,access_mode::overwrite);
 
     directorVar->set_cur(rec);
-    std::vector<Dscalar> cddata(Nv,0.0);
+    std::vector<double> cddata(Nv,0.0);
     directorVar->get(&cddata[0],1, NvDim->size());
-    ArrayHandle<Dscalar> h_cd(t->cellDirectors,access_location::host,access_mode::overwrite);
+    ArrayHandle<double> h_cd(t->cellDirectors,access_location::host,access_mode::overwrite);
     for (int idx = 0; idx < Nv; ++idx)
         {
         h_cd.data[idx]=cddata[idx];;
@@ -186,13 +186,13 @@ void SPVDatabaseNetCDF::ReadState(STATE t, int rec,bool geometry)
     if (tester == 7)
         {
         exVar-> set_cur(rec);
-        std::vector<Dscalar> efdata(2*Nv,0.0);
+        std::vector<double> efdata(2*Nv,0.0);
         exVar->get(&posdata[0],1, dofDim->size());
-        ArrayHandle<Dscalar2> h_ef(t->external_forces,access_location::host,access_mode::overwrite);
+        ArrayHandle<double2> h_ef(t->external_forces,access_location::host,access_mode::overwrite);
         for (int idx = 0; idx < Nv; ++idx)
             {
-            Dscalar efx = efdata[(2*idx)];
-            Dscalar efy = efdata[(2*idx)+1];
+            double efx = efdata[(2*idx)];
+            double efy = efdata[(2*idx)+1];
             h_ef.data[idx].x=efx;
             h_ef.data[idx].y=efy;
             };

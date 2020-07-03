@@ -20,19 +20,19 @@ class DelaunayNP
     public:
         DelaunayNP(){sorted=false;triangulated=false;};
         //!constructor via a vector of point objects
-        DelaunayNP(std::vector<Dscalar2> points){setPoints(points);};
+        DelaunayNP(std::vector<double2> points){setPoints(points);};
         //!constructor via a vector of scalars, {x1,y1,x2,y2,...}
-        DelaunayNP(std::vector<Dscalar> points){setPoints(points);};
+        DelaunayNP(std::vector<double> points){setPoints(points);};
 
         void setSorted(bool s){sorted=s;};
         //!Set the points you want to triangulate
-        void setPoints(std::vector<Dscalar2> points);
-        void setPoints(std::vector<Dscalar> points);
+        void setPoints(std::vector<double2> points);
+        void setPoints(std::vector<double> points);
 
         //!A debugging function, prints the location of a point
         void printPoint(int i){cout <<pts[i].x << " " <<pts[i].y << endl;};
         //!A debugging function... gets the sorted point i
-        void getSortedPoint(int i,Dscalar2 &point)
+        void getSortedPoint(int i,double2 &point)
             {
             if (i >= nV) {cout << "invalid sort point access" << endl;
             cout << i << "   " << nV << endl;
@@ -65,11 +65,11 @@ class DelaunayNP
         void testDel(int numpts,int tmax,bool verbose);
 
     private:
-        std::vector<Dscalar2> pts;      //!<vector of points to triangulate
+        std::vector<double2> pts;      //!<vector of points to triangulate
         int nV;                       //!<number of vertices
         bool sorted;                  //!<are the points sorted
         bool triangulated;            //!<has a triangulation been performed?
-        std::vector< pair<Dscalar2, int> > sortmap;    //!<map from sorted points back to input points
+        std::vector< pair<double2, int> > sortmap;    //!<map from sorted points back to input points
     };
 
 #endif

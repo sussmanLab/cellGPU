@@ -16,7 +16,7 @@ gammas[n+2] = g_{1,1} (again, never used)
 ...
 gammas[n^2-1] = g_{n,n}
 */
-void VertexQuadraticEnergyWithTension::setSurfaceTension(vector<Dscalar> gammas)
+void VertexQuadraticEnergyWithTension::setSurfaceTension(vector<double> gammas)
     {
     simpleTension = false;
     //set the tension matrix to the right size, and the indexer
@@ -24,7 +24,7 @@ void VertexQuadraticEnergyWithTension::setSurfaceTension(vector<Dscalar> gammas)
     int n = sqrt(gammas.size());
     cellTypeIndexer = Index2D(n);
 
-    ArrayHandle<Dscalar> tensions(tensionMatrix,access_location::host,access_mode::overwrite);
+    ArrayHandle<double> tensions(tensionMatrix,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < gammas.size(); ++ii)
         {
         int typeI = ii/n;
@@ -66,28 +66,28 @@ Use the data pre-computed in the geometry routine to rapidly compute the net for
 void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
     {
     ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_vc(voroCur,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar4> h_vln(voroLastNext,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_vc(voroCur,access_location::host,access_mode::read);
+    ArrayHandle<double4> h_vln(voroLastNext,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
     ArrayHandle<int> h_ct(cellType,access_location::host,access_mode::read);
     ArrayHandle<int> h_cv(cellVertices,access_location::host, access_mode::read);
     ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_tm(tensionMatrix,access_location::host,access_mode::read);
+    ArrayHandle<double> h_tm(tensionMatrix,access_location::host,access_mode::read);
 
-    ArrayHandle<Dscalar2> h_fs(vertexForceSets,access_location::host, access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_f(vertexForces,access_location::host, access_mode::overwrite);
+    ArrayHandle<double2> h_fs(vertexForceSets,access_location::host, access_mode::overwrite);
+    ArrayHandle<double2> h_f(vertexForces,access_location::host, access_mode::overwrite);
 
     //first, compute the contribution to the force on each vertex from each of its three cells
-    Dscalar2 vlast,vcur,vnext;
-    Dscalar2 dEdv;
-    Dscalar Adiff, Pdiff;
+    double2 vlast,vcur,vnext;
+    double2 dEdv;
+    double Adiff, Pdiff;
     for(int fsidx = 0; fsidx < Nvertices*3; ++fsidx)
         {
         //for the change in the energy of the cell, just repeat the vertexQuadraticEnergy part
         int cellIdx1 = h_vcn.data[fsidx];
-        Dscalar Adiff = KA*(h_AP.data[cellIdx1].x - h_APpref.data[cellIdx1].x);
-        Dscalar Pdiff = KP*(h_AP.data[cellIdx1].y - h_APpref.data[cellIdx1].y);
+        double Adiff = KA*(h_AP.data[cellIdx1].x - h_APpref.data[cellIdx1].x);
+        double Pdiff = KP*(h_AP.data[cellIdx1].y - h_APpref.data[cellIdx1].y);
         vcur = h_vc.data[fsidx];
         vlast.x = h_vln.data[fsidx].x;  vlast.y = h_vln.data[fsidx].y;
         vnext.x = h_vln.data[fsidx].z;  vnext.y = h_vln.data[fsidx].w;
@@ -130,13 +130,13 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
         int cellType2 = h_ct.data[cellIdx2];
         if(cellType1 != cellType2)
             {
-            Dscalar gammaEdge;
+            double gammaEdge;
             if (simpleTension)
                 gammaEdge = gamma;
             else
                 gammaEdge = h_tm.data[cellTypeIndexer(cellType1,cellType2)];
-            Dscalar2 dnext = vcur-vnext;
-            Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+            double2 dnext = vcur-vnext;
+            double dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
             h_fs.data[fsidx].x -= gammaEdge*dnext.x/dnnorm;
             h_fs.data[fsidx].y -= gammaEdge*dnext.y/dnnorm;
             };
@@ -145,7 +145,7 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
     //now sum these up to get the force on each vertex
     for (int v = 0; v < Nvertices; ++v)
         {
-        Dscalar2 ftemp = make_Dscalar2(0.0,0.0);
+        double2 ftemp = make_double2(0.0,0.0);
         for (int ff = 0; ff < 3; ++ff)
             {
             ftemp.x += h_fs.data[3*v+ff].x;
@@ -155,7 +155,7 @@ void VertexQuadraticEnergyWithTension::computeVertexTensionForcesCPU()
         };
     };
 
-Dscalar VertexQuadraticEnergyWithTension::computeEnergy()
+double VertexQuadraticEnergyWithTension::computeEnergy()
     {
     if(!forcesUpToDate)
         computeForces();

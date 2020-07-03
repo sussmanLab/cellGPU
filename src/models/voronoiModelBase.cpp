@@ -72,7 +72,7 @@ by the DelaunayLoc class
 */
 void voronoiModelBase::resetDelLocPoints()
     {
-    ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
+    ArrayHandle<double2> h_points(cellPositions,access_location::host, access_mode::read);
     delLoc.setPoints(h_points,Ncells);
     delLoc.initialize(cellsize);
     };
@@ -85,7 +85,7 @@ void voronoiModelBase::setExclusions(vector<int> &exes)
     particleExclusions=true;
     external_forces.resize(Ncells);
     exclusions.resize(Ncells);
-    ArrayHandle<Dscalar2> h_mot(Motility,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_mot(Motility,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_ex(exclusions,access_location::host,access_mode::overwrite);
 
     for (int ii = 0; ii < Ncells; ++ii)
@@ -119,8 +119,8 @@ void voronoiModelBase::updateCellList()
         }
     else
         {
-        vector<Dscalar> psnew(2*Ncells);
-        ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
+        vector<double> psnew(2*Ncells);
+        ArrayHandle<double2> h_points(cellPositions,access_location::host, access_mode::read);
         for (int ii = 0; ii < Ncells; ++ii)
             {
             psnew[2*ii] =  h_points.data[ii].x;
@@ -133,13 +133,13 @@ void voronoiModelBase::updateCellList()
 
 /*!
 Displace cells on the CPU
-\param displacements a vector of Dscalar2 specifying how much to move every cell
+\param displacements a vector of double2 specifying how much to move every cell
 \post the cells are displaced according to the input vector, and then put back in the main unit cell.
 */
-void voronoiModelBase::movePointsCPU(GPUArray<Dscalar2> &displacements,Dscalar scale)
+void voronoiModelBase::movePointsCPU(GPUArray<double2> &displacements,double scale)
     {
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_d(displacements,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_d(displacements,access_location::host,access_mode::read);
     if(scale == 1.)
         {
         for (int idx = 0; idx < Ncells; ++idx)
@@ -162,13 +162,13 @@ void voronoiModelBase::movePointsCPU(GPUArray<Dscalar2> &displacements,Dscalar s
 
 /*!
 Displace cells on the GPU
-\param displacements a vector of Dscalar2 specifying how much to move every cell
+\param displacements a vector of double2 specifying how much to move every cell
 \post the cells are displaced according to the input vector, and then put back in the main unit cell.
 */
-void voronoiModelBase::movePoints(GPUArray<Dscalar2> &displacements,Dscalar scale)
+void voronoiModelBase::movePoints(GPUArray<double2> &displacements,double scale)
     {
-    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::readwrite);
+    ArrayHandle<double2> d_p(cellPositions,access_location::device,access_mode::readwrite);
+    ArrayHandle<double2> d_d(displacements,access_location::device,access_mode::readwrite);
     if (scale == 1.)
         gpu_move_degrees_of_freedom(d_p.data,d_d.data,Ncells,*(Box));
     else
@@ -184,11 +184,11 @@ void voronoiModelBase::movePoints(GPUArray<Dscalar2> &displacements,Dscalar scal
 
 /*!
 Displace cells on either the GPU or CPU, according to the flag
-\param displacements a vector of Dscalar2 specifying how much to move every cell
+\param displacements a vector of double2 specifying how much to move every cell
 \param scale a scalar that multiples the value of every index of displacements before things are moved
 \post the cells are displaced according to the input vector, and then put back in the main unit cell.
 */
-void voronoiModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale)
+void voronoiModelBase::moveDegreesOfFreedom(GPUArray<double2> &displacements,double scale)
     {
     forcesUpToDate = false;
     if (GPUcompute)
@@ -281,13 +281,13 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
     GlobalFixes +=1;
     completeRetriangulationPerformed = 1;
     DelaunayCGAL dcgal;
-    ArrayHandle<Dscalar2> h_points(cellPositions,access_location::host, access_mode::read);
+    ArrayHandle<double2> h_points(cellPositions,access_location::host, access_mode::read);
     vector<pair<Point,int> > Psnew(Ncells);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         Psnew[ii]=make_pair(Point(h_points.data[ii].x,h_points.data[ii].y),ii);
         };
-    Dscalar b1,b2,b3,b4;
+    double b1,b2,b3,b4;
     Box->getBoxDims(b1,b2,b3,b4);
     dcgal.PeriodicTriangulation(Psnew,b1,b2,b3,b4);
 
@@ -427,7 +427,7 @@ and then update the relevant data structures.
 void voronoiModelBase::repairTriangulation(vector<int> &fixlist)
     {
     int fixes = fixlist.size();
-    repPerFrame += ((Dscalar) fixes/(Dscalar)Ncells);
+    repPerFrame += ((double) fixes/(double)Ncells);
     resetDelLocPoints();
 
     ArrayHandle<int> neighnum(cellNeighborNum,access_location::host,access_mode::readwrite);
@@ -518,7 +518,7 @@ void voronoiModelBase::testTriangulation()
     h_actf.data[0]=0;
     };
     //access data handles
-    ArrayHandle<Dscalar2> d_pt(cellPositions,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_pt(cellPositions,access_location::device,access_mode::read);
 
     ArrayHandle<unsigned int> d_cell_sizes(celllist.cell_sizes,access_location::device,access_mode::read);
     ArrayHandle<int> d_c_idx(celllist.idxs,access_location::device,access_mode::read);
@@ -746,10 +746,10 @@ void voronoiModelBase::readTriangulation(ifstream &infile)
     cout << "Reading in " << nn << "points" << endl;
     int idx = 0;
     int ii = 0;
-    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> p(cellPositions,access_location::host,access_mode::overwrite);
     while(getline(infile,line))
         {
-        Dscalar val = stof(line);
+        double val = stof(line);
         if (idx == 0)
             {
             p.data[ii].x=val;
@@ -768,7 +768,7 @@ void voronoiModelBase::readTriangulation(ifstream &infile)
 //similarly, write a text file with particle positions. This is often called when an exception is thrown
 void voronoiModelBase::writeTriangulation(ofstream &outfile)
     {
-    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> p(cellPositions,access_location::host,access_mode::read);
     outfile << Ncells <<endl;
     for (int ii = 0; ii < Ncells ; ++ii)
         outfile << p.data[ii].x <<"\t" <<p.data[ii].y <<endl;
@@ -781,13 +781,13 @@ void voronoiModelBase::writeTriangulation(ofstream &outfile)
 void voronoiModelBase::computeGeometryCPU()
     {
     //read in all the data we'll need
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
 
-    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar4> h_vln(voroLastNext,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
+    ArrayHandle<double4> h_vln(voroLastNext,access_location::host,access_mode::overwrite);
 
     for (int i = 0; i < Ncells; ++i)
         {
@@ -800,11 +800,11 @@ void voronoiModelBase::computeGeometryCPU()
             };
 
         //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
-        vector<Dscalar2> voro(neigh);
-        Dscalar2 circumcent;
-        Dscalar2 nnextp,nlastp;
-        Dscalar2 pi = h_p.data[i];
-        Dscalar2 rij, rik;
+        vector<double2> voro(neigh);
+        double2 circumcent;
+        double2 nnextp,nlastp;
+        double2 pi = h_p.data[i];
+        double2 rij, rik;
 
         nlastp = h_p.data[ns[ns.size()-1]];
         Box->minDist(nlastp,pi,rij);
@@ -819,17 +819,17 @@ void voronoiModelBase::computeGeometryCPU()
             h_v.data[id] = voro[nn];
             };
 
-        Dscalar2 vlast,vnext;
+        double2 vlast,vnext;
         //compute Area and perimeter, and fill in voroLastNext structure
-        Dscalar Varea = 0.0;
-        Dscalar Vperi = 0.0;
+        double Varea = 0.0;
+        double Vperi = 0.0;
         vlast = voro[neigh-1];
         for (int nn = 0; nn < neigh; ++nn)
             {
             vnext=voro[nn];
             Varea += TriangleArea(vlast,vnext);
-            Dscalar dx = vlast.x-vnext.x;
-            Dscalar dy = vlast.y-vnext.y;
+            double dx = vlast.x-vnext.x;
+            double dy = vlast.y-vnext.y;
             Vperi += sqrt(dx*dx+dy*dy);
             int id = n_idx(nn,i);
             h_vln.data[id].x=vlast.x;
@@ -849,12 +849,12 @@ void voronoiModelBase::computeGeometryCPU()
 */
 void voronoiModelBase::computeGeometryGPU()
     {
-    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
+    ArrayHandle<double2> d_p(cellPositions,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
     ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
     ArrayHandle<int> d_n(cellNeighbors,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::overwrite);
-    ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::overwrite);
+    ArrayHandle<double2> d_vc(voroCur,access_location::device,access_mode::overwrite);
+    ArrayHandle<double4> d_vln(voroLastNext,access_location::device,access_mode::overwrite);
 
     gpu_compute_voronoi_geometry(
                         d_p.data,
@@ -873,20 +873,20 @@ void voronoiModelBase::computeGeometryGPU()
 Returns the derivative of the voronoi vertex shared by cells i, j , and k with respect to changing the position of cell i
 the (row, column) format specifies dH_{row}/dr_{i,column}
 */
-Matrix2x2 voronoiModelBase::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)
+Matrix2x2 voronoiModelBase::dHdri(double2 ri, double2 rj, double2 rk)
     {
     Matrix2x2 Id;
-    Dscalar2 rij, rik, rjk;
+    double2 rij, rik, rjk;
     Box->minDist(rj,ri,rij);
     Box->minDist(rk,ri,rik);
     rjk.x =rik.x-rij.x;
     rjk.y =rik.y-rij.y;
 
-    Dscalar2 dbDdri,dgDdri,dDdriOD,z;
-    Dscalar betaD = -dot(rik,rik)*dot(rij,rjk);
-    Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
-    Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
-    Dscalar D = 2*cp*cp;
+    double2 dbDdri,dgDdri,dDdriOD,z;
+    double betaD = -dot(rik,rik)*dot(rij,rjk);
+    double gammaD = dot(rij,rij)*dot(rik,rjk);
+    double cp = rij.x*rjk.y - rij.y*rjk.x;
+    double D = 2*cp*cp;
     z.x = betaD*rij.x+gammaD*rik.x;
     z.y = betaD*rij.y+gammaD*rik.y;
 
@@ -908,14 +908,14 @@ Matrix2x2 voronoiModelBase::dHdri(Dscalar2 ri, Dscalar2 rj, Dscalar2 rk)
 \pre Requires that computeGeometry is current
 Returns the derivative of the area of cell i w/r/t the position of cell j
 */
-Dscalar2 voronoiModelBase::dAidrj(int i, int j)
+double2 voronoiModelBase::dAidrj(int i, int j)
     {
-    Dscalar2 answer;
+    double2 answer;
     answer.x = 0.0; answer.y=0.0;
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
 
     //how many neighbors does cell i have?
     int neigh = h_nn.data[i];
@@ -936,7 +936,7 @@ Dscalar2 voronoiModelBase::dAidrj(int i, int j)
             if (n2 ==neigh) n2 = 0;
             }
         };
-    Dscalar2 vlast, vcur,vnext;
+    double2 vlast, vcur,vnext;
     //if j is not a neighbor of i (or i itself!) the  derivative vanishes
     if (!jIsANeighbor)
         return answer;
@@ -948,13 +948,13 @@ Dscalar2 voronoiModelBase::dAidrj(int i, int j)
             {
             vcur = h_v.data[n_idx(vv,i)];
             vnext = h_v.data[n_idx((vv+1)%neigh,i)];
-            Dscalar2 dAdv;
+            double2 dAdv;
             dAdv.x = -0.5*(vlast.y-vnext.y);
             dAdv.y = -0.5*(vnext.x-vlast.x);
 
             int indexk = vv - 1;
             if (indexk <0) indexk = neigh-1;
-            Dscalar2 temp = dAdv*dHdri(h_p.data[i],h_p.data[ h_n.data[n_idx(vv,i)] ],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            double2 temp = dAdv*dHdri(h_p.data[i],h_p.data[ h_n.data[n_idx(vv,i)] ],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
             answer.x += temp.x;
             answer.y += temp.y;
             vlast = vcur;
@@ -977,10 +977,10 @@ Dscalar2 voronoiModelBase::dAidrj(int i, int j)
                 indexk=vv;
 
             if (indexk <0) indexk = neigh-1;
-            Dscalar2 dAdv;
+            double2 dAdv;
             dAdv.x = -0.5*(vlast.y-vnext.y);
             dAdv.y = -0.5*(vnext.x-vlast.x);
-            Dscalar2 temp = dAdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            double2 temp = dAdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
             answer.x += temp.x;
             answer.y += temp.y;
             };
@@ -994,15 +994,15 @@ Dscalar2 voronoiModelBase::dAidrj(int i, int j)
 \param j The index of cell j
 Returns the derivative of the perimeter of cell i w/r/t the position of cell j
 */
-Dscalar2 voronoiModelBase::dPidrj(int i, int j)
+double2 voronoiModelBase::dPidrj(int i, int j)
     {
-    Dscalar Pthreshold = THRESHOLD;
-    Dscalar2 answer;
+    double Pthreshold = THRESHOLD;
+    double2 answer;
     answer.x = 0.0; answer.y=0.0;
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
 
     //how many neighbors does cell i have?
     int neigh = h_nn.data[i];
@@ -1023,7 +1023,7 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
             if (n2 ==neigh) n2 = 0;
             }
         };
-    Dscalar2 vlast, vcur,vnext;
+    double2 vlast, vcur,vnext;
     //if j is not a neighbor of i (or i itself!) the  derivative vanishes
     if (!jIsANeighbor)
         return answer;
@@ -1035,16 +1035,16 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
             {
             vcur = h_v.data[n_idx(vv,i)];
             vnext = h_v.data[n_idx((vv+1)%neigh,i)];
-            Dscalar2 dPdv;
-            Dscalar2 dlast,dnext;
+            double2 dPdv;
+            double2 dlast,dnext;
             dlast.x = vlast.x-vcur.x;
             dlast.y=vlast.y-vcur.y;
 
-            Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+            double dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
 
             dnext.x = vcur.x-vnext.x;
             dnext.y = vcur.y-vnext.y;
-            Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+            double dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
             if(dnnorm < Pthreshold)
                 dnnorm = Pthreshold;
             if(dlnorm < Pthreshold)
@@ -1054,7 +1054,7 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
 
             int indexk = vv - 1;
             if (indexk <0) indexk = neigh-1;
-            Dscalar2 temp = dPdv*dHdri(h_p.data[i],h_p.data[ h_n.data[n_idx(vv,i)] ],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            double2 temp = dPdv*dHdri(h_p.data[i],h_p.data[ h_n.data[n_idx(vv,i)] ],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
             answer.x -= temp.x;
             answer.y -= temp.y;
             vlast = vcur;
@@ -1077,23 +1077,23 @@ Dscalar2 voronoiModelBase::dPidrj(int i, int j)
                 indexk=vv;
 
             if (indexk <0) indexk = neigh-1;
-            Dscalar2 dPdv;
-            Dscalar2 dlast,dnext;
+            double2 dPdv;
+            double2 dlast,dnext;
             dlast.x = vlast.x-vcur.x;
             dlast.y=vlast.y-vcur.y;
 
-            Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+            double dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
 
             dnext.x = vcur.x-vnext.x;
             dnext.y = vcur.y-vnext.y;
-            Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+            double dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
             if(dnnorm < Pthreshold)
                 dnnorm = Pthreshold;
             if(dlnorm < Pthreshold)
                 dlnorm = Pthreshold;
             dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
             dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
-            Dscalar2 temp = dPdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
+            double2 temp = dPdv*dHdri(h_p.data[j],h_p.data[i],h_p.data[ h_n.data[n_idx(indexk,i)] ]);
             answer.x -= temp.x;
             answer.y -= temp.y;
             };
@@ -1124,14 +1124,14 @@ Matrix2x2 voronoiModelBase::d2Areadvdr(Matrix2x2 &dvpdr, Matrix2x2 &dvmdr)
 \param v position of v_{i}
 \param vp position of v_{i+1}
 */
-Matrix2x2 voronoiModelBase::d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr,Matrix2x2 &dvpdr, Dscalar2 vm, Dscalar2 v, Dscalar2 vp)
+Matrix2x2 voronoiModelBase::d2Peridvdr(Matrix2x2 &dvdr, Matrix2x2 &dvmdr,Matrix2x2 &dvpdr, double2 vm, double2 v, double2 vp)
     {
-    Dscalar2 dlast = v-vm;
-    Dscalar2 dnext = vp-v;
-    Dscalar dlastNorm = norm(dlast);
-    Dscalar dnextNorm = norm(dnext);
-    Dscalar denNext = 1.0/(dnextNorm*dnextNorm*dnextNorm);
-    Dscalar denLast = 1.0/(dlastNorm*dlastNorm*dlastNorm);
+    double2 dlast = v-vm;
+    double2 dnext = vp-v;
+    double dlastNorm = norm(dlast);
+    double dnextNorm = norm(dnext);
+    double denNext = 1.0/(dnextNorm*dnextNorm*dnextNorm);
+    double denLast = 1.0/(dlastNorm*dlastNorm*dlastNorm);
 
     //dP/dv = dnext/dnextNorm - dlast/dlastNorm; we'll differentiate each of those terms separately
     Matrix2x2 dNdr, dLdr;
@@ -1163,15 +1163,15 @@ H_x/r_{i,y}r_{j,y}, H_y/r_{i,y}r_{j,y}  )
 NOTE: This function does not check that ri, rj, and rk actually share a voronoi vertex in the triangulation
 NOTE: This function assumes that rj and rk are w/r/t the position of ri, so ri = (0.,0.)
 */
-vector<Dscalar> voronoiModelBase::d2Hdridrj(Dscalar2 rj, Dscalar2 rk, int jj)
+vector<double> voronoiModelBase::d2Hdridrj(double2 rj, double2 rk, int jj)
     {
-    vector<Dscalar> answer(8);
-    Dscalar hxr1xr2x, hyr1xr2x, hxr1yr2x,hyr1yr2x;
-    Dscalar hxr1xr2y, hyr1xr2y, hxr1yr2y,hyr1yr2y;
-    Dscalar rjx,rjy,rkx,rky;
+    vector<double> answer(8);
+    double hxr1xr2x, hyr1xr2x, hxr1yr2x,hyr1yr2x;
+    double hxr1xr2y, hyr1xr2y, hxr1yr2y,hyr1yr2y;
+    double rjx,rjy,rkx,rky;
     rjx = rj.x; rjy=rj.y; rkx=rk.x;rky=rk.y;
 
-    Dscalar denominator;
+    double denominator;
     denominator = (rjx*rky-rjy*rkx)*(rjx*rky-rjy*rkx)*(rjx*rky-rjy*rkx);
     hxr1xr2x = hyr1xr2x = hxr1yr2x = hyr1yr2x = hxr1xr2y= hyr1xr2y= hxr1yr2y=hyr1yr2y= (1.0/denominator);
     //all derivatives in the dynMatTesting notebook
@@ -1334,20 +1334,20 @@ This function is meant to be called before the start of a new timestep. It shoul
 \post the new cell is the final indexed entry of the various data structures (e.g.,
 cellPositions[new number of cells - 1])
 */
-void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams)
+void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<double> &dParams)
     {
     int cellIdx = parameters[0];
-    Dscalar theta = dParams[0];
-    Dscalar separationFraction = dParams[1];
+    double theta = dParams[0];
+    double separationFraction = dParams[1];
 
     //First let's get the geometry of the cell in a convenient reference frame
     //computeGeometry has not yet been called, so need to find the voro positions
-    vector<Dscalar2> voro;
+    vector<double2> voro;
     voro.reserve(10);
     int neigh;
-    Dscalar2 initialCellPosition;
+    double2 initialCellPosition;
     {//arrayHandle scope
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
     initialCellPosition = h_p.data[cellIdx];
     ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
@@ -1355,10 +1355,10 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     vector<int> ns(neigh);
     for (int nn = 0; nn < neigh; ++nn)
             ns[nn]=h_n.data[n_idx(nn,cellIdx)];
-    Dscalar2 circumcent;
-    Dscalar2 nnextp,nlastp;
-    Dscalar2 pi = h_p.data[cellIdx];
-    Dscalar2 rij, rik;
+    double2 circumcent;
+    double2 nnextp,nlastp;
+    double2 pi = h_p.data[cellIdx];
+    double2 rij, rik;
     nlastp = h_p.data[ns[ns.size()-1]];
     Box->minDist(nlastp,pi,rij);
     for (int nn = 0; nn < neigh;++nn)
@@ -1372,19 +1372,19 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     };//arrayHandle scope
 
     //find where the line emanating from the polygons intersects the edges
-    Dscalar2 c,v1,v2,Int1,Int2;
+    double2 c,v1,v2,Int1,Int2;
     bool firstIntFound = false;
     v1 = voro[neigh-1];
-    Dscalar2 ray; ray.x = Cos(theta); ray.y = Sin(theta);
+    double2 ray; ray.x = Cos(theta); ray.y = Sin(theta);
     c.x = - Sin(theta);
     c.y = Cos(theta);
-    Dscalar2 p; p.x =0.0; p.y=0.;
+    double2 p; p.x =0.0; p.y=0.;
     for (int nn = 0; nn < neigh; ++nn)
         {
         v2=voro[nn];
-        Dscalar2 a; a.x = p.x-v2.x; a.y = p.y-v2.y;
-        Dscalar2 b; b.x = v1.x - v2.x; b.y = v1.y-v2.y;
-        Dscalar t2 = -1.;
+        double2 a; a.x = p.x-v2.x; a.y = p.y-v2.y;
+        double2 b; b.x = v1.x - v2.x; b.y = v1.y-v2.y;
+        double t2 = -1.;
         if (dot(b,c) != 0)
             t2 = dot(a,c)/dot(b,c);
         if (t2 >= 0. && t2 <= 1.0)
@@ -1402,9 +1402,9 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
 
         v1=v2;
         };
-    Dscalar maxSeparation = max(norm(p-Int1),norm(p-Int2));
-    Dscalar2 newCellPos1 = initialCellPosition + separationFraction*maxSeparation*ray;
-    Dscalar2 newCellPos2 = initialCellPosition - separationFraction*maxSeparation*ray;
+    double maxSeparation = max(norm(p-Int1),norm(p-Int2));
+    double2 newCellPos1 = initialCellPosition + separationFraction*maxSeparation*ray;
+    double2 newCellPos2 = initialCellPosition - separationFraction*maxSeparation*ray;
     Box->putInBoxReal(newCellPos1);
     Box->putInBoxReal(newCellPos2);
 
@@ -1412,7 +1412,7 @@ void voronoiModelBase::cellDivision(const vector<int> &parameters, const vector<
     //set the new cell position
     Simple2DActiveCell::cellDivision(parameters);
     {
-    ArrayHandle<Dscalar2> cp(cellPositions);
+    ArrayHandle<double2> cp(cellPositions);
     cp.data[cellIdx] = newCellPos1;
     cp.data[Ncells-1] = newCellPos2;
     }

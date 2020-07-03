@@ -25,27 +25,27 @@ class DelaunayLoc
     {
     public:
         DelaunayLoc(){triangulated=false;cellsize=2.0;Box = make_shared<gpubox>();};
-        //!constructor via a vector of Dscalar2 objects
-        DelaunayLoc(std::vector<Dscalar2> &points, gpubox &bx){setPoints(points);setBox(bx);};
+        //!constructor via a vector of double2 objects
+        DelaunayLoc(std::vector<double2> &points, gpubox &bx){setPoints(points);setBox(bx);};
         //!constructor via a vector of scalars, {x1,y1,x2,y2,...}
-        DelaunayLoc(std::vector<Dscalar> &points,gpubox &bx){setPoints(points);setBox(bx);};
+        DelaunayLoc(std::vector<double> &points,gpubox &bx){setPoints(points);setBox(bx);};
 
-        void setPoints(ArrayHandle<Dscalar2> &points, int N); //!<Set points by passing an ArrayHandle
-        void setPoints(GPUArray<Dscalar2> &points); //!<Set points via a GPUarray of Dscalar2's
-        void setPoints(std::vector<Dscalar2> &points); //!<Set points via a vector of Dscalar2's
-        void setPoints(std::vector<Dscalar> &points);   //!<Set the points via a vector of Dscalar's
+        void setPoints(ArrayHandle<double2> &points, int N); //!<Set points by passing an ArrayHandle
+        void setPoints(GPUArray<double2> &points); //!<Set points via a GPUarray of double2's
+        void setPoints(std::vector<double2> &points); //!<Set points via a vector of double2's
+        void setPoints(std::vector<double> &points);   //!<Set the points via a vector of double's
         void setBox(gpubox &bx);                        //!<Set the box
         void setBox(BoxPtr bx){Box=bx;};                        //!<Set the box
-        void setCellSize(Dscalar cs){cellsize=cs;};     //!<Set the cell size of the underlying grid
+        void setCellSize(double cs){cellsize=cs;};     //!<Set the cell size of the underlying grid
 
-        void initialize(Dscalar csize);                 //!<Initialize various things, based on a given cell size for the underlying grid
+        void initialize(double csize);                 //!<Initialize various things, based on a given cell size for the underlying grid
 
         //!Find the indices of an enclosing polygon of vertex i
-        void getPolygon(int i, vector<int> &P0,vector<Dscalar2> &P1);
+        void getPolygon(int i, vector<int> &P0,vector<double2> &P1);
         //!Find a candidate set of possible points in the 1-ring of vertex i
-        void getOneRingCandidate(int i, vector<int> &DTringIdx,vector<Dscalar2> &DTring);
+        void getOneRingCandidate(int i, vector<int> &DTringIdx,vector<double2> &DTring);
         //!If the candidate 1-ring is large, try to reduce it before triangulating the whole thing
-        void reduceOneRing(int i, vector<int> &DTringIdx,vector<Dscalar2> &DTring);
+        void reduceOneRing(int i, vector<int> &DTringIdx,vector<double2> &DTring);
         //!Collect some statistics about the functioning of the oneRing algorithms
         int cellschecked,candidates; //statistics for the above function
 
@@ -76,18 +76,18 @@ class DelaunayLoc
         void testDel(int numpts,int tmax,double err, bool verbose);
 
         //!Various aids for timing functions
-        Dscalar polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
+        double polytiming,ringcandtiming,reducedtiming,tritiming,tritesttiming,geotiming,totaltiming;
 
     protected:
-        std::vector<Dscalar2> pts;    //!<vector of points to triangulate
+        std::vector<double2> pts;    //!<vector of points to triangulate
         int nV;                       //!<number of vertices
         bool triangulated;            //!<has a triangulation been performed?
 
-        Dscalar cellsize;               //!<Sets how fine a grid to use in the cell list
+        double cellsize;               //!<Sets how fine a grid to use in the cell list
         BoxPtr Box;             //!< A box to calculate relative distances in a periodic domain.
 
         vector<int> DTringIdxCGAL; //!<A vector of Delaunay neighbor indicies that can be repeatedly re-written
-        vector<Dscalar2> DTringCGAL;//!<A vector of Delaunay neighbors that can be repeatedly re-written
+        vector<double2> DTringCGAL;//!<A vector of Delaunay neighbors that can be repeatedly re-written
         //!A cell list for speeding up the calculation of the candidate 1-ring
         cellListGPU cList;
     };

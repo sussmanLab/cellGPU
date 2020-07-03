@@ -15,13 +15,13 @@ A file providing an interface to the relevant cuda calls for the brownianParticl
 
 //!set the vector of displacements from forces and noise
 bool gpu_brownian_eom_integration(
-                    Dscalar2 *forces,
-                    Dscalar2 *displacements,
+                    double2 *forces,
+                    double2 *displacements,
                     curandState *RNGs,
                     int N,
-                    Dscalar deltaT,
-                    Dscalar mu,
-                    Dscalar T);
+                    double deltaT,
+                    double mu,
+                    double T);
 
 /** @} */ //end of group declaration
  #endif

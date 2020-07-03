@@ -17,20 +17,20 @@ A file providing an interface to the relevant cuda calls for 2D vertex models
  */
 
 bool gpu_vm_geometry(
-                    Dscalar2 *d_vertexPositions,
+                    double2 *d_vertexPositions,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      *d_vertexCellNeighbors,
-                    Dscalar2 *d_voroCur,
-                    Dscalar4  *d_voroLastNext,
-                    Dscalar2 *d_AreaPeri,
+                    double2 *d_voroCur,
+                    double4  *d_voroLastNext,
+                    double2 *d_AreaPeri,
                     int      N,
                     Index2D  &n_idx,
                     gpubox   &Box);
 
 bool gpu_vm_get_cell_positions(
-                    Dscalar2 *d_cellPositions,
-                    Dscalar2 *d_vertexPositions,
+                    double2 *d_cellPositions,
+                    double2 *d_vertexPositions,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      N,
@@ -38,14 +38,14 @@ bool gpu_vm_get_cell_positions(
                     gpubox   &Box);
 
 bool gpu_vm_test_edges_for_T1(
-                    Dscalar2 *d_vertexPositions,
+                    double2 *d_vertexPositions,
                     int      *d_vertexNeighbors,
                     int      *d_vertexEdgeFlips,
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     gpubox   &Box,
-                    Dscalar  T1THRESHOLD,
+                    double  T1THRESHOLD,
                     int      Nvertices,
                     int      vertexMax,
                     int      *d_grow,
@@ -66,7 +66,7 @@ bool gpu_vm_parse_multiple_flips(
 
 bool gpu_vm_flip_edges(
                     int      *d_vertexEdgeFlipsCurrent,
-                    Dscalar2 *d_vertexPositions,
+                    double2 *d_vertexPositions,
                     int      *d_vertexNeighbors,
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,

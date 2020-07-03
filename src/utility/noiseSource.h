@@ -35,9 +35,9 @@ class noiseSource
         //!Get a reproducible integer
         int getInt(int minimum, int maximum);
         //!Get a real from uniform distribution
-        Dscalar getRealUniform(Dscalar minimum =0., Dscalar maximum =1.);
+        double getRealUniform(double minimum =0., double maximum =1.);
         //!Get a real from normal distribution
-        Dscalar getRealNormal(Dscalar mean =0., Dscalar std =1.);
+        double getRealNormal(double mean =0., double std =1.);
 
         //!Set the array size of the cuda rngs
         void initialize(int _N)

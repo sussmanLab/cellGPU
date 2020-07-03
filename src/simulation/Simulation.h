@@ -25,9 +25,9 @@ class Simulation : public enable_shared_from_this<Simulation>
         void setConfiguration(ForcePtr _config);
 
         //!Call the force computer to compute the forces
-        void computeForces(GPUArray<Dscalar2> &forces);
+        void computeForces(GPUArray<double2> &forces);
         //!Call the configuration to move particles around
-        void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements);
+        void moveDegreesOfFreedom(GPUArray<double2> &displacements);
         //!Call every updater to advance one time step
         void performTimestep();
 
@@ -57,7 +57,7 @@ class Simulation : public enable_shared_from_this<Simulation>
         void setCellList(cellListGPU &_cl){cellList = &_cl;};
 
         //!Set the simulation timestep
-        void setIntegrationTimestep(Dscalar dt);
+        void setIntegrationTimestep(double dt);
         //!turn on CPU-only mode for all components
         void setCPUOperation(bool setcpu);
         //!Enforce reproducible dynamics
@@ -67,15 +67,15 @@ class Simulation : public enable_shared_from_this<Simulation>
         void setSortPeriod(int sp){sortPeriod = sp;};
 
         //!reset the simulation clock
-        virtual void setCurrentTime(Dscalar _cTime);
+        virtual void setCurrentTime(double _cTime);
         //!reset the simulation clock counter
         virtual void setCurrentTimestep(int _cTime){integerTimestep =_cTime;};
         //! An integer that keeps track of how often performTimestep has been called
         int integerTimestep;
         //!The current simulation time
-        Dscalar Time;
+        double Time;
         //! The dt of a time step
-        Dscalar integrationTimestep;
+        double integrationTimestep;
         //! A flag controlling whether to use the GPU
         bool USE_GPU;
 

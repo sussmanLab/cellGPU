@@ -67,8 +67,8 @@ void brownianParticleDynamics::integrateEquationsOfMotionGPU()
     {
     cellModel->computeForces();
     {//scope for array Handles
-    ArrayHandle<Dscalar2> d_f(cellModel->returnForces(),access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::overwrite);
+    ArrayHandle<double2> d_f(cellModel->returnForces(),access_location::device,access_mode::read);
+    ArrayHandle<double2> d_disp(displacements,access_location::device,access_mode::overwrite);
 
     ArrayHandle<curandState> d_RNG(noise.RNGs,access_location::device,access_mode::readwrite);
 
@@ -91,13 +91,13 @@ void brownianParticleDynamics::integrateEquationsOfMotionCPU()
     {
     cellModel->computeForces();
     {//scope for array Handles
-    ArrayHandle<Dscalar2> h_f(cellModel->returnForces(),access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_f(cellModel->returnForces(),access_location::host,access_mode::read);
+    ArrayHandle<double2> h_disp(displacements,access_location::host,access_mode::overwrite);
 
     for (int ii = 0; ii < Ndof; ++ii)
         {
-        Dscalar randomNumber1 = noise.getRealNormal();
-        Dscalar randomNumber2 = noise.getRealNormal();
+        double randomNumber1 = noise.getRealNormal();
+        double randomNumber2 = noise.getRealNormal();
         h_disp.data[ii].x = randomNumber1*sqrt(2.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].x;
         h_disp.data[ii].y = randomNumber2*sqrt(2.0*deltaT*Temperature*mu) + deltaT*mu*h_f.data[ii].y;
         };

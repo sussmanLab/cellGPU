@@ -6,14 +6,14 @@
 /*!
 move vertices according to an inpute GPUarray
 */
-void vertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale)
+void vertexModelBase::moveDegreesOfFreedom(GPUArray<double2> &displacements,double scale)
     {
     forcesUpToDate = false;
     //handle things either on the GPU or CPU
     if (GPUcompute)
         {
-        ArrayHandle<Dscalar2> d_d(displacements,access_location::device,access_mode::read);
-        ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
+        ArrayHandle<double2> d_d(displacements,access_location::device,access_mode::read);
+        ArrayHandle<double2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
         if (scale == 1.)
             gpu_move_degrees_of_freedom(d_v.data,d_d.data,Nvertices,*(Box));
         else
@@ -21,8 +21,8 @@ void vertexModelBase::moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dsc
         }
     else
         {
-        ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::read);
-        ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
+        ArrayHandle<double2> h_disp(displacements,access_location::host,access_mode::read);
+        ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
         if(scale ==1.)
             {
             for (int i = 0; i < Nvertices; ++i)
@@ -64,9 +64,9 @@ void vertexModelBase::initializeVertexModelBase(int n,bool spvInitialize)
 
     vertexMasses.resize(Nvertices);
     vertexVelocities.resize(Nvertices);
-    vector<Dscalar> vmasses(Nvertices,1.0);
+    vector<double> vmasses(Nvertices,1.0);
     fillGPUArrayWithVector(vmasses,vertexMasses);
-    vector<Dscalar2> velocities(Nvertices,make_Dscalar2(0.0,0.0));
+    vector<double2> velocities(Nvertices,make_double2(0.0,0.0));
     fillGPUArrayWithVector(velocities,vertexVelocities);
 
     //initializes per-vertex lists
@@ -112,7 +112,7 @@ timesteps to smooth out the random point set first.
 */
 void vertexModelBase::setCellsVoronoiTesselation(bool spvInitialize)
     {
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::readwrite);
     //use the Voronoi class to relax the initial configuration just a bit?
     if(spvInitialize)
         {
@@ -132,7 +132,7 @@ void vertexModelBase::setCellsVoronoiTesselation(bool spvInitialize)
 
         for (int ii = 0; ii < 100;++ii)
             sim->performTimestep();
-        ArrayHandle<Dscalar2> h_pp(spv->cellPositions,access_location::host,access_mode::read);
+        ArrayHandle<double2> h_pp(spv->cellPositions,access_location::host,access_mode::read);
         for (int ii = 0; ii < Ncells; ++ii)
             h_p.data[ii] = h_pp.data[ii];
         };
@@ -143,7 +143,7 @@ void vertexModelBase::setCellsVoronoiTesselation(bool spvInitialize)
         {
         Psnew[ii]=make_pair(Point(h_p.data[ii].x,h_p.data[ii].y),ii);
         };
-    Dscalar b11,b12,b21,b22;
+    double b11,b12,b21,b22;
     Box->getBoxDims(b11,b12,b21,b22);
     Iso_rectangle domain(0.0,0.0,b11,b22);
     PDT T(Psnew.begin(),Psnew.end(),domain);
@@ -152,7 +152,7 @@ void vertexModelBase::setCellsVoronoiTesselation(bool spvInitialize)
     //set number of vertices
     Nvertices = 2*Ncells;
     vertexPositions.resize(Nvertices);
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::overwrite);
 
     //first, ask CGAL for the circumcenter of the face, and add it to the list of vertices, and make a map between the iterator and the vertex idx
     map<PDT::Face_handle,int> faceToVoroIdx;
@@ -245,23 +245,23 @@ Very similar to the function in Voronoi2d.cpp, but optimized since we already ha
 */
 void vertexModelBase::computeGeometryCPU()
     {
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
     ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_vc(voroCur,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar4> h_vln(voroLastNext,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_vc(voroCur,access_location::host,access_mode::readwrite);
+    ArrayHandle<double4> h_vln(voroLastNext,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::readwrite);
 
     //compute the geometry for each cell
     for (int i = 0; i < Ncells; ++i)
         {
         int neighs = h_nn.data[i];
 //      Define the vertices of a cell relative to some (any) of its verties to take care of periodic boundaries
-        Dscalar2 cellPos = h_v.data[h_n.data[n_idx(neighs-2,i)]];
-        Dscalar2 vlast, vcur,vnext;
-        Dscalar Varea = 0.0;
-        Dscalar Vperi = 0.0;
+        double2 cellPos = h_v.data[h_n.data[n_idx(neighs-2,i)]];
+        double2 vlast, vcur,vnext;
+        double Varea = 0.0;
+        double Vperi = 0.0;
         //compute the vertex position relative to the cell position
         vlast.x=0.;vlast.y=0.0;
         int vidx = h_n.data[n_idx(neighs-1,i)];
@@ -279,12 +279,12 @@ void vertexModelBase::computeGeometryCPU()
             //contribution to cell's area is
             // 0.5* (vcur.x+vnext.x)*(vnext.y-vcur.y)
             Varea += SignedPolygonAreaPart(vcur,vnext);
-            Dscalar dx = vcur.x-vnext.x;
-            Dscalar dy = vcur.y-vnext.y;
+            double dx = vcur.x-vnext.x;
+            double dy = vcur.y-vnext.y;
             Vperi += sqrt(dx*dx+dy*dy);
             //save vertex positions in a convenient form
             h_vc.data[forceSetIdx] = vcur;
-            h_vln.data[forceSetIdx] = make_Dscalar4(vlast.x,vlast.y,vnext.x,vnext.y);
+            h_vln.data[forceSetIdx] = make_double4(vlast.x,vlast.y,vnext.x,vnext.y);
             //advance the loop
             vlast = vcur;
             vcur = vnext;
@@ -299,13 +299,13 @@ Very similar to the function in Voronoi2d.cpp, but optimized since we already ha
 */
 void vertexModelBase::computeGeometryGPU()
     {
-    ArrayHandle<Dscalar2> d_v(vertexPositions,      access_location::device,access_mode::read);
+    ArrayHandle<double2> d_v(vertexPositions,      access_location::device,access_mode::read);
     ArrayHandle<int>      d_cvn(cellVertexNum,       access_location::device,access_mode::read);
     ArrayHandle<int>      d_cv(cellVertices,         access_location::device,access_mode::read);
     ArrayHandle<int>      d_vcn(vertexCellNeighbors,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_vc(voroCur,             access_location::device,access_mode::overwrite);
-    ArrayHandle<Dscalar4> d_vln(voroLastNext,       access_location::device,access_mode::overwrite);
-    ArrayHandle<Dscalar2> d_AP(AreaPeri,            access_location::device,access_mode::overwrite);
+    ArrayHandle<double2> d_vc(voroCur,             access_location::device,access_mode::overwrite);
+    ArrayHandle<double4> d_vln(voroLastNext,       access_location::device,access_mode::overwrite);
+    ArrayHandle<double2> d_AP(AreaPeri,            access_location::device,access_mode::overwrite);
 
     gpu_vm_geometry(
                     d_v.data,
@@ -344,28 +344,28 @@ CPU computation of the centroid of every cell
 */
 void vertexModelBase::getCellCentroidsCPU()
     {
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
 
-    Dscalar2 zero = make_Dscalar2(0.0,0.0);
-    Dscalar2 baseVertex;
+    double2 zero = make_double2(0.0,0.0);
+    double2 baseVertex;
     for (int cell = 0; cell < Ncells; ++cell)
         {
         //for convenience, for each cell we will make a vector of the vertices of the cell relative to vertex 0
         //the vector will be of length (vertices+1), and the first and last entry will be zero.
         baseVertex = h_v.data[h_n.data[n_idx(0,cell)]];
         int neighs = h_nn.data[cell];
-        vector<Dscalar2> vertices(neighs+1,zero);
+        vector<double2> vertices(neighs+1,zero);
         for (int vv = 1; vv < neighs; ++vv)
             {
             int vidx = h_n.data[n_idx(vv,cell)];
             Box->minDist(h_v.data[vidx],baseVertex,vertices[vv]);
             };
         //compute the area and the sums for the centroids
-        Dscalar Area = 0.0;
-        Dscalar2 centroid = zero;
+        double Area = 0.0;
+        double2 centroid = zero;
         for (int vv = 0; vv < neighs; ++vv)
             {
             Area += (vertices[vv].x*vertices[vv+1].y - vertices[vv+1].x*vertices[vv].y);
@@ -398,12 +398,12 @@ This isn't really used much, anyway, so update this only when the functionality 
 */
 void vertexModelBase::getCellPositionsCPU()
     {
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(cellVertexNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(cellVertices,access_location::host,access_mode::read);
 
-    Dscalar2 vertex,baseVertex,pos;
+    double2 vertex,baseVertex,pos;
     for (int cell = 0; cell < Ncells; ++cell)
         {
         baseVertex = h_v.data[h_n.data[n_idx(0,cell)]];
@@ -431,8 +431,8 @@ Repeat the above calculation of "cell positions", but on the GPU
 */
 void vertexModelBase::getCellPositionsGPU()
     {
-    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_p(cellPositions,access_location::device,access_mode::readwrite);
+    ArrayHandle<double2> d_v(vertexPositions,access_location::device,access_mode::read);
     ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::read);
     ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::read);
 
@@ -628,13 +628,13 @@ This function also performs the transition and maintains the auxiliary data stru
  */
 void vertexModelBase::testAndPerformT1TransitionsCPU()
     {
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_cv(cellVertices,access_location::host,access_mode::readwrite);
     ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::readwrite);
 
-    Dscalar2 edge;
+    double2 edge;
     //first, scan through the list for any T1 transitions...
     int vertex2;
     //keep track of whether vertexMax needs to be increased
@@ -654,7 +654,7 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
     cell k has CCW vertices: ..., b,v1,v2,d, ...
     */
     int4 vertexSet;
-    Dscalar2 v1,v2;
+    double2 v1,v2;
     for (int vertex1 = 0; vertex1 < Nvertices; ++vertex1)
         {
         v1 = h_v.data[vertex1];
@@ -683,7 +683,7 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                         };
 
                     //Rotate the vertices in the edge and set them at twice their original distance
-                    Dscalar2 midpoint;
+                    double2 midpoint;
                     midpoint.x = v2.x + 0.5*edge.x;
                     midpoint.y = v2.y + 0.5*edge.y;
 
@@ -791,7 +791,7 @@ and detect whether the edge needs to grow. If so, grow it!
 void vertexModelBase::testEdgesForT1GPU()
     {
         {//provide scope for array handles
-        ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::read);
+        ArrayHandle<double2> d_v(vertexPositions,access_location::device,access_mode::read);
         ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::read);
         ArrayHandle<int> d_vflip(vertexEdgeFlips,access_location::device,access_mode::overwrite);
         ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::read);
@@ -861,7 +861,7 @@ void vertexModelBase::flipEdgesGPU()
         ArrayHandle<int> h_ffe(finishedFlippingEdges,access_location::host,access_mode::readwrite);
         if(h_ffe.data[0] != 0)
             {
-            ArrayHandle<Dscalar2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
+            ArrayHandle<double2> d_v(vertexPositions,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_vn(vertexNeighbors,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_vflipcur(vertexEdgeFlipsCurrent,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::readwrite);
@@ -975,8 +975,8 @@ void vertexModelBase::cellDeath(int cellIndex)
         };
 
     //Eventually, put the new vertex in, say, the centroid... for now, just put it on top of v1
-    Dscalar2 newVertexPosition;
-    ArrayHandle<Dscalar2> h_v(vertexPositions);
+    double2 newVertexPosition;
+    ArrayHandle<double2> h_v(vertexPositions);
     newVertexPosition = h_v.data[vertices[0]];
 
     //First, we start updating the data structures
@@ -1124,7 +1124,7 @@ indices of the vertices being targeted
 Note that dParams does nothing
 \post This function is meant to be called before the start of a new timestep. It should be immediately followed by a computeGeometry call
 */
-void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams)
+void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<double> &dParams)
     {
     //This function will first do some analysis to identify the cells and vertices involved
     //it will then call base class' cellDivision routine, and then update all needed data structures
@@ -1138,15 +1138,15 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
     int v1 = min(parameters[1],parameters[2]);
     int v2 = max(parameters[1],parameters[2]);
 
-    Dscalar2 cellPos;
-    Dscalar2 newV1Pos,newV2Pos;
+    double2 cellPos;
+    double2 newV1Pos,newV2Pos;
     int v1idx, v2idx, v1NextIdx, v2NextIdx;
     int newV1CellNeighbor, newV2CellNeighbor;
     bool increaseVertexMax = false;
     int neighs;
     vector<int> combinedVertices;
     {//scope for array handles
-    ArrayHandle<Dscalar2> vP(vertexPositions);
+    ArrayHandle<double2> vP(vertexPositions);
     ArrayHandle<int> cellVertNum(cellVertexNum);
     ArrayHandle<int> cv(cellVertices);
     ArrayHandle<int> vcn(vertexCellNeighbors);
@@ -1176,7 +1176,7 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
         v2NextIdx = cv.data[n_idx(0,cellIdx)];
 
     //find the positions of the new vertices
-    Dscalar2 disp;
+    double2 disp;
     Box->minDist(vP.data[v1NextIdx],vP.data[v1idx],disp);
     disp.x = 0.5*disp.x;
     disp.y = 0.5*disp.y;
@@ -1272,13 +1272,13 @@ void vertexModelBase::cellDivision(const vector<int> &parameters, const vector<D
     cellVertices.resize(vertexMax*Ncells);
     //first, let's take care of the vertex positions, masses, and velocities
         {//arrayhandle scope
-        ArrayHandle<Dscalar2> h_vp(vertexPositions);
+        ArrayHandle<double2> h_vp(vertexPositions);
         h_vp.data[Nvertices-2] = newV1Pos;
         h_vp.data[Nvertices-1] = newV2Pos;
-        ArrayHandle<Dscalar2> h_vv(vertexVelocities);
-        h_vv.data[Nvertices-2] = make_Dscalar2(0.0,0.0);
-        h_vv.data[Nvertices-1] = make_Dscalar2(0.0,0.0);
-        ArrayHandle<Dscalar> h_vm(vertexMasses);
+        ArrayHandle<double2> h_vv(vertexVelocities);
+        h_vv.data[Nvertices-2] = make_double2(0.0,0.0);
+        h_vv.data[Nvertices-1] = make_double2(0.0,0.0);
+        ArrayHandle<double> h_vm(vertexMasses);
         h_vm.data[Nvertices-2] = h_vm.data[v1idx];
         h_vm.data[Nvertices-1] = h_vm.data[v2idx];
         }

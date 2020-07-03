@@ -15,17 +15,17 @@ A file providing an interface to the relevant cuda calls for the selfPropelledAl
 
 //!set the vector of displacements from forces and activity
 bool gpu_spp_aligning_eom_integration(
-                    Dscalar2 *forces,
-                    Dscalar2 *velocities,
-                    Dscalar2 *displacements,
-                    Dscalar2 *motility,
-                    Dscalar *cellDirectors,
+                    double2 *forces,
+                    double2 *velocities,
+                    double2 *displacements,
+                    double2 *motility,
+                    double *cellDirectors,
                     curandState *RNGs,
                     int N,
-                    Dscalar deltaT,
+                    double deltaT,
                     int Timestep,
-                    Dscalar mu,
-                    Dscalar J);
+                    double mu,
+                    double J);
 
 /** @} */ //end of group declaration
  #endif

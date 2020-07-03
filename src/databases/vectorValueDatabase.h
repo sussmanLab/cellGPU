@@ -21,16 +21,16 @@ class vectorValueDatabase : public BaseDatabaseNetCDF
         //!read values in a new value and vector
         void ReadState(int rec);
         //!write a new value and vector
-        void WriteState(vector<Dscalar> &vec,Dscalar val);
+        void WriteState(vector<double> &vec,double val);
         //!read the number of records in the database
         int GetNumRecs(){
                     NcDim *rd = File.get_dim("rec");
                     return rd->size();
                     };
         //!The variable that will be loaded for "value" when state is read
-        Dscalar val;
+        double val;
         //!The variable that will be loaded for "vector" when state is read
-        vector<Dscalar> vec;
+        vector<double> vec;
 
     protected:
         void SetDimVar();

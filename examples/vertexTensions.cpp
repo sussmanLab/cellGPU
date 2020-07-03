@@ -29,11 +29,11 @@ int main(int argc, char*argv[])
     int tSteps = 100;
     int initSteps = 100;
 
-    Dscalar dt = 0.01;
-    Dscalar p0 = 4.0;
-    Dscalar a0 = 1.0;
-    Dscalar v0 = 0.01;
-    Dscalar gamma = 0.0;
+    double dt = 0.01;
+    double p0 = 4.0;
+    double a0 = 1.0;
+    double v0 = 0.01;
+    double gamma = 0.0;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
@@ -115,9 +115,9 @@ int main(int argc, char*argv[])
     //set a strip in the middle of the box?
     cout << "Setting a strip with tension = " << gamma << endl;
     avm->getCellPositionsCPU();
-    ArrayHandle<Dscalar2> h_cp(avm->cellPositions);
+    ArrayHandle<double2> h_cp(avm->cellPositions);
     vector<int> types(numpts,0);
-    Dscalar boxL = (Dscalar) sqrt(numpts);
+    double boxL = (double) sqrt(numpts);
     for (int ii = 0; ii < numpts; ++ii)
         {
         if (h_cp.data[ii].x > boxL/4. && h_cp.data[ii].x < 3.*boxL/4.) types[ii]=1;
@@ -141,7 +141,7 @@ int main(int argc, char*argv[])
         };
 
     t2=clock();
-    cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
+    cout << "timestep time per iteration currently at " <<  (t2-t1)/(double)CLOCKS_PER_SEC/tSteps << endl << endl;
     avm->reportMeanVertexForce();
     cout << "Mean q = " << avm->reportq() << endl;
 

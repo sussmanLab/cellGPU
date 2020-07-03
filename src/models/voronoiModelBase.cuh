@@ -21,13 +21,13 @@ bool gpu_test_circumcenters(
                             int *d_repair,
                             int3 *d_ccs,
                             int Nccs,
-                            Dscalar2 *d_pt,
+                            double2 *d_pt,
                             unsigned int *d_cell_sizes,
                             int *d_idx,
                             int Np,
                             int xsize,
                             int ysize,
-                            Dscalar boxsize,
+                            double boxsize,
                             gpubox &Box,
                             Index2D &ci,
                             Index2D &cli,
@@ -36,12 +36,12 @@ bool gpu_test_circumcenters(
 
 //!compute the area and perimeter of all Voronoi cells, and save the voronoi vertices
 bool gpu_compute_voronoi_geometry(
-                    Dscalar2 *d_points,
-                    Dscalar2 *d_AP,
+                    double2 *d_points,
+                    double2 *d_AP,
                     int    *d_nn,
                     int    *d_n,
-                    Dscalar2 *d_vc,
-                    Dscalar4 *d_vln,
+                    double2 *d_vc,
+                    double4 *d_vln,
                     int    N,
                     Index2D &n_idx,
                     gpubox &Box

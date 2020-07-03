@@ -26,11 +26,11 @@ int main(int argc, char*argv[])
     int tSteps = 5;
     int initSteps = 0;
 
-    Dscalar dt = 0.1;
-    Dscalar Dr = 1.0;
-    Dscalar p0 = 4.0;
-    Dscalar a0 = 1.0;
-    Dscalar v0 = 0.1;
+    double dt = 0.1;
+    double Dr = 1.0;
+    double p0 = 4.0;
+    double a0 = 1.0;
+    double v0 = 0.1;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:d:s:r:a:i:v:b:x:y:z:p:t:e:d:")) != -1)
@@ -129,7 +129,7 @@ int main(int argc, char*argv[])
     t2=clock();
     ncdat.WriteState(spv);
 
-    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
+    double steptime = (t2-t1)/(double)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
 
     return 0;

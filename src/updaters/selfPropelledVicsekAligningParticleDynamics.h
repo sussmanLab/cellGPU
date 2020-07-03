@@ -21,7 +21,7 @@ class selfPropelledVicsekAligningParticleDynamics : public simpleEquationOfMotio
         selfPropelledVicsekAligningParticleDynamics(){deltaT = 0.01; GPUcompute =true;Timestep = 0;};
 
         //!additionally set the number of particles andinitialize things
-        selfPropelledVicsekAligningParticleDynamics(int N, Dscalar _eta = 0.0, Dscalar _tau = 1.0);
+        selfPropelledVicsekAligningParticleDynamics(int N, double _eta = 0.0, double _tau = 1.0);
 
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion();
@@ -31,11 +31,11 @@ class selfPropelledVicsekAligningParticleDynamics : public simpleEquationOfMotio
         virtual void integrateEquationsOfMotionGPU();
 
         //!Get the inverse friction constant, mu
-        Dscalar getMu(){return mu;};
+        double getMu(){return mu;};
         //!Set the number of degrees of freedom of the equation of motion
-        void setMu(Dscalar _mu){mu=_mu;};
-        void setEta(Dscalar _Eta){Eta=_Eta;};
-        void setTau(Dscalar _tau){tau=_tau;};
+        void setMu(double _mu){mu=_mu;};
+        void setEta(double _Eta){Eta=_Eta;};
+        void setTau(double _tau){tau=_tau;};
 
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
         virtual void spatialSorting();
@@ -46,10 +46,10 @@ class selfPropelledVicsekAligningParticleDynamics : public simpleEquationOfMotio
         //!A shared pointer to a simple active model
         shared_ptr<Simple2DActiveCell> activeModel;
         //!The value of the alignment coupling
-        Dscalar tau;
+        double tau;
         //!The value of the inverse friction constant
-        Dscalar mu;
+        double mu;
         //!The value of the strength of vectorial noise
-        Dscalar Eta;
+        double Eta;
     };
 #endif

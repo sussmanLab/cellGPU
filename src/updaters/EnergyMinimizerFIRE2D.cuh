@@ -16,30 +16,30 @@ A file providing an interface to the relevant cuda calls for the EnergyMinimizer
  */
 
 //!Zero out the velocity (if the power is negative)
-bool gpu_zero_velocity(Dscalar2 *d_velocity,
+bool gpu_zero_velocity(double2 *d_velocity,
                        int N);
 
 //!velocity = velocity +0.5*deltaT*force
-bool gpu_update_velocity(Dscalar2 *d_velocity,
-                      Dscalar2 *d_force,
-                      Dscalar deltaT,
+bool gpu_update_velocity(double2 *d_velocity,
+                      double2 *d_force,
+                      double deltaT,
                       int N
                       );
 
 //!velocity = (1-a)velocity +a*scaling*force
-bool gpu_update_velocity_FIRE(Dscalar2 *d_velocity,
-                      Dscalar2 *d_force,
-                      Dscalar alpha,
-                      Dscalar scaling,
+bool gpu_update_velocity_FIRE(double2 *d_velocity,
+                      double2 *d_force,
+                      double alpha,
+                      double scaling,
                       int N
                       );
 
 
 //!displacement = dt*velocity + 0.5*dt^2*force
-bool gpu_displacement_velocity_verlet(Dscalar2 *d_displacement,
-                      Dscalar2 *d_velocity,
-                      Dscalar2 *d_force,
-                      Dscalar deltaT,
+bool gpu_displacement_velocity_verlet(double2 *d_displacement,
+                      double2 *d_velocity,
+                      double2 *d_force,
+                      double deltaT,
                       int N
                       );
 

@@ -10,7 +10,7 @@ class logSpacedIntegers
     {
     public:
         //!start with a number and an exponent
-        logSpacedIntegers(int firstSave = 0, Dscalar _exp = 0.05)
+        logSpacedIntegers(int firstSave = 0, double _exp = 0.05)
             {
             nextSave = firstSave;
             exponent = _exp;
@@ -44,8 +44,8 @@ class logSpacedIntegers
             }
         int nextSave;
         int logSaveIdx;
-        Dscalar exponent;
-        Dscalar base;
+        double exponent;
+        double base;
     };
 
 #endif

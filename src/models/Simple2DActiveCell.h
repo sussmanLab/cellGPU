@@ -24,10 +24,10 @@ class Simple2DActiveCell : public Simple2DCell
         void initializeSimple2DActiveCell(int n);
 
         //!Set uniform motility
-        void setv0Dr(Dscalar v0new,Dscalar drnew);
+        void setv0Dr(double v0new,double drnew);
 
         //!Set non-uniform cell motilites
-        void setCellMotility(vector<Dscalar> &v0s,vector<Dscalar> &drs);
+        void setCellMotility(vector<double> &v0s,vector<double> &drs);
 
         //!Set random cell directors (for active cell models)
         void setCellDirectorsRandomly();
@@ -36,19 +36,19 @@ class Simple2DActiveCell : public Simple2DCell
         virtual int getNumberOfDegreesOfFreedom(){return Ncells;};
 
         //!Divide cell...vector should be cell index i, vertex 1 and vertex 2
-        virtual void cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams = {});
+        virtual void cellDivision(const vector<int> &parameters, const vector<double> &dParams = {});
 
         //!Kill the indexed cell
         virtual void cellDeath(int cellIndex);
 
         //!measure the viscek order parameter N^-1 \sum \frac{v_i}{|v_i}
-        Dscalar vicsekOrderParameter(Dscalar2 &vParallel, Dscalar2 &vPerpendicular)
+        double vicsekOrderParameter(double2 &vParallel, double2 &vPerpendicular)
             {
-            ArrayHandle<Dscalar2> vel(returnVelocities());
-            Dscalar2 globalV = make_Dscalar2(0.0,0.0);
+            ArrayHandle<double2> vel(returnVelocities());
+            double2 globalV = make_double2(0.0,0.0);
             for(int ii = 0; ii < getNumberOfDegreesOfFreedom(); ++ii)
                 {
-                Dscalar2 v = (1.0/norm(vel.data[ii]))*vel.data[ii];
+                double2 v = (1.0/norm(vel.data[ii]))*vel.data[ii];
                 vParallel = vParallel+vel.data[ii];
                 globalV = globalV+v;
                 };
@@ -60,20 +60,20 @@ class Simple2DActiveCell : public Simple2DCell
             };
 
         //!measure the viscek order parameter N^-1 \sum \frac{v_i}{|v_i} from the director only
-        Dscalar vicsekOrderParameterDirector(Dscalar2 &vParallel, Dscalar2 &vPerpendicular)
+        double vicsekOrderParameterDirector(double2 &vParallel, double2 &vPerpendicular)
             {
-            ArrayHandle<Dscalar> cd(cellDirectors);
-            Dscalar2 globalV = make_Dscalar2(0.0,0.0);
-            Dscalar thetaAve = 0.0;
+            ArrayHandle<double> cd(cellDirectors);
+            double2 globalV = make_double2(0.0,0.0);
+            double thetaAve = 0.0;
             for(int ii = 0; ii < getNumberOfDegreesOfFreedom(); ++ii)
                 {
-                Dscalar theta=cd.data[ii];
+                double theta=cd.data[ii];
                 if(theta < -PI)
                     theta += 2*PI;
                 if(theta > PI)
                     theta -= 2*PI;
                 thetaAve += theta;
-                Dscalar2 v;
+                double2 v;
                 v.x = cos(theta);
                 v.y = sin(theta);
                 globalV = globalV+v;
@@ -104,15 +104,15 @@ class Simple2DActiveCell : public Simple2DCell
     //public member variables
     public:
         //!An array of angles (relative to the x-axis) that the cell directors point
-        GPUArray<Dscalar> cellDirectors;
+        GPUArray<double> cellDirectors;
         //!An array of forces acting on the cell directors
-        GPUArray<Dscalar> cellDirectorForces;
+        GPUArray<double> cellDirectorForces;
 
         //!velocity of cells in mono-motile systems
-        Dscalar v0;
+        double v0;
         //!rotational diffusion of cell directors in mono-motile systems
-        Dscalar Dr;
+        double Dr;
         //!The motility parameters (v0 and Dr) for each cell
-        GPUArray<Dscalar2> Motility;
+        GPUArray<double2> Motility;
     };
 #endif

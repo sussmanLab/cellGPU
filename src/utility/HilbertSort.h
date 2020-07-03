@@ -30,13 +30,13 @@ struct HilbertSorter
         //!The only constructor requires a box
         HOSTDEVICE HilbertSorter(gpubox Box)
             {
-            Dscalar x11,x12,x21,x22;
+            double x11,x12,x21,x22;
             Box.getBoxDims(x11,x12,x21,x22);
             box.setGeneral(x11,x12,x21,x22);
 
             int mm = 1;
             int temp = 2;
-            while ((Dscalar)temp < x11)
+            while ((double)temp < x11)
                 {
                 temp *=2;
                 mm +=1;
@@ -86,11 +86,11 @@ struct HilbertSorter
 
         //!Convert a real(x,y) pair to a nearby integer pair, and then gets the 1D Hilbert coordinate of that point.
         //!The number of cells is 2^M (M is the index of the HC))
-        HOSTDEVICE int getIdx(Dscalar2 point)
+        HOSTDEVICE int getIdx(double2 point)
             {
 
             //x and y need to be in the range 0 <= x,y < n, where n=2^M
-            Dscalar2 virtualPos;
+            double2 virtualPos;
             box.invTrans(point,virtualPos);
 
             int n = int_power(2,M);

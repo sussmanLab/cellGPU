@@ -17,9 +17,9 @@ interface to diagonalize a dynamical matrix.
 */
 
 //! A function of convenience for setting FIRE parameters
-void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, Dscalar deltaT, Dscalar alphaStart,
-        Dscalar deltaTMax, Dscalar deltaTInc, Dscalar deltaTDec, Dscalar alphaDec, int nMin,
-        Dscalar forceCutoff)
+void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, double deltaT, double alphaStart,
+        double deltaTMax, double deltaTInc, double deltaTDec, double alphaDec, int nMin,
+        double forceCutoff)
     {
     emin->setDeltaT(deltaT);
     emin->setAlphaStart(alphaStart);
@@ -42,13 +42,13 @@ int main(int argc, char*argv[])
     int tSteps = 5;
     int initSteps = 0;
 
-    Dscalar dt = 0.1;
-    Dscalar p0 = 4.0;
-    Dscalar pf = 4.0;
-    Dscalar a0 = 1.0;
-    Dscalar v0 = 0.1;
-    Dscalar KA = 1.0;
-    Dscalar thresh = 1e-12;
+    double dt = 0.1;
+    double p0 = 4.0;
+    double pf = 4.0;
+    double a0 = 1.0;
+    double v0 = 0.1;
+    double KA = 1.0;
+    double thresh = 1e-12;
 
     //This example is a bit more ragged than the others, and program_switch has been abused for testing features that have not been cleaned up yet
     int program_switch = 0;
@@ -106,7 +106,7 @@ int main(int argc, char*argv[])
     sim->setCPUOperation(!initializeGPU);
 
     //initialize FIRE parameters...these parameters are pretty standard for many MD settings, and shouldn't need too much adjustment
-    Dscalar astart, adec, tdec, tinc; int nmin;
+    double astart, adec, tdec, tinc; int nmin;
     nmin = 5;
     astart = .1;
     adec= 0.99;
@@ -118,7 +118,7 @@ int main(int argc, char*argv[])
     //test minimization simply
     if(program_switch ==5)
         {
-        Dscalar mf;
+        double mf;
         for (int ii = 0; ii < initSteps; ++ii)
             {
             fireMinimizer->setMaximumIterations((tSteps)*(1+ii));
@@ -126,15 +126,15 @@ int main(int argc, char*argv[])
             spv->computeGeometryCPU();
             spv->computeForces();
             mf = spv->getMaxForce();
-            printf("maxForce = %g\t energy/cell = %g\n",mf,spv->computeEnergy()/(Dscalar)numpts);
+            printf("maxForce = %g\t energy/cell = %g\n",mf,spv->computeEnergy()/(double)numpts);
             if (mf < thresh)
                 break;
             };
 
         t2=clock();
-        Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC;
+        double steptime = (t2-t1)/(double)CLOCKS_PER_SEC;
         cout << "minimization was ~ " << steptime << endl;
-        Dscalar meanQ, varQ;
+        double meanQ, varQ;
         meanQ = spv->reportq();
         varQ = spv->reportVarq();
         printf("Cell <q> = %f\t Var(q) = %g\n",meanQ,varQ);
@@ -142,7 +142,7 @@ int main(int argc, char*argv[])
         };
 
     //minimize to tolerance
-    Dscalar mf;
+    double mf;
     for (int ii = 0; ii < initSteps; ++ii)
         {
         if (ii > 0 && mf > 0.0001) return 0;
@@ -157,9 +157,9 @@ int main(int argc, char*argv[])
         };
 
     t2=clock();
-    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC;
+    double steptime = (t2-t1)/(double)CLOCKS_PER_SEC;
     cout << "minimization was ~ " << steptime << endl;
-    Dscalar meanQ, varQ;
+    double meanQ, varQ;
     meanQ = spv->reportq();
     varQ = spv->reportVarq();
     printf("Cell <q> = %f\t Var(q) = %g\n",meanQ,varQ);
@@ -172,7 +172,7 @@ int main(int argc, char*argv[])
     //build the dynamical matrix
     spv->computeGeometryCPU();
     vector<int2> rowCols;
-    vector<Dscalar> entries;
+    vector<double> entries;
     spv->getDynMatEntries(rowCols,entries,1.0,1.0);
     printf("Number of partial entries: %lu\n",rowCols.size());
     EigMat D(2*numpts);
@@ -184,7 +184,7 @@ int main(int argc, char*argv[])
 
     int evecTest = 11;
     D.SASolve(evecTest+1);
-    vector<Dscalar> eigenv;
+    vector<double> eigenv;
     for (int ee = 0; ee < 40; ++ee)
         {
         D.getEvec(ee,eigenv);
@@ -193,13 +193,13 @@ int main(int argc, char*argv[])
     cout <<endl;
 
     //compare with a numerical derivative
-    GPUArray<Dscalar2> disp,dispneg;
+    GPUArray<double2> disp,dispneg;
     disp.resize(numpts);
     dispneg.resize(numpts);
-    Dscalar mag = 1e-2;
+    double mag = 1e-2;
     {
-    ArrayHandle<Dscalar2> hp(disp);
-    ArrayHandle<Dscalar2> hn(dispneg);
+    ArrayHandle<double2> hp(disp);
+    ArrayHandle<double2> hn(dispneg);
     for (int ii = 0; ii < numpts; ++ii)
         {
         hp.data[ii].x = mag*D.eigenvectors[evecTest][2*ii];
@@ -210,18 +210,18 @@ int main(int argc, char*argv[])
         };
     };
 
-    Dscalar E0 = spv->computeEnergy();
+    double E0 = spv->computeEnergy();
     printf("initial energy = %g\n",spv->computeEnergy());
     spv->computeForces();
     printf("initial energy = %g\n",spv->computeEnergy());
     spv->moveDegreesOfFreedom(disp);
     spv->computeForces();
-    Dscalar E1 = spv->computeEnergy();
+    double E1 = spv->computeEnergy();
     printf("positive delta energy = %g\n",spv->computeEnergy());
     spv->moveDegreesOfFreedom(dispneg);
     spv->moveDegreesOfFreedom(dispneg);
     spv->computeForces();
-    Dscalar E2 = spv->computeEnergy();
+    double E2 = spv->computeEnergy();
     printf("negative delta energy = %g\n",spv->computeEnergy());
     printf("differences: %f\t %f\n",E1-E0,E2-E0);
     printf("der = %f\n",(E1+E2-2.0*E0)/(mag*mag));

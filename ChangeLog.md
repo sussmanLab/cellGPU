@@ -6,7 +6,7 @@
 
 * cmake build system
 * update cgal to use header-only versions
-* Retire the use of Dscalars... everything is a double
+* Retire the use of Dscalars... switching at compile time was never used, so now everything is a double
 * assorted bug fixes and clean-ups
 
 ### version 0.8.0 

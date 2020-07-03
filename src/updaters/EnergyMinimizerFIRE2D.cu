@@ -10,7 +10,7 @@
 /*!
   set the first N elements of the d_velocity vector to 0.0
 */
-__global__ void gpu_zero_velocity_kernel(Dscalar2 *d_velocity,
+__global__ void gpu_zero_velocity_kernel(double2 *d_velocity,
                                               int N)
     {
     // read in the particle that belongs to this thread
@@ -27,7 +27,7 @@ __global__ void gpu_zero_velocity_kernel(Dscalar2 *d_velocity,
 /*!
 update the velocity in a velocity Verlet step
 */
-__global__ void gpu_update_velocity_kernel(Dscalar2 *d_velocity, Dscalar2 *d_force, Dscalar deltaT, int n)
+__global__ void gpu_update_velocity_kernel(double2 *d_velocity, double2 *d_force, double deltaT, int n)
     {
     // read in the index that belongs to this thread
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -40,7 +40,7 @@ __global__ void gpu_update_velocity_kernel(Dscalar2 *d_velocity, Dscalar2 *d_for
 /*!
 update the velocity according to a FIRE step
 */
-__global__ void gpu_update_velocity_FIRE_kernel(Dscalar2 *d_velocity, Dscalar2 *d_force, Dscalar alpha, Dscalar scaling, int n)
+__global__ void gpu_update_velocity_FIRE_kernel(double2 *d_velocity, double2 *d_force, double alpha, double scaling, int n)
     {
     // read in the index that belongs to this thread
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -53,8 +53,8 @@ __global__ void gpu_update_velocity_FIRE_kernel(Dscalar2 *d_velocity, Dscalar2 *
 /*!
 calculate the displacement in a velocity verlet step according to the force and velocity
 */
-__global__ void gpu_displacement_vv_kernel(Dscalar2 *d_displacement, Dscalar2 *d_velocity,
-                                           Dscalar2 *d_force, Dscalar deltaT, int n)
+__global__ void gpu_displacement_vv_kernel(double2 *d_displacement, double2 *d_velocity,
+                                           double2 *d_force, double deltaT, int n)
     {
     // read in the index that belongs to this thread
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -69,7 +69,7 @@ __global__ void gpu_displacement_vv_kernel(Dscalar2 *d_displacement, Dscalar2 *d
   \param N length of the array
   \post all elements of d_velocity are set to (0.0,0.0)
   */
-bool gpu_zero_velocity(Dscalar2 *d_velocity,
+bool gpu_zero_velocity(double2 *d_velocity,
                     int N
                     )
     {
@@ -85,14 +85,14 @@ bool gpu_zero_velocity(Dscalar2 *d_velocity,
     }
 
 /*!
-\param d_velocity Dscalar2 array of velocity
-\param d_force Dscalar2 array of force
+\param d_velocity double2 array of velocity
+\param d_force double2 array of force
 \param alpha the FIRE parameter
 \param scaling the square root of (v.v / f.f)
 \param N      the length of the arrays
 \post v = (1-alpha)v + alpha*scalaing*force
 */
-bool gpu_update_velocity_FIRE(Dscalar2 *d_velocity, Dscalar2 *d_force, Dscalar alpha, Dscalar scaling, int N)
+bool gpu_update_velocity_FIRE(double2 *d_velocity, double2 *d_force, double alpha, double scaling, int N)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
@@ -108,13 +108,13 @@ bool gpu_update_velocity_FIRE(Dscalar2 *d_velocity, Dscalar2 *d_force, Dscalar a
     };
 
 /*!
-\param d_velocity Dscalar2 array of velocity
-\param d_force Dscalar2 array of force
+\param d_velocity double2 array of velocity
+\param d_force double2 array of force
 \param deltaT time step
 \param N      the length of the arrays
 \post v = v + 0.5*deltaT*force
 */
-bool gpu_update_velocity(Dscalar2 *d_velocity, Dscalar2 *d_force, Dscalar deltaT, int N)
+bool gpu_update_velocity(double2 *d_velocity, double2 *d_force, double deltaT, int N)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
@@ -129,17 +129,17 @@ bool gpu_update_velocity(Dscalar2 *d_velocity, Dscalar2 *d_force, Dscalar deltaT
     };
 
 /*!
-\param d_displacement Dscalar2 array of displacements
-\param d_velocity Dscalar2 array of velocities
-\param d_force Dscalar2 array of forces
-\param Dscalar deltaT the current time step
+\param d_displacement double2 array of displacements
+\param d_velocity double2 array of velocities
+\param d_force double2 array of forces
+\param double deltaT the current time step
 \param N      the length of the arrays
 \post displacement = dt*velocity + 0.5 *dt^2*force
 */
-bool gpu_displacement_velocity_verlet(Dscalar2 *d_displacement,
-                      Dscalar2 *d_velocity,
-                      Dscalar2 *d_force,
-                      Dscalar deltaT,
+bool gpu_displacement_velocity_verlet(double2 *d_displacement,
+                      double2 *d_velocity,
+                      double2 *d_force,
+                      double deltaT,
                       int N)
     {
     unsigned int block_size = 128;

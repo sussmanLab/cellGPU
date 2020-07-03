@@ -45,47 +45,47 @@ class Simple2DCell : public Simple2DModel
 
 
         //!do everything necessary to compute the energy for the current model
-        virtual Dscalar computeEnergy(){Energy = 0.0; return 0.0;};
+        virtual double computeEnergy(){Energy = 0.0; return 0.0;};
         //!Call masses and velocities to get the total kinetic energy
-        Dscalar computeKineticEnergy();
+        double computeKineticEnergy();
         //!Call masses and velocities to get the average kinetic contribution to the pressure tensor
-        Dscalar4 computeKineticPressure();
+        double4 computeKineticPressure();
 
         //!copy the models current set of forces to the variable
-        virtual void getForces(GPUArray<Dscalar2> &forces){};
+        virtual void getForces(GPUArray<double2> &forces){};
 
         //!move the degrees of freedom
-        virtual void moveDegreesOfFreedom(GPUArray<Dscalar2> &displacements,Dscalar scale = 1.){};
+        virtual void moveDegreesOfFreedom(GPUArray<double2> &displacements,double scale = 1.){};
 
         //!Do everything necessary to update or enforce the topology in the current model
         virtual void enforceTopology(){};
 
         //!Set uniform cell area and perimeter preferences
-        void setCellPreferencesUniform(Dscalar A0, Dscalar P0);
+        void setCellPreferencesUniform(double A0, double P0);
 
         //!Set cell area and perimeter preferences according to input vector
-        void setCellPreferences(vector<Dscalar2> &AreaPeriPreferences);
+        void setCellPreferences(vector<double2> &AreaPeriPreferences);
 
         //!Set random cell positions, and set the periodic box to a square with average cell area=1
         void setCellPositionsRandomly();
 
         //!allow for cell division, according to a vector of model-dependent parameters
-        virtual void cellDivision(const vector<int> &parameters,const vector<Dscalar> &dParams={});
+        virtual void cellDivision(const vector<int> &parameters,const vector<double> &dParams={});
 
         //!allow for cell death, killing off the cell with the specified index
         virtual void cellDeath(int cellIndex);
 
         //!Set cell positions according to a user-specified vector
-        void setCellPositions(vector<Dscalar2> newCellPositions);
+        void setCellPositions(vector<double2> newCellPositions);
         //!Set vertex positions according to a user-specified vector
-        void setVertexPositions(vector<Dscalar2> newVertexPositions);
+        void setVertexPositions(vector<double2> newVertexPositions);
         //!Set velocities via a temperature. The return value is the total kinetic energy
-        Dscalar setCellVelocitiesMaxwellBoltzmann(Dscalar T);
+        double setCellVelocitiesMaxwellBoltzmann(double T);
         //!Set velocities via a temperature for the vertex degrees of freedom
-        Dscalar setVertexVelocitiesMaxwellBoltzmann(Dscalar T);
+        double setVertexVelocitiesMaxwellBoltzmann(double T);
 
         //! set uniform moduli for all cells
-        void setModuliUniform(Dscalar newKA, Dscalar newKP);
+        void setModuliUniform(double newKA, double newKP);
 
         //!Set all cells to the same "type"
         void setCellTypeUniform(int i);
@@ -106,24 +106,24 @@ class Simple2DCell : public Simple2DModel
 
         //GPUArray returners...
         //!Return a reference to moduli
-        virtual GPUArray<Dscalar2> & returnModuli(){return Moduli;};
+        virtual GPUArray<double2> & returnModuli(){return Moduli;};
         //!Return a reference to AreaPeri array
-        virtual GPUArray<Dscalar2> & returnAreaPeri(){return AreaPeri;};
+        virtual GPUArray<double2> & returnAreaPeri(){return AreaPeri;};
         //!Return a reference to AreaPeriPreferences
-        virtual GPUArray<Dscalar2> & returnAreaPeriPreferences(){return AreaPeriPreferences;};
+        virtual GPUArray<double2> & returnAreaPeriPreferences(){return AreaPeriPreferences;};
         //!Return a reference to velocities on cells. VertexModelBase will instead return vertexVelocities
-        virtual GPUArray<Dscalar2> & returnVelocities(){return cellVelocities;};
+        virtual GPUArray<double2> & returnVelocities(){return cellVelocities;};
         //!Return a reference to Positions on cells
-        virtual GPUArray<Dscalar2> & returnPositions(){return cellPositions;};
+        virtual GPUArray<double2> & returnPositions(){return cellPositions;};
         //!Return a reference to forces on cells
-        virtual GPUArray<Dscalar2> & returnForces(){return cellForces;};
+        virtual GPUArray<double2> & returnForces(){return cellForces;};
         //!Return a reference to Masses on cells
-        virtual GPUArray<Dscalar> & returnMasses(){return cellMasses;};
+        virtual GPUArray<double> & returnMasses(){return cellMasses;};
 
         //!Return other data just returns the masses; in this class it's not needed
-        virtual GPUArray<Dscalar> & returnOtherData(){return cellMasses;};
+        virtual GPUArray<double> & returnOtherData(){return cellMasses;};
         //!Set the simulation time stepsize
-        void setDeltaT(Dscalar dt){deltaT = dt;};
+        void setDeltaT(double dt){deltaT = dt;};
 
     //protected functions
     protected:
@@ -134,15 +134,15 @@ class Simple2DCell : public Simple2DModel
         //!Re-index cell arrays after a spatial sorting has occured.
         void reIndexCellArray(GPUArray<int> &array);
         //!why use templates when you can type more?
-        void reIndexCellArray(GPUArray<Dscalar> &array);
+        void reIndexCellArray(GPUArray<double> &array);
         //!why use templates when you can type more?
-        void reIndexCellArray(GPUArray<Dscalar2> &array);
+        void reIndexCellArray(GPUArray<double2> &array);
         //!Re-index vertex after a spatial sorting has occured.
         void reIndexVertexArray(GPUArray<int> &array);
         //!why use templates when you can type more?
-        void reIndexVertexArray(GPUArray<Dscalar> &array);
+        void reIndexVertexArray(GPUArray<double> &array);
         //!why use templates when you can type more?
-        void reIndexVertexArray(GPUArray<Dscalar2> &array);
+        void reIndexVertexArray(GPUArray<double2> &array);
         //!Perform a spatial sorting of the cells to try to maintain data locality
         void spatiallySortCells();
         //!Perform a spatial sorting of the vertices to try to maintain data locality
@@ -157,17 +157,17 @@ class Simple2DCell : public Simple2DModel
         int Nvertices;
 
         //! Cell positions... not used for computation, but can track, e.g., MSD of cell centers
-        GPUArray<Dscalar2> cellPositions;
+        GPUArray<double2> cellPositions;
         //! Position of the vertices
-        GPUArray<Dscalar2> vertexPositions;
+        GPUArray<double2> vertexPositions;
         //!The velocity vector of cells (only relevant if the equations of motion use it)
-        GPUArray<Dscalar2> cellVelocities;
+        GPUArray<double2> cellVelocities;
         //!The masses of the cells
-        GPUArray<Dscalar> cellMasses;
+        GPUArray<double> cellMasses;
         //!The velocity vector of vertices (only relevant if the equations of motion use it)
-        GPUArray<Dscalar2> vertexVelocities;
+        GPUArray<double2> vertexVelocities;
         //!The masses of the vertices
-        GPUArray<Dscalar> vertexMasses;
+        GPUArray<double> vertexMasses;
 
         //! VERTEX neighbors of every vertex
         /*!
@@ -207,9 +207,9 @@ class Simple2DCell : public Simple2DModel
         GPUArray<int> cellVertexNum;
 
         //!an array containing net force on each vertex
-        GPUArray<Dscalar2> vertexForces;
+        GPUArray<double2> vertexForces;
         //!an array containing net force on each cell
-        GPUArray<Dscalar2> cellForces;
+        GPUArray<double2> cellForces;
         //!An array of integers labeling cell type...an easy way of determining if cells are different.
         /*!
         Please note that "type" is not meaningful unless it is used by child classes. That is, things
@@ -223,9 +223,9 @@ class Simple2DCell : public Simple2DModel
         Index2D cellTypeIndexer;
 
         //!The current potential energy of the system; only updated when an explicit energy calculation is called (i.e. not by default each timestep)
-        Dscalar Energy;
+        double Energy;
         //!The current kinetic energy of the system; only updated when an explicit calculation is called
-        Dscalar KineticEnergy;
+        double KineticEnergy;
         //!To write consistent files...the cell that started the simulation as index i has current index tagToIdx[i]
         /*!
          The Hilbert sorting stuff makes keeping track of particles, and re-indexing things when
@@ -254,7 +254,7 @@ class Simple2DCell : public Simple2DModel
         //! Count the number of times "performTimeStep" has been called
         int Timestep;
         //!The time stepsize of the simulation
-        Dscalar deltaT;
+        double deltaT;
 
         //!Are the forces (and hence, the geometry) up-to-date?
         bool forcesUpToDate;
@@ -269,16 +269,16 @@ class Simple2DCell : public Simple2DModel
         //! A source of noise for random cell initialization
         noiseSource noise;
         //!the area modulus
-        Dscalar KA;
+        double KA;
         //!The perimeter modulus
-        Dscalar KP;
+        double KP;
         //!The area and perimeter moduli of each cell. CURRENTLY NOT SUPPORTED, BUT EASY TO IMPLEMENT
-        GPUArray<Dscalar2> Moduli;//(KA,KP)
+        GPUArray<double2> Moduli;//(KA,KP)
 
         //!The current area and perimeter of each cell
-        GPUArray<Dscalar2> AreaPeri;//(current A,P) for each cell
+        GPUArray<double2> AreaPeri;//(current A,P) for each cell
         //!The area and perimeter preferences of each cell
-        GPUArray<Dscalar2> AreaPeriPreferences;//(A0,P0) for each cell
+        GPUArray<double2> AreaPeriPreferences;//(A0,P0) for each cell
         //!A structure that indexes the vertices defining each cell
         /*!
         cellVertices is a large, 1D array containing the vertices associated with each cell.
@@ -296,10 +296,10 @@ class Simple2DCell : public Simple2DModel
         cell, either for easy force computation or in the geometry routine, etc.
         voroCur.data[n_idx(nn,i)] gives the nth vertex, in CCW order, of cell i
         */
-        GPUArray<Dscalar2> voroCur;
+        GPUArray<double2> voroCur;
         //!3*Nvertices length array of the position of the last and next vertices along the cell
         //!Similarly, voroLastNext.data[n_idx(nn,i)] gives the previous and next vertex of the same
-        GPUArray<Dscalar4> voroLastNext;
+        GPUArray<double4> voroLastNext;
 
         //!A map between cell index and the spatially sorted version.
         /*!
@@ -318,19 +318,19 @@ class Simple2DCell : public Simple2DModel
         vector<int> idxToTagVertex;
 
         //!An array of displacements used only for the equations of motion
-        GPUArray<Dscalar2> displacements;
+        GPUArray<double2> displacements;
 
     //reporting functions
     public:
         //!Get the maximum force on a cell
-        Dscalar getMaxForce()
+        double getMaxForce()
             {
-            Dscalar maxForceNorm = 0.0;
-            ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::read);
+            double maxForceNorm = 0.0;
+            ArrayHandle<double2> h_f(cellForces,access_location::host,access_mode::read);
             for (int i = 0; i < Ncells; ++i)
                 {
-                Dscalar2 temp2 = h_f.data[i];
-                Dscalar temp = sqrt(temp2.x*temp2.x+temp2.y*temp2.y);
+                double2 temp2 = h_f.data[i];
+                double temp = sqrt(temp2.x*temp2.x+temp2.y*temp2.y);
                 temp = max(fabs(temp2.x),fabs(temp2.y));
                 if (temp >maxForceNorm)
                     maxForceNorm = temp;
@@ -342,9 +342,9 @@ class Simple2DCell : public Simple2DModel
         //!Report the current average force per vertex...should be close to zero
         void reportMeanVertexForce(bool verbose = false)
                 {
-                ArrayHandle<Dscalar2> f(vertexForces,access_location::host,access_mode::read);
-                Dscalar fx= 0.0;
-                Dscalar fy = 0.0;
+                ArrayHandle<double2> f(vertexForces,access_location::host,access_mode::read);
+                double fx= 0.0;
+                double fy = 0.0;
                 for (int i = 0; i < Nvertices; ++i)
                     {
                     fx += f.data[i].x;
@@ -358,8 +358,8 @@ class Simple2DCell : public Simple2DModel
         //!report the current total area, and optionally the area and perimeter for each cell
         void reportAP(bool verbose = false)
                 {
-                ArrayHandle<Dscalar2> ap(AreaPeri,access_location::host,access_mode::read);
-                Dscalar vtot= 0.0;
+                ArrayHandle<double2> ap(AreaPeri,access_location::host,access_mode::read);
+                double vtot= 0.0;
                 for (int i = 0; i < Ncells; ++i)
                     {
                     if(verbose)
@@ -369,19 +369,19 @@ class Simple2DCell : public Simple2DModel
                 printf("total area = %f\n",vtot);
                 };
         //! Report the average value of p/sqrt(A) for the cells in the system
-        Dscalar reportq();
+        double reportq();
 
         //! Report the variance of p/sqrt(A) for the cells in the system
-        Dscalar reportVarq();
+        double reportVarq();
         //! Report the variance of A and P for the cells in the system
-        Dscalar2 reportVarAP();
+        double2 reportVarAP();
 
         //! Report the mean value of the perimeter
-        Dscalar reportMeanP();
+        double reportMeanP();
 
         // virtual functions for interfacing with a Simulation
         virtual void setCPU(bool a) = 0;
-        virtual void setv0Dr(Dscalar a, Dscalar b) = 0;
+        virtual void setv0Dr(double a, double b) = 0;
     };
 
 typedef shared_ptr<Simple2DCell> ForcePtr;

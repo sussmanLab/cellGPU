@@ -17,24 +17,24 @@ cells...compute those force sets
 */
 __global__ void avm_force_sets_kernel(
                         int      *d_vertexCellNeighbors,
-                        Dscalar2 *d_voroCur,
-                        Dscalar4 *d_voroLastNext,
-                        Dscalar2 *d_AreaPerimeter,
-                        Dscalar2 *d_AreaPerimeterPreferences,
-                        Dscalar2 *d_vertexForceSets,
+                        double2 *d_voroCur,
+                        double4 *d_voroLastNext,
+                        double2 *d_AreaPerimeter,
+                        double2 *d_AreaPerimeterPreferences,
+                        double2 *d_vertexForceSets,
                         int nForceSets,
-                        Dscalar KA, Dscalar KP)
+                        double KA, double KP)
     {
     // read in the cell index that belongs to this thread
     unsigned int fsidx = blockDim.x * blockIdx.x + threadIdx.x;
     if (fsidx >= nForceSets)
         return;
 
-    Dscalar2 vlast,vnext;
+    double2 vlast,vnext;
 
     int cellIdx = d_vertexCellNeighbors[fsidx];
-    Dscalar Adiff = KA*(d_AreaPerimeter[cellIdx].x - d_AreaPerimeterPreferences[cellIdx].x);
-    Dscalar Pdiff = KP*(d_AreaPerimeter[cellIdx].y - d_AreaPerimeterPreferences[cellIdx].y);
+    double Adiff = KA*(d_AreaPerimeter[cellIdx].x - d_AreaPerimeterPreferences[cellIdx].x);
+    double Pdiff = KP*(d_AreaPerimeter[cellIdx].y - d_AreaPerimeterPreferences[cellIdx].y);
 
     //vcur = d_voroCur[fsidx];
     vlast.x = d_voroLastNext[fsidx].x;
@@ -49,14 +49,14 @@ __global__ void avm_force_sets_kernel(
   vertices... add 'em up!
   */
 __global__ void avm_sum_force_sets_kernel(
-                                    Dscalar2*  d_vertexForceSets,
-                                    Dscalar2*  d_vertexForces,
+                                    double2*  d_vertexForceSets,
+                                    double2*  d_vertexForces,
                                     int N)
     {
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= N)
         return;
-    Dscalar2 ftemp;
+    double2 ftemp;
     ftemp.x = 0.0; ftemp.y=0.0;
     for (int ff = 0; ff < 3; ++ff)
         {
@@ -69,13 +69,13 @@ __global__ void avm_sum_force_sets_kernel(
 //!Call the kernel to calculate force sets
 bool gpu_avm_force_sets(
                     int      *d_vertexCellNeighbors,
-                    Dscalar2 *d_voroCur,
-                    Dscalar4 *d_voroLastNext,
-                    Dscalar2 *d_AreaPerimeter,
-                    Dscalar2 *d_AreaPerimeterPreferences,
-                    Dscalar2 *d_vertexForceSets,
+                    double2 *d_voroCur,
+                    double4 *d_voroLastNext,
+                    double2 *d_AreaPerimeter,
+                    double2 *d_AreaPerimeterPreferences,
+                    double2 *d_vertexForceSets,
                     int nForceSets,
-                    Dscalar KA, Dscalar KP)
+                    double KA, double KP)
     {
     unsigned int block_size = 128;
     if (nForceSets < 128) block_size = 32;
@@ -91,8 +91,8 @@ bool gpu_avm_force_sets(
 
 //!Call the kernel to sum up the force sets to get net force on each vertex
 bool gpu_avm_sum_force_sets(
-                    Dscalar2 *d_vertexForceSets,
-                    Dscalar2 *d_vertexForces,
+                    double2 *d_vertexForceSets,
+                    double2 *d_vertexForces,
                     int      Nvertices)
     {
     unsigned int block_size = 128;

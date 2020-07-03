@@ -18,13 +18,13 @@ class VoronoiQuadraticEnergyWithTension : public VoronoiQuadraticEnergy
         //!initialize with random positions in a square box
         VoronoiQuadraticEnergyWithTension(int n,bool reprod = false) : VoronoiQuadraticEnergy(n,reprod){gamma = 0.0; Tension = false;simpleTension = true;};
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        VoronoiQuadraticEnergyWithTension(int n, Dscalar A0, Dscalar P0,bool reprod = false) : VoronoiQuadraticEnergy(n,A0,P0,reprod){gamma = 0;Tension = false;simpleTension = true;};
+        VoronoiQuadraticEnergyWithTension(int n, double A0, double P0,bool reprod = false) : VoronoiQuadraticEnergy(n,A0,P0,reprod){gamma = 0;Tension = false;simpleTension = true;};
 
         //!compute the geometry and get the forces
         virtual void computeForces();
         
         //!compute the quadratic energy functional
-        virtual Dscalar computeEnergy();
+        virtual double computeEnergy();
 
         //!Compute force sets on the GPU
         virtual void ComputeForceSetsGPU();
@@ -42,20 +42,20 @@ class VoronoiQuadraticEnergyWithTension : public VoronoiQuadraticEnergy
         //!Use surface tension
         void setUseSurfaceTension(bool use_tension){Tension = use_tension;};
         //!Set surface tension, with only a single value of surface tension
-        void setSurfaceTension(Dscalar g){gamma = g; simpleTension = true;};
+        void setSurfaceTension(double g){gamma = g; simpleTension = true;};
         //!Set a general flattened 2d matrix describing surface tensions between many cell types
-        void setSurfaceTension(vector<Dscalar> gammas);
+        void setSurfaceTension(vector<double> gammas);
         //!Get surface tension
-        Dscalar getSurfaceTension(){return gamma;};
+        double getSurfaceTension(){return gamma;};
     protected:
         //!The value of surface tension between two cells of different type (some day make this more general)
-        Dscalar gamma;
+        double gamma;
         //!A flag specifying whether the force calculation contains any surface tensions to compute
         bool Tension;
         //!A flag switching between "simple" tensions (only a single value of gamma for every unlike interaction) or not
         bool simpleTension;
         //!A flattened 2d matrix describing the surface tension, \gamma_{i,j} for types i and j
-        GPUArray<Dscalar> tensionMatrix;
+        GPUArray<double> tensionMatrix;
 
     //be friends with the associated Database class so it can access data to store or read
     friend class SPVDatabaseNetCDF;

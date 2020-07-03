@@ -15,14 +15,14 @@
  */
 
 //!Find the set indices of points in every cell bucket in the grid
-bool gpu_compute_cell_list(Dscalar2 *d_pt,
+bool gpu_compute_cell_list(double2 *d_pt,
                                   unsigned int *d_cell_sizes,
                                   int *d_idx,
                                   int Np,
                                   int &Nmax,
                                   int xsize,
                                   int ysize,
-                                  Dscalar boxsize,
+                                  double boxsize,
                                   gpubox &Box,
                                   Index2D &ci,
                                   Index2D &cli,

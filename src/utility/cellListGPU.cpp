@@ -12,7 +12,7 @@
 \param points the positions of points to populate the cell list with
 \param bx the period box for the system
  */
-cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
+cellListGPU::cellListGPU(double a, vector<double> &points,gpubox &bx)
     {
     Nmax = 0;
     setParticles(points);
@@ -23,7 +23,7 @@ cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
 /*!
 \param points the positions of points to populate the cell list with
  */
-cellListGPU::cellListGPU(vector<Dscalar> &points)
+cellListGPU::cellListGPU(vector<double> &points)
     {
     Nmax = 0;
     Box = make_shared<gpubox>();
@@ -41,14 +41,14 @@ void cellListGPU::setNp(int nn)
 /*!
 \param points set the list of points cellListGPU knows about to this vector
  */
-void cellListGPU::setParticles(const vector<Dscalar> &points)
+void cellListGPU::setParticles(const vector<double> &points)
     {
     int newsize = points.size()/2;
     particles.resize(newsize);
     Np=newsize;
     if(true)
         {
-        ArrayHandle<Dscalar2> h_handle(particles,access_location::host,access_mode::overwrite);
+        ArrayHandle<double2> h_handle(particles,access_location::host,access_mode::overwrite);
         for (int ii = 0; ii < points.size()/2; ++ii)
             {
             h_handle.data[ii].x = points[2*ii];
@@ -58,16 +58,16 @@ void cellListGPU::setParticles(const vector<Dscalar> &points)
     };
 
 /*!
-\param points set the list of points cellListGPU knows about to this vector of Dscalar2's
+\param points set the list of points cellListGPU knows about to this vector of double2's
  */
-void cellListGPU::setParticles(const vector<Dscalar2> &points)
+void cellListGPU::setParticles(const vector<double2> &points)
     {
     int newsize = points.size();
     particles.resize(newsize);
     Np=newsize;
     if(true)
         {
-        ArrayHandle<Dscalar2> h_handle(particles,access_location::host,access_mode::overwrite);
+        ArrayHandle<double2> h_handle(particles,access_location::host,access_mode::overwrite);
         for (int ii = 0; ii < points.size(); ++ii)
             {
             h_handle.data[ii] = points[ii];
@@ -80,7 +80,7 @@ void cellListGPU::setParticles(const vector<Dscalar2> &points)
  */
 void cellListGPU::setBox(gpubox &bx)
     {
-    Dscalar b11,b12,b21,b22;
+    double b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
     if (bx.isBoxSquare())
         Box->setSquare(b11,b22);
@@ -92,9 +92,9 @@ void cellListGPU::setBox(gpubox &bx)
 \param a the approximate side length of all of the cells.
 This routine currently picks an even integer of cells, close to the desired size, that fit in the box.
  */
-void cellListGPU::setGridSize(Dscalar a)
+void cellListGPU::setGridSize(double a)
     {
-    Dscalar b11,b12,b21,b22;
+    double b11,b12,b21,b22;
     Box->getBoxDims(b11,b12,b21,b22);
     xsize = (int)floor(b11/a);
     if(xsize%2==1) xsize +=1;
@@ -181,7 +181,7 @@ void cellListGPU::resetCellSizes()
 \param y the y coordinate of the position
 returns the cell index that (x,y) would be contained in for the current cell list
  */
-int cellListGPU::positionToCellIndex(Dscalar x, Dscalar y)
+int cellListGPU::positionToCellIndex(double x, double y)
     {
     int cell_idx = 0;
     int binx = max(0,min(xsize-1,(int)floor(x/boxsize)));
@@ -246,7 +246,7 @@ void cellListGPU::compute()
     //will loop through particles and put them in cells...
     //if there are more than Nmax particles in any cell, will need to recompute.
     bool recompute = true;
-    ArrayHandle<Dscalar2> h_pt(particles,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_pt(particles,access_location::host,access_mode::read);
     int ibin, jbin;
     int nmax = Nmax;
     int computations = 0;
@@ -287,12 +287,12 @@ void cellListGPU::compute()
 /*!
 \param points the set of points to assign to cells
  */
-void cellListGPU::compute(GPUArray<Dscalar2> &points)
+void cellListGPU::compute(GPUArray<double2> &points)
     {
     //will loop through particles and put them in cells...
     //if there are more than Nmax particles in any cell, will need to recompute.
     bool recompute = true;
-    ArrayHandle<Dscalar2> h_pt(points,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_pt(points,access_location::host,access_mode::read);
     int ibin, jbin;
     int nmax = Nmax;
     int computations = 0;
@@ -348,7 +348,7 @@ void cellListGPU::computeGPU()
         if (true)
             {
             //get particle data
-            ArrayHandle<Dscalar2> d_pt(particles,access_location::device,access_mode::read);
+            ArrayHandle<double2> d_pt(particles,access_location::device,access_mode::read);
 
             //get cell list arrays...readwrite so things are properly zeroed out
             ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);
@@ -402,7 +402,7 @@ void cellListGPU::computeGPU()
 /*!
 \param points the set of points to assign to cells...on the GPU
  */
-void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
+void cellListGPU::computeGPU(GPUArray<double2> &points)
     {
     bool recompute = true;
     resetCellSizes();
@@ -415,7 +415,7 @@ void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
         if (true)
             {
             //get particle data
-            ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::read);
+            ArrayHandle<double2> d_pt(points,access_location::device,access_mode::read);
 
             //get cell list arrays...readwrite so things are properly zeroed out
             ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);

@@ -29,12 +29,12 @@ int main(int argc, char*argv[])
     int tSteps = 5;
     int initSteps = 0;
 
-    Dscalar dt = 0.005;
-    Dscalar p0 = 3.85;
-    Dscalar a0 = 1.0;
-    Dscalar v0 = 0.01;
-    Dscalar Dr = 1.0;
-    Dscalar gamma = 0.05;
+    double dt = 0.005;
+    double p0 = 3.85;
+    double a0 = 1.0;
+    double v0 = 0.01;
+    double Dr = 1.0;
+    double gamma = 0.05;
 
     //program_switch plays an awkward role in this example of both selecting vertex vs Voronoi model,
     //and also determining whether to save output files... read below for details
@@ -144,7 +144,7 @@ int main(int argc, char*argv[])
             };
 
         t2=clock();
-        cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
+        cout << "timestep time per iteration currently at " <<  (t2-t1)/(double)CLOCKS_PER_SEC/tSteps << endl << endl;
 
         };
 
@@ -194,8 +194,8 @@ int main(int argc, char*argv[])
                 int Ncells = Nvertices/2;
                 int deadCell = noise.getInt(0,Ncells);
 //                cout << "targeting cell " << deadCell << endl;
-                Dscalar2 oldAP; oldAP.x=1.; oldAP.y = p0;
-                vector<Dscalar2> newPrefs(Ncells,oldAP);
+                double2 oldAP; oldAP.x=1.; oldAP.y = p0;
+                vector<double2> newPrefs(Ncells,oldAP);
                 newPrefs[deadCell].x = 0.0;
                 newPrefs[deadCell].y = p0*0.1;
                 avm->setCellPreferences(newPrefs);
@@ -226,8 +226,8 @@ int main(int argc, char*argv[])
                     }
                 else
                     {//if the cell doesn't die, restore it's area preferences
-                    Dscalar2 oldAP; oldAP.x=1.; oldAP.y = p0;
-                    vector<Dscalar2> newPrefs(Ncells,oldAP);
+                    double2 oldAP; oldAP.x=1.; oldAP.y = p0;
+                    vector<double2> newPrefs(Ncells,oldAP);
                     avm->setCellPreferences(newPrefs);
                     };
                 };

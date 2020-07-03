@@ -31,10 +31,10 @@ class selfPropelledAligningParticleDynamics : public simpleEquationOfMotion
         virtual void integrateEquationsOfMotionGPU();
 
         //!Get the inverse friction constant, mu
-        Dscalar getMu(){return mu;};
+        double getMu(){return mu;};
         //!Set the number of degrees of freedom of the equation of motion
-        void setMu(Dscalar _mu){mu=_mu;};
-        void setJ(Dscalar _J){J=_J;};
+        void setMu(double _mu){mu=_mu;};
+        void setJ(double _J){J=_J;};
 
         //!call the Simple2DCell spatial vertex sorter, and re-index arrays of cell activity
         virtual void spatialSorting();
@@ -45,8 +45,8 @@ class selfPropelledAligningParticleDynamics : public simpleEquationOfMotion
         //!A shared pointer to a simple active model
         shared_ptr<Simple2DActiveCell> activeModel;
         //!The value of the inverse friction constant
-        Dscalar mu;
+        double mu;
         //!The value of the aligning couping
-        Dscalar J;
+        double J;
     };
 #endif

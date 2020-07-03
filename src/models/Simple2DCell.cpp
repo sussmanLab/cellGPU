@@ -29,9 +29,9 @@ void Simple2DCell::initializeSimple2DCell(int n)
     setCellTypeUniform(0);
     cellMasses.resize(Ncells);
     cellVelocities.resize(Ncells);
-    vector<Dscalar> masses(Ncells,1.0);
+    vector<double> masses(Ncells,1.0);
     fillGPUArrayWithVector(masses,cellMasses);
-    vector<Dscalar2> velocities(Ncells,make_Dscalar2(0.0,0.0));
+    vector<double2> velocities(Ncells,make_double2(0.0,0.0));
     fillGPUArrayWithVector(velocities,cellVelocities);
 
     vertexForces.resize(Nvertices);
@@ -40,10 +40,10 @@ void Simple2DCell::initializeSimple2DCell(int n)
 /*!
 Generically believe that cells in 2D have a notion of a preferred area and perimeter
 */
-void Simple2DCell::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
+void Simple2DCell::setCellPreferencesUniform(double A0, double P0)
     {
     AreaPeriPreferences.resize(Ncells);
-    ArrayHandle<Dscalar2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_p.data[ii].x = A0;
@@ -54,10 +54,10 @@ void Simple2DCell::setCellPreferencesUniform(Dscalar A0, Dscalar P0)
 /*!
 Set the Area and Perimeter preferences to the input vector
 */
-void Simple2DCell::setCellPreferences(vector<Dscalar2> &APPref)
+void Simple2DCell::setCellPreferences(vector<double2> &APPref)
     {
     AreaPeriPreferences.resize(Ncells);
-    ArrayHandle<Dscalar2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_p.data[ii].x = APPref[ii].x;
@@ -83,15 +83,15 @@ reproducible RNG or a non-reproducible RNG
 void Simple2DCell::setCellPositionsRandomly()
     {
     cellPositions.resize(Ncells);
-    Dscalar boxsize = sqrt((Dscalar)Ncells);
+    double boxsize = sqrt((double)Ncells);
     Box->setSquare(boxsize,boxsize);
     noise.Reproducible = Reproducible;
 
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
-        Dscalar x = noise.getRealUniform(0.0,boxsize);
-        Dscalar y = noise.getRealUniform(0.0,boxsize);
+        double x = noise.getRealUniform(0.0,boxsize);
+        double y = noise.getRealUniform(0.0,boxsize);
         h_p.data[ii].x = x;
         h_p.data[ii].y = y;
         };
@@ -101,11 +101,11 @@ void Simple2DCell::setCellPositionsRandomly()
 Does not update any other lists -- it is the user's responsibility to maintain topology, etc, when
 using this function.
 */
-void Simple2DCell::setCellPositions(vector<Dscalar2> newCellPositions)
+void Simple2DCell::setCellPositions(vector<double2> newCellPositions)
     {
     Ncells = newCellPositions.size();
     if(cellPositions.getNumElements() != Ncells) cellPositions.resize(Ncells);
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         h_p.data[ii] = newCellPositions[ii];
     }
@@ -114,11 +114,11 @@ void Simple2DCell::setCellPositions(vector<Dscalar2> newCellPositions)
 Does not update any other lists -- it is the user's responsibility to maintain topology, etc, when
 using this function.
 */
-void Simple2DCell::setVertexPositions(vector<Dscalar2> newVertexPositions)
+void Simple2DCell::setVertexPositions(vector<double2> newVertexPositions)
     {
     Nvertices = newVertexPositions.size();
     if(vertexPositions.getNumElements() != Nvertices) vertexPositions.resize(Nvertices);
-    ArrayHandle<Dscalar2> h_v(vertexPositions,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Nvertices; ++ii)
         h_v.data[ii] = newVertexPositions[ii];
     }
@@ -129,12 +129,12 @@ set all cell K_A, K_P preferences to uniform values.
 PLEASE NOTE that as an optimization this data is not actually used at the moment,
 but the code could be trivially altered to use this
 */
-void Simple2DCell::setModuliUniform(Dscalar newKA, Dscalar newKP)
+void Simple2DCell::setModuliUniform(double newKA, double newKP)
     {
     KA=newKA;
     KP=newKP;
     Moduli.resize(Ncells);
-    ArrayHandle<Dscalar2> h_m(Moduli,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_m(Moduli,access_location::host,access_mode::overwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_m.data[ii].x = KA;
@@ -159,22 +159,22 @@ void Simple2DCell::setCellTypeUniform(int i)
 Set the vertex velocities by drawing from a Maxwell-Boltzmann distribution, and then make sure there is no
 net momentum. The return value is the total kinetic energy.
  */
-Dscalar Simple2DCell::setVertexVelocitiesMaxwellBoltzmann(Dscalar T)
+double Simple2DCell::setVertexVelocitiesMaxwellBoltzmann(double T)
     {
     noise.Reproducible = Reproducible;
-    ArrayHandle<Dscalar> h_cm(vertexMasses,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_v(vertexVelocities,access_location::host,access_mode::overwrite);
-    Dscalar2 P = make_Dscalar2(0.0,0.0);
+    ArrayHandle<double> h_cm(vertexMasses,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_v(vertexVelocities,access_location::host,access_mode::overwrite);
+    double2 P = make_double2(0.0,0.0);
     for (int ii = 0; ii < Nvertices; ++ii)
         {
-        Dscalar2 vi;
+        double2 vi;
         vi.x = noise.getRealNormal(0.0,sqrt(T/h_cm.data[ii]));
         vi.y = noise.getRealNormal(0.0,sqrt(T/h_cm.data[ii]));
         h_v.data[ii] = vi;
         P = P+h_cm.data[ii]*vi;
         };
     //remove excess momentum, calculate the KE
-    Dscalar KE = 0.0;
+    double KE = 0.0;
     for (int ii = 0; ii < Nvertices; ++ii)
         {
         h_v.data[ii] = h_v.data[ii] + (-1.0/(Ncells*h_cm.data[ii]))*P;
@@ -187,22 +187,22 @@ Dscalar Simple2DCell::setVertexVelocitiesMaxwellBoltzmann(Dscalar T)
 Set the cell velocities by drawing from a Maxwell-Boltzmann distribution, and then make sure there is no
 net momentum. The return value is the total kinetic energy
  */
-Dscalar Simple2DCell::setCellVelocitiesMaxwellBoltzmann(Dscalar T)
+double Simple2DCell::setCellVelocitiesMaxwellBoltzmann(double T)
     {
     noise.Reproducible = Reproducible;
-    ArrayHandle<Dscalar> h_cm(cellMasses,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_v(cellVelocities,access_location::host,access_mode::overwrite);
-    Dscalar2 P = make_Dscalar2(0.0,0.0);
+    ArrayHandle<double> h_cm(cellMasses,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_v(cellVelocities,access_location::host,access_mode::overwrite);
+    double2 P = make_double2(0.0,0.0);
     for (int ii = 0; ii < Ncells; ++ii)
         {
-        Dscalar2 vi;
+        double2 vi;
         vi.x = noise.getRealNormal(0.0,sqrt(T/h_cm.data[ii]));
         vi.y = noise.getRealNormal(0.0,sqrt(T/h_cm.data[ii]));
         h_v.data[ii] = vi;
         P = P+h_cm.data[ii]*vi;
         };
     //remove excess momentum, calculate the KE
-    Dscalar KE = 0.0;
+    double KE = 0.0;
     for (int ii = 0; ii < Ncells; ++ii)
         {
         h_v.data[ii] = h_v.data[ii] + (-1.0/(Ncells*h_cm.data[ii]))*P;
@@ -354,11 +354,11 @@ void Simple2DCell::initializeVertexSorting()
  * Always called after spatial sorting is performed, reIndexCellArray shuffles the order of an array
     based on the spatial sort order of the cells
 */
-void Simple2DCell::reIndexCellArray(GPUArray<Dscalar2> &array)
+void Simple2DCell::reIndexCellArray(GPUArray<double2> &array)
     {
-    GPUArray<Dscalar2> TEMP = array;
-    ArrayHandle<Dscalar2> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> ar(array,access_location::host,access_mode::readwrite);
+    GPUArray<double2> TEMP = array;
+    ArrayHandle<double2> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<double2> ar(array,access_location::host,access_mode::readwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         ar.data[ii] = temp.data[itt[ii]];
@@ -366,13 +366,13 @@ void Simple2DCell::reIndexCellArray(GPUArray<Dscalar2> &array)
     };
 
 /*!
-Re-indexes GPUarrays of Dscalars
+Re-indexes GPUarrays of doubles
 */
-void Simple2DCell::reIndexCellArray(GPUArray<Dscalar> &array)
+void Simple2DCell::reIndexCellArray(GPUArray<double> &array)
     {
-    GPUArray<Dscalar> TEMP = array;
-    ArrayHandle<Dscalar> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> ar(array,access_location::host,access_mode::readwrite);
+    GPUArray<double> TEMP = array;
+    ArrayHandle<double> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<double> ar(array,access_location::host,access_mode::readwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         ar.data[ii] = temp.data[itt[ii]];
@@ -397,22 +397,22 @@ void Simple2DCell::reIndexCellArray(GPUArray<int> &array)
  * Called if the vertices need to be spatially sorted, reIndexVertexArray shuffles the order of an
  * array based on the spatial sort order of the vertices
 */
-void Simple2DCell::reIndexVertexArray(GPUArray<Dscalar2> &array)
+void Simple2DCell::reIndexVertexArray(GPUArray<double2> &array)
     {
-    GPUArray<Dscalar2> TEMP = array;
-    ArrayHandle<Dscalar2> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> ar(array,access_location::host,access_mode::readwrite);
+    GPUArray<double2> TEMP = array;
+    ArrayHandle<double2> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<double2> ar(array,access_location::host,access_mode::readwrite);
     for (int ii = 0; ii < Nvertices; ++ii)
         {
         ar.data[ii] = temp.data[ittVertex[ii]];
         };
     };
 
-void Simple2DCell::reIndexVertexArray(GPUArray<Dscalar> &array)
+void Simple2DCell::reIndexVertexArray(GPUArray<double> &array)
     {
-    GPUArray<Dscalar> TEMP = array;
-    ArrayHandle<Dscalar> temp(TEMP,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> ar(array,access_location::host,access_mode::readwrite);
+    GPUArray<double> TEMP = array;
+    ArrayHandle<double> temp(TEMP,access_location::host,access_mode::read);
+    ArrayHandle<double> ar(array,access_location::host,access_mode::readwrite);
     for (int ii = 0; ii < Nvertices; ++ii)
         {
         ar.data[ii] = temp.data[ittVertex[ii]];
@@ -442,7 +442,7 @@ void Simple2DCell::spatiallySortCells()
     vector<pair<int,int> > idxCellSorter(Ncells);
 
     //sort points by Hilbert Curve location
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host, access_mode::readwrite);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host, access_mode::readwrite);
     for (int ii = 0; ii < Ncells; ++ii)
         {
         idxCellSorter[ii].first=hs.getIdx(h_p.data[ii]);
@@ -489,7 +489,7 @@ void Simple2DCell::spatiallySortVertices()
     vector<pair<int,int> > idxSorterVertex(Nvertices);
 
     //sort points by Hilbert Curve location
-    ArrayHandle<Dscalar2> h_p(vertexPositions,access_location::host, access_mode::readwrite);
+    ArrayHandle<double2> h_p(vertexPositions,access_location::host, access_mode::readwrite);
     for (int ii = 0; ii < Nvertices; ++ii)
         {
         idxSorterVertex[ii].first=hs.getIdx(h_p.data[ii]);
@@ -599,24 +599,24 @@ void Simple2DCell::spatiallySortVertices()
 /*!
 P_ab = \sum m_i v_{ib}v_{ia}
 */
-Dscalar4 Simple2DCell::computeKineticPressure()
+double4 Simple2DCell::computeKineticPressure()
     {
     int Ndof = getNumberOfDegreesOfFreedom();
-    Dscalar4 ans; ans.x = 0.0; ans.y=0.0;ans.z=0;ans.w=0.0;
-    ArrayHandle<Dscalar> h_m(returnMasses());
-    ArrayHandle<Dscalar2> h_v(returnVelocities());
+    double4 ans; ans.x = 0.0; ans.y=0.0;ans.z=0;ans.w=0.0;
+    ArrayHandle<double> h_m(returnMasses());
+    ArrayHandle<double2> h_v(returnVelocities());
     for (int ii = 0; ii < Ndof; ++ii)
         {
-        Dscalar  m = h_m.data[ii];
-        Dscalar2 v = h_v.data[ii];
+        double  m = h_m.data[ii];
+        double2 v = h_v.data[ii];
         ans.x += m*v.x*v.x;
         ans.y += m*v.y*v.x;
         ans.z += m*v.x*v.y;
         ans.w += m*v.y*v.y;
         };
-    Dscalar b1,b2,b3,b4;
+    double b1,b2,b3,b4;
     Box->getBoxDims(b1,b2,b3,b4);
-    Dscalar area = b1*b4;
+    double area = b1*b4;
     ans.x = ans.x / area;
     ans.y = ans.y / area;
     ans.z = ans.z / area;
@@ -627,16 +627,16 @@ Dscalar4 Simple2DCell::computeKineticPressure()
 /*!
 E = \sum 0.5*m_i v_i^2
 */
-Dscalar Simple2DCell::computeKineticEnergy()
+double Simple2DCell::computeKineticEnergy()
     {
     int Ndof = getNumberOfDegreesOfFreedom();
-    Dscalar ans = 0.0;
-    ArrayHandle<Dscalar> h_m(returnMasses());
-    ArrayHandle<Dscalar2> h_v(returnVelocities());
+    double ans = 0.0;
+    ArrayHandle<double> h_m(returnMasses());
+    ArrayHandle<double2> h_v(returnVelocities());
     for (int ii = 0; ii < Ndof; ++ii)
         {
-        Dscalar  m = h_m.data[ii];
-        Dscalar2 v = h_v.data[ii];
+        double  m = h_m.data[ii];
+        double2 v = h_v.data[ii];
         ans += 0.5*m*(v.x*v.x+v.y*v.y);
         };
     return ans;
@@ -648,12 +648,12 @@ a utility/testing function...output the currently computed mean net force to scr
 */
 void Simple2DCell::reportMeanCellForce(bool verbose)
     {
-    ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> p(cellPositions,access_location::host,access_mode::read);
-    Dscalar fx = 0.0;
-    Dscalar fy = 0.0;
-    Dscalar min = 10000;
-    Dscalar max = -10000;
+    ArrayHandle<double2> h_f(cellForces,access_location::host,access_mode::read);
+    ArrayHandle<double2> p(cellPositions,access_location::host,access_mode::read);
+    double fx = 0.0;
+    double fy = 0.0;
+    double min = 10000;
+    double max = -10000;
     for (int i = 0; i < Ncells; ++i)
         {
         if (h_f.data[i].y >max)
@@ -678,28 +678,28 @@ void Simple2DCell::reportMeanCellForce(bool verbose)
 /*!
 Returns the mean value of the perimeter
 */
-Dscalar Simple2DCell::reportMeanP()
+double Simple2DCell::reportMeanP()
     {
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    Dscalar P = 0.0;
-    Dscalar ans = 0.0;
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    double P = 0.0;
+    double ans = 0.0;
     for (int i = 0; i < Ncells; ++i)
         {
         P = h_AP.data[i].y;
         ans += P ;
         };
-    return ans/(Dscalar)Ncells;
+    return ans/(double)Ncells;
     };
 
 /*!
 Returns the mean value of the shape parameter:
 */
-Dscalar Simple2DCell::reportq()
+double Simple2DCell::reportq()
     {
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    Dscalar A = 0.0;
-    Dscalar P = 0.0;
-    Dscalar q = 0.0;
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    double A = 0.0;
+    double P = 0.0;
+    double q = 0.0;
     for (int i = 0; i < Ncells; ++i)
         {
         A = h_AP.data[i].x;
@@ -707,57 +707,57 @@ Dscalar Simple2DCell::reportq()
 //    printf("%f\t",P/sqrt(A));
         q += P / sqrt(A);
         };
-    return q/(Dscalar)Ncells;
+    return q/(double)Ncells;
     };
 
 /*!
 Returns the variance of the shape parameter:
 */
-Dscalar Simple2DCell::reportVarq()
+double Simple2DCell::reportVarq()
     {
-    Dscalar meanQ = reportq();
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    Dscalar qtemp = 0.0;
-    Dscalar var = 0.0;
+    double meanQ = reportq();
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    double qtemp = 0.0;
+    double var = 0.0;
     for (int i = 0; i < Ncells; ++i)
         {
-        Dscalar A = h_AP.data[i].x;
-        Dscalar P = h_AP.data[i].y;
+        double A = h_AP.data[i].x;
+        double P = h_AP.data[i].y;
         qtemp = P / sqrt(A);
         var += (qtemp-meanQ)*(qtemp-meanQ);
         };
-    return var/(Dscalar)Ncells;
+    return var/(double)Ncells;
     };
 
 /*!
 Returns the variance of the A and P for the system:
 */
-Dscalar2 Simple2DCell::reportVarAP()
+double2 Simple2DCell::reportVarAP()
     {
-    Dscalar meanA = 0;
-    Dscalar meanP = 0;
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    double meanA = 0;
+    double meanP = 0;
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
     for (int i = 0; i < Ncells; ++i)
         {
-        Dscalar A = h_AP.data[i].x;
-        Dscalar P = h_AP.data[i].y;
+        double A = h_AP.data[i].x;
+        double P = h_AP.data[i].y;
         meanA += A;
         meanP += P;
         };
-    meanA = meanA /(Dscalar)Ncells;
-    meanP = meanP /(Dscalar)Ncells;
+    meanA = meanA /(double)Ncells;
+    meanP = meanP /(double)Ncells;
 
-    Dscalar2 var;
+    double2 var;
     var.x=0.0; var.y=0.0;
     for (int i = 0; i < Ncells; ++i)
         {
-        Dscalar A = h_AP.data[i].x;
-        Dscalar P = h_AP.data[i].y;
+        double A = h_AP.data[i].x;
+        double P = h_AP.data[i].y;
         var.x += (A-meanA)*(A-meanA);
         var.y += (P-meanP)*(P-meanP);
         };
-    var.x = var.x /(Dscalar)Ncells;
-    var.y = var.y /(Dscalar)Ncells;
+    var.x = var.x /(double)Ncells;
+    var.y = var.y /(double)Ncells;
 
     return var;
     };
@@ -814,7 +814,7 @@ This function will grow the cell lists by 1 and assign the new cell
 Note that dParams does nothing by default, but allows more general virtual functions to be defined
 downstream (used in the Voronoi branch)
  */
-void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<Dscalar> &dParams)
+void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<double> &dParams)
     {
     forcesUpToDate=false;
     Ncells += 1;
@@ -839,10 +839,10 @@ void Simple2DCell::cellDivision(const vector<int> &parameters, const vector<Dsca
     growGPUArray(cellPositions,1);
 
         {//arrayhandle scope
-        ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
-        ArrayHandle<Dscalar2> h_Mod(Moduli); h_Mod.data[Ncells-1] = h_Mod.data[cellIdx];
+        ArrayHandle<double2> h_APP(AreaPeriPreferences); h_APP.data[Ncells-1] = h_APP.data[cellIdx];
+        ArrayHandle<double2> h_Mod(Moduli); h_Mod.data[Ncells-1] = h_Mod.data[cellIdx];
         ArrayHandle<int> h_ct(cellType); h_ct.data[Ncells-1] = h_ct.data[cellIdx];
-        ArrayHandle<Dscalar> h_cm(cellMasses);  h_cm.data[Ncells-1] = h_cm.data[cellIdx];
-        ArrayHandle<Dscalar2> h_v(cellVelocities); h_v.data[Ncells-1] = make_Dscalar2(0.0,0.0);
+        ArrayHandle<double> h_cm(cellMasses);  h_cm.data[Ncells-1] = h_cm.data[cellIdx];
+        ArrayHandle<double2> h_v(cellVelocities); h_v.data[Ncells-1] = make_double2(0.0,0.0);
         };
     };

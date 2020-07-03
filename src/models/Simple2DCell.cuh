@@ -19,16 +19,16 @@ A file providing an interface to the relevant cuda calls for the Simple2DCell cl
  */
 
 //!Move degrees of freedom according to a set of displacements, and put them back in the unit cell
-bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
-                    Dscalar2 *d_disp,
+bool gpu_move_degrees_of_freedom(double2 *d_points,
+                    double2 *d_disp,
                     int N,
                     gpubox &Box
                     );
 
 //!The same as the above, but scale the displacements by a scalar (i.e., x[i] += scale*disp[i]
-bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
-                    Dscalar2 *d_disp,
-                    Dscalar  scale,
+bool gpu_move_degrees_of_freedom(double2 *d_points,
+                    double2 *d_disp,
+                    double  scale,
                     int N,
                     gpubox &Box
                     );
