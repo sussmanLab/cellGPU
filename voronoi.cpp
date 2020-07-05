@@ -63,7 +63,11 @@ int main(int argc, char*argv[])
     if (USE_GPU >= 0)
         {
         bool gpu = chooseGPU(USE_GPU);
-        if (!gpu) return 0;
+        if (!gpu) 
+            {
+            printf("Tried to set a gpu that doesn't exist -- exiting program.\n");
+            return 0;
+            }
         cudaSetDevice(USE_GPU);
         }
     else

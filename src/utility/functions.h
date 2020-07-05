@@ -5,6 +5,7 @@
 #include "Matrix.h"
 #include "gpuarray.h"
 #include <set>
+#include <algorithm>
 
 #ifdef NVCC
 /*!
@@ -192,6 +193,12 @@ HOSTDEVICE void Circumcircle(const double2 &x1, const double2 &x2, const double2
     double dx = (x1.x-xc.x);
     double dy = (x1.y-xc.y);
     radius = sqrt(dx*dx+dy*dy);
+    };
+
+//!Helper function for the GPU DT to check if two line segments intersect
+HOSTDEVICE bool ccw(const double2 &x1, const double2 &x2, const double2 &x3)
+    {
+    return (x3.y-x1.y)*(x2.x-x1.x) > (x2.y-x1.y)*(x3.x-x1.x);
     };
 
 //!The dot product between two vectors of length two.
@@ -383,11 +390,9 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
     cudaGetDeviceCount(&nDev);
     if (USE_GPU >= nDev)
         {
-        cout << "Requested GPU (device " << USE_GPU<<") does not exist. Stopping triangulation" << endl;
+        cout << "Requested GPU (device " << USE_GPU<<") does not exist." << endl;
         return false;
         };
-    if (USE_GPU <nDev)
-        cudaSetDevice(USE_GPU);
     if(verbose)    cout << "Device # \t\t Device Name \t\t MemClock \t\t MemBusWidth" << endl;
     for (int ii=0; ii < nDev; ++ii)
         {
@@ -407,6 +412,8 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
         cudaGetDeviceProperties(&prop,USE_GPU);
         cout << "using " << prop.name << "\t ClockRate = " << prop.memoryClockRate << " memBusWidth = " << prop.memoryBusWidth << endl << endl;
         };
+    if (USE_GPU <nDev)
+        cudaSetDevice(USE_GPU);
     return true;
     };
 #endif

@@ -49,36 +49,8 @@ using namespace std;
 #define Floor floor
 #define Ceil ceil
 
-
-//!Less than operator for doubles just sorts by the x-coordinate
-HOSTDEVICE bool operator<(const double2 &a, const double2 &b)
-    {
-    return a.x<b.x;
-    }
-
-//!Equality operator tests for.... equality of both elements
-HOSTDEVICE bool operator==(const double2 &a, const double2 &b)
-    {
-    return (a.x==b.x &&a.y==b.y);
-    }
-
-//!component-wise addition of two double2s
-HOSTDEVICE double2 operator+(const double2 &a, const double2 &b)
-    {
-    return make_double2(a.x+b.x,a.y+b.y);
-    }
-
-//!component-wise subtraction of two double2s
-HOSTDEVICE double2 operator-(const double2 &a, const double2 &b)
-    {
-    return make_double2(a.x-b.x,a.y-b.y);
-    }
-
-//!multiplication of double2 by double
-HOSTDEVICE double2 operator*(const double &a, const double2 &b)
-    {
-    return make_double2(a*b.x,a*b.y);
-    }
+//! a file for defining operations on double2's double3's,...  such as addition, equality, etc
+#include "vectorTypeOperations.h"
 
 //!Handle errors in kernel calls...returns file and line numbers if cudaSuccess doesn't pan out
 static void HandleError(cudaError_t err, const char *file, int line)
