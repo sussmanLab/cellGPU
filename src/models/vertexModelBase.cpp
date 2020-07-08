@@ -623,22 +623,21 @@ void vertexModelBase::getCellVertexSetForT1(int vertex1, int vertex2, int4 &cell
     };
 
 /*!
-Test whether a T1 needs to be performed on any edge by simply checking if the edge length is beneath a threshold.
-This function also performs the transition and maintains the auxiliary data structures
- */
-void vertexModelBase::testAndPerformT1TransitionsCPU()
+a utility function that, given two vertices forming an edge and  the relevant data arrays,
+actually goes through the trouble of rotating positions and re-wiring the topology
+*/
+void vertexModelBase::performT1TransitionCPU(int vertex1, int vertex2,
+                                            int &vMax,
+                                            ArrayHandle<double2> &vertexPositionArray,
+                                            ArrayHandle<int> &vertexNeighborArray
+                                            )
     {
-    ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_cvn(cellVertexNum,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_cv(cellVertices,access_location::host,access_mode::readwrite);
-    ArrayHandle<int> h_vcn(vertexCellNeighbors,access_location::host,access_mode::readwrite);
-
-    double2 edge;
-    //first, scan through the list for any T1 transitions...
-    int vertex2;
-    //keep track of whether vertexMax needs to be increased
-    int vMax = vertexMax;
+    ArrayHandle<int> cellVertexNumberArray(cellVertexNum,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> cellVertexArray(cellVertices,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> vertexCellNeighborArray(vertexCellNeighbors,access_location::host,access_mode::readwrite);
+    double2 v1,v2;
+    v1 = vertexPositionArray.data[vertex1];
+    v2 = vertexPositionArray.data[vertex2];
     /*
      The following is the convention:
      cell i: contains both vertex 1 and vertex 2, in CW order
@@ -654,6 +653,132 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
     cell k has CCW vertices: ..., b,v1,v2,d, ...
     */
     int4 vertexSet;
+    bool growCellVertexList = false;
+    getCellVertexSetForT1(vertex1,vertex2,cellSet,vertexSet,growCellVertexList);
+    //forbid a T1 transition that would shrink a triangular cell
+    if( cellVertexNumberArray.data[cellSet.x] == 3 || cellVertexNumberArray.data[cellSet.z] == 3)
+            return;
+    //Does the cell-vertex-neighbor data structure need to be bigger?
+    if(growCellVertexList)
+    {
+            vMax +=1;
+            growCellVerticesList(vMax);
+            cellVertexArray = ArrayHandle<int>(cellVertices,access_location::host,access_mode::readwrite);
+    };
+
+    //Rotate the vertices in the edge and set them at twice their original distance
+    double2 edge;
+    Box->minDist(v1,v2,edge);
+    double2 midpoint;
+    midpoint.x = v2.x + 0.5*edge.x;
+    midpoint.y = v2.y + 0.5*edge.y;
+
+    v1.x = midpoint.x-edge.y;
+    v1.y = midpoint.y+edge.x;
+    v2.x = midpoint.x+edge.y;
+    v2.y = midpoint.y-edge.x;
+    Box->putInBoxReal(v1);
+    Box->putInBoxReal(v2);
+    vertexPositionArray.data[vertex1] = v1;
+    vertexPositionArray.data[vertex2] = v2;
+
+    //re-wire the cells and vertices
+    //start with the vertex-vertex and vertex-cell  neighbors
+    for (int vert = 0; vert < 3; ++vert)
+        {
+        //vertex-cell neighbors
+        if(vertexCellNeighborArray.data[3*vertex1+vert] == cellSet.z)
+                vertexCellNeighborArray.data[3*vertex1+vert] = cellSet.w;
+        if(vertexCellNeighborArray.data[3*vertex2+vert] == cellSet.x)
+                vertexCellNeighborArray.data[3*vertex2+vert] = cellSet.y;
+        //vertex-vertex neighbors
+        if(vertexNeighborArray.data[3*vertexSet.y+vert] == vertex1)
+                vertexNeighborArray.data[3*vertexSet.y+vert] = vertex2;
+        if(vertexNeighborArray.data[3*vertexSet.z+vert] == vertex2)
+                    vertexNeighborArray.data[3*vertexSet.z+vert] = vertex1;
+        if(vertexNeighborArray.data[3*vertex1+vert] == vertexSet.y)
+                vertexNeighborArray.data[3*vertex1+vert] = vertexSet.z;
+        if(vertexNeighborArray.data[3*vertex2+vert] == vertexSet.z)
+                vertexNeighborArray.data[3*vertex2+vert] = vertexSet.y;
+        };
+    //now rewire the cells
+    //cell i loses v2 as a neighbor
+    int cneigh = cellVertexNumberArray.data[cellSet.x];
+    int cidx = 0;
+    for (int cc = 0; cc < cneigh-1; ++cc)
+        {
+        if(cellVertexArray.data[n_idx(cc,cellSet.x)] == vertex2)
+                cidx +=1;
+        cellVertexArray.data[n_idx(cc,cellSet.x)] = cellVertexArray.data[n_idx(cidx,cellSet.x)];
+        cidx +=1;
+        };
+    cellVertexNumberArray.data[cellSet.x] -= 1;
+
+    //cell j gains v2 in between v1 and b
+    cneigh = cellVertexNumberArray.data[cellSet.y];
+    vector<int> cvcopy1(cneigh+1);
+    cidx = 0;
+    for (int cc = 0; cc < cneigh; ++cc)
+        {
+        int cellIndex = cellVertexArray.data[n_idx(cc,cellSet.y)];
+        cvcopy1[cidx] = cellIndex;
+        cidx +=1;
+        if(cellIndex == vertex1)
+            {
+            cvcopy1[cidx] = vertex2;
+            cidx +=1;
+            };
+        };
+    for (int cc = 0; cc < cneigh+1; ++cc)
+        cellVertexArray.data[n_idx(cc,cellSet.y)] = cvcopy1[cc];
+    cellVertexNumberArray.data[cellSet.y] += 1;
+
+    //cell k loses v1 as a neighbor
+    cneigh = cellVertexNumberArray.data[cellSet.z];
+    cidx = 0;
+    for (int cc = 0; cc < cneigh-1; ++cc)
+        {
+        if(cellVertexArray.data[n_idx(cc,cellSet.z)] == vertex1)
+            cidx +=1;
+        cellVertexArray.data[n_idx(cc,cellSet.z)] = cellVertexArray.data[n_idx(cidx,cellSet.z)];
+        cidx +=1;
+        };
+    cellVertexNumberArray.data[cellSet.z] -= 1;
+
+    //cell l gains v1 in between v2 and a
+    cneigh = cellVertexNumberArray.data[cellSet.w];
+    vector<int> cvcopy2(cneigh+1);
+    cidx = 0;
+    for (int cc = 0; cc < cneigh; ++cc)
+        {
+        int cellIndex = cellVertexArray.data[n_idx(cc,cellSet.w)];
+        cvcopy2[cidx] = cellIndex;
+        cidx +=1;
+        if(cellIndex == vertex2)
+            {
+            cvcopy2[cidx] = vertex1;
+            cidx +=1;
+            };
+        };
+    for (int cc = 0; cc < cneigh+1; ++cc)
+        cellVertexArray.data[n_idx(cc,cellSet.w)] = cvcopy2[cc];
+    cellVertexNumberArray.data[cellSet.w] = cneigh + 1;
+    };
+
+/*!
+Test whether a T1 needs to be performed on any edge by simply checking if the edge length is beneath a threshold.
+This function also performs the transition and maintains the auxiliary data structures
+ */
+void vertexModelBase::testAndPerformT1TransitionsCPU()
+    {
+    ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
+    ArrayHandle<int> h_vn(vertexNeighbors,access_location::host,access_mode::readwrite);
+
+    double2 edge;
+    //first, scan through the list for any T1 transitions...
+    int vertex2;
+    //keep track of whether vertexMax needs to be increased
+    int vMax = vertexMax;
     double2 v1,v2;
     for (int vertex1 = 0; vertex1 < Nvertices; ++vertex1)
         {
@@ -669,115 +794,8 @@ void vertexModelBase::testAndPerformT1TransitionsCPU()
                 Box->minDist(v1,v2,edge);
                 if(norm(edge) < T1Threshold)
                     {
-                    bool growCellVertexList = false;
-                    getCellVertexSetForT1(vertex1,vertex2,cellSet,vertexSet,growCellVertexList);
-                    //forbid a T1 transition that would shrink a triangular cell
-                    if( h_cvn.data[cellSet.x] == 3 || h_cvn.data[cellSet.z] == 3)
-                        continue;
-                    //Does the cell-vertex-neighbor data structure need to be bigger?
-                    if(growCellVertexList)
-                        {
-                        vMax +=1;
-                        growCellVerticesList(vMax);
-                        h_cv = ArrayHandle<int>(cellVertices,access_location::host,access_mode::readwrite);
-                        };
-
-                    //Rotate the vertices in the edge and set them at twice their original distance
-                    double2 midpoint;
-                    midpoint.x = v2.x + 0.5*edge.x;
-                    midpoint.y = v2.y + 0.5*edge.y;
-
-                    v1.x = midpoint.x-edge.y;
-                    v1.y = midpoint.y+edge.x;
-                    v2.x = midpoint.x+edge.y;
-                    v2.y = midpoint.y-edge.x;
-                    Box->putInBoxReal(v1);
-                    Box->putInBoxReal(v2);
-                    h_v.data[vertex1] = v1;
-                    h_v.data[vertex2] = v2;
-
-                    //re-wire the cells and vertices
-                    //start with the vertex-vertex and vertex-cell  neighbors
-                    for (int vert = 0; vert < 3; ++vert)
-                        {
-                        //vertex-cell neighbors
-                        if(h_vcn.data[3*vertex1+vert] == cellSet.z)
-                            h_vcn.data[3*vertex1+vert] = cellSet.w;
-                        if(h_vcn.data[3*vertex2+vert] == cellSet.x)
-                            h_vcn.data[3*vertex2+vert] = cellSet.y;
-                        //vertex-vertex neighbors
-                        if(h_vn.data[3*vertexSet.y+vert] == vertex1)
-                            h_vn.data[3*vertexSet.y+vert] = vertex2;
-                        if(h_vn.data[3*vertexSet.z+vert] == vertex2)
-                            h_vn.data[3*vertexSet.z+vert] = vertex1;
-                        if(h_vn.data[3*vertex1+vert] == vertexSet.y)
-                            h_vn.data[3*vertex1+vert] = vertexSet.z;
-                        if(h_vn.data[3*vertex2+vert] == vertexSet.z)
-                            h_vn.data[3*vertex2+vert] = vertexSet.y;
-                        };
-                    //now rewire the cells
-                    //cell i loses v2 as a neighbor
-                    int cneigh = h_cvn.data[cellSet.x];
-                    int cidx = 0;
-                    for (int cc = 0; cc < cneigh-1; ++cc)
-                        {
-                        if(h_cv.data[n_idx(cc,cellSet.x)] == vertex2)
-                            cidx +=1;
-                        h_cv.data[n_idx(cc,cellSet.x)] = h_cv.data[n_idx(cidx,cellSet.x)];
-                        cidx +=1;
-                        };
-                    h_cvn.data[cellSet.x] -= 1;
-
-                    //cell j gains v2 in between v1 and b
-                    cneigh = h_cvn.data[cellSet.y];
-                    vector<int> cvcopy1(cneigh+1);
-                    cidx = 0;
-                    for (int cc = 0; cc < cneigh; ++cc)
-                        {
-                        int cellIndex = h_cv.data[n_idx(cc,cellSet.y)];
-                        cvcopy1[cidx] = cellIndex;
-                        cidx +=1;
-                        if(cellIndex == vertex1)
-                            {
-                            cvcopy1[cidx] = vertex2;
-                            cidx +=1;
-                            };
-                        };
-                    for (int cc = 0; cc < cneigh+1; ++cc)
-                        h_cv.data[n_idx(cc,cellSet.y)] = cvcopy1[cc];
-                    h_cvn.data[cellSet.y] += 1;
-
-                    //cell k loses v1 as a neighbor
-                    cneigh = h_cvn.data[cellSet.z];
-                    cidx = 0;
-                    for (int cc = 0; cc < cneigh-1; ++cc)
-                        {
-                        if(h_cv.data[n_idx(cc,cellSet.z)] == vertex1)
-                            cidx +=1;
-                        h_cv.data[n_idx(cc,cellSet.z)] = h_cv.data[n_idx(cidx,cellSet.z)];
-                        cidx +=1;
-                        };
-                    h_cvn.data[cellSet.z] -= 1;
-
-                    //cell l gains v1 in between v2 and a
-                    cneigh = h_cvn.data[cellSet.w];
-                    vector<int> cvcopy2(cneigh+1);
-                    cidx = 0;
-                    for (int cc = 0; cc < cneigh; ++cc)
-                        {
-                        int cellIndex = h_cv.data[n_idx(cc,cellSet.w)];
-                        cvcopy2[cidx] = cellIndex;
-                        cidx +=1;
-                        if(cellIndex == vertex2)
-                            {
-                            cvcopy2[cidx] = vertex1;
-                            cidx +=1;
-                            };
-                        };
-                    for (int cc = 0; cc < cneigh+1; ++cc)
-                        h_cv.data[n_idx(cc,cellSet.w)] = cvcopy2[cc];
-                    h_cvn.data[cellSet.w] = cneigh + 1;
-
+                    performT1TransitionCPU(vertex1,vertex2,vMax,
+                                           h_v,h_vn);
                     };//end condition that a T1 transition should occur
                 };
             };//end loop over vertex2

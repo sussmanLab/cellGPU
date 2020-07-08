@@ -109,6 +109,12 @@ class vertexModelBase : public Simple2DActiveCell
         void setCPU(bool global = true){GPUcompute = false;};
 
     protected:
+        //!sub-function for performing a T1 transition
+        void performT1TransitionCPU(int vertex1, int vertex2,int &vMax,
+                            ArrayHandle<double2> &vertexPositionArray,
+                            ArrayHandle<int> &vertexNeighborArray
+                            );
+
         //!if the maximum number of vertices per cell increases, grow the cellVertices list
         void growCellVerticesList(int newVertexMax);
 
