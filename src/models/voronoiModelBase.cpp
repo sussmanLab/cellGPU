@@ -40,7 +40,7 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     initializeCellSorting();
 
     //DelaunayGPU initialization
-    delGPU.initialize(Ncells,8,1.0,Box);
+    delGPU.initialize(Ncells,12,1.0,Box);
     delGPU.setSafetyMode(true);
     delGPU.setGPUcompute(GPUcompute);
 
@@ -49,6 +49,7 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     neighborNum.resize(Ncells);
     //globalTriangulationCGAL();
     globalTriangulationDelGPU();
+    resizeAndReset();
     resetLists();
     allDelSets();
 
@@ -163,13 +164,21 @@ void voronoiModelBase::globalTriangulationDelGPU(bool verbose)
     {
     GlobalFixes +=1;
     completeRetriangulationPerformed += 1;
-    neighMax = delGPU.MaxSize;
-    if(neighbors.getNumElements() != Ncells*neighMax)
-        neighbors.resize( Ncells*neighMax);
+    int oldNeighMax = delGPU.MaxSize;
+    if(neighbors.getNumElements() != Ncells*oldNeighMax)
+        neighbors.resize( Ncells*oldNeighMax);
+
     delGPU.globalDelaunayTriangulation(cellPositions,neighbors,neighborNum);
+    
     neighMax = delGPU.MaxSize;
     n_idx = Index2D(neighMax,Ncells);
-
+    if(neighbors.getNumElements() != Ncells*neighMax)
+        neighbors.resize( Ncells*neighMax);
+    if(oldNeighMax != neighMax)
+        {
+        resetLists();
+        resizeAndReset();
+        }
     //change updateNeigh function to allow for GPU operation
     updateNeighIdxs();
     //add neighborNum reduction and check that totalN = 6*Ncells
@@ -307,12 +316,23 @@ goes through the process of testing and repairing the topology on either the CPU
 */
 void voronoiModelBase::enforceTopology()
     {
+    int oldNeighMax = delGPU.MaxSize;
+    if(neighbors.getNumElements() != Ncells*oldNeighMax)
+        neighbors.resize( Ncells*oldNeighMax);
 
     delGPU.testAndRepairDelaunayTriangulation(cellPositions,neighbors,neighborNum);
     if(NeighIdxNum != 6* Ncells)
        globalTriangulationCGAL();
+
+    neighMax = delGPU.MaxSize;
+    if(oldNeighMax != neighMax)
+        {
+        n_idx = Index2D(neighMax,Ncells);
+        neighbors.resize( Ncells*neighMax);
+        resetLists();
+        resizeAndReset();
+        }
         
-    resetLists();
     allDelSets();
     };
 
@@ -885,7 +905,7 @@ void voronoiModelBase::resizeAndReset()
     cellForces.resize(Ncells);
     external_forces.resize(Ncells);
     exclusions.resize(Ncells);
-    NeighIdxs.resize(6*(Ncells+10));
+    NeighIdxs.resize(6*(Ncells));
     repair.resize(Ncells);
 
     neighborNum.resize(Ncells);
