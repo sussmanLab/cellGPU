@@ -151,7 +151,7 @@ class voronoiModelBase : public Simple2DActiveCell
         //!A flag that notifies that the maximum number of neighbors may have changed, necessitating resizing of some data arrays
         bool neighMaxChange;
 
-        //!A a vector of zeros (everything is fine) and ones (that index needs to be repaired)
+        //!A a vector of zeros (everything is fine) and ones (that index needs to be repaired)...also used as an assist array in updateNeighIdxs
         GPUArray<int> repair;
         //!A smaller vector that, after testing the triangulation, contains the particle indices that need their local topology to be updated.
         vector<int> NeedsFixing;

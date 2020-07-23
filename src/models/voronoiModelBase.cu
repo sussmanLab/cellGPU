@@ -6,6 +6,9 @@
 #include <iostream>
 #include <stdio.h>
 #include "voronoiModelBase.cuh"
+#include <thrust/reduce.h>
+#include <thrust/scan.h>
+#include <thrust/execution_policy.h>
 
 /*! \file voronoiModelBase.cu */
 /*!
@@ -270,5 +273,98 @@ bool gpu_compute_voronoi_geometry(double2 *d_points,
     return cudaSuccess;
     };
 
+__global__ void gpu_update_neighIdxs_kernel(int *neighborNum,
+                          int *neighNumScan,
+                          int2 *neighIdxs,
+                          int Ncells)
+    {
+    // read in the particle that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= Ncells)
+        return;
+    int nmax = neighborNum[idx];
+    int offset = neighNumScan[idx];
+    for (int ii = 0; ii < nmax; ++ii)
+        {
+        neighIdxs[offset+ii].x = idx;
+        neighIdxs[offset+ii].y = ii;
+        }
+    return;
+    }
+
+
+bool gpu_update_neighIdxs(int *neighborNum,
+                          int *neighNumScan,
+                          int2 *neighIdxs,
+                          int &NeighIdxNum,
+                          int Ncells)
+    {
+    unsigned int block_size = 128;
+    if (Ncells < 128) block_size = 32;
+    unsigned int nblocks  = Ncells/block_size + 1;
+
+
+    thrust::exclusive_scan(thrust::device,neighborNum,neighborNum+Ncells,neighNumScan);
+    gpu_update_neighIdxs_kernel<<<nblocks,block_size>>>(neighborNum,neighNumScan,neighIdxs,Ncells);
+
+    NeighIdxNum = thrust::reduce(thrust::device,neighborNum,neighborNum+Ncells);
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    }
+
+__global__ void gpu_all_del_sets_kernel(int *neighborNum,
+                      int *neighbors,
+                      int2 *delSets,
+                      int * delOther,
+                      int Ncells,
+                      Index2D nIdx)
+    {
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= Ncells)
+        return;
+
+    int iNeighs = neighborNum[idx];
+    int nm2,nm1,n1,n2,nextNeighs,testPoint;
+    nm2 = neighbors[nIdx(iNeighs-3,idx)];
+    nm1 = neighbors[nIdx(iNeighs-2,idx)];
+    n1 = neighbors[nIdx(iNeighs-1,idx)];
+    for(int nn = 0; nn < iNeighs; ++nn)
+        {
+        n2 = neighbors[nIdx(nn,idx)];
+        nextNeighs = neighborNum[n1];
+        for (int nn2 = 0; nn2 <nextNeighs; ++nn2)
+            {
+            testPoint = neighbors[nIdx(nn2,n1)];
+            if(testPoint==nm1)
+                {
+                delOther[nIdx(nn,idx)] = neighbors[nIdx((nn2+1)%nextNeighs,n1)];
+                break;
+                }
+            }
+        delSets[nIdx(nn,idx)].x = nm1;
+        delSets[nIdx(nn,idx)].y = n1;
+
+        nm2 = nm1;
+        nm1=n1;
+        n1=n2;
+        }
+    }
+
+bool gpu_all_del_sets(int *neighborNum,
+                      int *neighbors,
+                      int2 *delSets,
+                      int * delOther,
+                      int Ncells,
+                      Index2D &nIdx)
+    {
+    unsigned int block_size = 128;
+    if (Ncells < 128) block_size = 32;
+    unsigned int nblocks  = Ncells/block_size + 1;
+
+    gpu_all_del_sets_kernel<<<nblocks,block_size>>>(neighborNum,neighbors,delSets,delOther, Ncells,nIdx);
+
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    }
 
 /** @} */ //end of group declaration

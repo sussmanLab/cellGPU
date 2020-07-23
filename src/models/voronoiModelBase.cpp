@@ -40,7 +40,7 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     initializeCellSorting();
 
     //DelaunayGPU initialization
-    delGPU.initialize(Ncells,16,1.0,Box);
+    delGPU.initialize(Ncells,8,1.0,Box);
     delGPU.setSafetyMode(true);
     delGPU.setGPUcompute(GPUcompute);
 
@@ -258,20 +258,30 @@ threads in the force set computation function
 */
 void voronoiModelBase::updateNeighIdxs()
     {
-    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int2> h_nidx(NeighIdxs,access_location::host,access_mode::overwrite);
-    int idx = 0;
-    for (int ii = 0; ii < Ncells; ++ii)
+    if (GPUcompute)
         {
-        int nmax = neighnum.data[ii];
-        for (int nn = 0; nn < nmax; ++nn)
+        ArrayHandle<int> neighnum(neighborNum,access_location::device,access_mode::read);
+        ArrayHandle<int> neighNumScan(repair,access_location::device,access_mode::overwrite);
+        ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::overwrite);
+        gpu_update_neighIdxs(neighnum.data, neighNumScan.data,d_nidx.data,NeighIdxNum,Ncells);
+        }
+    else
+        {
+        ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::read);
+        ArrayHandle<int2> h_nidx(NeighIdxs,access_location::host,access_mode::overwrite);
+        int idx = 0;
+        for (int ii = 0; ii < Ncells; ++ii)
             {
-            h_nidx.data[idx].x = ii;
-            h_nidx.data[idx].y = nn;
-            idx+=1;
+            int nmax = neighnum.data[ii];
+            for (int nn = 0; nn < nmax; ++nn)
+                {
+                h_nidx.data[idx].x = ii;
+                h_nidx.data[idx].y = nn;
+                idx+=1;
+                };
             };
-        };
-    NeighIdxNum = idx;
+        NeighIdxNum = idx;
+        }
     };
 
 /*!
@@ -299,15 +309,11 @@ void voronoiModelBase::enforceTopology()
     {
 
     delGPU.testAndRepairDelaunayTriangulation(cellPositions,neighbors,neighborNum);
+    if(NeighIdxNum != 6* Ncells)
+       globalTriangulationCGAL();
+        
     resetLists();
     allDelSets();
-
-    //include testing for consistency, call CGAL if needed
-    /*
-       globalTriangulationCGAL();
-       resetLists();
-       allDelSets();
-    */
     };
 
 //read a triangulation from a text file...used only for testing purposes. Any other use should call the Database class (see inc/Database.h")
@@ -854,8 +860,19 @@ Calls updateNeighIdxs and then getDelSets(i) for all cells i
 void voronoiModelBase::allDelSets()
     {
     updateNeighIdxs();
-    for (int ii = 0; ii < Ncells; ++ii)
-        getDelSets(ii);
+    if(GPUcompute)
+        {
+        ArrayHandle<int> neighnum(neighborNum,access_location::device,access_mode::read);
+        ArrayHandle<int> ns(neighbors,access_location::device,access_mode::read);
+        ArrayHandle<int2> ds(delSets,access_location::device,access_mode::readwrite);
+        ArrayHandle<int> dother(delOther,access_location::device,access_mode::readwrite);
+        gpu_all_del_sets(neighnum.data,ns.data,ds.data,dother.data,Ncells,n_idx);
+        }
+    else
+        {
+        for (int ii = 0; ii < Ncells; ++ii)
+            getDelSets(ii);
+        };
     };
 
 /*!

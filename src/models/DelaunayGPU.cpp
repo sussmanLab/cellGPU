@@ -42,6 +42,7 @@ void DelaunayGPU::initialize(int N, int maximumNeighborsGuess, double cellSize, 
 //Resize the relevant array for the triangulation
 void DelaunayGPU::resize(const int nmax)
     {
+    printf("resizing delGPU data structures: MaxSize = %i\n",nmax);
     MaxSize=nmax;
     GPUVoroCur.resize(nmax*Ncells);
     GPUDelNeighsPos.resize(nmax*Ncells);
