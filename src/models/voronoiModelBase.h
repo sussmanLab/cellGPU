@@ -4,8 +4,9 @@
 #include "Simple2DActiveCell.h"
 #include "cellListGPU.cuh"
 #include "cellListGPU.h"
-#include "DelaunayLoc.h"
 #include "DelaunayCGAL.h"
+#include "DelaunayGPU.h"
+#include "structures.h"
 #include "voronoiModelBase.cuh"
 
 
@@ -34,7 +35,8 @@ class voronoiModelBase : public Simple2DActiveCell
         This is generally slower, but if working in a regime where things change
         very infrequently, it may be faster.
         */
-        void setCPU(bool global = true){GPUcompute = false;globalOnly=global;};
+        void setCPU(bool global = true){GPUcompute = false;globalOnly=global;delGPU.setGPUcompute(false);};
+        virtual void setGPU(){GPUcompute = true; delGPU.setGPUcompute(true);};
         //!write triangulation to text file
         void writeTriangulation(ofstream &outfile);
         //!read positions from text file...for debugging
@@ -72,8 +74,6 @@ class voronoiModelBase : public Simple2DActiveCell
         void movePoints(GPUArray<double2> &displacements,double scale);
         //!move particles on the CPU
         void movePointsCPU(GPUArray<double2> &displacements,double scale);
-        //!Transfer particle data from the GPU to the CPU for use by delLoc
-        void resetDelLocPoints();
 
         //!Update the cell list structure after particles have moved
         void updateCellList();
@@ -85,27 +85,17 @@ class voronoiModelBase : public Simple2DActiveCell
         //!sort points along a Hilbert curve for data locality
         void spatialSorting();
 
-        //!construct the global periodic triangulation point-by-point using non-CGAL methods
-        void fullTriangulation(bool verbose = false);
         //!Globally construct the triangulation via CGAL
         void globalTriangulationCGAL(bool verbose = false);
+        //!Globally construct the triangulation via CGAL
+        void globalTriangulationDelGPU(bool verbose = false);
 
-        //!build the auxiliary data structure containing the indices of the particle circumcenters from the neighbor list
-        void getCircumcenterIndices(bool secondtime=false,bool verbose = false);
-
-        //!Test the current neighbor list to see if it is still a valid triangulation. GPU function
-        void testTriangulation();
-        //!Test the validity of the triangulation on the CPU
-        void testTriangulationCPU();
         //!repair any problems with the triangulation on the CPU
         void repairTriangulation(vector<int> &fixlist);
-        //!A workhorse function that calls the appropriate topology testing and repairing routines
-        void testAndRepairTriangulation(bool verb = false);
         //! call getDelSets for all particles
         void allDelSets();
 
         //! Maintain the delSets and delOther data structure for particle i
-        //! If it returns false there was a problem and a global re-triangulation is triggered.
         bool getDelSets(int i);
         //!resize all neighMax-related arrays
         void resetLists();
@@ -129,7 +119,7 @@ class voronoiModelBase : public Simple2DActiveCell
     //public member variables
     public:
         //!The class' local Delaunay tester/updater
-        DelaunayLoc delLoc;
+        DelaunayGPU delGPU;
 
         //!Collect statistics of how many triangulation repairs are done per frame, etc.
         double repPerFrame;
@@ -141,13 +131,8 @@ class voronoiModelBase : public Simple2DActiveCell
         GPUArray<double2> external_forces;
         //!An array containing the indices of excluded particles
         GPUArray<int> exclusions;
-        //!The number of topology updates performed at the individual particle level
-        int localTopologyUpdates;
-
 
     protected:
-        //!The associated cell list structure
-        cellListGPU celllist;        
         //!The size of the cell list's underlying grid
         double cellsize;            
         //!An upper bound for the maximum number of neighbors that any cell has
@@ -158,11 +143,6 @@ class voronoiModelBase : public Simple2DActiveCell
         GPUArray<int2> NeighIdxs;
         //!A utility integer to help with NeighIdxs
         int NeighIdxNum;
-
-        //!A data structure that holds the indices of particles forming the circumcircles of the Delaunay Triangulation
-        GPUArray<int3> circumcenters;
-        //!The number of circumcircles...for a periodic system, this should never change. This provides one check that local updates to the triangulation are globally consistent
-        int NumCircumCenters;
 
         //!A flag that can be accessed by child classes... serves as notification that any change in the network topology has occured
         GPUArray<int> anyCircumcenterTestFailed;

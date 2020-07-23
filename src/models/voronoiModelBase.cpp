@@ -26,8 +26,6 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     Ncells = n;
     initializeSimple2DActiveCell(Ncells);
 
-    //set circumcenter array size
-    circumcenters.resize(2*(Ncells+10));
     NeighIdxs.resize(6*(Ncells+10));
 
     repair.resize(Ncells);
@@ -41,19 +39,16 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     //initialize spatial sorting, but do not sort by default
     initializeCellSorting();
 
-    //cell list initialization
-    celllist.setNp(Ncells);
-    celllist.setBox(Box);
-    celllist.setGridSize(cellsize);
-
-    //DelaunayLoc initialization
-    delLoc.setBox(Box);
-    resetDelLocPoints();
+    //DelaunayGPU initialization
+    delGPU.initialize(Ncells,16,1.0,Box);
+    delGPU.setSafetyMode(true);
+    delGPU.setGPUcompute(GPUcompute);
 
     //make a full triangulation
-    completeRetriangulationPerformed = 1;
+    completeRetriangulationPerformed = 0;
     neighborNum.resize(Ncells);
-    globalTriangulationCGAL();
+    //globalTriangulationCGAL();
+    globalTriangulationDelGPU();
     resetLists();
     allDelSets();
 
@@ -61,20 +56,6 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     anyCircumcenterTestFailed.resize(1);
     ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::overwrite);
     h_actf.data[0]=0;
-
-    localTopologyUpdates = 0;
-    };
-
-/*!
-The GPU moves the location of points in the GPU memory... this gets a local copy that can be used
-by the DelaunayLoc class
-\post the DelaunayLoc class has the updated set of cell positions, and its cell list is initialized
-*/
-void voronoiModelBase::resetDelLocPoints()
-    {
-    ArrayHandle<double2> h_points(cellPositions,access_location::host, access_mode::read);
-    delLoc.setPoints(h_points,Ncells);
-    delLoc.initialize(cellsize);
     };
 
 /*!
@@ -106,29 +87,7 @@ void voronoiModelBase::setExclusions(vector<int> &exes)
 */
 void voronoiModelBase::updateCellList()
     {
-
-    if(GPUcompute)
-        {
-        celllist.computeGPU(cellPositions);
-        cudaError_t code = cudaGetLastError();
-        if(code!=cudaSuccess)
-            {
-            printf("cell list computation GPUassert: %s \n", cudaGetErrorString(code));
-            throw std::exception();
-            };
-        }
-    else
-        {
-        vector<double> psnew(2*Ncells);
-        ArrayHandle<double2> h_points(cellPositions,access_location::host, access_mode::read);
-        for (int ii = 0; ii < Ncells; ++ii)
-            {
-            psnew[2*ii] =  h_points.data[ii].x;
-            psnew[2*ii+1]= h_points.data[ii].y;
-            };
-        celllist.setParticles(psnew);
-        celllist.compute();
-        };
+    delGPU.updateList(cellPositions);
     };
 
 /*!
@@ -198,83 +157,30 @@ void voronoiModelBase::moveDegreesOfFreedom(GPUArray<double2> &displacements,dou
     };
 
 /*!
-The DelaunayLoc and DelaunayNP classes are invoked to performed to determine the Delaunay
-triangulation of the entire periodic domain.
+Call the delaunayGPU class to get a complete triangulation of the current point set. Afterwards, call updateNeighIdxs
 */
-void voronoiModelBase::fullTriangulation(bool verbose)
+void voronoiModelBase::globalTriangulationDelGPU(bool verbose)
     {
     GlobalFixes +=1;
-    completeRetriangulationPerformed = 1;
-    resetDelLocPoints();
-
-    //get neighbors of each cell in CW order
-
-    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::overwrite);
-    ArrayHandle<int> h_repair(repair,access_location::host,access_mode::overwrite);
-    vector< vector<int> > allneighs(Ncells);
-    int oldNmax = neighMax;
-    int totaln = 0;
-    int nmax = 0;
-    for(int nn = 0; nn < Ncells; ++nn)
-        {
-        vector<int> neighTemp;
-        delLoc.getNeighbors(nn,neighTemp);
-        allneighs[nn]=neighTemp;
-        neighnum.data[nn] = neighTemp.size();
-        totaln += neighTemp.size();
-        if (neighTemp.size() > nmax) nmax= neighTemp.size();
-        h_repair.data[nn]=0;
-        };
-    if (nmax%2 ==0)
-        neighMax = nmax + 2;
-    else
-        neighMax = nmax + 1;
-
+    completeRetriangulationPerformed += 1;
+    neighMax = delGPU.MaxSize;
+    if(neighbors.getNumElements() != Ncells*neighMax)
+        neighbors.resize( Ncells*neighMax);
+    delGPU.globalDelaunayTriangulation(cellPositions,neighbors,neighborNum);
+    neighMax = delGPU.MaxSize;
     n_idx = Index2D(neighMax,Ncells);
-    if(neighMax != oldNmax)
-        {
-        neighbors.resize(neighMax*Ncells);
-        neighMaxChange = true;
-        };
+
+    //change updateNeigh function to allow for GPU operation
     updateNeighIdxs();
-
-
-    //store data in gpuarray
-    {
-    ArrayHandle<int> ns(neighbors,access_location::host,access_mode::overwrite);
-    for (int nn = 0; nn < Ncells; ++nn)
-        {
-        int imax = neighnum.data[nn];
-        for (int ii = 0; ii < imax; ++ii)
-            {
-            int idxpos = n_idx(ii,nn);
-            ns.data[idxpos] = allneighs[nn][ii];
-            };
-        };
-
-    if(verbose)
-        cout << "global new Nmax = " << neighMax << "; total neighbors = " << totaln << endl;cout.flush();
-    };
-
-    getCircumcenterIndices();
-
-    if(totaln != 6*Ncells)
-        {
-        printf("CPU neighbor creation failed to match topology! NN = %i \n",totaln);
-        char fn[256];
-        sprintf(fn,"failed.txt");
-        ofstream output(fn);
-        getCircumcenterIndices();
-        writeTriangulation(output);
-        throw std::exception();
-        };
-    };
+    //add neighborNum reduction and check that totalN = 6*Ncells
+    //if not, call CGAL?
+    }
 
 /*!
 This function calls the DelaunayCGAL class to determine the Delaunay triangulation of the entire
 square periodic domain this method is, obviously, better than the version written by DMS, so
 should be the default option. In addition to performing a triangulation, the function also automatically
-calls updateNeighIdxs and getCircumcenterIndices/
+calls updateNeighIdxs
 */
 void voronoiModelBase::globalTriangulationCGAL(bool verbose)
     {
@@ -335,8 +241,6 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
         cout << "global new Nmax = " << neighMax << "; total neighbors = " << totaln << endl;cout.flush();
     };
 
-    getCircumcenterIndices(true);
-
     if(totaln != 6*Ncells)
         {
         printf("global CPU neighbor failed! NN = %i\n",totaln);
@@ -371,296 +275,6 @@ void voronoiModelBase::updateNeighIdxs()
     };
 
 /*!
-Converts the neighbor list data structure into a list of the three particle indices defining
-all of the circumcenters in the triangulation. Keeping this version of the topology on the GPU
-allows for fast testing of what points need to be retriangulated.
-*/
-void voronoiModelBase::getCircumcenterIndices(bool secondtime, bool verbose)
-    {
-    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> ns(neighbors,access_location::host,access_mode::read);
-    ArrayHandle<int3> h_ccs(circumcenters,access_location::host,access_mode::overwrite);
-
-    int totaln = 0;
-    int cidx = 0;
-    bool fail = false;
-    for (int nn = 0; nn < Ncells; ++nn)
-        {
-        int nmax = neighnum.data[nn];
-        totaln+=nmax;
-        for (int jj = 0; jj < nmax; ++jj)
-            {
-            if (fail) continue;
-
-            int n1 = ns.data[n_idx(jj,nn)];
-            int ne2 = jj + 1;
-            if (jj == nmax-1)  ne2=0;
-            int n2 = ns.data[n_idx(ne2,nn)];
-            if (nn < n1 && nn < n2)
-                {
-                h_ccs.data[cidx].x = nn;
-                h_ccs.data[cidx].y = n1;
-                h_ccs.data[cidx].z = n2;
-                cidx+=1;
-                };
-            };
-        };
-    NumCircumCenters = cidx;
-    if((totaln != 6*Ncells || cidx != 2*Ncells) && !secondtime)
-        globalTriangulationCGAL();
-    if((totaln != 6*Ncells || cidx != 2*Ncells) && secondtime)
-        {
-        char fn[256];
-        sprintf(fn,"failed.txt");
-        ofstream output(fn);
-        writeTriangulation(output);
-        printf("step: %i  getCCs failed, %i out of %i ccs, %i out of %i neighs \n",timestep,cidx,2*Ncells,totaln,6*Ncells);
-        globalTriangulationCGAL();
-        throw std::exception();
-        };
-    };
-
-/*!
-Given a list of particle indices that need to be repaired, call CGAL to figure out their neighbors
-and then update the relevant data structures.
-*/
-void voronoiModelBase::repairTriangulation(vector<int> &fixlist)
-    {
-    int fixes = fixlist.size();
-    repPerFrame += ((double) fixes/(double)Ncells);
-    resetDelLocPoints();
-
-    ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::readwrite);
-
-    //First, retriangulate the target points, and check if the neighbor list needs to be reset
-    //the structure you want is vector<vector<int> > allneighs(fixes), but below a flattened version is implemented
-
-    vector<int> allneighs;
-    allneighs.reserve(fixes*neighMax);
-    vector<int> allneighidxstart(fixes);
-    vector<int> allneighidxstop(fixes);
-
-    //vector<vector<int> > allneighs(fixes);
-    vector<int> neighTemp;
-    neighTemp.reserve(10);
-
-    bool resetCCidx = false;
-    bool LocalFailure = false;
-    bool localTest = false;
-    for (int ii = 0; ii < fixes; ++ii)
-        {
-        int pidx = fixlist[ii];
-        localTest = delLoc.getNeighborsCGAL(pidx,neighTemp);
-        if(!localTest)
-            {
-            LocalFailure = true;
-            cout << "local triangulation failed...attempting a global triangulation to save the day" << endl << "Note that a particle position has probably become NaN, in which case CGAL will give an assertion violation" << endl;
-            break;
-            };
-
-        allneighidxstart[ii] = allneighs.size();
-        for (int nn = 0; nn < neighTemp.size(); ++nn)
-            {
-            allneighs.push_back(neighTemp[nn]);
-            };
-        //allneighs[ii]=neighTemp;
-
-        allneighidxstop[ii] = allneighs.size();
-        if(neighTemp.size() > neighMax)
-            {
-            resetCCidx = true;
-            };
-        };
-
-    //if needed, regenerate the "neighs" structure...hopefully don't do this too much
-    if(resetCCidx || LocalFailure)
-        {
-        if(resetCCidx)
-            neighMaxChange = true;
-        globalTriangulationCGAL();
-        return;
-        };
-
-    //now, edit the right entries of the neighborlist and neighbor size list
-    ArrayHandle<int> ns(neighbors,access_location::host,access_mode::readwrite);
-    for (int nn = 0; nn < fixes; ++nn)
-        {
-        int pidx = fixlist[nn];
-        //int imax = allneighs[nn].size();
-        int imax = allneighidxstop[nn]-allneighidxstart[nn];
-        neighnum.data[pidx] = imax;
-        for (int ii = 0; ii < imax; ++ii)
-            {
-            int idxpos = n_idx(ii,pidx);
-            //ns.data[idxpos] = allneighs[nn][ii];
-            ns.data[idxpos] = allneighs[ii+allneighidxstart[nn]];
-            };
-        };
-
-    //finally, update the NeighIdx list and Circumcenter list
-    updateNeighIdxs();
-    getCircumcenterIndices();
-    };
-
-/*!
-Call the GPU to test each circumcenter to see if it is still empty (i.e., how much of the
-triangulation from the last time step is still valid?). Note that because gpu_test_circumcenters
-*always* copies at least a single integer back and forth (to answer the question "did any
-circumcircle come back non-empty?" for the cpu) this function is always an implicit cuda
-synchronization event. At least until non-default streams are added to the code.
-*/
-void voronoiModelBase::testTriangulation()
-    {
-    //first, update the cell list, and set the cc test to 0
-    updateCellList();
-    {
-    ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::overwrite);
-    h_actf.data[0]=0;
-    };
-    //access data handles
-    ArrayHandle<double2> d_pt(cellPositions,access_location::device,access_mode::read);
-
-    ArrayHandle<unsigned int> d_cell_sizes(celllist.cell_sizes,access_location::device,access_mode::read);
-    ArrayHandle<int> d_c_idx(celllist.idxs,access_location::device,access_mode::read);
-
-    ArrayHandle<int> d_repair(repair,access_location::device,access_mode::readwrite);
-    ArrayHandle<int3> d_ccs(circumcenters,access_location::device,access_mode::read);
-    ArrayHandle<int> d_actf(anyCircumcenterTestFailed,access_location::device,access_mode::readwrite);
-
-    int NumCircumCenters = Ncells*2;
-    gpu_test_circumcenters(d_repair.data,
-                           d_ccs.data,
-                           NumCircumCenters,
-                           d_pt.data,
-                           d_cell_sizes.data,
-                           d_c_idx.data,
-                           Ncells,
-                           celllist.getXsize(),
-                           celllist.getYsize(),
-                           celllist.getBoxsize(),
-                           *(Box),
-                           celllist.cell_indexer,
-                           celllist.cell_list_indexer,
-                           d_actf.data
-                           );
-    };
-
-/*!
-perform the same check on the CPU... because of the cost of checking circumcircles and the
-relatively poor performance of the 1-ring calculation in DelaunayLoc, it is sometimes better
-to just re-triangulate the entire point set with CGAL. At the moment that is the default
-behavior of the cpu branch.
-*/
-void voronoiModelBase::testTriangulationCPU()
-    {
-    ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::readwrite);
-    h_actf.data[0]=0;
-    if (globalOnly)
-        {
-        globalTriangulationCGAL();
-        skippedFrames -= 1;
-        }
-    else
-        {
-        resetDelLocPoints();
-
-        ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
-        ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::readwrite);
-        ArrayHandle<int> ns(neighbors,access_location::host,access_mode::readwrite);
-        h_actf.data[0]=0;
-        for (int nn = 0; nn < Ncells; ++nn)
-            {
-            h_repair.data[nn] = 0;
-            vector<int> neighbors;
-            neighbors.reserve(neighMax);
-            for (int ii = 0; ii < neighnum.data[nn];++ii)
-                    {
-                    int idxpos = n_idx(ii,nn);
-                    neighbors.push_back(ns.data[idxpos]);
-                    };
-
-            bool good = delLoc.testPointTriangulation(nn,neighbors,false);
-            if(!good)
-                {
-                h_repair.data[nn] = 1;
-                h_actf.data[0]=1;
-                localTopologyUpdates += 1;
-                };
-            };
-        };
-    };
-
-/*!
-This function calls the relevant testing and repairing functions, and increments the "timestep"
-by one. Note that the call to testTriangulation will always synchronize the gpu (via a memcpy of
-the "anyCircumcenterTestFailed" variable)
-*/
-void voronoiModelBase::testAndRepairTriangulation(bool verb)
-    {
-    timestep +=1;
-
-    if (verb) printf("testing triangulation\n");
-    if(GPUcompute)
-        {
-        testTriangulation();
-        }
-    else
-        {
-        testTriangulationCPU();
-        };
-
-    ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::read);
-    if(h_actf.data[0]==1)
-        {
-        NeedsFixing.clear();
-        ArrayHandle<int> h_repair(repair,access_location::host,access_mode::readwrite);
-        if(GPUcompute)
-            {
-            cudaError_t code = cudaGetLastError();
-            if(code!=cudaSuccess)
-                {
-                printf("testAndRepair preliminary GPUassert: %s \n", cudaGetErrorString(code));
-                throw std::exception();
-                };
-            };
-
-        //add the index and all of its' neighbors
-        ArrayHandle<int> neighnum(neighborNum,access_location::host,access_mode::readwrite);
-        ArrayHandle<int> ns(neighbors,access_location::host,access_mode::readwrite);
-        for (int nn = 0; nn < Ncells; ++nn)
-            {
-            if (h_repair.data[nn] == 1)
-                {
-                NeedsFixing.push_back(nn);
-                h_repair.data[nn] = 0;
-                for (int ii = 0; ii < neighnum.data[nn];++ii)
-                    {
-                    int idxpos = n_idx(ii,nn);
-                    NeedsFixing.push_back(ns.data[idxpos]);
-                    };
-                };
-            };
-        sort(NeedsFixing.begin(),NeedsFixing.end());
-        NeedsFixing.erase(unique(NeedsFixing.begin(),NeedsFixing.end() ),NeedsFixing.end() );
-
-        if (verb) printf("repairing triangulation via %lu\n",NeedsFixing.size());
-
-        if (NeedsFixing.size() > (Ncells/6))
-            {
-            completeRetriangulationPerformed = 1;
-            globalTriangulationCGAL();
-            }
-        else
-            {
-            completeRetriangulationPerformed = 0;
-            repairTriangulation(NeedsFixing);
-            };
-        }
-    else
-        skippedFrames+=1;
-    };
-
-/*!
 When sortPeriod < 0, this routine does not get called
 \post call Simple2DActiveCell's underlying Hilbert sort scheme, and re-index voronoiModelBase's extra arrays
 */
@@ -683,58 +297,19 @@ goes through the process of testing and repairing the topology on either the CPU
 */
 void voronoiModelBase::enforceTopology()
     {
-    if (GPUcompute)
-        {
-        testAndRepairTriangulation();
-        ArrayHandle<int> h_actf(anyCircumcenterTestFailed,access_location::host,access_mode::read);
-        if(h_actf.data[0] == 1)
-            {
-            //maintain the auxilliary lists for computing forces
-            if(completeRetriangulationPerformed || neighMaxChange)
-                {
-                if(neighMaxChange)
-                    {
-                    resetLists();
-                    neighMaxChange = false;
-                    };
-                allDelSets();
-                }
-            else
-                {
-                bool localFail = false;
-                for (int jj = 0;jj < NeedsFixing.size(); ++jj)
-                    if(!getDelSets(NeedsFixing[jj]))
-                        localFail=true;
-                if (localFail)
-                    {
-                    cout << "Local triangulation failed to return a consistent set of topological information..." << endl;
-                    cout << "Now attempting a global re-triangulation to save the day." << endl;
-                    globalTriangulationCGAL();
-                    //get new DelSets and DelOthers
-                    resetLists();
-                    allDelSets();
-                    };
-                };
 
-            };
-        //pre-copy some data back to device; this will overlap with some CPU time
-        //...these are the arrays that are used by force_sets but not geometry, and should be switched to Async
-        ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
-        ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
-        ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
-        }
-    else
-        {
-        testAndRepairTriangulation();
-        if(neighMaxChange)
-            {
-            if(neighMaxChange)
-                resetLists();
-            neighMaxChange = false;
-            allDelSets();
-            };
-        };
+    delGPU.testAndRepairDelaunayTriangulation(cellPositions,neighbors,neighborNum);
+    resetLists();
+    allDelSets();
+
+    //include testing for consistency, call CGAL if needed
+    /*
+       globalTriangulationCGAL();
+       resetLists();
+       allDelSets();
+    */
     };
+
 //read a triangulation from a text file...used only for testing purposes. Any other use should call the Database class (see inc/Database.h")
 void voronoiModelBase::readTriangulation(ifstream &infile)
     {
@@ -1294,11 +869,8 @@ void voronoiModelBase::resizeAndReset()
     external_forces.resize(Ncells);
     exclusions.resize(Ncells);
     NeighIdxs.resize(6*(Ncells+10));
-    circumcenters.resize(2*(Ncells+10));
     repair.resize(Ncells);
 
-    celllist.setNp(Ncells);
-    resetDelLocPoints();
     neighborNum.resize(Ncells);
     //brute force fix of triangulation
     globalTriangulationCGAL();

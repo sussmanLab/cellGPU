@@ -80,6 +80,45 @@ static void unwrittenCode(const char *message, const char *file, int line)
     throw std::exception();
     }
 
+//!Get basic stats about the chosen GPU (if it exists)
+__host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
+    {
+    if(USE_GPU < 0)
+        {
+        cout << "running on the CPU..." << endl;
+        return false;
+        }
+    int nDev;
+    cudaGetDeviceCount(&nDev);
+    if (USE_GPU >= nDev)
+        {
+        cout << "Requested GPU (device " << USE_GPU<<") does not exist. Stopping triangulation" << endl;
+        return false;
+        };
+    if (USE_GPU <nDev)
+        cudaSetDevice(USE_GPU);
+    if(verbose)    cout << "Device # \t\t Device Name \t\t MemClock \t\t MemBusWidth" << endl;
+    for (int ii=0; ii < nDev; ++ii)
+        {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop,ii);
+        if (verbose)
+            {
+            if (ii == USE_GPU) cout << "********************************" << endl;
+            if (ii == USE_GPU) cout << "****Using the following gpu ****" << endl;
+            cout << ii <<"\t\t\t" << prop.name << "\t\t" << prop.memoryClockRate << "\t\t" << prop.memoryBusWidth << endl;
+            if (ii == USE_GPU) cout << "*******************************" << endl;
+            };
+        };
+    if (!verbose)
+        {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop,USE_GPU);
+        cout << "using " << prop.name << "\t ClockRate = " << prop.memoryClockRate << " memBusWidth = " << prop.memoryBusWidth << endl << endl;
+        };
+    return true;
+    };
+
 //A macro to wrap cuda calls
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
 //spot-checking of code for debugging
