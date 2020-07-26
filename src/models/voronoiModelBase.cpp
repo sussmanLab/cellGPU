@@ -26,7 +26,7 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     Ncells = n;
     initializeSimple2DActiveCell(Ncells);
 
-    NeighIdxs.resize(6*(Ncells+10));
+    NeighIdxs.resize(6*(Ncells));
 
     repair.resize(Ncells);
     displacements.resize(Ncells);
@@ -40,13 +40,15 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     initializeCellSorting();
 
     //DelaunayGPU initialization
-    delGPU.initialize(Ncells,12,1.0,Box);
+    int maxNeighGuess = 12;
+    delGPU.initialize(Ncells,maxNeighGuess,1.0,Box);
     delGPU.setSafetyMode(true);
     delGPU.setGPUcompute(GPUcompute);
 
     //make a full triangulation
     completeRetriangulationPerformed = 0;
     neighborNum.resize(Ncells);
+    neighbors.resize(Ncells*maxNeighGuess);
     //globalTriangulationCGAL();
     globalTriangulationDelGPU();
     resizeAndReset();
@@ -166,7 +168,7 @@ void voronoiModelBase::globalTriangulationDelGPU(bool verbose)
     completeRetriangulationPerformed += 1;
     int oldNeighMax = delGPU.MaxSize;
     if(neighbors.getNumElements() != Ncells*oldNeighMax)
-        neighbors.resize( Ncells*oldNeighMax);
+        resizeAndReset();
 
     delGPU.globalDelaunayTriangulation(cellPositions,neighbors,neighborNum);
     
@@ -176,13 +178,9 @@ void voronoiModelBase::globalTriangulationDelGPU(bool verbose)
         neighbors.resize( Ncells*neighMax);
     if(oldNeighMax != neighMax)
         {
-        resetLists();
         resizeAndReset();
         }
-    //change updateNeigh function to allow for GPU operation
     updateNeighIdxs();
-    //add neighborNum reduction and check that totalN = 6*Ncells
-    //if not, call CGAL?
     }
 
 /*!
@@ -318,19 +316,25 @@ void voronoiModelBase::enforceTopology()
     {
     int oldNeighMax = delGPU.MaxSize;
     if(neighbors.getNumElements() != Ncells*oldNeighMax)
-        neighbors.resize( Ncells*oldNeighMax);
-
+        resizeAndReset();
+    
+    
     delGPU.testAndRepairDelaunayTriangulation(cellPositions,neighbors,neighborNum);
+//    globalTriangulationDelGPU();
+
+    //global rescue if needed
     if(NeighIdxNum != 6* Ncells)
-       globalTriangulationCGAL();
+        {
+        cout << "attempting CGAL rescue -- inconsistent local topologies" << endl;
+        globalTriangulationCGAL();
+        resizeAndReset();
+        }
 
     neighMax = delGPU.MaxSize;
     if(oldNeighMax != neighMax)
         {
-        n_idx = Index2D(neighMax,Ncells);
-        neighbors.resize( Ncells*neighMax);
-        resetLists();
         resizeAndReset();
+        globalTriangulationDelGPU();
         }
         
     allDelSets();
@@ -818,6 +822,8 @@ As the code is modified, all GPUArrays whose size depend on neighMax should be a
 */
 void voronoiModelBase::resetLists()
     {
+    n_idx = Index2D(neighMax,Ncells);
+    neighbors.resize( Ncells*neighMax);
     voroCur.resize(neighMax*Ncells);
     voroLastNext.resize(neighMax*Ncells);
     delSets.resize(neighMax*Ncells);
@@ -905,12 +911,11 @@ void voronoiModelBase::resizeAndReset()
     cellForces.resize(Ncells);
     external_forces.resize(Ncells);
     exclusions.resize(Ncells);
-    NeighIdxs.resize(6*(Ncells));
     repair.resize(Ncells);
 
     neighborNum.resize(Ncells);
-    //brute force fix of triangulation
-    globalTriangulationCGAL();
+    NeighIdxs.resize(6*(Ncells));
+
     resetLists();
     allDelSets();
     };

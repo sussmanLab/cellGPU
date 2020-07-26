@@ -10,7 +10,7 @@
 */
 VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod)
     {
-    printf("Initializing %i cells with random positions in a square box... \n",n);
+//    printf("Initializing %i cells with random positions in a square box... \n",n);
     Reproducible = reprod;
     initializeVoronoiQuadraticEnergy(n);
     setCellPreferencesUniform(1.0,4.0);
@@ -25,7 +25,7 @@ VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod)
 */
 VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n,double A0, double P0,bool reprod)
     {
-    printf("Initializing %i cells with random positions in a square box...\n ",n);
+//    printf("Initializing %i cells with random positions in a square box...\n ",n);
     Reproducible = reprod;
     initializeVoronoiQuadraticEnergy(n);
     setCellPreferencesUniform(A0,P0);

@@ -1000,8 +1000,10 @@ __global__ void gpu_get_neighbors_no_sort_kernel(const double2* __restrict__ d_p
 
     unsigned int tidx = blockDim.x * blockIdx.x + threadIdx.x;
     if (tidx >= Ncells)return;
-    if(d_fixlist[tidx] >=0)
-        get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx, P,Q,Q_rad,d_neighnum, Ncells,xsize,ysize,boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,maximumNeighborNum);
+    if(d_fixlist[tidx] <0)
+        return;
+
+    get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx, P,Q,Q_rad,d_neighnum, Ncells,xsize,ysize,boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,maximumNeighborNum);
 
     return;
     }//end function

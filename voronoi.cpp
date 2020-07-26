@@ -7,6 +7,7 @@
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
 #include "selfPropelledParticleDynamics.h"
+#include "brownianParticleDynamics.h"
 #include "analysisPackage.h"
 
 /*!
@@ -73,8 +74,10 @@ int main(int argc, char*argv[])
     else
         initializeGPU = false;
 
+    cout << "initializing a system of " << numpts << " cells at temperature " << v0 << endl;
     //define an equation of motion object...here for self-propelled cells
-    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+//    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+    shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(numpts);
     //define a voronoi configuration with a quadratic energy functional
     shared_ptr<VoronoiQuadraticEnergy> spv  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible);
 
@@ -82,12 +85,12 @@ int main(int argc, char*argv[])
     spv->setCellPreferencesUniform(1.0,p0);
     //set the cell activity to have D_r = 1. and a given v_0
     spv->setv0Dr(v0,1.0);
-
+    bd->setT(v0);
 
     //combine the equation of motion and the cell configuration in a "Simulation"
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
-    sim->addUpdater(spp,spv);
+    sim->addUpdater(bd,spv);
     //set the time step size
     sim->setIntegrationTimestep(dt);
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number

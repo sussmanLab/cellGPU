@@ -16,8 +16,6 @@ include_directories(
         )
 
 add_library(model
-    Delaunay1.cpp
-    DelaunayLoc.cpp
     DelaunayCGAL.cpp
     DelaunayGPU.cpp
     Simple2DActiveCell.cpp

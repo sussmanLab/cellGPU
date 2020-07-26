@@ -9,6 +9,7 @@
 #include <thrust/reduce.h>
 #include <thrust/scan.h>
 #include <thrust/execution_policy.h>
+#include <thrust/device_vector.h>
 
 /*! \file voronoiModelBase.cu */
 /*!
@@ -304,10 +305,19 @@ bool gpu_update_neighIdxs(int *neighborNum,
     unsigned int nblocks  = Ncells/block_size + 1;
 
 
-    thrust::exclusive_scan(thrust::device,neighborNum,neighborNum+Ncells,neighNumScan);
+    {
+    thrust::device_ptr<int> dpNN(neighborNum);
+    thrust::device_ptr<int> dpNNS(neighNumScan);
+//    thrust::exclusive_scan(thrust::device,neighborNum,neighborNum+Ncells,neighNumScan);
+    thrust::exclusive_scan(dpNN,dpNN+Ncells,dpNNS);
+    }
+
     gpu_update_neighIdxs_kernel<<<nblocks,block_size>>>(neighborNum,neighNumScan,neighIdxs,Ncells);
 
-    NeighIdxNum = thrust::reduce(thrust::device,neighborNum,neighborNum+Ncells);
+    {
+    thrust::device_ptr<int> dpNN(neighborNum);
+    NeighIdxNum = thrust::reduce(dpNN,dpNN+Ncells);//neighborNum,neighborNum+Ncells);
+    }
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     }
@@ -324,8 +334,7 @@ __global__ void gpu_all_del_sets_kernel(int *neighborNum,
         return;
 
     int iNeighs = neighborNum[idx];
-    int nm2,nm1,n1,n2,nextNeighs,testPoint;
-    nm2 = neighbors[nIdx(iNeighs-3,idx)];
+    int nm1,n1,n2,nextNeighs,testPoint;
     nm1 = neighbors[nIdx(iNeighs-2,idx)];
     n1 = neighbors[nIdx(iNeighs-1,idx)];
     for(int nn = 0; nn < iNeighs; ++nn)
@@ -344,7 +353,6 @@ __global__ void gpu_all_del_sets_kernel(int *neighborNum,
         delSets[nIdx(nn,idx)].x = nm1;
         delSets[nIdx(nn,idx)].y = n1;
 
-        nm2 = nm1;
         nm1=n1;
         n1=n2;
         }
