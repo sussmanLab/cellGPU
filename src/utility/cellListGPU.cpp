@@ -338,7 +338,6 @@ Assign known points to cells on the GPU
 void cellListGPU::computeGPU()
     {
     bool recompute = true;
-    resetCellSizes();
     int maximumCellOccupation = Nmax;
 
     while (recompute)
@@ -394,7 +393,6 @@ void cellListGPU::computeGPU()
 void cellListGPU::computeGPU(GPUArray<double2> &points)
     {
     bool recompute = true;
-    resetCellSizes();
     int maximumCellOccupation = Nmax;
 
     while (recompute)

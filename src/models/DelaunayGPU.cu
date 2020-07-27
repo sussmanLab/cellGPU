@@ -222,14 +222,7 @@ __host__ __device__ void test_circumcircle_kernel_function(int idx,
         {
         for (int jj = jb-wcheck; jj <= jb+wcheck; ++jj)
             {
-            int cx = ii;
-            if(cx < 0) cx += xsize;
-            if(cx >= xsize) cx -= xsize;
-            int cy = jj;
-            if(cy < 0) cy += ysize;
-            if(cy >= ysize) cy -= ysize;
-
-            int bin = ci(cx,cy);
+            int bin = ci(positiveModulo(ii,xsize),positiveModulo(jj,ysize));
 
             for (int pp = 0; pp < d_cell_sizes[bin]; ++pp)
                 {
