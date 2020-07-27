@@ -16,6 +16,13 @@ voronoiModelBase::voronoiModelBase() :
 
     };
 
+void voronoiModelBase::reinitialize(int neighborGuess)
+    {
+    neighbors.resize(Ncells*neighborGuess);
+    delGPU.initialize(Ncells,neighborGuess,1.0,Box);
+    globalTriangulationDelGPU();
+    resizeAndReset();
+    }
 /*!
  * a function that takes care of the initialization of the class.
  * \param n the number of cells to initialize
@@ -52,8 +59,6 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     //globalTriangulationCGAL();
     globalTriangulationDelGPU();
     resizeAndReset();
-    resetLists();
-    allDelSets();
 
     //initialize the anyCircumcenterTestFailed structure
     anyCircumcenterTestFailed.resize(1);
