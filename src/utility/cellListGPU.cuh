@@ -26,7 +26,7 @@ bool gpu_compute_cell_list(double2 *d_pt,
                                   periodicBoundaries &Box,
                                   Index2D &ci,
                                   Index2D &cli,
-                                  int *d_assist
+                                  int &maximumCellOccupation
                                   );
 //!convenience function to zero out an array on the GPU
 bool gpu_zero_array(int *arr,

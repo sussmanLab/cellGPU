@@ -4,6 +4,11 @@
 #include "periodicBoundaries.h"
 #include <iostream>
 #include <stdio.h>
+#include <thrust/device_vector.h>
+#include <thrust/reduce.h>
+#include <thrust/functional.h>
+#include <thrust/execution_policy.h>
+
 /*! \file cellListGPU.cu */
 
 /*!
@@ -24,8 +29,7 @@ __global__ void gpu_compute_cell_list_kernel(double2 *d_pt,
                                               double boxsize,
                                               periodicBoundaries Box,
                                               Index2D ci,
-                                              Index2D cli,
-                                              int *d_assist
+                                              Index2D cli
                                               )
     {
     // read in the particle that belongs to this thread
@@ -40,16 +44,11 @@ __global__ void gpu_compute_cell_list_kernel(double2 *d_pt,
     int bin = ci(ibin,jbin);
 
     unsigned int offset = atomicAdd(&(d_cell_sizes[bin]), 1);
-    if (offset <= d_assist[0]+1)
+    if (offset <= Nmax+1)
         {
         unsigned int write_pos = min(cli(offset, bin),cli.getNumElements()-1);
         d_idx[write_pos] = idx;
         }
-    else
-        {
-        d_assist[0]=offset+1;
-        d_assist[1]=1;
-        };
 
     return;
     };
@@ -133,7 +132,7 @@ bool gpu_compute_cell_list(double2 *d_pt,
                                   periodicBoundaries &Box,
                                   Index2D &ci,
                                   Index2D &cli,
-                                  int *d_assist
+                                  int &maximumCellOccupation
                                   )
     {
     //optimize block size later
@@ -153,9 +152,13 @@ bool gpu_compute_cell_list(double2 *d_pt,
                                                           boxsize,
                                                           Box,
                                                           ci,
-                                                          cli,
-                                                          d_assist
+                                                          cli
                                                           );
+    {
+    thrust::device_ptr<unsigned int> dpCS(d_cell_sizes);
+    int vecSize = xsize*ysize;
+    maximumCellOccupation = thrust::reduce(dpCS,dpCS+vecSize,0,thrust::maximum<unsigned int>());
+    }
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     }

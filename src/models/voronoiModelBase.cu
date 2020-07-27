@@ -308,7 +308,6 @@ bool gpu_update_neighIdxs(int *neighborNum,
     {
     thrust::device_ptr<int> dpNN(neighborNum);
     thrust::device_ptr<int> dpNNS(neighNumScan);
-//    thrust::exclusive_scan(thrust::device,neighborNum,neighborNum+Ncells,neighNumScan);
     thrust::exclusive_scan(dpNN,dpNN+Ncells,dpNNS);
     }
 

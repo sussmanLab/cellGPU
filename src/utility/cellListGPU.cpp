@@ -168,11 +168,13 @@ void cellListGPU::resetCellSizes()
     ArrayHandle<int> cidxs(idxs,access_location::device,access_mode::overwrite);
     gpu_set_array<int>(cidxs.data,0,cell_list_indexer.getNumElements());
 
+    /* no longer using assist structure on the gpu
     if(assist.getNumElements()!= 2)
         assist.resize(2);
     ArrayHandle<int> h_assist(assist,access_location::host,access_mode::overwrite);
     h_assist.data[0]=Nmax;
     h_assist.data[1] = 0;
+    */
     };
 
 /*!
@@ -336,7 +338,8 @@ Assign known points to cells on the GPU
 void cellListGPU::computeGPU()
     {
     bool recompute = true;
-    //resetCellSizes();
+    resetCellSizes();
+    int maximumCellOccupation = Nmax;
 
     while (recompute)
         {
@@ -352,7 +355,6 @@ void cellListGPU::computeGPU()
             //get cell list arrays...readwrite so things are properly zeroed out
             ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::readwrite);
-            ArrayHandle<int> d_assist(assist,access_location::device,access_mode::readwrite);
 
             //call the gpu function
             gpu_compute_cell_list(d_pt.data,        //particle positions...broken
@@ -366,33 +368,21 @@ void cellListGPU::computeGPU()
                           (*Box),
                           cell_indexer,
                           cell_list_indexer,
-                          d_assist.data
-                          );               //the box
+                          maximumCellOccupation
+                          );
             }
         //get cell list arrays
         recompute = false;
-        //bool loopcheck=false;
-        if (true)
+        if(maximumCellOccupation > Nmax)
             {
-
-            ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
-            ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::read);
-            for (int cc = 0; cc < totalCells; ++cc)
-                {
-                int cs = h_cell_sizes.data[cc] ;
-                for (int bb = 0; bb < cs; ++bb)
-                    {
-                    int wp = cell_list_indexer(bb,cc);
-                    };
-                if(cs > Nmax)
-                    {
-                    Nmax =cs ;
-                    recompute = true;
-                    };
-
-                };
-
-            };
+            Nmax =maximumCellOccupation;
+            if (Nmax%2 == 0 )
+                Nmax +=2;
+            else
+                Nmax +=1;
+            recompute = true;
+            }
+        //bool loopcheck=false;
         };
     cell_list_indexer = Index2D(Nmax,totalCells);
 
@@ -405,6 +395,7 @@ void cellListGPU::computeGPU(GPUArray<double2> &points)
     {
     bool recompute = true;
     resetCellSizes();
+    int maximumCellOccupation = Nmax;
 
     while (recompute)
         {
@@ -419,7 +410,6 @@ void cellListGPU::computeGPU(GPUArray<double2> &points)
             //get cell list arrays...readwrite so things are properly zeroed out
             ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::readwrite);
-            ArrayHandle<int> d_assist(assist,access_location::device,access_mode::readwrite);
 
             //call the gpu function
             gpu_compute_cell_list(d_pt.data,        //particle positions...broken
@@ -433,28 +423,20 @@ void cellListGPU::computeGPU(GPUArray<double2> &points)
                           (*Box),
                           cell_indexer,
                           cell_list_indexer,
-                          d_assist.data
-                          );               //the box
+                          maximumCellOccupation
+                          );
             }
         //get cell list arrays
         recompute = false;
-        if (true)
+        if(maximumCellOccupation > Nmax)
             {
-            ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
-            for (int cc = 0; cc < totalCells; ++cc)
-                {
-                int cs = h_cell_sizes.data[cc] ;
-                if(cs > Nmax)
-                    {
-                    Nmax =cs ;
-                    if (Nmax%2 == 0 ) Nmax +=2;
-                    if (Nmax%2 == 1 ) Nmax +=1;
-                    recompute = true;
-                    };
-
-                };
-
-            };
-        };
+            Nmax =maximumCellOccupation;
+            if (Nmax%2 == 0 )
+                Nmax +=2;
+            else
+                Nmax +=1;
+            recompute = true;
+            }
+        }
     cell_list_indexer = Index2D(Nmax,totalCells);
     };
