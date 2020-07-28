@@ -31,6 +31,9 @@ a file of bad practice to be included all the time... carries with it things DMS
 #include <string.h>
 #include <stdexcept>
 #include <cassert>
+#include <omp.h>
+#include <thread>
+#include <cpuid.h>
 
 using namespace std;
 
@@ -73,11 +76,32 @@ inline bool fileExists(const std::string& name)
     return f.good();
     }
 
-//!Report somewhere that code needs to be written
-static void unwrittenCode(const char *message, const char *file, int line)
+__host__ inline bool chooseCPU(int gpuSwitch,bool verbose = false)
     {
-    printf("\nCode unwritten (file %s; line %d)\nMessage: %s\n",file,line,message);
-    throw std::exception();
+	char CPUBrandString[0x40];
+	unsigned int CPUInfo[4] = {0,0,0,0};
+	__cpuid(0x80000000, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+	unsigned int nExIds = CPUInfo[0];
+
+	memset(CPUBrandString, 0, sizeof(CPUBrandString));
+
+	for (unsigned int i = 0x80000000; i <= nExIds; ++i)
+		{
+    		__cpuid(i, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+
+    		if (i == 0x80000002)
+	        	memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+		else if (i == 0x80000003)
+			memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+		else if (i == 0x80000004)
+			memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+		}
+
+    if(verbose)
+        cout << "using "<<CPUBrandString <<"     Available threads: "<< std::thread::hardware_concurrency() <<"     Threads requested: "<<abs(gpuSwitch) <<"\n"<< endl;
+    else
+        cout << "Running on the CPU with " << abs(gpuSwitch) << " openMP-based threads" << endl;
+    return false;
     }
 
 //!Get basic stats about the chosen GPU (if it exists)
@@ -85,8 +109,7 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
     {
     if(USE_GPU < 0)
         {
-        cout << "running on the CPU..." << endl;
-        return false;
+        return chooseCPU(abs(USE_GPU),true);
         }
     int nDev;
     cudaGetDeviceCount(&nDev);
@@ -118,6 +141,12 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
         };
     return true;
     };
+//!Report somewhere that code needs to be written
+static void unwrittenCode(const char *message, const char *file, int line)
+    {
+    printf("\nCode unwritten (file %s; line %d)\nMessage: %s\n",file,line,message);
+    throw std::exception();
+    }
 
 //A macro to wrap cuda calls
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))

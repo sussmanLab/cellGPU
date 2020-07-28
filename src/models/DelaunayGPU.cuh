@@ -39,9 +39,10 @@ bool gpu_test_circumcircles(int *d_repair,
                             periodicBoundaries &Box,
                             Index2D &ci,
                             Index2D &cli,
-                            bool GPUcompute
+                            bool GPUcompute,
+                            unsigned int OMPThreadsNum
                             );
-
+//!Find enclosing polygons to serve as candidate one-rings
 bool gpu_voronoi_calc(double2* d_pt,
                       unsigned int* d_cell_sizes,
                       int* d_cell_idx,
@@ -58,10 +59,11 @@ bool gpu_voronoi_calc(double2* d_pt,
                       Index2D ci,
                       Index2D cli,
                       Index2D GPU_idx,
-                      bool GPUcompute
+                      bool GPUcompute,
+                      unsigned int OMPThreadsNum
                       );
 
-//call the voronoi_calc kernels *only* on elements of the fixlist, but without any sorting
+//!Find enclosing polygons to serve as candidate one-rings on the testAndRepair branch
 bool gpu_voronoi_calc_no_sort(double2* d_pt,
                       unsigned int* d_cell_sizes,
                       int* d_cell_idx,
@@ -79,11 +81,11 @@ bool gpu_voronoi_calc_no_sort(double2* d_pt,
                       Index2D cli,
                       int* d_fixlist,
                       Index2D GPU_idx,
-                      bool GPUcompute
+                      bool GPUcompute,
+                      unsigned int OMPThreadsNum
                       );
 
-//the meat of the triangulation algorithm, calculates the actual del neighs of cell i
-//this is also a bit large, but to optimize it, big algorithmical changes might be needed (I'm too lazy though...)                  
+//!Find the one-rings on the global triangulation branch of the algorithm
 bool gpu_get_neighbors(double2* d_pt,
                       unsigned int* d_cell_sizes,
                       int* d_cell_idx,
@@ -102,9 +104,11 @@ bool gpu_get_neighbors(double2* d_pt,
                       Index2D GPU_idx,
                       int* maximumNeighborNum,
                       int currentMaxNeighborNum,
-                      bool GPUcompute
+                      bool GPUcompute,
+                      unsigned int OMPThreadsNum
                       );
 
+//!Find the one-rings on the testAndRepair branch
 bool gpu_get_neighbors_no_sort(double2* d_pt,
                       unsigned int* d_cell_sizes,
                       int* d_cell_idx,
@@ -124,9 +128,9 @@ bool gpu_get_neighbors_no_sort(double2* d_pt,
                       Index2D GPU_idx,
                       int* maximumNeighborNum,
                       int currentMaxNeighborNum,
-                      bool GPUcompute
+                      bool GPUcompute,
+                      unsigned int OMPThreadsNum
                       );
 
 /** @} */ //end of group declaration
-
 #endif
