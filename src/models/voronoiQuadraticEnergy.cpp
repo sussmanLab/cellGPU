@@ -630,7 +630,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
     ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
-    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::readwrite);
     ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
     ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
 

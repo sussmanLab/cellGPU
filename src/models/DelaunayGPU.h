@@ -54,6 +54,8 @@ class DelaunayGPU
         PeriodicBoxPtr Box;
         //! The maximum number of neighbors any point has
         int MaxSize;
+        //!A helper array containing the positions of voronoi vertices associated with every 1-ring
+        GPUArray<double2> GPUVoroCur;
 
     protected:
         //!Given point set, test the quality of a triangulation on the GPU
@@ -95,8 +97,6 @@ class DelaunayGPU
         //!Repair the parts of the triangulation associated with the given repairList
         void locallyRepairDelaunayTriangulation(GPUArray<double2> &points, GPUArray<int> &GPUTriangulation, GPUArray<int> &cellNeighborNum,GPUArray<int> &repairList, int numberToRepair=-1);
 
-        //!A helper array containing the positions of voronoi vertices associated with every 1-ring
-        GPUArray<double2> GPUVoroCur;
         //!A helper array containing the positions of the delaunay positions associated with every 1-ring of neighboring points
         GPUArray<double2> GPUDelNeighsPos;
         //!A helper array containing the size of circumcircles associated with point(kidx) and GPUDelNeighsPos(kidx,i) and GPUDelNeighsPos(kidx,i+1)

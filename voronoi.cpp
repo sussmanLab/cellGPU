@@ -113,7 +113,6 @@ int main(int argc, char*argv[])
         spv->setCPU(false);//turn off globabl-ony mode
 
     //run for additional timesteps, compute dynamical features, and record timing information
-    spv->reinitialize(8);
     dynamicalFeatures dynFeat(spv->returnPositions(),spv->Box);
     logSpacedIntegers logInts(0,0.05);
     t1=clock();

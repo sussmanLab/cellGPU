@@ -93,6 +93,8 @@ class voronoiModelBase : public Simple2DActiveCell
 
         //!repair any problems with the triangulation on the CPU
         void repairTriangulation(vector<int> &fixlist);
+        //! after a CGAL triangulation, need to populate delGPU's voroCur structure in order for compute geometry to work
+        void populateVoroCur();
         //! call getDelSets for all particles
         void allDelSets();
 

@@ -21,7 +21,6 @@ void voronoiModelBase::reinitialize(int neighborGuess)
     neighbors.resize(Ncells*neighborGuess);
     delGPU.initialize(Ncells,neighborGuess,1.0,Box);
     globalTriangulationDelGPU();
-    resizeAndReset();
     }
 /*!
  * a function that takes care of the initialization of the class.
@@ -56,7 +55,6 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     completeRetriangulationPerformed = 0;
     neighborNum.resize(Ncells);
     neighbors.resize(Ncells*maxNeighGuess);
-    //globalTriangulationCGAL();
     globalTriangulationDelGPU();
     resizeAndReset();
 
@@ -186,6 +184,13 @@ void voronoiModelBase::globalTriangulationDelGPU(bool verbose)
         resizeAndReset();
         }
     updateNeighIdxs();
+    //global rescue if needed
+    if(NeighIdxNum != 6* Ncells)
+        {
+        cout << "attempting CGAL rescue -- inconsistent local topologies" << endl;
+        globalTriangulationCGAL();
+        resizeAndReset();
+        }
     }
 
 /*!
@@ -262,6 +267,51 @@ void voronoiModelBase::globalTriangulationCGAL(bool verbose)
         writeTriangulation(output);
         throw std::exception();
         };
+    populateVoroCur();
+    };
+
+void voronoiModelBase::populateVoroCur()
+    {
+    if(delGPU.GPUVoroCur.getNumElements() != neighMax*Ncells)
+        delGPU.GPUVoroCur.resize(neighMax*Ncells);
+
+    //read in all the data we'll need
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
+
+    ArrayHandle<double2> h_v(delGPU.GPUVoroCur,access_location::host,access_mode::readwrite);
+
+    for (int i = 0; i < Ncells; ++i)
+        {
+        //get Delaunay neighbors of the cell
+        int neigh = h_nn.data[i];
+        vector<int> ns(neigh);
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            ns[nn]=h_n.data[n_idx(nn,i)];
+            };
+
+        //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
+        vector<double2> voro(neigh);
+        double2 circumcent;
+        double2 nnextp,nlastp;
+        double2 pi = h_p.data[i];
+        double2 rij, rik;
+
+        nlastp = h_p.data[ns[ns.size()-1]];
+        Box->minDist(nlastp,pi,rij);
+        for (int nn = 0; nn < neigh;++nn)
+            {
+            nnextp = h_p.data[ns[nn]];
+            Box->minDist(nnextp,pi,rik);
+            Circumcenter(rij,rik,circumcent);
+            voro[nn] = circumcent;
+            rij=rik;
+            int id = n_idx(nn,i);
+            h_v.data[id] = voro[nn];
+            };
+        };
     };
 
 /*!
@@ -304,7 +354,7 @@ void voronoiModelBase::spatialSorting()
     {
     spatiallySortCellsAndCellActivity();
     //reTriangulate with the new ordering
-    globalTriangulationCGAL();
+    globalTriangulationDelGPU();
     //get new DelSets and DelOthers
     resetLists();
     allDelSets();
@@ -396,7 +446,7 @@ void voronoiModelBase::computeGeometryCPU()
     ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
 
-    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::readwrite);
     ArrayHandle<double4> h_vln(voroLastNext,access_location::host,access_mode::overwrite);
 
     for (int i = 0; i < Ncells; ++i)
@@ -463,7 +513,7 @@ void voronoiModelBase::computeGeometryGPU()
     ArrayHandle<double2> d_AP(AreaPeri,access_location::device,access_mode::readwrite);
     ArrayHandle<int> d_nn(neighborNum,access_location::device,access_mode::read);
     ArrayHandle<int> d_n(neighbors,access_location::device,access_mode::read);
-    ArrayHandle<double2> d_vc(voroCur,access_location::device,access_mode::overwrite);
+    ArrayHandle<double2> d_vc(voroCur,access_location::device,access_mode::readwrite);
     ArrayHandle<double4> d_vln(voroLastNext,access_location::device,access_mode::overwrite);
 
     gpu_compute_voronoi_geometry(
@@ -525,7 +575,7 @@ double2 voronoiModelBase::dAidrj(int i, int j)
     ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
-    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::readwrite);
 
     //how many neighbors does cell i have?
     int neigh = h_nn.data[i];
@@ -612,7 +662,7 @@ double2 voronoiModelBase::dPidrj(int i, int j)
     ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
-    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::readwrite);
 
     //how many neighbors does cell i have?
     int neigh = h_nn.data[i];
@@ -923,6 +973,7 @@ void voronoiModelBase::resizeAndReset()
 
     resetLists();
     allDelSets();
+    reinitialize(neighMax);
     };
 
 /*!
