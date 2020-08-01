@@ -61,17 +61,8 @@ int main(int argc, char*argv[])
     bool reproducible = true; // if you want random numbers with a more random seed each run, set this to false
     //check to see if we should run on a GPU
     bool initializeGPU = true;
-    if (USE_GPU >= 0)
-        {
-        bool gpu = chooseGPU(USE_GPU);
-        if (!gpu) 
-            {
-            printf("Tried to set a gpu that doesn't exist -- exiting program.\n");
-            return 0;
-            }
-        cudaSetDevice(USE_GPU);
-        }
-    else
+    bool gpu = chooseGPU(USE_GPU);
+    if (!gpu) 
         initializeGPU = false;
 
     cout << "initializing a system of " << numpts << " cells at temperature " << v0 << endl;

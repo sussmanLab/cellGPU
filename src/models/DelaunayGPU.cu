@@ -197,12 +197,12 @@ __host__ __device__ void test_circumcircle_kernel_function(int idx,
     //the indices of particles forming the circumcircle
     int3 i1 = d_circumcircles[idx];
     //the vertex we will take to be the origin, and its cell position
-    double2 v = d_pt[i1.x];
+    double2 v = ldgHD(&d_pt[i1.x]);
     int cc,dd,cx,cy,bin,newidx,cell_x,cell_y,xOrY,cell_rad;
 
     double2 pt1,pt2,Q;
-    Box.minDist(d_pt[i1.y],v,pt1);
-    Box.minDist(d_pt[i1.z],v,pt2);
+    Box.minDist(ldgHD(&d_pt[i1.y]),v,pt1);
+    Box.minDist(ldgHD(&d_pt[i1.z]),v,pt2);
 
 
     //get the circumcircle
@@ -251,7 +251,7 @@ __host__ __device__ void test_circumcircle_kernel_function(int idx,
             if(newidx == i1.x || newidx == i1.y || newidx == i1.z)
                 continue;
 
-            Box.minDist(d_pt[newidx],v,pt1);
+            Box.minDist(ldgHD(&d_pt[newidx]),v,pt1);
             //everything is pt1 and Q are now already relative positions... no need for a minDist call
             pt2 = pt1-Q; //Box.minDist(pt1,Q,pt2);
 
@@ -300,7 +300,6 @@ __global__ void gpu_test_circumcircles_kernel(
     test_circumcircle_kernel_function(idx,d_repair,d_circumcircles,d_pt,
                                       d_cell_sizes,d_cell_idx,xsize,ysize,
                                       boxsize,Box,ci,cli);
-
     return;
     };
 
@@ -342,34 +341,6 @@ __host__ __device__ void virtual_voronoi_calc_function(        int kidx,
     P[GPU_idx(2, kidx)].y=-LL;
     P[GPU_idx(3, kidx)].x=LL;
     P[GPU_idx(3, kidx)].y=-LL;
-    /*
-    poly_size=5;
-    P[GPU_idx(0, kidx)].x=0.62*LL;
-    P[GPU_idx(0, kidx)].y=1.9*LL;
-    P[GPU_idx(1, kidx)].x=-1.62*LL;
-    P[GPU_idx(1, kidx)].y=1.176*LL;
-    P[GPU_idx(2, kidx)].x=-1.62*LL;
-    P[GPU_idx(2, kidx)].y=-1.176*LL;
-    P[GPU_idx(3, kidx)].x=.62*LL;
-    P[GPU_idx(3, kidx)].y=-1.9*LL;
-    P[GPU_idx(4, kidx)].x=2.0*LL;
-    P[GPU_idx(4, kidx)].y=0.;
-    */
-    /*
-    poly_size=6;
-    P[GPU_idx(0, kidx)].x=2.*LL;
-    P[GPU_idx(0, kidx)].y=0.;
-    P[GPU_idx(1, kidx)].x=LL;
-    P[GPU_idx(1, kidx)].y=1.7*LL;
-    P[GPU_idx(2, kidx)].x=-LL;
-    P[GPU_idx(2, kidx)].y=1.7*LL;
-    P[GPU_idx(3, kidx)].x=-2.0*LL;
-    P[GPU_idx(3, kidx)].y=0.;
-    P[GPU_idx(4, kidx)].x=-LL;
-    P[GPU_idx(4, kidx)].y=-1.7*LL;
-    P[GPU_idx(5, kidx)].x=LL;
-    P[GPU_idx(5, kidx)].y=-1.7*LL;
-    */
 
 #ifdef DEBUGFLAGUP
 int blah = 0;
@@ -402,16 +373,20 @@ t1=clock();
     int pp, w, j, jj, cx, cy, cc, dd, cell_rad, bin, cell_x, cell_y;
 
 
-    v = d_pt[kidx];
+    v = ldgHD(&d_pt[kidx]);
     bool flag=false,removeCCW,firstRemove;
 
     int baseIdx = GPU_idx(0,kidx);
+    bool virtualPoints = true;
+    int whileLoopCounter =0;
+    while(virtualPoints && whileLoopCounter < 1)
+    {
+
     for(jj=0; jj<poly_size; jj++)
         {
         currentRadius = Q_rad[GPU_idx(jj,kidx)];
         pt1=v;//+Q[GPU_idx(jj,kidx)]; //absolute position (within box) of circumcenter
         Box.putInBoxReal(pt1);
-        currentRadius = Q_rad[GPU_idx(jj,kidx)];
         cell_x = (int)floor(pt1.x/boxsize) % xsize;
         cell_y = (int)floor(pt1.y/boxsize) % ysize;
         cell_rad = min((int) ceil(currentRadius/boxsize),xsize/2);
@@ -464,9 +439,9 @@ t3=clock();
                     newidx = d_cell_idx[cli(aa,bin)];
                     //6-Compute the half-plane Hv defined by the bissector of v and c, containing c
                     newidx = d_cell_idx[cli(aa,bin)];
-                    if(newidx == kidx) continue;
+                    if(newidx == kidx || newidx == P_idx[baseIdx]) continue;
                     bool skipPoint = false;
-                    for (int pidx = 0; pidx < poly_size; ++pidx)
+                    for (int pidx = jj; pidx < poly_size; ++pidx)
                         if(newidx == P_idx[GPU_idx(pidx, kidx)]) skipPoint = true;
                     if (skipPoint) continue;
 #ifdef DEBUGFLAGUP
@@ -474,27 +449,27 @@ blah2+=1;
 #endif
                     //how far is the point from the circumcircle's center?
                     rr=currentRadius*currentRadius;
-                    Box.minDist(d_pt[newidx], v, disp); //disp = vector between new point and the point we're constructing the one ring of
+                    Box.minDist(ldgHD(&d_pt[newidx]), v, disp); //disp = vector between new point and the point we're constructing the one ring of
                     Box.minDist(disp,Q[GPU_idx(jj, kidx)],pt1); // pt1 gets overwritten by vector between new point and Pi's circumcenter
                     if(pt1.x*pt1.x+pt1.y*pt1.y>rr)continue;
 #ifdef DEBUGFLAGUP
 blah3 +=1;
 #endif
                     //calculate half-plane bissector
-                    if(abs(disp.y)<THRESHOLD)
+                    if(abs(disp.y) > THRESHOLD)
+                        {
+                        yy=(disp.y*disp.y+disp.x*disp.x)/(2*disp.y);
+                        xx=0;
+                        }
+                    else if(abs(disp.y)<THRESHOLD)
                         {
                         yy=disp.y/2+1;
                         xx=disp.x/2;
                         }
-                    else if(abs(disp.x)<THRESHOLD)
+                    if(abs(disp.x)<THRESHOLD)
                         {
                         yy=disp.y/2;
                         xx=disp.x/2+1;
-                        }
-                    else
-                        {
-                        yy=(disp.y*disp.y+disp.x*disp.x)/(2*disp.y);
-                        xx=0;
                         }
 
                     //7-Q<-Hv intersect Q
@@ -625,6 +600,14 @@ t7 += clock()-t2;
             flag=false;
             }
         }//end iterative loop over all edges of the 1-ring
+    virtualPoints = false;
+    whileLoopCounter +=1;
+    for (int pCheck = 0; pCheck < poly_size; ++pCheck)
+        {
+        if(P_idx[GPU_idx(pCheck,kidx)] == -1)
+            virtualPoints = true;
+        }
+    }//end while loop
 
     d_neighnum[kidx]=poly_size;
 #ifdef DEBUGFLAGUP
@@ -735,7 +718,7 @@ __host__ __device__ void get_oneRing_function(int kidx,
     unsigned int newidx, aa, removed, removeCW;
     int pp, m, w, j, jj, cx, cy, cc, dd, cell_rad, bin, cell_x, cell_y;
 
-    v = d_pt[kidx];
+    v = ldgHD(&d_pt[kidx]);
     unsigned int poly_size=d_neighnum[kidx];
     bool flag=false, removeCCW, firstRemove;
 
@@ -781,6 +764,7 @@ __host__ __device__ void get_oneRing_function(int kidx,
                 else
                     cc += 1;
                 }
+            //a possible future optimization, but requires some changes in logic...
             //if(cellBucketInsideAngle(v, cx, cy, v1, v2, boxsize, Box)==false)continue;
 
             //check if there are any points in cellsns, if so do change, otherwise go for next bin
@@ -788,7 +772,7 @@ __host__ __device__ void get_oneRing_function(int kidx,
 
             for(aa = 0; aa < d_cell_sizes[bin]; ++aa) //check points in cell
                 {
-                newidx = d_cell_idx[cli(aa,bin)];
+                newidx = ldgHD(&d_cell_idx[cli(aa,bin)]);
                 if(newidx == kidx || newidx == P_idx[baseIdx]) continue;
                 bool skipPoint = false;
                 for (int pidx = jj; pidx < poly_size; ++pidx)
@@ -797,7 +781,7 @@ __host__ __device__ void get_oneRing_function(int kidx,
                 //6-Compute the half-plane Hv defined by the bissector of v and c, containing c
                 //how far is the point from the circumcircle's center?
                 rr=currentRadius*currentRadius;
-                Box.minDist(d_pt[newidx], v, disp); //disp = vector between new point and the point we're constructing the one ring of
+                Box.minDist(ldgHD(&d_pt[newidx]), v, disp); //disp = vector between new point and the point we're constructing the one ring of
                 Box.minDist(disp,currentQ,pt1); // pt1 gets overwritten by vector between new point and Pi's circumcenter
                 if(pt1.x*pt1.x+pt1.y*pt1.y>rr)continue;
                 //calculate half-plane bissector
@@ -820,7 +804,7 @@ __host__ __device__ void get_oneRing_function(int kidx,
                 //7-Q<-Hv intersect Q
                 //8-Update P, based on Q (Algorithm 2)      
                 cx = checkCW(0.5*disp.x,0.5*disp.y,xx,yy,0.,0.);
-                if(cx== checkCW(0.5*disp.x, 0.5*disp.y,xx,yy,Q[baseIdx+jj].x,Q[baseIdx+jj].y))
+                if(cx== checkCW(0.5*disp.x, 0.5*disp.y,xx,yy,currentQ.x,currentQ.y))
                     continue;
 
                 //Remove the voronoi test points on the opposite half sector from the cell v

@@ -52,6 +52,17 @@ using namespace std;
 #define Floor floor
 #define Ceil ceil
 
+//texture load templating correctly for old cuda devices and host functions
+template<typename T>
+__host__ __device__ __forceinline__ T ldgHD(const T* ptr)
+    {
+    #if __CUDA_ARCH__ >=350
+        return __ldg(ptr);
+    #else
+        return *ptr;
+    #endif
+    }
+
 //! a file for defining operations on double2's double3's,...  such as addition, equality, etc
 #include "vectorTypeOperations.h"
 
@@ -115,8 +126,8 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
     cudaGetDeviceCount(&nDev);
     if (USE_GPU >= nDev)
         {
-        cout << "Requested GPU (device " << USE_GPU<<") does not exist. Stopping triangulation" << endl;
-        return false;
+        cout << "Requested GPU (device " << USE_GPU<<") does not exist. switching to single-threaded CPU operation" << endl;
+        return chooseCPU(1,true);
         };
     if (USE_GPU <nDev)
         cudaSetDevice(USE_GPU);
