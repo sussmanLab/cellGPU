@@ -1,6 +1,6 @@
 # INSTALLATION {#install}
 
-Version 1.0 has switched to a cmake-based build system. Most dependencies can be apt-get installed, which is convenient, and 
+Version 1.0 has switched to a cmake-based build system. Most dependencies can be apt-get installed, which is convenient, and
 a script for installing netcdf locally is included. As noted below, you should have the include and lib of netcdf on your PATH and LD_LIBRARY_PATH,
 but as long as that's the case compilation should be straightforward. Just
 
@@ -19,14 +19,9 @@ number generation.
 Note that, thanks to the CGAL dependency (which, with some work, can be removed), your compiler needs to support
 features of C++14. This package has been tested with gcc-6 and gcc-7.5 (and equivalent g++ versions)
 
-The current iteration of the code was written using some features of C++11, and was compiled using
+The current iteration of the code was written using some features of C++14, and was compiled using
 CUDA-11.0. The code has been tested with CUDA versions as early as 6.5, and uses compute capability
-3.5 devices and higher. It ought to work on lower compute capability devices; compile without the
-"-arch=sm_35" flag to run on them.
-
-The Voronoi model branch uses the CGAL library; this dependency can be removed, if necessary, by monkeying
-with the code to run "fullTriangulation()" rather than "globalTriangulationCGAL()" in the relevant
-spots. This is highly discouraged, and the code may be much less stable as a result. 
+3.5 devices and higher.
 
 In any event,
 CGAL-5.0.2 was used, which in turn requires up-to-date versions of the gmp and mpfr libraries.
@@ -47,7 +42,7 @@ range of parameters.
 
 #Ubuntu installation
 
-Most requirements can be obtained by the usual apt-get method; netcdf is more finicky. 
+Most requirements can be obtained by the usual apt-get method; netcdf is more finicky.
 An install script is included in the cmakeHelp/ directory. Modify the directory paths to be more appropriate for your system,
 and use this if you prefer not to go through by hand the steps outlined on the netcdf page below. In
 any event, make sure that the includes and libraries for netcdf and netcdfcxx

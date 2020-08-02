@@ -5,12 +5,13 @@
 ## version 1.0.0
 
 * Inclusion of only-on-GPU operation of voronoi models.
-* (almost) all API remains the same -- "deprecated.h" was finally removed, so if you used
-very old class names you'll have to update them, but otherwise your code should work fine.
-BoxPtr has been changed to PeriodicBoxPtr, though.
+* openMP for cpu multithreaded operation
 * Switch to cmake build system -- see installation.md for details
 * Update cgal to use header-only versions
 * Retire the use of Dscalars... switching at compile time was never used, so now everything is a double
+* (almost) all API remains the same -- "deprecated.h" was finally removed, so if you used
+very old class names you'll have to update them, but otherwise your code should work fine.
+BoxPtr has been changed to PeriodicBoxPtr, though.
 
 ### version 0.8.1
 
