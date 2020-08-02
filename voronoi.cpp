@@ -107,6 +107,7 @@ int main(int argc, char*argv[])
     dynamicalFeatures dynFeat(spv->returnPositions(),spv->Box);
     logSpacedIntegers logInts(0,0.05);
     t1=clock();
+    cudaProfilerStart();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
@@ -118,6 +119,7 @@ int main(int argc, char*argv[])
             };
         sim->performTimestep();
         };
+    cudaProfilerStop();
     t2=clock();
     printf("final state:\t\t energy %f \t msd %f \t overlap %f\n",spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()));
     double steptime = (t2-t1)/(double)CLOCKS_PER_SEC/tSteps;

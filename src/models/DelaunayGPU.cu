@@ -313,7 +313,6 @@ __host__ __device__ void virtual_voronoi_calc_function(        int kidx,
                                               int* __restrict__ P_idx,
                                               double2* __restrict__ P,
                                               double2* __restrict__ Q,
-                                              double* __restrict__ Q_rad,
                                               int* __restrict__ d_neighnum,
                                               int Ncells,
                                               int xsize,
@@ -359,9 +358,8 @@ t6=0;
         P_idx[GPU_idx(m, kidx)]=-1;
         n=m+1;
         if(n>=poly_size)n-=poly_size;
-        Circumcircle(P[GPU_idx(m,kidx)],P[GPU_idx(n,kidx)], pt1, rr);
+        Circumcenter(P[GPU_idx(m,kidx)],P[GPU_idx(n,kidx)], pt1);
         Q[GPU_idx(m,kidx)]=pt1;
-        Q_rad[GPU_idx(m,kidx)]=rr;
         }
 #ifdef DEBUGFLAGUP
 t1=clock();
@@ -375,16 +373,12 @@ t1=clock();
 
     v = ldgHD(&d_pt[kidx]);
     bool flag=false,removeCCW,firstRemove;
-
+    double2 currentQ;
     int baseIdx = GPU_idx(0,kidx);
-    bool virtualPoints = true;
-    int whileLoopCounter =0;
-    while(virtualPoints && whileLoopCounter < 1)
-    {
-
     for(jj=0; jj<poly_size; jj++)
         {
-        currentRadius = Q_rad[GPU_idx(jj,kidx)];
+        currentQ = Q[GPU_idx(jj,kidx)];
+        currentRadius = norm(currentQ);
         pt1=v;//+Q[GPU_idx(jj,kidx)]; //absolute position (within box) of circumcenter
         Box.putInBoxReal(pt1);
         cell_x = (int)floor(pt1.x/boxsize) % xsize;
@@ -450,7 +444,7 @@ blah2+=1;
                     //how far is the point from the circumcircle's center?
                     rr=currentRadius*currentRadius;
                     Box.minDist(ldgHD(&d_pt[newidx]), v, disp); //disp = vector between new point and the point we're constructing the one ring of
-                    Box.minDist(disp,Q[GPU_idx(jj, kidx)],pt1); // pt1 gets overwritten by vector between new point and Pi's circumcenter
+                    Box.minDist(disp,currentQ,pt1); // pt1 gets overwritten by vector between new point and Pi's circumcenter
                     if(pt1.x*pt1.x+pt1.y*pt1.y>rr)continue;
 #ifdef DEBUGFLAGUP
 blah3 +=1;
@@ -527,10 +521,6 @@ t1 += t4-t3;
                                         }
                                     for(pp=w; pp<poly_size-1; pp++)
                                         {
-                                        Q_rad[baseIdx+pp]=Q_rad[baseIdx+pp+1];
-                                        }
-                                    for(pp=w; pp<poly_size-1; pp++)
-                                        {
                                         P_idx[baseIdx+pp]=P_idx[baseIdx+pp+1];
                                         }
                                     poly_size--;
@@ -564,8 +554,8 @@ t2=clock();
                         m=(j+2)%poly_size;
                     else 
                         m=(j+1)%poly_size;
-                    Circumcircle(P[GPU_idx(j,kidx)], disp, pt1, xx);
-                    Circumcircle(disp, P[GPU_idx(m,kidx)], pt2, yy);
+                    Circumcenter(P[GPU_idx(j,kidx)], disp, pt1);
+                    Circumcenter(disp, P[GPU_idx(m,kidx)], pt2);
                     if(removed==1)
                         {
                         poly_size++;
@@ -573,19 +563,16 @@ t2=clock();
                             {
                             Q[GPU_idx(pp+1,kidx)]=Q[GPU_idx(pp,kidx)];
                             P[GPU_idx(pp+1,kidx)]=P[GPU_idx(pp,kidx)];
-                            Q_rad[GPU_idx(pp+1,kidx)]=Q_rad[GPU_idx(pp,kidx)];
                             P_idx[GPU_idx(pp+1,kidx)]=P_idx[GPU_idx(pp,kidx)];
                             }
                         }
 
                     m=(j+1)%poly_size;
                     Q[GPU_idx(m,kidx)]=pt2;
-                    Q_rad[GPU_idx(m,kidx)]=yy;
                     P[GPU_idx(m,kidx)]=disp;
                     P_idx[GPU_idx(m,kidx)]=newidx;
 
                     Q[GPU_idx(j,kidx)]=pt1;
-                    Q_rad[GPU_idx(j,kidx)]=xx;
                     flag=true;
 #ifdef DEBUGFLAGUP
 t7 += clock()-t2;
@@ -600,14 +587,6 @@ t7 += clock()-t2;
             flag=false;
             }
         }//end iterative loop over all edges of the 1-ring
-    virtualPoints = false;
-    whileLoopCounter +=1;
-    for (int pCheck = 0; pCheck < poly_size; ++pCheck)
-        {
-        if(P_idx[GPU_idx(pCheck,kidx)] == -1)
-            virtualPoints = true;
-        }
-    }//end while loop
 
     d_neighnum[kidx]=poly_size;
 #ifdef DEBUGFLAGUP
@@ -626,7 +605,6 @@ __global__ void gpu_voronoi_calc_no_sort_kernel(const double2* __restrict__ d_pt
                                               int* __restrict__ P_idx,
                                               double2* __restrict__ P,
                                               double2* __restrict__ Q,
-                                              double* __restrict__ Q_rad,
                                               int* __restrict__ d_neighnum,
                                               int Ncells,
                                               int xsize,
@@ -644,7 +622,7 @@ __global__ void gpu_voronoi_calc_no_sort_kernel(const double2* __restrict__ d_pt
     if(d_fixlist[tidx] >= 0)
         {
         virtual_voronoi_calc_function(tidx,d_pt,d_cell_sizes,d_cell_idx,
-                          P_idx, P, Q, Q_rad,
+                          P_idx, P, Q,
                           d_neighnum,
                           Ncells, xsize,ysize, boxsize,Box,
                           ci,cli,GPU_idx);
@@ -665,7 +643,6 @@ __global__ void gpu_voronoi_calc_global_kernel(const double2* __restrict__ d_pt,
                                               int* __restrict__ P_idx,
                                               double2* __restrict__ P,
                                               double2* __restrict__ Q,
-                                              double* __restrict__ Q_rad,
                                               int* __restrict__ d_neighnum,
                                               int Ncells,
                                               int xsize,
@@ -681,7 +658,7 @@ __global__ void gpu_voronoi_calc_global_kernel(const double2* __restrict__ d_pt,
     if (tidx >= Ncells)return;
 
     virtual_voronoi_calc_function(tidx,d_pt,d_cell_sizes,d_cell_idx,
-                          P_idx, P, Q, Q_rad,
+                          P_idx, P, Q, 
                           d_neighnum,
                           Ncells, xsize,ysize, boxsize,Box,
                           ci,cli,GPU_idx);
@@ -698,7 +675,6 @@ __host__ __device__ void get_oneRing_function(int kidx,
                 int* __restrict__ P_idx,
                 double2* __restrict__ P,
                 double2* __restrict__ Q,
-                double* __restrict__ Q_rad,
                 int* __restrict__ d_neighnum,
                 int Ncells,
                 int xsize,
@@ -726,13 +702,11 @@ __host__ __device__ void get_oneRing_function(int kidx,
     for(jj=0; jj<poly_size; jj++)
         {
         currentQ = Q[baseIdx+jj];
+        currentRadius = norm(currentQ);
         pt1=v+currentQ; //absolute position (within box) of circumcenter
-        //v1=P[GPU_idx(jj, kidx)];
-        //v2=P[GPU_idx((jj+1)%poly_size, kidx)];
         Box.putInBoxReal(pt1);
 
         //check neighbours of Q's cell inside the circumcircle
-        currentRadius = Q_rad[baseIdx+jj];
         cell_x = (int)floor(pt1.x/boxsize) % xsize;
         cell_y = (int)floor(pt1.y/boxsize) % ysize;
         cell_rad = min((int) ceil(currentRadius/boxsize),xsize/2);
@@ -854,10 +828,6 @@ __host__ __device__ void get_oneRing_function(int kidx,
                                     }
                                 for(pp=w; pp<poly_size-1; pp++)
                                     {
-                                    Q_rad[baseIdx+pp]=Q_rad[baseIdx+pp+1];
-                                    }
-                                for(pp=w; pp<poly_size-1; pp++)
-                                    {
                                     P_idx[baseIdx+pp]=P_idx[baseIdx+pp+1];
                                     }
                                 poly_size--;
@@ -887,11 +857,10 @@ __host__ __device__ void get_oneRing_function(int kidx,
                     m=(j+2)%poly_size;
                 else 
                     m=(j+1)%poly_size;
-                Circumcircle(P[baseIdx+j], disp, pt1, xx);
-                Circumcircle(disp, P[baseIdx+m], pt2, yy);
+                Circumcenter(P[baseIdx+j], disp, pt1);
+                Circumcenter(disp, P[baseIdx+m], pt2);
                 if(removed==1)
                     {
-                    //if(kidx ==18 ) printf("kidx %i shifting poly by %i\n",kidx,poly_size-1-j);
                     poly_size++;
                     #ifdef __CUDA_ARCH__
                     if(poly_size > currentMaxNeighbors)
@@ -908,31 +877,26 @@ __host__ __device__ void get_oneRing_function(int kidx,
                         case 1:
                             rotateInMemoryRight<double2, 1>(Q,baseIdx,j,rotationSize);
                             rotateInMemoryRight<double2, 1>(P,baseIdx,j,rotationSize);
-                            rotateInMemoryRight<double,1>(Q_rad,baseIdx,j,rotationSize);
                             rotateInMemoryRight<int, 1>(P_idx,baseIdx,j,rotationSize);
                             break;
                         case 2:
                             rotateInMemoryRight<double2, 2>(Q,baseIdx,j,rotationSize);
                             rotateInMemoryRight<double2, 2>(P,baseIdx,j,rotationSize);
-                            rotateInMemoryRight<double,2>(Q_rad,baseIdx,j,rotationSize);
                             rotateInMemoryRight<int, 2>(P_idx,baseIdx,j,rotationSize);
                             break;
                         case 3:
                             rotateInMemoryRight<double2, 3>(Q,baseIdx,j,rotationSize);
                             rotateInMemoryRight<double2, 3>(P,baseIdx,j,rotationSize);
-                            rotateInMemoryRight<double,3>(Q_rad,baseIdx,j,rotationSize);
                             rotateInMemoryRight<int, 3>(P_idx,baseIdx,j,rotationSize);
                             break;
                         case 4:
                             rotateInMemoryRight<double2, 4>(Q,baseIdx,j,rotationSize);
                             rotateInMemoryRight<double2, 4>(P,baseIdx,j,rotationSize);
-                            rotateInMemoryRight<double,4>(Q_rad,baseIdx,j,rotationSize);
                             rotateInMemoryRight<int, 4>(P_idx,baseIdx,j,rotationSize);
                             break;
                         default:
                             rotateInMemoryRight(Q,baseIdx,j,rotationSize);
                             rotateInMemoryRight(P,baseIdx,j,rotationSize);
-                            rotateInMemoryRight(Q_rad,baseIdx,j,rotationSize);
                             rotateInMemoryRight(P_idx,baseIdx,j,rotationSize);
                         }
                     #else
@@ -940,7 +904,6 @@ __host__ __device__ void get_oneRing_function(int kidx,
                         {
                         Q[GPU_idx(pp+1,kidx)]=Q[GPU_idx(pp,kidx)];
                         P[GPU_idx(pp+1,kidx)]=P[GPU_idx(pp,kidx)];
-                        Q_rad[GPU_idx(pp+1,kidx)]=Q_rad[GPU_idx(pp,kidx)];
                         P_idx[GPU_idx(pp+1,kidx)]=P_idx[GPU_idx(pp,kidx)];
                         }
                     #endif
@@ -948,8 +911,6 @@ __host__ __device__ void get_oneRing_function(int kidx,
                 m=(j+1)%poly_size;
                 Q[baseIdx+m]=pt2;
                 Q[baseIdx+j]=pt1;
-                Q_rad[baseIdx+m]=yy;
-                Q_rad[baseIdx+j]=xx;
 
                 P[baseIdx+m]=disp;
                 P_idx[baseIdx+m]=newidx;
@@ -978,7 +939,6 @@ __global__ void gpu_get_neighbors_no_sort_kernel(const double2* __restrict__ d_p
                 int* __restrict__ P_idx,
                 double2* __restrict__ P,
                 double2* __restrict__ Q,
-                double* __restrict__ Q_rad,
                 int* __restrict__ d_neighnum,
                 int Ncells,
                 int xsize,
@@ -1000,7 +960,7 @@ __global__ void gpu_get_neighbors_no_sort_kernel(const double2* __restrict__ d_p
     if(d_fixlist[tidx] <0)
         return;
 
-    get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx, P,Q,Q_rad,d_neighnum, Ncells,xsize,ysize,boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,maximumNeighborNum);
+    get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx, P,Q,d_neighnum, Ncells,xsize,ysize,boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,maximumNeighborNum);
 
     return;
     }//end function
@@ -1015,7 +975,6 @@ __global__ void gpu_get_neighbors_global_kernel(const double2* __restrict__ d_pt
                 int* __restrict__ P_idx,
                 double2* __restrict__ P,
                 double2* __restrict__ Q,
-                double* __restrict__ Q_rad,
                 int* __restrict__ d_neighnum,
                 int Ncells,
                 int xsize,
@@ -1032,7 +991,7 @@ __global__ void gpu_get_neighbors_global_kernel(const double2* __restrict__ d_pt
     unsigned int tidx = blockDim.x * blockIdx.x + threadIdx.x;
     if (tidx >= Ncells)return;
 
-    get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx, P,Q,Q_rad,d_neighnum, Ncells,xsize,ysize,boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,maximumNeighborNum);
+    get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx, P,Q,d_neighnum, Ncells,xsize,ysize,boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,maximumNeighborNum);
         
     return;
     }//end function
@@ -1071,7 +1030,6 @@ bool gpu_voronoi_calc_no_sort(double2* d_pt,
                       int* P_idx,
                       double2* P,
                       double2* Q,
-                      double* Q_rad,
                       int* d_neighnum,
                       int Ncells,
                       int xsize,
@@ -1098,7 +1056,6 @@ bool gpu_voronoi_calc_no_sort(double2* d_pt,
                         P_idx,
                         P,
                         Q,
-                        Q_rad,
                         d_neighnum,
                         Ncells,
                         xsize,
@@ -1124,7 +1081,7 @@ bool gpu_voronoi_calc_no_sort(double2* d_pt,
                 {
                 if(d_fixlist[tidx]>=0)
                     virtual_voronoi_calc_function(tidx,d_pt,d_cell_sizes,d_cell_idx,
-                      P_idx, P, Q, Q_rad,
+                      P_idx, P, Q,
                       d_neighnum,
                       Ncells, xsize,ysize, boxsize,Box,
                       ci,cli,GPU_idx);
@@ -1137,7 +1094,7 @@ bool gpu_voronoi_calc_no_sort(double2* d_pt,
                 {
                 if(d_fixlist[tidx]>=0)
                     virtual_voronoi_calc_function(tidx,d_pt,d_cell_sizes,d_cell_idx,
-                      P_idx, P, Q, Q_rad,
+                      P_idx, P, Q,
                       d_neighnum,
                       Ncells, xsize,ysize, boxsize,Box,
                       ci,cli,GPU_idx);
@@ -1153,7 +1110,6 @@ bool gpu_voronoi_calc(double2* d_pt,
                 int* P_idx,
                 double2* P,
                 double2* Q,
-                double* Q_rad,
                 int* d_neighnum,
                 int Ncells,
                 int xsize,
@@ -1180,7 +1136,6 @@ bool gpu_voronoi_calc(double2* d_pt,
                         P_idx,
                         P,
                         Q,
-                        Q_rad,
                         d_neighnum,
                         Ncells,
                         xsize,
@@ -1205,7 +1160,7 @@ bool gpu_voronoi_calc(double2* d_pt,
 	        {
             for(int tidx=0; tidx<Ncells; tidx++)
                  virtual_voronoi_calc_function(tidx,d_pt,d_cell_sizes,d_cell_idx,
-                          P_idx, P, Q, Q_rad,
+                          P_idx, P, Q,
                           d_neighnum,
                           Ncells, xsize,ysize, boxsize,Box,
                           ci,cli,GPU_idx);
@@ -1215,7 +1170,7 @@ bool gpu_voronoi_calc(double2* d_pt,
 	        #pragma omp parallel for num_threads(OMPThreadsNum)
             for(int tidx=0; tidx<Ncells; tidx++)
                  virtual_voronoi_calc_function(tidx,d_pt,d_cell_sizes,d_cell_idx,
-                          P_idx, P, Q, Q_rad,
+                          P_idx, P, Q,
                           d_neighnum,
                           Ncells, xsize,ysize, boxsize,Box,
                           ci,cli,GPU_idx);
@@ -1230,7 +1185,6 @@ bool gpu_get_neighbors_no_sort(double2* d_pt, //the point set
                 int* P_idx,//index of Del Neighbors
                 double2* P,//location del neighborPositions
                 double2* Q,//voronoi vertex positions
-                double* Q_rad,//radius? associated with voro vertex
                 int* d_neighnum,//number of del neighbors
                 int Ncells,
                 int xsize,
@@ -1253,7 +1207,7 @@ bool gpu_get_neighbors_no_sort(double2* d_pt, //the point set
     if(GPUcompute==true)
         {
         gpu_get_neighbors_no_sort_kernel<<<nblocks,block_size>>>(
-                      d_pt,d_cell_sizes,d_cell_idx,P_idx,P,Q,Q_rad,d_neighnum,Ncells,xsize,ysize,
+                      d_pt,d_cell_sizes,d_cell_idx,P_idx,P,Q,d_neighnum,Ncells,xsize,ysize,
                       boxsize,Box,ci,cli,d_fixlist,GPU_idx,maximumNeighborNum,currentMaxNeighborNum
                       );
 
@@ -1271,7 +1225,7 @@ bool gpu_get_neighbors_no_sort(double2* d_pt, //the point set
                 {
                 if(d_fixlist[tidx]>=0)
                     get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx,
-                                 P,Q,Q_rad,d_neighnum, Ncells,xsize,ysize,
+                                 P,Q,d_neighnum, Ncells,xsize,ysize,
                                  boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,
                                  maximumNeighborNum);
                 }
@@ -1283,7 +1237,7 @@ bool gpu_get_neighbors_no_sort(double2* d_pt, //the point set
                 {
                 if(d_fixlist[tidx]>=0)
                     get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx, 
-                                 P,Q,Q_rad,d_neighnum, Ncells,xsize,ysize,
+                                 P,Q,d_neighnum, Ncells,xsize,ysize,
                                  boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,
                                  maximumNeighborNum);
                 }
@@ -1298,7 +1252,6 @@ bool gpu_get_neighbors(double2* d_pt, //the point set
                 int* P_idx,//index of Del Neighbors
                 double2* P,//location del neighborPositions
                 double2* Q,//voronoi vertex positions
-                double* Q_rad,//radius? associated with voro vertex
                 int* d_neighnum,//number of del neighbors
                 int Ncells,
                 int xsize,
@@ -1321,7 +1274,7 @@ bool gpu_get_neighbors(double2* d_pt, //the point set
     if(GPUcompute==true)
         {
         gpu_get_neighbors_global_kernel<<<nblocks,block_size>>>(
-                      d_pt,d_cell_sizes,d_cell_idx,P_idx,P,Q,Q_rad,d_neighnum,
+                      d_pt,d_cell_sizes,d_cell_idx,P_idx,P,Q,d_neighnum,
                       Ncells,xsize,ysize,boxsize,Box,ci,cli,GPU_idx,maximumNeighborNum,currentMaxNeighborNum
                       );
 
@@ -1337,7 +1290,7 @@ bool gpu_get_neighbors(double2* d_pt, //the point set
 	        {
             for(int tidx=0; tidx<Ncells; tidx++)
                 get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx,
-                                 P,Q,Q_rad,d_neighnum, Ncells,xsize,ysize,
+                                 P,Q,d_neighnum, Ncells,xsize,ysize,
                                  boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,
                                  maximumNeighborNum);
 	        }
@@ -1346,7 +1299,7 @@ bool gpu_get_neighbors(double2* d_pt, //the point set
 	        #pragma omp parallel for num_threads(OMPThreadsNum)
             for(int tidx=0; tidx<Ncells; tidx++)
                 get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx, 
-                                 P,Q,Q_rad,d_neighnum, Ncells,xsize,ysize,
+                                 P,Q,d_neighnum, Ncells,xsize,ysize,
                                  boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,
                                  maximumNeighborNum);
 	        }

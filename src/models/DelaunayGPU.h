@@ -99,8 +99,6 @@ class DelaunayGPU
 
         //!A helper array containing the positions of the delaunay positions associated with every 1-ring of neighboring points
         GPUArray<double2> GPUDelNeighsPos;
-        //!A helper array containing the size of circumcircles associated with point(kidx) and GPUDelNeighsPos(kidx,i) and GPUDelNeighsPos(kidx,i+1)
-        GPUArray<double> GPUVoroCurRad;
         //!A helper array containing the indices of the points forming the 1-ring of each point
         GPUArray<int> GPUPointIndx;
         //!A helper array for the testAndRepair branch containing indices of points forming circumcircles

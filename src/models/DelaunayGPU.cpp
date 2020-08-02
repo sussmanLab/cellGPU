@@ -43,7 +43,6 @@ void DelaunayGPU::resize(const int nmax)
     MaxSize=nmax;
     GPUVoroCur.resize(nmax*Ncells);
     GPUDelNeighsPos.resize(nmax*Ncells);
-    GPUVoroCurRad.resize(nmax*Ncells);
     GPUPointIndx.resize(nmax*Ncells);
     GPU_idx = Index2D(nmax,Ncells);
     }
@@ -169,7 +168,6 @@ void DelaunayGPU::voronoiCalcRepairList_CPU(GPUArray<double2> &points, GPUArray<
 
     ArrayHandle<double2> d_Q(GPUVoroCur,access_location::host,access_mode::readwrite);
     ArrayHandle<double2> d_P(GPUDelNeighsPos,access_location::host,access_mode::readwrite);
-    ArrayHandle<double> d_Q_rad(GPUVoroCurRad,access_location::host,access_mode::readwrite);
 
     gpu_voronoi_calc_no_sort(d_pt.data,
                         d_cell_sizes.data,
@@ -177,7 +175,6 @@ void DelaunayGPU::voronoiCalcRepairList_CPU(GPUArray<double2> &points, GPUArray<
                         d_P_idx.data,
                         d_P.data,
                         d_Q.data,
-                        d_Q_rad.data,
                         d_neighnum.data,
                         Ncells,
                         cList.getXsize(),
@@ -207,7 +204,6 @@ void DelaunayGPU::Voronoi_Calc_CPU(GPUArray<double2> &points, GPUArray<int> &GPU
 
     ArrayHandle<double2> d_Q(GPUVoroCur,access_location::host,access_mode::overwrite);
     ArrayHandle<double2> d_P(GPUDelNeighsPos,access_location::host,access_mode::overwrite);
-    ArrayHandle<double> d_Q_rad(GPUVoroCurRad,access_location::host,access_mode::overwrite);
 
     gpu_voronoi_calc(d_pt.data,
                         d_cell_sizes.data,
@@ -215,7 +211,6 @@ void DelaunayGPU::Voronoi_Calc_CPU(GPUArray<double2> &points, GPUArray<int> &GPU
                         d_P_idx.data,
                         d_P.data,
                         d_Q.data,
-                        d_Q_rad.data,
                         d_neighnum.data,
                         Ncells,
                         cList.getXsize(),
@@ -247,7 +242,6 @@ bool DelaunayGPU::computeTriangulationRepairList_CPU(GPUArray<double2> &points, 
 
         ArrayHandle<double2> d_Q(GPUVoroCur,access_location::host,access_mode::readwrite);
         ArrayHandle<double2> d_P(GPUDelNeighsPos,access_location::host,access_mode::readwrite);
-        ArrayHandle<double> d_Q_rad(GPUVoroCurRad,access_location::host,access_mode::readwrite);
         ArrayHandle<int> d_ms(maxOneRingSize, access_location::host,access_mode::readwrite);
 
         gpu_get_neighbors_no_sort(d_pt.data,
@@ -256,7 +250,6 @@ bool DelaunayGPU::computeTriangulationRepairList_CPU(GPUArray<double2> &points, 
                                 d_P_idx.data,
                                 d_P.data,
                                 d_Q.data,
-                                d_Q_rad.data,
                                 d_neighnum.data,
                                 Ncells,
                                 cList.getXsize(),
@@ -307,7 +300,6 @@ bool DelaunayGPU::get_neighbors_CPU(GPUArray<double2> &points, GPUArray<int> &GP
 
         ArrayHandle<double2> d_Q(GPUVoroCur,access_location::host,access_mode::readwrite);
         ArrayHandle<double2> d_P(GPUDelNeighsPos,access_location::host,access_mode::readwrite);
-        ArrayHandle<double> d_Q_rad(GPUVoroCurRad,access_location::host,access_mode::readwrite);
         ArrayHandle<int> d_ms(maxOneRingSize, access_location::host,access_mode::readwrite);
 
         gpu_get_neighbors(d_pt.data,
@@ -316,7 +308,6 @@ bool DelaunayGPU::get_neighbors_CPU(GPUArray<double2> &points, GPUArray<int> &GP
                          d_P_idx.data,
                          d_P.data,
                          d_Q.data,
-                         d_Q_rad.data,
                          d_neighnum.data,
                          Ncells,
                          cList.getXsize(),
@@ -402,7 +393,6 @@ void DelaunayGPU::voronoiCalcRepairList(GPUArray<double2> &points, GPUArray<int>
 
     ArrayHandle<double2> d_Q(GPUVoroCur,access_location::device,access_mode::readwrite);
     ArrayHandle<double2> d_P(GPUDelNeighsPos,access_location::device,access_mode::readwrite);
-    ArrayHandle<double> d_Q_rad(GPUVoroCurRad,access_location::device,access_mode::readwrite);
 
     gpu_voronoi_calc_no_sort(d_pt.data,
                         d_cell_sizes.data,
@@ -410,7 +400,6 @@ void DelaunayGPU::voronoiCalcRepairList(GPUArray<double2> &points, GPUArray<int>
                         d_P_idx.data,
                         d_P.data,
                         d_Q.data,
-                        d_Q_rad.data,
                         d_neighnum.data,
                         Ncells,
                         cList.getXsize(),
@@ -440,7 +429,6 @@ void DelaunayGPU::Voronoi_Calc(GPUArray<double2> &points, GPUArray<int> &GPUTria
 
     ArrayHandle<double2> d_Q(GPUVoroCur,access_location::device,access_mode::overwrite);
     ArrayHandle<double2> d_P(GPUDelNeighsPos,access_location::device,access_mode::overwrite);
-    ArrayHandle<double> d_Q_rad(GPUVoroCurRad,access_location::device,access_mode::overwrite);
 
     gpu_voronoi_calc(d_pt.data,
                         d_cell_sizes.data,
@@ -448,7 +436,6 @@ void DelaunayGPU::Voronoi_Calc(GPUArray<double2> &points, GPUArray<int> &GPUTria
                         d_P_idx.data,
                         d_P.data,
                         d_Q.data,
-                        d_Q_rad.data,
                         d_neighnum.data,
                         Ncells,
                         cList.getXsize(),
@@ -479,7 +466,6 @@ bool DelaunayGPU::computeTriangulationRepairList(GPUArray<double2> &points, GPUA
 
         ArrayHandle<double2> d_Q(GPUVoroCur,access_location::device,access_mode::readwrite);
         ArrayHandle<double2> d_P(GPUDelNeighsPos,access_location::device,access_mode::readwrite);
-        ArrayHandle<double> d_Q_rad(GPUVoroCurRad,access_location::device,access_mode::readwrite);
         ArrayHandle<int> d_ms(maxOneRingSize, access_location::device,access_mode::readwrite);
 
         gpu_get_neighbors_no_sort(d_pt.data,
@@ -488,7 +474,6 @@ bool DelaunayGPU::computeTriangulationRepairList(GPUArray<double2> &points, GPUA
                                  d_P_idx.data,
                                  d_P.data,
                                  d_Q.data,
-                                 d_Q_rad.data,
                                  d_neighnum.data,
                                  Ncells,
                                  cList.getXsize(),
@@ -503,7 +488,7 @@ bool DelaunayGPU::computeTriangulationRepairList(GPUArray<double2> &points, GPUA
                                  currentMaxOneRingSize,
                                  GPUcompute,
                                  OMPThreadsNum
-                                         );
+                                 );
         }
     if(safetyMode)
         {
@@ -539,7 +524,6 @@ bool DelaunayGPU::get_neighbors(GPUArray<double2> &points, GPUArray<int> &GPUTri
 
         ArrayHandle<double2> d_Q(GPUVoroCur,access_location::device,access_mode::readwrite);
         ArrayHandle<double2> d_P(GPUDelNeighsPos,access_location::device,access_mode::readwrite);
-        ArrayHandle<double> d_Q_rad(GPUVoroCurRad,access_location::device,access_mode::readwrite);
         ArrayHandle<int> d_ms(maxOneRingSize, access_location::device,access_mode::readwrite);
 
         gpu_get_neighbors(d_pt.data,
@@ -548,7 +532,6 @@ bool DelaunayGPU::get_neighbors(GPUArray<double2> &points, GPUArray<int> &GPUTri
                           d_P_idx.data,
                           d_P.data,
                           d_Q.data,
-                          d_Q_rad.data,
                           d_neighnum.data,
                           Ncells,
                           cList.getXsize(),
