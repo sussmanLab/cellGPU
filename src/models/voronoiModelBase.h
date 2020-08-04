@@ -80,6 +80,8 @@ class voronoiModelBase : public Simple2DActiveCell
         void updateCellList();
         //!update the NieghIdxs data structure
         void updateNeighIdxs();
+        //set number of threads
+        virtual void setOmpThreads(int _number){ompThreadNum = _number;delGPU.setOmpThreads(_number);};
 
     //protected functions
     protected:

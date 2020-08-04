@@ -56,6 +56,10 @@ class updater
         //!allow all updaters to potentially implement an internal time scale
         virtual void setDeltaT(double dt){};
 
+        //!Allow a openMP threads
+        int ompThreadNum = 1;
+        //set number of threads
+        virtual void setOmpThreads(int _number){ompThreadNum = _number;};
     protected:
         //!The period of the updater... the updater will work every Period timesteps
         int Period;

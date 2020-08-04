@@ -6,7 +6,6 @@
 #include "simpleEquationOfMotion.h"
 #include "updater.h"
 #include "periodicBoundaries.h"
-#include "cellListGPU.h"
 
 /*! \file Simulation.h */
 
@@ -51,11 +50,6 @@ class Simulation : public enable_shared_from_this<Simulation>
         //!This changes the contents of the Box pointed to by Box to match that of _box
         void setBox(PeriodicBoxPtr _box);
 
-        //!A neighbor list assisting the simulation
-        cellListGPU *cellList;;
-        //!Pass in a reference to the box
-        void setCellList(cellListGPU &_cl){cellList = &_cl;};
-
         //!Set the simulation timestep
         void setIntegrationTimestep(double dt);
         //!turn on CPU-only mode for all components
@@ -78,6 +72,11 @@ class Simulation : public enable_shared_from_this<Simulation>
         double integrationTimestep;
         //! A flag controlling whether to use the GPU
         bool USE_GPU;
+
+        //!Allow a openMP threads
+        int ompThreadNum = 1;
+        //set number of threads
+        virtual void setOmpThreads(int _number);
 
     protected:
         //! Determines how frequently the spatial sorter be called...once per sortPeriod Timesteps. When sortPeriod < 0 no sorting occurs

@@ -63,6 +63,28 @@ __host__ __device__ __forceinline__ T ldgHD(const T* ptr)
     #endif
     }
 
+/*!
+omp Template: loop over the function with omp or not
+the syntax requires that the first argument of the function is the "index" of whatever the function acts on.
+So, if the function is f(int, double, double,Index2D,...) then this template function should be called by:
+ompFunctionLoop(ompThreadNum,maxIdx, f, double, double,Index2D,...).
+*/
+template< typename... Args>
+void ompFunctionLoop(int nThreads, int maxIdx, void (*fPointer)(int, Args...), Args... args)
+    {
+    if(nThreads == 1)
+        {
+        for(int idx = 0; idx < maxIdx; ++idx)
+            fPointer(idx,args...);
+        }
+    else
+        {
+	    #pragma omp parallel for num_threads(nThreads)
+        for(int idx = 0; idx < maxIdx; ++idx)
+            fPointer(idx,args...);
+        }
+    };
+
 //! a file for defining operations on double2's double3's,...  such as addition, equality, etc
 #include "vectorTypeOperations.h"
 

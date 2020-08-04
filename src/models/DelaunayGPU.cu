@@ -57,102 +57,111 @@ template<>
 __device__ inline void rotateInMemoryRight<double2,2>( double2 *inList, int saveIdx, int rotationOffset,int rotationSize)
     {
     double2 temp1,temp2;
-    temp1 = inList[saveIdx+rotationSize+rotationOffset-1];
-    temp2 = inList[saveIdx+rotationSize+rotationOffset];
-    inList[saveIdx+rotationSize+rotationOffset] = temp1;
-    inList[saveIdx+rotationSize+rotationOffset+1] = temp2;
+    int baseIdx = saveIdx+rotationSize+rotationOffset;
+    temp1 = inList[baseIdx-1];
+    temp2 = inList[baseIdx];
+    inList[baseIdx] = temp1;
+    inList[baseIdx+1] = temp2;
     };
 template<>
 __device__ inline void rotateInMemoryRight<double,2>(double *inList, int saveIdx, int rotationOffset,int rotationSize)
     {
     double2 temp;
-    temp.x = inList[saveIdx+rotationSize+rotationOffset-1];
-    temp.y = inList[saveIdx+rotationSize+rotationOffset];
-    inList[saveIdx+rotationSize+rotationOffset] = temp.x;
-    inList[saveIdx+rotationSize+rotationOffset+1] = temp.y;
+    int baseIdx = saveIdx+rotationSize+rotationOffset;
+    temp.x = inList[baseIdx-1];
+    temp.y = inList[baseIdx];
+    inList[baseIdx] = temp.x;
+    inList[baseIdx+1] = temp.y;
     };
 
 template<>
 __device__ inline void rotateInMemoryRight<int,2>( int *inList, int saveIdx, int rotationOffset,int rotationSize)
     {
     int2 temp;
-    temp.x = inList[saveIdx+rotationSize+rotationOffset-1];
-    temp.y = inList[saveIdx+rotationSize+rotationOffset];
-    inList[saveIdx+rotationSize+rotationOffset] = temp.x;
-    inList[saveIdx+rotationSize+rotationOffset+1] = temp.y;
+    int baseIdx = saveIdx+rotationSize+rotationOffset;
+    temp.x = inList[baseIdx-1];
+    temp.y = inList[baseIdx];
+    inList[baseIdx] = temp.x;
+    inList[baseIdx+1] = temp.y;
     };
 template<>
 __device__ inline void rotateInMemoryRight<double2,3>( double2 *inList, int saveIdx, int rotationOffset,int rotationSize)
     {
     double2 temp1,temp2,temp3;
-    temp1 = inList[saveIdx+rotationSize+rotationOffset-2];
-    temp2 = inList[saveIdx+rotationSize+rotationOffset-1];
-    temp3 = inList[saveIdx+rotationSize+rotationOffset];
-    inList[saveIdx+rotationSize+rotationOffset-1] = temp1;
-    inList[saveIdx+rotationSize+rotationOffset] = temp2;
-    inList[saveIdx+rotationSize+rotationOffset+1] = temp3;
+    int baseIdx = saveIdx+rotationSize+rotationOffset;
+    temp1 = inList[baseIdx-2];
+    temp2 = inList[baseIdx-1];
+    temp3 = inList[baseIdx];
+    inList[baseIdx-1] = temp1;
+    inList[baseIdx] = temp2;
+    inList[baseIdx+1] = temp3;
     };
 template<>
 __device__ inline void rotateInMemoryRight<double,3>(double *inList, int saveIdx, int rotationOffset,int rotationSize)
     {
     double3 temp;
-    temp.x = inList[saveIdx+rotationSize+rotationOffset-2];
-    temp.y = inList[saveIdx+rotationSize+rotationOffset-1];
-    temp.z = inList[saveIdx+rotationSize+rotationOffset];
-    inList[saveIdx+rotationSize+rotationOffset-1] = temp.x;
-    inList[saveIdx+rotationSize+rotationOffset] = temp.y;
-    inList[saveIdx+rotationSize+rotationOffset+1] = temp.z;
+    int baseIdx = saveIdx+rotationSize+rotationOffset;
+    temp.x = inList[baseIdx-2];
+    temp.y = inList[baseIdx-1];
+    temp.z = inList[baseIdx];
+    inList[baseIdx-1] = temp.x;
+    inList[baseIdx] = temp.y;
+    inList[baseIdx+1] = temp.z;
     };
 
 template<>
 __device__ inline void rotateInMemoryRight<int,3>( int *inList, int saveIdx, int rotationOffset,int rotationSize)
     {
     int3 temp;
-    temp.x = inList[saveIdx+rotationSize+rotationOffset-2];
-    temp.y = inList[saveIdx+rotationSize+rotationOffset-1];
-    temp.z = inList[saveIdx+rotationSize+rotationOffset];
-    inList[saveIdx+rotationSize+rotationOffset-1] = temp.x;
-    inList[saveIdx+rotationSize+rotationOffset] = temp.y;
-    inList[saveIdx+rotationSize+rotationOffset+1] = temp.z;
+    int baseIdx = saveIdx+rotationSize+rotationOffset;
+    temp.x = inList[baseIdx-2];
+    temp.y = inList[baseIdx-1];
+    temp.z = inList[baseIdx];
+    inList[baseIdx-1] = temp.x;
+    inList[baseIdx] = temp.y;
+    inList[baseIdx+1] = temp.z;
     };
 template<>
 __device__ inline void rotateInMemoryRight<double2,4>( double2 *inList, int saveIdx, int rotationOffset,int rotationSize)
     {
     double2 temp1,temp2,temp3,temp4;
-    temp1 = inList[saveIdx+rotationSize+rotationOffset-3];
-    temp2 = inList[saveIdx+rotationSize+rotationOffset-2];
-    temp3 = inList[saveIdx+rotationSize+rotationOffset-1];
-    temp4 = inList[saveIdx+rotationSize+rotationOffset];
-    inList[saveIdx+rotationSize+rotationOffset-2] = temp1;
-    inList[saveIdx+rotationSize+rotationOffset-1] = temp2;
-    inList[saveIdx+rotationSize+rotationOffset] = temp3;
-    inList[saveIdx+rotationSize+rotationOffset+1] = temp4;
+    int baseIdx = saveIdx+rotationSize+rotationOffset;
+    temp1 = inList[baseIdx-3];
+    temp2 = inList[baseIdx-2];
+    temp3 = inList[baseIdx-1];
+    temp4 = inList[baseIdx];
+    inList[baseIdx-2] = temp1;
+    inList[baseIdx-1] = temp2;
+    inList[baseIdx] = temp3;
+    inList[baseIdx+1] = temp4;
     };
 template<>
 __device__ inline void rotateInMemoryRight<double,4>(double *inList, int saveIdx, int rotationOffset,int rotationSize)
     {
     double4 temp;
-    temp.x = inList[saveIdx+rotationSize+rotationOffset-3];
-    temp.y = inList[saveIdx+rotationSize+rotationOffset-2];
-    temp.z = inList[saveIdx+rotationSize+rotationOffset-1];
-    temp.w = inList[saveIdx+rotationSize+rotationOffset];
-    inList[saveIdx+rotationSize+rotationOffset-2] = temp.x;
-    inList[saveIdx+rotationSize+rotationOffset-1] = temp.y;
-    inList[saveIdx+rotationSize+rotationOffset] = temp.z;
-    inList[saveIdx+rotationSize+rotationOffset+1] = temp.w;
+    int baseIdx = saveIdx+rotationSize+rotationOffset;
+    temp.x = inList[baseIdx-3];
+    temp.y = inList[baseIdx-2];
+    temp.z = inList[baseIdx-1];
+    temp.w = inList[baseIdx];
+    inList[baseIdx-2] = temp.x;
+    inList[baseIdx-1] = temp.y;
+    inList[baseIdx] = temp.z;
+    inList[baseIdx+1] = temp.w;
     };
 template<>
 __device__ inline void rotateInMemoryRight<int,4>( int *inList, int saveIdx, int rotationOffset,int rotationSize)
     {
     int4 temp;
-    temp.x = inList[saveIdx+rotationSize+rotationOffset-3];
-    temp.y = inList[saveIdx+rotationSize+rotationOffset-2];
-    temp.z = inList[saveIdx+rotationSize+rotationOffset-1];
-    temp.w = inList[saveIdx+rotationSize+rotationOffset];
-    inList[saveIdx+rotationSize+rotationOffset-2] = temp.x;
-    inList[saveIdx+rotationSize+rotationOffset-1] = temp.y;
-    inList[saveIdx+rotationSize+rotationOffset] = temp.z;
-    inList[saveIdx+rotationSize+rotationOffset+1] = temp.w;
+    int baseIdx = saveIdx+rotationSize+rotationOffset;
+    temp.x = inList[baseIdx-3];
+    temp.y = inList[baseIdx-2];
+    temp.z = inList[baseIdx-1];
+    temp.w = inList[baseIdx];
+    inList[baseIdx-2] = temp.x;
+    inList[baseIdx-1] = temp.y;
+    inList[baseIdx] = temp.z;
+    inList[baseIdx+1] = temp.w;
     };
 
 /*!
@@ -318,10 +327,10 @@ __host__ __device__ void virtual_voronoi_calc_function(        int kidx,
                                               int xsize,
                                               int ysize,
                                               double boxsize,
-                                              periodicBoundaries &Box,
-                                              Index2D &ci,
-                                              Index2D &cli,
-                                              Index2D &GPU_idx
+                                              periodicBoundaries Box,
+                                              Index2D ci,
+                                              Index2D cli,
+                                              Index2D GPU_idx
                                               )
     {
     unsigned int poly_size;
@@ -680,10 +689,10 @@ __host__ __device__ void get_oneRing_function(int kidx,
                 int xsize,
                 int ysize,
                 double boxsize,
-                periodicBoundaries &Box,
-                Index2D &ci,
-                Index2D &cli,
-                Index2D &GPU_idx,
+                periodicBoundaries Box,
+                Index2D ci,
+                Index2D cli,
+                Index2D GPU_idx,
                 int const currentMaxNeighbors,
                 int *maximumNeighborNumber
                 )
@@ -1024,9 +1033,9 @@ __global__ void gpu_get_circumcircles_kernel(int *neighbors, int *neighnum, int3
 //////
 /////////////////////////////////////////////////////////////
 
-bool gpu_voronoi_calc_no_sort(double2* d_pt,
-                      unsigned int* d_cell_sizes,
-                      int* d_cell_idx,
+bool gpu_voronoi_calc_no_sort(const double2* d_pt,
+                      const unsigned int* d_cell_sizes,
+                      const int* d_cell_idx,
                       int* P_idx,
                       double2* P,
                       double2* Q,
@@ -1041,7 +1050,7 @@ bool gpu_voronoi_calc_no_sort(double2* d_pt,
                       int* d_fixlist,
                       Index2D GPU_idx,
                       bool GPUcompute,
-		      unsigned int OMPThreadsNum
+		      unsigned int ompThreadNum
                       )
     {
     unsigned int block_size = THREADCOUNT;
@@ -1075,7 +1084,7 @@ bool gpu_voronoi_calc_no_sort(double2* d_pt,
         }
     else
         {
-    	if(OMPThreadsNum==1)
+    	if(ompThreadNum==1)
 	        {
             for(int tidx=0; tidx<Ncells; tidx++)
                 {
@@ -1089,7 +1098,7 @@ bool gpu_voronoi_calc_no_sort(double2* d_pt,
 	        }
     	else
 	        {
-	        #pragma omp parallel for num_threads(OMPThreadsNum)
+	        #pragma omp parallel for num_threads(ompThreadNum)
             for(int tidx=0; tidx<Ncells; tidx++)
                 {
                 if(d_fixlist[tidx]>=0)
@@ -1104,9 +1113,9 @@ bool gpu_voronoi_calc_no_sort(double2* d_pt,
     return true;
     }
 
-bool gpu_voronoi_calc(double2* d_pt,
-                unsigned int* d_cell_sizes,
-                int* d_cell_idx,
+bool gpu_voronoi_calc(const double2* d_pt,
+                const unsigned int* d_cell_sizes,
+                const int* d_cell_idx,
                 int* P_idx,
                 double2* P,
                 double2* Q,
@@ -1120,7 +1129,7 @@ bool gpu_voronoi_calc(double2* d_pt,
                 Index2D cli,
                 Index2D GPU_idx,
                 bool GPUcompute,
-		unsigned int OMPThreadsNum
+		unsigned int ompThreadNum
                 )
 {
     unsigned int block_size = THREADCOUNT;
@@ -1155,33 +1164,17 @@ bool gpu_voronoi_calc(double2* d_pt,
         return cudaSuccess;
         }
     else
-        {
-    	if(OMPThreadsNum==1)
-	        {
-            for(int tidx=0; tidx<Ncells; tidx++)
-                 virtual_voronoi_calc_function(tidx,d_pt,d_cell_sizes,d_cell_idx,
+        ompFunctionLoop((int)ompThreadNum,Ncells,virtual_voronoi_calc_function,d_pt,d_cell_sizes,d_cell_idx,
                           P_idx, P, Q,
                           d_neighnum,
                           Ncells, xsize,ysize, boxsize,Box,
                           ci,cli,GPU_idx);
-	        }
-    	else
-	        {
-	        #pragma omp parallel for num_threads(OMPThreadsNum)
-            for(int tidx=0; tidx<Ncells; tidx++)
-                 virtual_voronoi_calc_function(tidx,d_pt,d_cell_sizes,d_cell_idx,
-                          P_idx, P, Q,
-                          d_neighnum,
-                          Ncells, xsize,ysize, boxsize,Box,
-                          ci,cli,GPU_idx);
-	        }
-        }
     return true;
 };
 
-bool gpu_get_neighbors_no_sort(double2* d_pt, //the point set
-                unsigned int* d_cell_sizes,//points per bucket
-                int* d_cell_idx,//cellListIdxs
+bool gpu_get_neighbors_no_sort(const double2* d_pt, //the point set
+                const unsigned int* d_cell_sizes,//points per bucket
+                const int* d_cell_idx,//cellListIdxs
                 int* P_idx,//index of Del Neighbors
                 double2* P,//location del neighborPositions
                 double2* Q,//voronoi vertex positions
@@ -1198,7 +1191,7 @@ bool gpu_get_neighbors_no_sort(double2* d_pt, //the point set
                 int *maximumNeighborNum,
                 int currentMaxNeighborNum,
                 bool GPUcompute,
-		unsigned int OMPThreadsNum
+		unsigned int ompThreadNum
                 )
     {
     unsigned int block_size = THREADCOUNT;
@@ -1219,7 +1212,7 @@ bool gpu_get_neighbors_no_sort(double2* d_pt, //the point set
         }
     else
         {
-    	if(OMPThreadsNum==1)
+    	if(ompThreadNum==1)
 	        {
             for(int tidx=0; tidx<Ncells; tidx++)
                 {
@@ -1232,7 +1225,7 @@ bool gpu_get_neighbors_no_sort(double2* d_pt, //the point set
 	        }
     	else
 	        {
-            #pragma omp parallel for num_threads(OMPThreadsNum)
+            #pragma omp parallel for num_threads(ompThreadNum)
             for(int tidx=0; tidx<Ncells; tidx++)
                 {
                 if(d_fixlist[tidx]>=0)
@@ -1246,9 +1239,9 @@ bool gpu_get_neighbors_no_sort(double2* d_pt, //the point set
     return true;
     };
 
-bool gpu_get_neighbors(double2* d_pt, //the point set
-                unsigned int* d_cell_sizes,//points per bucket
-                int* d_cell_idx,//cellListIdxs
+bool gpu_get_neighbors(const double2* d_pt, //the point set
+                const unsigned int* d_cell_sizes,//points per bucket
+                const int* d_cell_idx,//cellListIdxs
                 int* P_idx,//index of Del Neighbors
                 double2* P,//location del neighborPositions
                 double2* Q,//voronoi vertex positions
@@ -1264,7 +1257,7 @@ bool gpu_get_neighbors(double2* d_pt, //the point set
                 int *maximumNeighborNum,
                 int currentMaxNeighborNum,
                 bool GPUcompute,
-		unsigned int OMPThreadsNum
+		unsigned int ompThreadNum
                 )
     {
     unsigned int block_size = THREADCOUNT;
@@ -1285,25 +1278,12 @@ bool gpu_get_neighbors(double2* d_pt, //the point set
         return cudaSuccess;
         }
     else
-        {
-    	if(OMPThreadsNum==1)
-	        {
-            for(int tidx=0; tidx<Ncells; tidx++)
-                get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx,
-                                 P,Q,d_neighnum, Ncells,xsize,ysize,
-                                 boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,
-                                 maximumNeighborNum);
-	        }
-    	else
-	        {
-	        #pragma omp parallel for num_threads(OMPThreadsNum)
-            for(int tidx=0; tidx<Ncells; tidx++)
-                get_oneRing_function(tidx, d_pt,d_cell_sizes,d_cell_idx,P_idx, 
-                                 P,Q,d_neighnum, Ncells,xsize,ysize,
-                                 boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,
-                                 maximumNeighborNum);
-	        }
-        }
+        ompFunctionLoop((int)ompThreadNum,Ncells,get_oneRing_function,
+                d_pt,d_cell_sizes,d_cell_idx,P_idx,
+                P,Q,d_neighnum, Ncells,xsize,ysize,
+                boxsize,Box,ci,cli,GPU_idx, currentMaxNeighborNum,
+                maximumNeighborNum);
+
     return true;
     };
 
@@ -1335,11 +1315,11 @@ bool gpu_get_circumcircles(int *neighbors,
 
 //!call the kernel to test every circumcenter to see if it's empty
 bool gpu_test_circumcircles(int *d_repair,
-                            int3 *d_ccs,
+                            const int3 *d_ccs,
                             int Nccs,
-                            double2 *d_pt,
-                            unsigned int *d_cell_sizes,
-                            int *d_idx,
+                            const double2 *d_pt,
+                            const unsigned int *d_cell_sizes,
+                            const int *d_idx,
                             int Np,
                             int xsize,
                             int ysize,
@@ -1348,7 +1328,7 @@ bool gpu_test_circumcircles(int *d_repair,
                             Index2D &ci,
                             Index2D &cli,
                             bool GPUcompute,
-			    unsigned int OMPThreadsNum
+			    unsigned int ompThreadNum
                             )
     {
     unsigned int block_size = THREADCOUNT;
@@ -1379,23 +1359,9 @@ bool gpu_test_circumcircles(int *d_repair,
         return cudaSuccess;
         }
     else
-        {
-	    if(OMPThreadsNum==1)
-	        {
-            for(int idx = 0; idx < Nccs; ++idx)
-            test_circumcircle_kernel_function(idx,d_repair,d_ccs,d_pt,
+        ompFunctionLoop((int)ompThreadNum,Nccs,test_circumcircle_kernel_function,d_repair,d_ccs,d_pt,
                                       d_cell_sizes,d_idx,xsize,ysize,
                                       boxsize,Box,ci,cli);
-	        }
-	    else
-	        {
-	        #pragma omp parallel for num_threads(OMPThreadsNum)
-            for(int idx = 0; idx < Nccs; ++idx)
-                test_circumcircle_kernel_function(idx,d_repair,d_ccs,d_pt,
-                                      d_cell_sizes,d_idx,xsize,ysize,
-                                      boxsize,Box,ci,cli);
-            }
-	    }
     return true;
     };
 

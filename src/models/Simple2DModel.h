@@ -64,5 +64,10 @@ class Simple2DModel
         double currentTime;
         //!set the time
         virtual void setTime(double time){currentTime = time;};
+
+        //!Allow openMP threads
+        int ompThreadNum = 1;
+        //set number of threads
+        virtual void setOmpThreads(int _number){ompThreadNum = _number;};
     };
 #endif

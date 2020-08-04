@@ -47,7 +47,7 @@ class DelaunayGPU
         //!set a flag to use GPU routines. When false, use CPU routines
         void setGPUcompute(bool flag){GPUcompute=flag;};
         //!Set the number of threads to ask openMP to use during CPU-based triangulation loops
-    	void setOMPthreads(unsigned int num){OMPThreadsNum=num;};
+        virtual void setOmpThreads(int _number){ompThreadNum = _number;};
         //!A lightweight profiler to use when timing the functionality of this class
         multiProfiler prof;
         //! A box to calculate relative distances in a periodic domain.
@@ -117,8 +117,8 @@ class DelaunayGPU
         GPUArray<int> circumcirclesAssist;
         //!A flag that tells the code to use either CPU or GPU routines
         bool GPUcompute;
-        //!Variable that keeps the number of threads used by OpenMP
-        unsigned int OMPThreadsNum=1;
+        //!Allow openMP threads
+        int ompThreadNum = 1;
 
         //!A 2dIndexer for computing where in the GPUArray to look for a given particles neighbors GPU
         Index2D GPU_idx;

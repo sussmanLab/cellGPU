@@ -57,6 +57,7 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
     neighbors.resize(Ncells*maxNeighGuess);
     globalTriangulationDelGPU();
     resizeAndReset();
+    enforceTopology();
 
     //initialize the anyCircumcenterTestFailed structure
     anyCircumcenterTestFailed.resize(1);

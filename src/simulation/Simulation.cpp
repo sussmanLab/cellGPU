@@ -72,6 +72,20 @@ void Simulation::setIntegrationTimestep(double dt)
         };
     };
 
+/*! iterate through the conf and any updaters, setting the number of threads to request
+*/
+void Simulation::setOmpThreads(int _number)
+    {
+    printf("requesting %i CPU threads in the configuration and %lu updaters\n",_number,updaters.size());
+    auto cellConf = cellConfiguration.lock();
+    cellConf->setOmpThreads(_number);
+    for (int u = 0; u < updaters.size(); ++u)
+        {
+        auto upd = updaters[u].lock();
+        upd->setOmpThreads(_number);
+        };
+    };
+    
 /*!
 \post the cell configuration and e.o.m. timestep is set to the input value
 */

@@ -88,6 +88,8 @@ int main(int argc, char*argv[])
     //sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
     sim->setCPUOperation(!initializeGPU);
+    if (!gpu) 
+        sim->setOmpThreads(abs(USE_GPU));
     sim->setReproducible(reproducible);
 
     //run for a few initialization timesteps
@@ -96,6 +98,7 @@ int main(int argc, char*argv[])
         {
         sim->performTimestep();
         };
+    spv->computeGeometry();
     printf("Finished with initialization\n");
     cout << "current q = " << spv->reportq() << endl;
     //the reporting of the force should yield a number that is numerically close to zero.
