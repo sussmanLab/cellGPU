@@ -11,6 +11,22 @@
     @{
 */
 
+__host__ __device__ inline void moveDegreesOfFreedomFunction(int idx, double2 *d_points, double2 *d_disp, periodicBoundaries Box)
+    {
+    d_points[idx].x += d_disp[idx].x;
+    d_points[idx].y += d_disp[idx].y;
+    Box.putInBoxReal(d_points[idx]);
+    return;
+    };
+__host__ __device__  inline void moveDegreesOfFreedomFunctionScaled(int idx, double2 *d_points, double2 *d_disp, double scale, periodicBoundaries Box)
+    {
+    d_points[idx].x += scale*d_disp[idx].x;
+    d_points[idx].y += scale*d_disp[idx].y;
+    Box.putInBoxReal(d_points[idx]);
+    return;
+    };
+
+
 /*!
   A simple routine that takes in a pointer array of points, an array of displacements,
   adds the displacements to the points, and puts the points back in the primary unit cell.
@@ -25,9 +41,7 @@ __global__ void gpu_move_degrees_of_freedom_kernel(double2 *d_points,
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= N)
         return;
-    d_points[idx].x += d_disp[idx].x;
-    d_points[idx].y += d_disp[idx].y;
-    Box.putInBoxReal(d_points[idx]);
+    moveDegreesOfFreedomFunction(idx,d_points,d_disp,Box);
     return;
     };
 
@@ -48,23 +62,7 @@ __global__ void gpu_move_degrees_of_freedom_kernel(double2 *d_points,
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= N)
         return;
-    d_points[idx].x += scale*d_disp[idx].x;
-    d_points[idx].y += scale*d_disp[idx].y;
-    Box.putInBoxReal(d_points[idx]);
-    return;
-    };
-
-/*!
-every thread just writes in a value
-*/
-__global__ void gpu_set_integer_array_kernel(int *d_array,
-                                          int value,
-                                          int N)
-    {
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= N)
-        return;
-    d_array[idx] = value;
+    moveDegreesOfFreedomFunctionScaled(idx,d_points,d_disp,scale,Box);
     return;
     };
 
@@ -78,23 +76,32 @@ bool gpu_move_degrees_of_freedom(double2 *d_points,
                         double2 *d_disp,
                         double  scale,
                         int N,
-                        periodicBoundaries &Box
+                        periodicBoundaries &Box,
+                        bool useGPU,
+                        int nThreads
                         )
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
-
-    gpu_move_degrees_of_freedom_kernel<<<nblocks,block_size>>>(
+    
+    if(useGPU)
+        {
+        gpu_move_degrees_of_freedom_kernel<<<nblocks,block_size>>>(
                                                 d_points,
                                                 d_disp,
                                                 scale,
                                                 N,
                                                 Box
                                                 );
-    HANDLE_ERROR(cudaGetLastError());
-
-    return cudaSuccess;
+        HANDLE_ERROR(cudaGetLastError());
+        return cudaSuccess;
+        }
+    else
+        {
+        ompFunctionLoop(nThreads,N,moveDegreesOfFreedomFunctionScaled,d_points,d_disp,scale,Box);
+        }
+    return true;
     };
 
 /*!
@@ -106,45 +113,32 @@ bool gpu_move_degrees_of_freedom(double2 *d_points,
 bool gpu_move_degrees_of_freedom(double2 *d_points,
                         double2 *d_disp,
                         int N,
-                        periodicBoundaries &Box
+                        periodicBoundaries &Box,
+                        bool useGPU,
+                        int nThreads
                         )
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
 
-    gpu_move_degrees_of_freedom_kernel<<<nblocks,block_size>>>(
+    if(useGPU)
+        {
+        gpu_move_degrees_of_freedom_kernel<<<nblocks,block_size>>>(
                                                 d_points,
                                                 d_disp,
                                                 N,
                                                 Box
                                                 );
-    HANDLE_ERROR(cudaGetLastError());
+        HANDLE_ERROR(cudaGetLastError());
+        return cudaSuccess;
+        }
+    else
+        {
+        ompFunctionLoop(nThreads,N,moveDegreesOfFreedomFunction,d_points,d_disp,Box);
+        }
 
-    return cudaSuccess;
-    };
-
-/*!
-\param d_array int array of values
-\param value   the integer to set the entire array to
-\param N        The number of values in the array to set (d_array[0] tp d_array[N-1])
-*/
-bool gpu_set_integer_array(int *d_array,
-                           int value,
-                           int N
-                          )
-    {
-    unsigned int block_size = 128;
-    if (N < 128) block_size = 32;
-    unsigned int nblocks  = N/block_size + 1;
-
-    gpu_set_integer_array_kernel<<<nblocks,block_size>>>(
-                                                d_array,
-                                                value,
-                                                N);
-    HANDLE_ERROR(cudaGetLastError());
-
-    return cudaSuccess;
+    return true;
     };
 
 /** @} */ //end of group declaration

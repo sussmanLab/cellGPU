@@ -6,7 +6,7 @@ add_definitions(-DENABLE_CUDA)
 
 
 set(CMAKE_CC_FLAGS "${CMAKE_CC_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++14 -DBOOST_MATH_DISABLE_FLOAT128")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++14 -DBOOST_MATH_DISABLE_FLOAT128 -fopenmp")
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --expt-relaxed-constexpr
                                         -arch=sm_30
                                         -gencode=arch=compute_30,code=sm_30

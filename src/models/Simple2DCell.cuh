@@ -22,7 +22,9 @@ A file providing an interface to the relevant cuda calls for the Simple2DCell cl
 bool gpu_move_degrees_of_freedom(double2 *d_points,
                     double2 *d_disp,
                     int N,
-                    periodicBoundaries &Box
+                    periodicBoundaries &Box,
+                    bool useGPU = true,
+                    int nThreads = 1
                     );
 
 //!The same as the above, but scale the displacements by a scalar (i.e., x[i] += scale*disp[i]
@@ -30,15 +32,10 @@ bool gpu_move_degrees_of_freedom(double2 *d_points,
                     double2 *d_disp,
                     double  scale,
                     int N,
-                    periodicBoundaries &Box
+                    periodicBoundaries &Box,
+                    bool useGPU = true,
+                    int nThreads = 1
                     );
 
-//!A utility function; set all copmonents of an integer array to value
-bool gpu_set_integer_array(int *d_array,
-                           int value,
-                           int N
-                           );
-
 /** @} */ //end of group declaration
-
 #endif

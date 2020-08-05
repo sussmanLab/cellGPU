@@ -71,11 +71,6 @@ class voronoiModelBase : public Simple2DActiveCell
         //!Kill the indexed cell by simply removing it from the simulation
         virtual void cellDeath(int cellIndex);
 
-        //!move particles on the GPU
-        void movePoints(GPUArray<double2> &displacements,double scale);
-        //!move particles on the CPU
-        void movePointsCPU(GPUArray<double2> &displacements,double scale);
-
         //!Update the cell list structure after particles have moved
         void updateCellList();
         //!update the NieghIdxs data structure
