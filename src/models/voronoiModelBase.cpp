@@ -450,9 +450,10 @@ void voronoiModelBase::computeGeometryCPU()
     ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::readwrite);
     ArrayHandle<double4> h_vln(voroLastNext,access_location::host,access_mode::overwrite);
 
+    /*
     gpu_compute_voronoi_geometry(h_p.data,h_AP.data,h_nn.data,h_n.data,
                                  h_v.data,h_vln.data,Ncells,n_idx,*(Box),false,ompThreadNum);
-                                 /*
+    */
     for (int i = 0; i < Ncells; ++i)
         {
         //get Delaunay neighbors of the cell
@@ -505,7 +506,6 @@ void voronoiModelBase::computeGeometryCPU()
         h_AP.data[i].x = Varea;
         h_AP.data[i].y = Vperi;
         };
-        */
     };
 
 /*!
