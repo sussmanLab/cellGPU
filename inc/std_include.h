@@ -72,7 +72,7 @@ ompFunctionLoop(ompThreadNum,maxIdx, f, double, double,Index2D,...).
 template< typename... Args>
 void ompFunctionLoop(int nThreads, int maxIdx, void (*fPointer)(int, Args...), Args... args)
     {
-    if(nThreads == 1)
+    if(nThreads <= 1)
         {
         for(int idx = 0; idx < maxIdx; ++idx)
             fPointer(idx,args...);

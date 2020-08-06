@@ -11,14 +11,14 @@
     @{
 */
 
-__host__ __device__ inline void moveDegreesOfFreedomFunction(int idx, double2 *d_points, double2 *d_disp, periodicBoundaries Box)
+__host__ __device__ void moveDegreesOfFreedomFunction(int idx, double2 *d_points, double2 *d_disp, periodicBoundaries Box)
     {
     d_points[idx].x += d_disp[idx].x;
     d_points[idx].y += d_disp[idx].y;
     Box.putInBoxReal(d_points[idx]);
     return;
     };
-__host__ __device__  inline void moveDegreesOfFreedomFunctionScaled(int idx, double2 *d_points, double2 *d_disp, double scale, periodicBoundaries Box)
+__host__ __device__ void moveDegreesOfFreedomFunctionScaled(int idx, double2 *d_points, double2 *d_disp, double scale, periodicBoundaries Box)
     {
     d_points[idx].x += scale*d_disp[idx].x;
     d_points[idx].y += scale*d_disp[idx].y;

@@ -109,26 +109,18 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     return;
     };
 
-/*!
-  Since the cells are guaranteed to be convex, the area of the cell is the sum of the areas of
-  the triangles formed by consecutive Voronoi vertices
-  */
-__global__ void gpu_compute_voronoi_geometry_kernel(const double2* __restrict__ d_points,
+
+__host__ __device__ void computeVoronoiGeometryFunction(int idx,
+                                          const double2* __restrict__ d_points,
                                           double2* __restrict__ d_AP,
                                           const int* __restrict__ d_nn,
                                           const int* __restrict__ d_n,
                                           double2* __restrict__ d_vc,
                                           double4* __restrict__ d_vln,
-                                          int N,
                                           Index2D n_idx,
                                           periodicBoundaries Box
-                                        )
+                                          )
     {
-    // read in the particle that belongs to this thread
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= N)
-        return;
-
     double2  nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
 
     int neigh = d_nn[idx];
@@ -197,7 +189,28 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const double2* __restrict__ 
 
     d_AP[idx].x=Varea;
     d_AP[idx].y=Vperi;
-
+    return;
+    }
+/*!
+  Since the cells are guaranteed to be convex, the area of the cell is the sum of the areas of
+  the triangles formed by consecutive Voronoi vertices
+  */
+__global__ void gpu_compute_voronoi_geometry_kernel(const double2* __restrict__ d_points,
+                                          double2* __restrict__ d_AP,
+                                          const int* __restrict__ d_nn,
+                                          const int* __restrict__ d_n,
+                                          double2* __restrict__ d_vc,
+                                          double4* __restrict__ d_vln,
+                                          int N,
+                                          Index2D n_idx,
+                                          periodicBoundaries Box
+                                        )
+    {
+    // read in the particle that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+    computeVoronoiGeometryFunction(idx,d_points,d_AP,d_nn,d_n,d_vc,d_vln, n_idx,Box);
     return;
     };
 
@@ -244,34 +257,43 @@ bool gpu_test_circumcenters(int *d_repair,
     };
 
 //!Call the kernel to compute the geometry
-bool gpu_compute_voronoi_geometry(double2 *d_points,
+bool gpu_compute_voronoi_geometry(const double2 *d_points,
                         double2   *d_AP,
-                        int      *d_nn,
-                        int      *d_n,
+                        const int      *d_nn,
+                        const int      *d_n,
                         double2 *d_vc,
                         double4 *d_vln,
                         int      N,
                         Index2D  &n_idx,
-                        periodicBoundaries &Box
+                        periodicBoundaries &Box,
+                        bool useGPU,
+                        int nThreads
                         )
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
 
-    gpu_compute_voronoi_geometry_kernel<<<nblocks,block_size>>>(
-                                                d_points,
-                                                d_AP,
-                                                d_nn,
-                                                d_n,
-                                                d_vc,
-                                                d_vln,
-                                                N,
-                                                n_idx,
-                                                Box
-                                                );
-    HANDLE_ERROR(cudaGetLastError());
-    return cudaSuccess;
+    if(useGPU)
+        {
+        gpu_compute_voronoi_geometry_kernel<<<nblocks,block_size>>>(                                        d_points,
+                        d_AP,
+                        d_nn,
+                        d_n,
+                        d_vc,
+                        d_vln,
+                        N,
+                        n_idx,
+                        Box
+                        );
+        HANDLE_ERROR(cudaGetLastError());
+        return cudaSuccess;
+        }
+    else
+        ompFunctionLoop(nThreads,N,computeVoronoiGeometryFunction,d_points,d_AP,d_nn,d_n,d_vc,d_vln,n_idx,Box);
+        
+        
+    return true;
     };
 
 __global__ void gpu_update_neighIdxs_kernel(int *neighborNum,

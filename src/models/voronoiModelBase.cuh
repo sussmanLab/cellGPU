@@ -50,15 +50,17 @@ bool gpu_test_circumcenters(
 
 //!compute the area and perimeter of all Voronoi cells, and save the voronoi vertices
 bool gpu_compute_voronoi_geometry(
-                    double2 *d_points,
+                    const double2 *d_points,
                     double2 *d_AP,
-                    int    *d_nn,
-                    int    *d_n,
+                    const int    *d_nn,
+                    const int    *d_n,
                     double2 *d_vc,
                     double4 *d_vln,
                     int    N,
                     Index2D &n_idx,
-                    periodicBoundaries &Box
+                    periodicBoundaries &Box,
+                    bool useGPU = true,
+                    int nThreads = 1
                     );
 
 /** @} */ //end of group declaration
