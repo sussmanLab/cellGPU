@@ -315,7 +315,7 @@ __global__ void gpu_test_circumcircles_kernel(
 /*!
 device function carries out the task of finding a good enclosing polygon, using the virtual point and half-plane intersection method
 */
-__host__ __device__ inline void virtual_voronoi_calc_function(        int kidx,
+__host__ __device__ void virtual_voronoi_calc_function(        int kidx,
                                               const double2* __restrict__ d_pt,
                                               const unsigned int* __restrict__ d_cell_sizes,
                                               const int* __restrict__ d_cell_idx,
@@ -677,7 +677,7 @@ __global__ void gpu_voronoi_calc_global_kernel(const double2* __restrict__ d_pt,
 /*!
 device function that goes from a candidate 1-ring to an actual 1-ring
 */
-__host__ __device__ inline void get_oneRing_function(int kidx,
+__host__ __device__ void get_oneRing_function(int kidx,
                 const double2* __restrict__ d_pt,
                 const unsigned int* __restrict__ d_cell_sizes,
                 const int* __restrict__ d_cell_idx,
@@ -1328,7 +1328,7 @@ bool gpu_test_circumcircles(int *d_repair,
                             Index2D &ci,
                             Index2D &cli,
                             bool GPUcompute,
-                            unsigned int ompThreadNum
+			    unsigned int ompThreadNum
                             )
     {
     unsigned int block_size = THREADCOUNT;
