@@ -15,20 +15,40 @@
 
 #define THREADCOUNT 128
 
+//Some specialized functions
+__host__ __device__ inline unsigned positiveModulo(int i, unsigned n)
+    {
+    int mod = i % (int) n;
+    return i < 0 ? mod+n : mod;
+    };
 __host__ __device__ inline double checkCCW(const double2 pa, const double2 pb, const double2 pc)
     {
     return (pa.x - pb.x) * (pa.y - pc.y) - (pa.y - pb.y) * (pa.x - pc.x);
     }
 __host__ __device__ inline int checkCW(const double pax, const double pay, const double pbx, const double pby, const double pcx, const double pcy)
     {
-    return ((pax - pbx) * (pay - pcy) - (pay - pby) * (pax - pcx)) >0 ? 0 : 1;
+    return (pax - pbx) * (pay - pcy) > (pay - pby) * (pax - pcx) ? 0 : 1;
     }
-__host__ __device__ inline unsigned positiveModulo(int i, unsigned n)
+__host__ __device__ inline int checkCW(const double2 pa, const double pbx, const double pby, const double2 pc)
     {
-    int mod = i % (int) n;
-    if(i < 0) mod += n;
-    return mod;
-    };
+    return (pa.x - pbx) * (pa.y - pc.y) > (pa.y - pby) * (pa.x - pc.x) ? 0 : 1;
+    }
+__host__ __device__ inline int checkCWhalf(const double2 pa, const double pby, const double2 pc)
+    {
+    return (pa.y-2.*pby)*pc.x > pa.x*(pc.y - pby) ? 0 : 1;
+    }
+__host__ __device__ inline int checkCWhalf(const double2 pa, const double pbx, const double pby, const double2 pc)
+    {
+    return (0.5*pa.x - pbx) * (0.5*pa.y - pc.y) > (0.5*pa.y - pby) * (0.5*pa.x - pc.x) ? 0 : 1;
+    }
+__host__ __device__ inline int checkCW(const double2 pa, const double pbx, const double pby)
+    {
+    return pa.x*pby > pa.y*pbx ? 0 : 1;
+    }
+__host__ __device__ inline int checkCW(const double pax, const double pby)
+    {
+    return pax*pby >0 ? 0 : 1;
+    }
 
 template<typename T, int N = -1>
 __device__ inline void rotateInMemoryRight( T *inList, int saveIdx, int rotationOffset,int rotationSize)
@@ -189,7 +209,7 @@ __device__ inline bool cellBucketInsideAngle(const double2 v, const int cx, cons
     }
 
 //per-circumcircle test function
-__host__ __device__ void test_circumcircle_kernel_function(int idx,
+__host__ __device__ inline void test_circumcircle_kernel_function(int idx,
                                               int* __restrict__ d_repair,
                                               const int3* __restrict__ d_circumcircles,
                                               const double2* __restrict__ d_pt,
@@ -315,7 +335,7 @@ __global__ void gpu_test_circumcircles_kernel(
 /*!
 device function carries out the task of finding a good enclosing polygon, using the virtual point and half-plane intersection method
 */
-__host__ __device__ void virtual_voronoi_calc_function(        int kidx,
+__host__ __device__ inline void virtual_voronoi_calc_function(        int kidx,
                                               const double2* __restrict__ d_pt,
                                               const unsigned int* __restrict__ d_cell_sizes,
                                               const int* __restrict__ d_cell_idx,
@@ -463,23 +483,29 @@ blah3 +=1;
                         {
                         yy=(disp.y*disp.y+disp.x*disp.x)/(2*disp.y);
                         xx=0;
+                        cx = checkCW(disp.x,yy);
+                        if(cx== checkCWhalf(disp,yy,Q[GPU_idx(jj,kidx)]))
+                            continue;
                         }
                     else if(abs(disp.y)<THRESHOLD)
                         {
                         yy=disp.y/2+1;
                         xx=disp.x/2;
+                        cx = checkCW(disp,xx,yy);
+                        if(cx== checkCWhalf(disp,xx,yy,Q[GPU_idx(jj,kidx)]))
+                            continue;
                         }
                     if(abs(disp.x)<THRESHOLD)
                         {
                         yy=disp.y/2;
                         xx=disp.x/2+1;
+                        cx = checkCW(disp,xx,yy);
+                        if(cx== checkCWhalf(disp,xx,yy,Q[GPU_idx(jj,kidx)]))
+                            continue;
                         }
 
                     //7-Q<-Hv intersect Q
                     //8-Update P, based on Q (Algorithm 2)      
-                    cx = checkCW(0.5*disp.x,0.5*disp.y,xx,yy,0.,0.);
-                    if(cx== checkCW(0.5*disp.x, 0.5*disp.y,xx,yy,Q[GPU_idx(jj,kidx)].x,Q[GPU_idx(jj,kidx)].y))
-                        continue;
 #ifdef DEBUGFLAGUP
 t4=clock();
 t1 += t4-t3;
@@ -492,7 +518,7 @@ t1 += t4-t3;
                     removed=0;
                     j=-1;
                     //which side will Q be at
-                    cy = checkCW(0.5*disp.x, 0.5*disp.y,xx,yy,Q[baseIdx+poly_size-1].x,Q[baseIdx+poly_size-1].y);
+                    cy = checkCWhalf(disp,xx,yy,Q[baseIdx+poly_size-1]);
 
                     removeCW=cy;
                     if(cy!=cx)
@@ -504,7 +530,7 @@ t1 += t4-t3;
 
                     for(w=0; w<poly_size-1; w++)
                         {
-                        cy = checkCW(0.5*disp.x, 0.5*disp.y,xx,yy,Q[baseIdx+w].x,Q[baseIdx+w].y);
+                        cy = checkCWhalf(disp,xx,yy,Q[baseIdx+w]);
                         if(cy!=cx)
                             {
                             if(removeCCW==false)
@@ -677,7 +703,7 @@ __global__ void gpu_voronoi_calc_global_kernel(const double2* __restrict__ d_pt,
 /*!
 device function that goes from a candidate 1-ring to an actual 1-ring
 */
-__host__ __device__ void get_oneRing_function(int kidx,
+__host__ __device__ inline void get_oneRing_function(int kidx,
                 const double2* __restrict__ d_pt,
                 const unsigned int* __restrict__ d_cell_sizes,
                 const int* __restrict__ d_cell_idx,
@@ -772,23 +798,29 @@ __host__ __device__ void get_oneRing_function(int kidx,
                     {
                     yy=(disp.y*disp.y+disp.x*disp.x)/(2*disp.y);
                     xx=0;
+                    cx = checkCW(disp.x,yy);
+                    if(cx== checkCWhalf(disp,yy,currentQ))
+                        continue;
                     }
                 else if(abs(disp.y)<THRESHOLD)
                     {
                     yy=disp.y/2+1;
                     xx=disp.x/2;
+                    cx = checkCW(disp,xx,yy);
+                    if(cx== checkCWhalf(disp,xx,yy,currentQ))
+                        continue;
                     }
                 if(abs(disp.x)<THRESHOLD)
                     {
                     yy=disp.y/2;
                     xx=disp.x/2+1;
+                    cx = checkCW(disp,xx,yy);
+                    if(cx== checkCWhalf(disp,xx,yy,currentQ))
+                        continue;
                     }
 
                 //7-Q<-Hv intersect Q
                 //8-Update P, based on Q (Algorithm 2)      
-                cx = checkCW(0.5*disp.x,0.5*disp.y,xx,yy,0.,0.);
-                if(cx== checkCW(0.5*disp.x, 0.5*disp.y,xx,yy,currentQ.x,currentQ.y))
-                    continue;
 
                 //Remove the voronoi test points on the opposite half sector from the cell v
                 //If more than 1 voronoi test point is removed, then also adjust the delaunay neighbors of v
@@ -798,7 +830,7 @@ __host__ __device__ void get_oneRing_function(int kidx,
                 removed=0;
                 j=-1;
                 //which side will Q be at
-                cy = checkCW(0.5*disp.x, 0.5*disp.y,xx,yy,Q[baseIdx+poly_size-1].x,Q[baseIdx+poly_size-1].y);
+                cy = checkCWhalf(disp,xx,yy,Q[baseIdx+poly_size-1]);
 
                 removeCW=cy;
                 if(cy!=cx)
@@ -811,7 +843,7 @@ __host__ __device__ void get_oneRing_function(int kidx,
 
                 for(w=jj; w<poly_size-1; w++)
                     {
-                    cy = checkCW(0.5*disp.x, 0.5*disp.y,xx,yy,Q[baseIdx+w].x,Q[baseIdx+w].y);
+                    cy = checkCWhalf(disp,xx,yy,Q[baseIdx+w]);
                     if(cy!=cx)
                         {
                         if(removeCCW==false)
@@ -909,6 +941,11 @@ __host__ __device__ void get_oneRing_function(int kidx,
                             rotateInMemoryRight(P_idx,baseIdx,j,rotationSize);
                         }
                     #else
+                    if(poly_size > currentMaxNeighbors)
+                        {
+                        maximumNeighborNumber[0]=poly_size;
+                        return;
+                        }
                     for(pp=poly_size-2; pp>j; pp--)
                         {
                         Q[GPU_idx(pp+1,kidx)]=Q[GPU_idx(pp,kidx)];
