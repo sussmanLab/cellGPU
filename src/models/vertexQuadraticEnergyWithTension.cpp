@@ -1,5 +1,6 @@
 #include "vertexQuadraticEnergyWithTension.h"
 #include "vertexQuadraticEnergyWithTension.cuh"
+#include "vertexQuadraticEnergy.cuh"
 /*! \file vertexQuadraticEnergyWithTension.cpp */
 
 /*!
@@ -46,10 +47,10 @@ void VertexQuadraticEnergyWithTension::computeForces()
     computeGeometry();
     if (GPUcompute)
         {
-        if (simpleTension)
-            computeVertexSimpleTensionForceGPU();
-        else if (Tension)
+        if (Tension)
             computeVertexTensionForceGPU();
+        else
+            computeForcesGPU();
         }
     else
         {
@@ -163,14 +164,42 @@ double VertexQuadraticEnergyWithTension::computeEnergy()
     throw std::exception();
     return 0;
     };
-void VertexQuadraticEnergyWithTension::computeVertexSimpleTensionForceGPU()
-    {
-    printf("computeVertexSimpleTensionForceGPU function not written. Very sorry\n");
-    throw std::exception();
-    };
+
 void VertexQuadraticEnergyWithTension::computeVertexTensionForceGPU()
     {
-    printf("computeVertexTensionForceGPU function not written. Very sorry\n");
-    throw std::exception();
+    ArrayHandle<int> d_vcn(vertexCellNeighbors,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_vc(voroCur,access_location::device,access_mode::read);
+    ArrayHandle<double4> d_vln(voroLastNext,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_AP(AreaPeri,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
+    ArrayHandle<int> d_ct(cellType,access_location::device,access_mode::read);
+    ArrayHandle<int> d_cv(cellVertices,access_location::device, access_mode::read);
+    ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::read);
+    ArrayHandle<double> d_tm(tensionMatrix,access_location::device,access_mode::read);
+
+    ArrayHandle<double2> d_fs(vertexForceSets,access_location::device, access_mode::overwrite);
+    ArrayHandle<double2> d_f(vertexForces,access_location::device, access_mode::overwrite);
+
+    int nForceSets = Nvertices*3;
+    gpu_vertexModel_tension_force_sets(
+            d_vcn.data,
+            d_vc.data,
+            d_vln.data,
+            d_AP.data,
+            d_APpref.data,
+            d_ct.data,
+            d_cv.data,
+            d_cvn.data,
+            d_tm.data,
+            d_fs.data,
+            cellTypeIndexer,
+            n_idx,
+            simpleTension,
+            gamma,
+            nForceSets,
+            KA,KP
+            );
+
+    gpu_avm_sum_force_sets(d_fs.data, d_f.data,Nvertices);
     };
 
