@@ -346,8 +346,18 @@ GPU computation of the centroid of every cell
 */
 void vertexModelBase::getCellCentroidsGPU()
     {
-    printf("getCellCentroidsGPU() function not currently functional...Very sorry\n");
-    throw std::exception();
+    ArrayHandle<double2> d_p(cellPositions,access_location::device,access_mode::readwrite);
+    ArrayHandle<double2> d_v(vertexPositions,access_location::device,access_mode::read);
+    ArrayHandle<int> d_cvn(cellVertexNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_cv(cellVertices,access_location::device,access_mode::read);
+
+    gpu_vm_get_cell_centroids(d_p.data,
+                               d_v.data,
+                               d_cvn.data,
+                               d_cv.data,
+                               Ncells,
+                               n_idx,
+                               *(Box));
     };
 
 /*!

@@ -33,6 +33,7 @@ cuda_add_library(modelGPU
     Simple2DCell.cu
     vertexModelBase.cu
     vertexQuadraticEnergy.cu
+    vertexQuadraticEnergyWithTension.cu
     voronoiModelBase.cu
     voronoiQuadraticEnergy.cu
     voronoiQuadraticEnergyWithTension.cu

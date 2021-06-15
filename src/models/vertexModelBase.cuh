@@ -28,6 +28,15 @@ bool gpu_vm_geometry(
                     Index2D  &n_idx,
                     periodicBoundaries   &Box);
 
+bool gpu_vm_get_cell_centroids(
+                    double2 *d_cellPositions,
+                    double2 *d_vertexPositions,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
+                    int      N,
+                    Index2D  &n_idx,
+                    periodicBoundaries   &Box);
+
 bool gpu_vm_get_cell_positions(
                     double2 *d_cellPositions,
                     double2 *d_vertexPositions,

@@ -26,8 +26,6 @@ class VertexQuadraticEnergyWithTension : public VertexQuadraticEnergy
         //!compute the quadratic energy functional
         virtual double computeEnergy();
 
-        //!Compute the forces on the GPU with only a single tension value
-        virtual void computeVertexSimpleTensionForceGPU();
         //!Compute the net force on particle i on the CPU with multiple tension values
         virtual void computeVertexTensionForcesCPU();
         //!call gpu_force_sets kernel caller
@@ -42,7 +40,7 @@ class VertexQuadraticEnergyWithTension : public VertexQuadraticEnergy
         //!Get surface tension
         double getSurfaceTension(){return gamma;};
     protected:
-        //!The value of surface tension between two cells of different type 
+        //!The value of surface tension between two cells of different type
         double gamma;
         //!A flag specifying whether the force calculation contains any surface tensions to compute
         bool Tension;

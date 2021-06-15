@@ -108,6 +108,40 @@ __global__ void vm_get_cell_positions_kernel(double2* d_cellPositions,
     d_cellPositions[idx] = pos;
     };
 
+__global__ void vm_get_cell_centroids_kernel(double2* d_cellPositions,
+                                              double2* d_vertexPositions,
+                                              int    * d_nn,
+                                              int    * d_n,
+                                              int N,
+                                              Index2D n_idx,
+                                              periodicBoundaries Box)
+    {
+    // read in the cell index that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+
+    double2 baseVertex = d_vertexPositions[ d_n[n_idx(0,idx)] ];
+    double2 lastVertex, currentVertex, centroid;
+    centroid.x=0.0;centroid.y=0.0;
+    lastVertex =centroid; //initialize at zero
+
+    int neighs = d_nn[idx];
+    double area = 0;
+    for (int vv = 1; vv < neighs; ++vv)
+        {
+        int vidx = d_n[n_idx(vv,idx)];
+        Box.minDist(d_vertexPositions[vidx],baseVertex,currentVertex);
+        area += SignedPolygonAreaPart(lastVertex,currentVertex);
+        centroid.x += (lastVertex.x+currentVertex.x)*(lastVertex.x*currentVertex.y-currentVertex.x*lastVertex.y);
+        centroid.y += (lastVertex.y+currentVertex.y)*(lastVertex.x*currentVertex.y-currentVertex.x*lastVertex.y);
+        };
+    centroid.x = centroid.x / (6.0*area) + baseVertex.x;
+    centroid.y = centroid.y / (6.0*area) + baseVertex.y;
+    Box.putInBoxReal(centroid);
+    d_cellPositions[idx] = centroid;
+    };
+
 /*!
   Run through every pair of vertices (once), see if any T1 transitions should be done,
   and see if the cell-vertex list needs to grow
@@ -676,6 +710,28 @@ bool gpu_vm_flip_edges(
                                                   Box,
                                                   n_idx,NvTimes3);
 
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    };
+
+//!Call the kernel to calculate the centroids of each cell from the position of its vertices
+bool gpu_vm_get_cell_centroids(
+                    double2 *d_cellPositions,
+                    double2 *d_vertexPositions,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
+                    int      N,
+                    Index2D  &n_idx,
+                    periodicBoundaries   &Box)
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
+
+
+    vm_get_cell_centroids_kernel<<<nblocks,block_size>>>(d_cellPositions,d_vertexPositions,
+                                                          d_cellVertexNum,d_cellVertices,
+                                                          N, n_idx, Box);
     HANDLE_ERROR(cudaGetLastError());
     return cudaSuccess;
     };
