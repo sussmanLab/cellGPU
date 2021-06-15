@@ -21,7 +21,7 @@ class Simple2DActiveCell : public Simple2DCell
         Simple2DActiveCell();
 
         //! initialize class' data structures and set default values
-        void initializeSimple2DActiveCell(int n);
+        void initializeSimple2DActiveCell(int n, bool gpu = true);
 
         //!Set uniform motility
         void setv0Dr(double v0new,double drnew);
@@ -85,10 +85,10 @@ class Simple2DActiveCell : public Simple2DCell
 
             vParallel.x= cos(thetaAve);
             vParallel.y= sin(thetaAve);
-            
+
             vPerpendicular.x= -vParallel.y;
             vPerpendicular.y=  vParallel.x;
-            
+
             return sqrt(globalV.x*globalV.x + globalV.y*globalV.y);
             };
 

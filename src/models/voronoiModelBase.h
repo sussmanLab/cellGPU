@@ -27,7 +27,7 @@ class voronoiModelBase : public Simple2DActiveCell
         //!The constructor!
         voronoiModelBase();
         //!A default initialization scheme
-        void initializeVoronoiModelBase(int n);
+        void initializeVoronoiModelBase(int n, bool useGPU = true);
         void reinitialize(int neighborGuess);
         //!Enforce CPU-only operation.
         /*!

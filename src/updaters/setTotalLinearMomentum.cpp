@@ -3,8 +3,15 @@
 #include "utilities.cuh"
 /*! \file setTotalLinearMomentum.cpp */
 
-setTotalLinearMomentum::setTotalLinearMomentum(double px, double py)
+setTotalLinearMomentum::setTotalLinearMomentum(double px, double py, bool usegpu)
     {
+    GPUcompute = usegpu;
+    if(!GPUcompute)
+        {
+        pArray.neverGPU = true;
+        pIntermediateReduction.neverGPU = true;
+        pHelper.neverGPU = true;
+        };
     setMomentumTarget(px,py);
     };
 

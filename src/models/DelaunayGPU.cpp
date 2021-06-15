@@ -13,8 +13,20 @@ DelaunayGPU::DelaunayGPU(int N, int maximumNeighborsGuess, double cellSize, Peri
 	initialize(N,maximumNeighborsGuess,cellSize,bx);
 	}
 
-void DelaunayGPU::initialize(int N, int maximumNeighborsGuess, double cellSize, PeriodicBoxPtr bx)
+void DelaunayGPU::initialize(int N, int maximumNeighborsGuess, double cellSize, PeriodicBoxPtr bx, bool gpu)
     {
+
+    if(!gpu)
+        {
+        GPUVoroCur.neverGPU = true;
+        GPUDelNeighsPos.neverGPU = true;
+        GPUPointIndx.neverGPU = true;
+        delGPUcircumcircles.neverGPU = true;
+        repair.neverGPU = true;
+        maxOneRingSize.neverGPU = true;
+        circumcirclesAssist.neverGPU = true;
+        GPUcompute = false;
+        };
     prof.start("initialization");
     Ncells = N;
     NumCircumcircles = 0;
@@ -49,6 +61,7 @@ void DelaunayGPU::resize(const int nmax)
 
 void DelaunayGPU::initializeCellList()
 	{
+    cList.GPUcompute = GPUcompute;
 	cList.setNp(Ncells);
     cList.setBox(Box);
     cList.setGridSize(cellsize);

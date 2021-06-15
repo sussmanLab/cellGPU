@@ -7,11 +7,18 @@
 Initialize everything, by default setting the target temperature to unity.
 Note that in the current set up the thermostate masses are automatically set by the target temperature, assuming \tau = 1
 */
-NoseHooverChainNVT::NoseHooverChainNVT(int N, int M)
+NoseHooverChainNVT::NoseHooverChainNVT(int N, int M, bool useGPU)
     {
     Timestep = 0;
     deltaT=0.01;
-    GPUcompute=true;
+    GPUcompute=useGPU;
+    if(!GPUcompute)
+        {
+        kineticEnergyScaleFactor.neverGPU = true;
+        BathVariables.neverGPU = true;
+        keArray.neverGPU = true;
+        keIntermediateReduction.neverGPU = true;
+        }
     Ndof = N;
     displacements.resize(Ndof);
     keArray.resize(Ndof);

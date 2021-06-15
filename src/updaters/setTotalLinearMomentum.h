@@ -9,14 +9,14 @@ class setTotalLinearMomentum : public updater
     {
     public:
         //! By default, target zero total linear momentum
-        setTotalLinearMomentum(double px = 0.0, double py = 0.0);
+        setTotalLinearMomentum(double px = 0.0, double py = 0.0, bool usegpu = true);
 
         //!sets the target x and y total system momentum
         void setMomentumTarget(double px, double py);
 
         //! performUpdate just selects either the GPU or CPU branch
         virtual void performUpdate();
-        
+
         //!call the CPU routine to set the total linear momentum
         virtual void setLinearMomentumCPU();
         //!call the GPU routine to set the total linear momentum

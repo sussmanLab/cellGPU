@@ -13,11 +13,12 @@ a random point set. Set this flag to true to relax this initial configuration vi
 \post Initialize(n,runSPVToInitialize) is called, setCellPreferencesUniform(A0,P0), and
 setModuliUniform(1.0,1.0)
 */
-VertexQuadraticEnergy::VertexQuadraticEnergy(int n,double A0, double P0,bool reprod,bool runSPVToInitialize)
+VertexQuadraticEnergy::VertexQuadraticEnergy(int n,double A0, double P0,bool reprod,bool runSPVToInitialize, bool usegpu)
     {
+    GPUcompute = usegpu;
     printf("Initializing %i cells with random positions as an initially Delaunay configuration in a square box... \n",n);
     Reproducible = reprod;
-    initializeVertexModelBase(n,runSPVToInitialize);
+    initializeVertexModelBase(n,runSPVToInitialize,GPUcompute);
     setCellPreferencesUniform(A0,P0);
     };
 

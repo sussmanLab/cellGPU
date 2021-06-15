@@ -21,9 +21,9 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
     {
     public:
         //!The basic constructor
-        EnergyMinimizerFIRE(){initializeParameters();};
+        EnergyMinimizerFIRE(bool useGPU = true){initializeParameters();GPUcompute = useGPU;};
         //!The basic constructor that feeds in a target system to minimize
-        EnergyMinimizerFIRE(shared_ptr<Simple2DModel> system);
+        EnergyMinimizerFIRE(shared_ptr<Simple2DModel> system, bool useGPU = true);
         //!Sets a bunch of default parameters that do not depend on the number of degrees of freedom
         void initializeParameters();
         //!Set a bunch of default initialization parameters (if the State is available to determine the size of vectors)
@@ -115,8 +115,6 @@ class EnergyMinimizerFIRE : public simpleEquationOfMotion
         GPUArray<double2> force;
         //!The GPUArray containing the velocity
         GPUArray<double2> velocity;
-        //!an array of displacements
-        GPUArray<double2> displacement;
 
         //!Utility array for computing force.velocity
         GPUArray<double> forceDotVelocity;

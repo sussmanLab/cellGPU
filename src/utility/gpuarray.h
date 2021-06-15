@@ -116,6 +116,8 @@ template<class T> class GPUArray
         GPUArray(unsigned int num_elements,bool _register=false);
         virtual ~GPUArray();
 
+        bool neverGPU = false;
+        
         GPUArray(const GPUArray& from);
         GPUArray& operator=(const GPUArray& rhs);
         //!Swap two GPUarrays efficiently
@@ -546,7 +548,8 @@ template<class T> void GPUArray<T>::resize(unsigned int num_elements)
     {
     resizeHostArray(num_elements);
 #ifdef ENABLE_CUDA
-    resizeDeviceArray(num_elements);
+    if (!neverGPU)
+        resizeDeviceArray(num_elements);
 #endif
     Num_elements = num_elements;
     }

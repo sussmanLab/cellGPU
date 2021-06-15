@@ -101,6 +101,8 @@ class cellListGPU
         //!An array containing the indices of particles in various cells. So, idx[cell_list_indexer(nn,bin)] gives the index of the nth particle in the bin "bin" of the cell list
         GPUArray<int> idxs;
 
+        bool GPUcompute = true;
+
     protected:
         //!first index is Nmax, second is whether to recompute
         GPUArray<int> assist;

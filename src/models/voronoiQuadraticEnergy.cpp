@@ -8,11 +8,11 @@
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
 \post initializeVoronoiQuadraticEnergy(n,initGPURNcellsG) is called, as is setCellPreferenceUniform(1.0,4.0)
 */
-VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod)
+VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod, bool usegpu)
     {
 //    printf("Initializing %i cells with random positions in a square box... \n",n);
     Reproducible = reprod;
-    initializeVoronoiQuadraticEnergy(n);
+    initializeVoronoiQuadraticEnergy(n, usegpu);
     setCellPreferencesUniform(1.0,4.0);
     };
 
@@ -23,11 +23,11 @@ VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod)
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
 \post initializeVoronoiQuadraticEnergy(n,initGPURNG) is called
 */
-VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n,double A0, double P0,bool reprod)
+VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n,double A0, double P0,bool reprod, bool gpu)
     {
 //    printf("Initializing %i cells with random positions in a square box...\n ",n);
     Reproducible = reprod;
-    initializeVoronoiQuadraticEnergy(n);
+    initializeVoronoiQuadraticEnergy(n, gpu);
     setCellPreferencesUniform(A0,P0);
     setv0Dr(0.05,1.0);
     };
@@ -40,9 +40,9 @@ initialized (initializeVoronoiModelBase(n) gets called), particle exclusions are
 data structures for the topology are set
 */
 //take care of all class initialization functions
-void VoronoiQuadraticEnergy::initializeVoronoiQuadraticEnergy(int n)
+void VoronoiQuadraticEnergy::initializeVoronoiQuadraticEnergy(int n, bool gpu)
     {
-    initializeVoronoiModelBase(n);
+    initializeVoronoiModelBase(n, gpu);
     Timestep = 0;
     setDeltaT(0.01);
     };

@@ -96,6 +96,14 @@ This routine currently picks an even integer of cells, close to the desired size
  */
 void cellListGPU::setGridSize(double a)
     {
+    if(!GPUcompute)
+        {
+        particles.neverGPU = true;
+        cell_sizes.neverGPU = true;
+        idxs.neverGPU = true;
+        assist.neverGPU = true;
+        };
+
     double b11,b12,b21,b22;
     Box->getBoxDims(b11,b12,b21,b22);
     xsize = (int)floor(b11/a);

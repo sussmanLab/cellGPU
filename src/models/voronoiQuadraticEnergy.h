@@ -17,14 +17,14 @@ class VoronoiQuadraticEnergy : public voronoiModelBase
     {
     public:
         //!initialize with random positions in a square box
-        VoronoiQuadraticEnergy(int n,bool reprod = false);
+        VoronoiQuadraticEnergy(int n,bool reprod = false, bool usegpu = true);
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        VoronoiQuadraticEnergy(int n, double A0, double P0,bool reprod = false);
+        VoronoiQuadraticEnergy(int n, double A0, double P0,bool reprod = false, bool gpu = true);
         //!Blank constructor
         VoronoiQuadraticEnergy(){};
 
         //!Initialize voronoiQuadraticEnergy and call the initializer chain
-        void initializeVoronoiQuadraticEnergy(int n);
+        void initializeVoronoiQuadraticEnergy(int n, bool useGPU = true);
 
         //!compute the geometry and get the forces
         virtual void computeForces();

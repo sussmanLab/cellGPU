@@ -14,11 +14,15 @@ class VertexQuadraticEnergyWithTension : public VertexQuadraticEnergy
     {
     public:
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        VertexQuadraticEnergyWithTension(int n, double A0, double P0,bool reprod = false, bool runSPVToInitialize=false) : VertexQuadraticEnergy(n,A0,P0,reprod,runSPVToInitialize){gamma = 0;Tension = false;simpleTension = true;};
+        VertexQuadraticEnergyWithTension(int n, double A0, double P0,bool reprod = false, bool runSPVToInitialize=false,bool usegpu = true) : VertexQuadraticEnergy(n,A0,P0,reprod,runSPVToInitialize,usegpu)
+                {
+                gamma = 0;Tension = false;simpleTension = true;GPUcompute = usegpu
+                if(!GPUcompute)
+                    tensionMatrix.neverGPU =true;
+                };
 
         //!compute the geometry and get the forces
         virtual void computeForces();
-        
         //!compute the quadratic energy functional
         virtual double computeEnergy();
 

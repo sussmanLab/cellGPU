@@ -43,7 +43,6 @@ class noiseSource
         void initialize(int _N)
             {
             N=_N;
-            RNGs.resize(N);
             };
         //!set reproducibility
         void setReproducible(bool _rep){Reproducible = _rep;};
@@ -62,7 +61,7 @@ class noiseSource
         //!A non-reproducible Mersenne Twister
         mt19937 genrd;
         //!A flag to determine whether the CUDA RNGs should be initialized or not (so that the program will run on systems with no GPU by setting this to false
-        bool initializeGPURNG;
+        bool initializeGPURNG = true;
 
         //!allow for whatever GPU RNG initialization is needed
         void initializeGPURNGs(int globalSeed=1337, int tempSeed=0);

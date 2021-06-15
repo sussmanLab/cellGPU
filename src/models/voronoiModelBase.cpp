@@ -26,11 +26,25 @@ void voronoiModelBase::reinitialize(int neighborGuess)
  * a function that takes care of the initialization of the class.
  * \param n the number of cells to initialize
  */
-void voronoiModelBase::initializeVoronoiModelBase(int n)
+void voronoiModelBase::initializeVoronoiModelBase(int n, bool gpu)
     {
+
+    if(!gpu)
+        {
+        GPUcompute = false;
+        external_forces.neverGPU = true;
+        exclusions.neverGPU =true;
+        NeighIdxs.neverGPU =true;
+        anyCircumcenterTestFailed.neverGPU =true;
+        repair.neverGPU =true;
+        delSets.neverGPU =true;
+        delOther.neverGPU =true;
+        forceSets.neverGPU =true;
+        };
+
     //set particle number and call initializers
     Ncells = n;
-    initializeSimple2DActiveCell(Ncells);
+    initializeSimple2DActiveCell(Ncells, gpu);
 
     NeighIdxs.resize(6*(Ncells));
 
@@ -47,7 +61,7 @@ void voronoiModelBase::initializeVoronoiModelBase(int n)
 
     //DelaunayGPU initialization
     int maxNeighGuess = 12;
-    delGPU.initialize(Ncells,maxNeighGuess,1.0,Box);
+    delGPU.initialize(Ncells,maxNeighGuess,1.0,Box, gpu);
     delGPU.setSafetyMode(true);
     delGPU.setGPUcompute(GPUcompute);
 

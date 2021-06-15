@@ -9,8 +9,9 @@
 Initialize the minimizer with a reference to a target system, set a bunch of default parameters.
 Of note, the current default is CPU operation
 */
-EnergyMinimizerFIRE::EnergyMinimizerFIRE(shared_ptr<Simple2DModel> system)
+EnergyMinimizerFIRE::EnergyMinimizerFIRE(shared_ptr<Simple2DModel> system, bool usegpu)
     {
+    GPUcompute = usegpu;
     set2DModel(system);
     initializeParameters();
     initializeFromModel();
@@ -21,6 +22,17 @@ Initialize the minimizer with some default parameters. that do not depend on N
 */
 void EnergyMinimizerFIRE::initializeParameters()
     {
+    if(!GPUcompute)
+        {
+        force.neverGPU =true;
+        velocity.neverGPU =true;
+        displacements.neverGPU =true;
+        forceDotVelocity.neverGPU =true;
+        forceDotForce.neverGPU =true;
+        velocityDotVelocity.neverGPU =true;
+        sumReductionIntermediate.neverGPU =true;
+        sumReductions.neverGPU =true;
+        }
     sumReductions.resize(3);
     iterations = 0;
     Power = 0;
@@ -51,7 +63,7 @@ void EnergyMinimizerFIRE::initializeFromModel()
     velocityDotVelocity.resize(N);
     force.resize(N);
     velocity.resize(N);
-    displacement.resize(N);
+    displacements.resize(N);
     sumReductionIntermediate.resize(N);
     ArrayHandle<double2> h_f(force);
     ArrayHandle<double2> h_v(velocity);
@@ -95,12 +107,12 @@ void EnergyMinimizerFIRE::velocityVerletGPU()
         {
         ArrayHandle<double2> d_f(force,access_location::device,access_mode::read);
         ArrayHandle<double2> d_v(velocity,access_location::device,access_mode::readwrite);
-        ArrayHandle<double2> d_d(displacement,access_location::device,access_mode::overwrite);
+        ArrayHandle<double2> d_d(displacements,access_location::device,access_mode::overwrite);
         gpu_displacement_velocity_verlet(d_d.data,d_v.data,d_f.data,deltaT,N);
         gpu_update_velocity(d_v.data,d_f.data,deltaT,N);
         };
     //move particles and update forces
-    State->moveDegreesOfFreedom(displacement);
+    State->moveDegreesOfFreedom(displacements);
     State->enforceTopology();
     State->computeForces();
     State->getForces(force);
@@ -121,7 +133,7 @@ void EnergyMinimizerFIRE::velocityVerletCPU()
         {
         ArrayHandle<double2> h_f(force);
         ArrayHandle<double2> h_v(velocity);
-        ArrayHandle<double2> h_d(displacement);
+        ArrayHandle<double2> h_d(displacements);
         for (int i = 0; i < N; ++i)
             {
             //update displacement
@@ -133,7 +145,7 @@ void EnergyMinimizerFIRE::velocityVerletCPU()
             };
         };
     //move particles, then update the forces
-    State->moveDegreesOfFreedom(displacement);
+    State->moveDegreesOfFreedom(displacements);
     State->enforceTopology();
     State->computeForces();
     State->getForces(force);

@@ -47,11 +47,22 @@ void vertexModelBase::moveDegreesOfFreedom(GPUArray<double2> &displacements,doub
 /*!
 Take care of all base class initialization functions, this involves setting arrays to the right size, etc.
 */
-void vertexModelBase::initializeVertexModelBase(int n,bool spvInitialize)
+void vertexModelBase::initializeVertexModelBase(int n,bool spvInitialize, bool usegpu)
     {
+    GPUcompute = useGPU;
+    if(!GPUcompute)
+        {
+        vertexEdgeFlips.neverGPU = true;
+        vertexEdgeFlipsCurrent.neverGPU = true;
+        vertexForceSets.neverGPU = true;
+        growCellVertexListAssist.neverGPU = true;
+        finishedFlippingEdges.neverGPU = true;
+        cellEdgeFlips.neverGPU = true;
+        cellSets.neverGPU = true;
+        };
     //set number of cells, and call initializer chain
     Ncells=n;
-    initializeSimple2DActiveCell(Ncells);
+    initializeSimple2DActiveCell(Ncells,GPUcompute);
     //derive the vertices from a voronoi tesselation
     setCellsVoronoiTesselation(spvInitialize);
 

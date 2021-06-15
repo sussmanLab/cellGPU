@@ -34,7 +34,7 @@ class vertexModelBase : public Simple2DActiveCell
         virtual void getForces(GPUArray<double2> &forces){forces = vertexForces;};
 
         //!Initialize vertexModelBase, set random orientations for vertex directors, prepare data structures
-        void initializeVertexModelBase(int n,bool spvInitialize = false);
+        void initializeVertexModelBase(int n,bool spvInitialize = false, bool usegpu = true);
 
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(bool spvInitialize = false);
@@ -155,5 +155,4 @@ class vertexModelBase : public Simple2DActiveCell
             cout <<endl;
             };
     };
-
 #endif

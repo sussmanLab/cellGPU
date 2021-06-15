@@ -17,14 +17,14 @@ using namespace std;
 
 class DelaunayGPU
     {
-	public:
+    public:
 
-		//!blank constructor
-		DelaunayGPU();
+        //!blank constructor
+        DelaunayGPU();
         //!Constructor + initialiation
         DelaunayGPU(int N, int maximumNeighborsGuess, double cellSize, PeriodicBoxPtr bx);
-		//!Destructor
-		~DelaunayGPU(){};
+        //!Destructor
+        ~DelaunayGPU(){};
 
         //!Given a point set, fill the int arrays with a Delaunay triangulation
         void globalDelaunayTriangulation(GPUArray<double2> &points, GPUArray<int> &GPUTriangulation, GPUArray<int> &cellNeighborNum);
@@ -33,14 +33,14 @@ class DelaunayGPU
         void testAndRepairDelaunayTriangulation(GPUArray<double2> &points, GPUArray<int> &GPUTriangulation, GPUArray<int> &cellNeighborNum);
 
         //!initialization function
-        void initialize(int N, int maximumNeighborsGuess, double cellSize, PeriodicBoxPtr bx);
+        void initialize(int N, int maximumNeighborsGuess, double cellSize, PeriodicBoxPtr bx, bool gpu = true);
         //!function call to change the maximum number of neighbors per point
         void resize(const int nmax);
-        //! update the size of the cell list bins 
+        //! update the size of the cell list bins
         void setCellListSize(double csize);
         //!Only update the cell list
         void updateList(GPUArray<double2> &points);
-        //!Set the box from a 
+        //!Set the box from another box
         void setBox(PeriodicBoxPtr bx){Box=bx;};
         //!Set the safetyMode flag...If safetyMode is false and the assumptions are not satisfied, program will be wrong with (possibly) no warning!
         void setSafetyMode(bool _sm){safetyMode=_sm;};

@@ -22,7 +22,7 @@ class Simple2DCell : public Simple2DModel
         Simple2DCell();
 
         //! initialize class' data structures and set default values
-        void initializeSimple2DCell(int n);
+        void initializeSimple2DCell(int n, bool gpu = true);
 
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};

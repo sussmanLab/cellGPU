@@ -17,7 +17,7 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
     {
     public:
         //!The base constructor asks for the number of particles and the length of the chain
-        NoseHooverChainNVT(int N, int M=2);
+        NoseHooverChainNVT(int N, int M=2, bool useGPU = true);
 
         //!The system that can compute forces, move degrees of freedom, etc.
         shared_ptr<Simple2DModel> State;

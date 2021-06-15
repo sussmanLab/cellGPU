@@ -27,11 +27,15 @@ class simpleEquationOfMotion : public updaterWithNoise
     {
     public:
         //!base constructor sets default time step size
-        simpleEquationOfMotion()
+        simpleEquationOfMotion(bool usegpu = true)
             {
             Period = 1;
             Phase = 0;
-            deltaT = 0.01; GPUcompute =true;Timestep = 0;
+            deltaT = 0.01; GPUcompute =usegpu;Timestep = 0;
+            if(!GPUcompute)
+                {
+                displacements.neverGPU = true;
+                };
             };
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion(){};

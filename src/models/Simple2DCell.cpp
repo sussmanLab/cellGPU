@@ -15,10 +15,36 @@ Simple2DCell::Simple2DCell() :
 /*!
 Initialize the data structures to the size specified by n, and set default values.
 */
-void Simple2DCell::initializeSimple2DCell(int n)
+void Simple2DCell::initializeSimple2DCell(int n, bool gpu)
     {
     Ncells = n;
     Nvertices = 2*Ncells;
+
+    if(!gpu)
+        {
+        cout << " disabling gpu memory use" << endl;
+        cellPositions.neverGPU = true;
+        vertexPositions.neverGPU = true;
+        cellVelocities.neverGPU = true;
+        cellMasses.neverGPU = true;
+        vertexVelocities.neverGPU = true;
+        vertexMasses.neverGPU = true;
+        vertexNeighbors.neverGPU = true;
+        vertexCellNeighbors.neverGPU = true;
+        neighborNum.neverGPU = true;
+        neighbors.neverGPU = true;
+        cellVertexNum.neverGPU = true;
+        vertexForces.neverGPU = true;
+        cellForces.neverGPU = true;
+        cellType.neverGPU = true;
+        Moduli.neverGPU = true;
+        AreaPeri.neverGPU = true;
+        AreaPeriPreferences.neverGPU = true;
+        cellVertices.neverGPU = true;
+        voroCur.neverGPU = true;
+        voroLastNext.neverGPU = true;
+        displacements.neverGPU = true;
+        };
 
     //setting cell positions randomly also auto-generates a square box with L = sqrt(Ncells)
     setCellPositionsRandomly();

@@ -16,13 +16,24 @@ class VoronoiQuadraticEnergyWithTension : public VoronoiQuadraticEnergy
     {
     public:
         //!initialize with random positions in a square box
-        VoronoiQuadraticEnergyWithTension(int n,bool reprod = false) : VoronoiQuadraticEnergy(n,reprod){gamma = 0.0; Tension = false;simpleTension = true;};
+        VoronoiQuadraticEnergyWithTension(int n,bool reprod = false,bool usegpu = true) : VoronoiQuadraticEnergy(n,reprod,usegpu)
+            {
+            gamma = 0.0; Tension = false;simpleTension = true; GPUcompute = usegpu;
+            if(!GPUcompute)
+                tensionMatrix.neverGPU = true;
+            };
+
         //! initialize with random positions and set all cells to have uniform target A_0 and P_0 parameters
-        VoronoiQuadraticEnergyWithTension(int n, double A0, double P0,bool reprod = false) : VoronoiQuadraticEnergy(n,A0,P0,reprod){gamma = 0;Tension = false;simpleTension = true;};
+        VoronoiQuadraticEnergyWithTension(int n, double A0, double P0,bool reprod = false, bool usegpu = true) : VoronoiQuadraticEnergy(n,A0,P0,reprod,usegpu)
+            {
+            gamma = 0;Tension = false;simpleTension = true; GPUcompute = usegpu;
+            if(!GPUcompute)
+                tensionMatrix.neverGPU = true;
+            };
 
         //!compute the geometry and get the forces
         virtual void computeForces();
-        
+
         //!compute the quadratic energy functional
         virtual double computeEnergy();
 

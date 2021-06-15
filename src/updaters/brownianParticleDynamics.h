@@ -17,7 +17,7 @@ class brownianParticleDynamics : public simpleEquationOfMotion
         //!base constructor sets the default time step size
         brownianParticleDynamics(){deltaT = 0.01; GPUcompute =true;Timestep = 0;};
         //!additionally set the number of particles and initialize things
-        brownianParticleDynamics(int N);
+        brownianParticleDynamics(int N, bool usegpu=true);
 
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion();
@@ -34,7 +34,7 @@ class brownianParticleDynamics : public simpleEquationOfMotion
         double getMu(){return mu;};
         //!Set the value of the inverse friction coefficient
         void setMu(double _mu){mu=_mu;};
-        
+
         //! virtual function to allow the model to be a derived class
         virtual void set2DModel(shared_ptr<Simple2DModel> _model);
 

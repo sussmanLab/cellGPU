@@ -16,10 +16,17 @@ Simple2DActiveCell::Simple2DActiveCell()
 Initialize the data structures to the size specified by n, and set default values, and call
 Simple2DCell's initilization routine.
 */
-void Simple2DActiveCell::initializeSimple2DActiveCell(int n)
+void Simple2DActiveCell::initializeSimple2DActiveCell(int n, bool gpu)
     {
     Ncells = n;
-    initializeSimple2DCell(Ncells);
+    initializeSimple2DCell(Ncells, gpu);
+
+    if(!gpu)
+        {
+        cellDirectors.neverGPU = true;
+        cellDirectorForces.neverGPU = true;
+        Motility.neverGPU = true;
+        }
     //The setting functions automatically resize their vectors
     setCellDirectorsRandomly();
     setv0Dr(0.0,1.0);
