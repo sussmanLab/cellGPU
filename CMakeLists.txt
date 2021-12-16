@@ -38,8 +38,6 @@ include_directories(
             ${CMAKE_SOURCE_DIR}/src/models
             ${CMAKE_SOURCE_DIR}/src/analysis
             ${CMAKE_SOURCE_DIR}/src/databases
-            $ENV{PATH}$
-
    )
 
 add_subdirectory(src)
@@ -58,7 +56,8 @@ set(myLibs
 
 link_directories(${CUDA_LIBRARY_DIRS} $ENV{LD_LIBRARY_PATH})
 
-set(SOURCES )
+set(SOURCES
+    )
 set(HEADERS
     )
 

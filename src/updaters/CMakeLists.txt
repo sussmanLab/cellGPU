@@ -25,6 +25,7 @@ add_library(updaters
     selfPropelledParticleDynamics.cpp
     selfPropelledVicsekAligningParticleDynamics.cpp
     setTotalLinearMomentum.cpp
+    langevinDynamics.cpp
     )
 cuda_add_library(updatersGPU
     EnergyMinimizerFIRE2D.cu
@@ -36,5 +37,5 @@ cuda_add_library(updatersGPU
     selfPropelledVicsekAligningParticleDynamics.cu
     setTotalLinearMomentum.cu
     simpleEquationOfMotion.cu
+    langevinDynamics.cu
     )
-

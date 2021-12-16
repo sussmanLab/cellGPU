@@ -49,7 +49,7 @@ Take care of all base class initialization functions, this involves setting arra
 */
 void vertexModelBase::initializeVertexModelBase(int n,bool spvInitialize, bool usegpu)
     {
-    GPUcompute = useGPU;
+    GPUcompute = usegpu;
     if(!GPUcompute)
         {
         vertexEdgeFlips.neverGPU = true;

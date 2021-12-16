@@ -32,6 +32,30 @@ bool gpu_add_gpuarray(GPUArray<T> &answer, GPUArray<T> &adder, int N, int maxBlo
     return cudaSuccess;
     }
 
+template <typename T>
+__global__ void gpu_add_multipleOf_gpuarray_kernel(T *a, T *b, double scale, int N)
+    {
+    // read in the particle that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+    a[idx] = a[idx] + scale*b[idx];
+    return;
+    };
+
+
+template<typename T>
+bool gpu_add_multipleOf_gpuarray(GPUArray<T> &answer, GPUArray<T> &adder, double scale, int N, int maxBlockSize)
+    {
+    unsigned int block_size = maxBlockSize;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = (N)/block_size + 1;
+    ArrayHandle<T> a(answer,access_location::device,access_mode::readwrite);
+    ArrayHandle<T> b(adder,access_location::device,access_mode::read);
+    gpu_add_multipleOf_gpuarray_kernel<<<nblocks,block_size>>>(a.data,b.data,scale, N);
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    }
 /*!
 take two vectors and return a vector of double2s, where each entry is vec1[i].vec2[i]
 */
@@ -304,6 +328,35 @@ bool gpu_set_array(T *array, T value, int N,int maxBlockSize)
     }
 
 template <typename T>
+__global__ void gpu_copy_multipleOf_gpuarray_kernel(T *copyInto,T *copyFrom, double scale,int N)
+    {
+    // read in the particle that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+    copyInto[idx] = scale*copyFrom[idx];
+    return;
+    };
+
+template<typename T>
+bool gpu_copy_multipleOf_gpuarray(GPUArray<T> &copyInto,GPUArray<T> &copyFrom,double scale, int numberOfElementsToCopy,int maxBlockSize)
+    {
+    int N = copyFrom.getNumElements();
+    if(numberOfElementsToCopy >0)
+        N = numberOfElementsToCopy;
+    if(copyInto.getNumElements() < N)
+        copyInto.resize(N);
+    unsigned int block_size = maxBlockSize;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = (N)/block_size + 1;
+    ArrayHandle<T> ci(copyInto,access_location::device,access_mode::overwrite);
+    ArrayHandle<T> cf(copyFrom,access_location::device,access_mode::read);
+    gpu_copy_multipleOf_gpuarray_kernel<<<nblocks,block_size>>>(ci.data,cf.data,scale,N);
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    }
+
+template <typename T>
 __global__ void gpu_copy_gpuarray_kernel(T *copyInto,T *copyFrom, int N)
     {
     // read in the particle that belongs to this thread
@@ -338,6 +391,8 @@ template bool gpu_copy_gpuarray<double2>(GPUArray<double2> &copyInto,GPUArray<do
 template bool gpu_copy_gpuarray<int>(GPUArray<int> &copyInto,GPUArray<int> &copyFrom,int n, int maxBlockSize);
 template bool gpu_copy_gpuarray<int3>(GPUArray<int3> &copyInto,GPUArray<int3> &copyFrom,int n, int maxBlockSize);
 
+template bool gpu_copy_multipleOf_gpuarray<double2>(GPUArray<double2> &copyInto,GPUArray<double2> &copyFrom,double scale, int n, int maxBlockSize);
+
 template bool gpu_set_array<int>(int *,int, int, int);
 template bool gpu_set_array<unsigned int>(unsigned int *,unsigned int, int, int);
 template bool gpu_set_array<int2>(int2 *,int2, int, int);
@@ -347,4 +402,6 @@ template bool gpu_set_array<double2>(double2 *,double2, int, int);
 
 template bool gpu_add_gpuarray<double>(GPUArray<double> &answer, GPUArray<double> &adder, int N, int maxBlockSize);
 template bool gpu_add_gpuarray<double2>(GPUArray<double2> &answer, GPUArray<double2> &adder, int N, int maxBlockSize);
+
+template bool gpu_add_multipleOf_gpuarray<double2>(GPUArray<double2> &answer, GPUArray<double2> &adder, double scale, int N, int maxBlockSize);
 /** @} */ //end of group declaration

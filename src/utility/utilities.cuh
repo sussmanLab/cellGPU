@@ -63,10 +63,26 @@ bool gpu_add_gpuarray(GPUArray<T> &answer,
                        int N,
                        int block_size=512);
 
+//! answer = answer+scale*adder
+template<typename T>
+bool gpu_add_multipleOf_gpuarray(GPUArray<T> &answer,
+                       GPUArray<T> &adder,
+                       double scale,
+                       int N,
+                       int block_size=512);
+
 //!copy data into target on the device...copies the first Ntotal elements into the target array, by default it copies all elements
 template<typename T>
 bool gpu_copy_gpuarray(GPUArray<T> &copyInto,
                        GPUArray<T> &copyFrom,
+                       int numberOfElementsToCopy = -1,
+                       int block_size=512);
+
+//!copy data into target on the device...copies the first Ntotal elements into the target array, by default it copies all elements
+template<typename T>
+bool gpu_copy_multipleOf_gpuarray(GPUArray<T> &copyInto,
+                       GPUArray<T> &copyFrom,
+                       double scale,
                        int numberOfElementsToCopy = -1,
                        int block_size=512);
 /** @} */ //end of group declaration
