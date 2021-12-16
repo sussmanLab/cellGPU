@@ -1,5 +1,5 @@
 #ifndef __LANGEVINDYNAMICS_CUH__
-#define __LANGEVINYNAMICS_CUH__
+#define __LANGEVINDYNAMICS_CUH__
 
 #include "std_include.h"
 #include <cuda_runtime.h>
