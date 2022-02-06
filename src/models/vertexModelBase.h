@@ -36,6 +36,9 @@ class vertexModelBase : public Simple2DActiveCell
         //!Initialize vertexModelBase, set random orientations for vertex directors, prepare data structures
         void initializeVertexModelBase(int n,bool spvInitialize = false, bool usegpu = true);
 
+        //!change to a rectangular unit cell, retesselate, etc
+        virtual void setRectangularUnitCell(double Lx, double Ly);
+
         //!Initialize cells to be a voronoi tesselation of a random point set
         void setCellsVoronoiTesselation(bool spvInitialize = false);
 

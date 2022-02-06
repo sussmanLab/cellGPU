@@ -44,6 +44,12 @@ void vertexModelBase::moveDegreesOfFreedom(GPUArray<double2> &displacements,doub
         };
     };
 
+void vertexModelBase::setRectangularUnitCell(double Lx, double Ly)
+    {
+    Simple2DCell::setRectangularUnitCell(Lx,Ly);
+    setCellsVoronoiTesselation(false);//false = no spv initialization....I want to deprecate that, anyway
+    }
+
 /*!
 Take care of all base class initialization functions, this involves setting arrays to the right size, etc.
 */

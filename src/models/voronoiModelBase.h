@@ -43,6 +43,9 @@ class voronoiModelBase : public Simple2DActiveCell
         //!read positions from text file...for debugging
         void readTriangulation(ifstream &infile);
 
+        //! change the box dimensions, and rescale the positions of particles
+        virtual void setRectangularUnitCell(double Lx, double Ly);
+
         //!update/enforce the topology
         virtual void enforceTopology();
 

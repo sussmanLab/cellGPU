@@ -24,6 +24,9 @@ class Simple2DCell : public Simple2DModel
         //! initialize class' data structures and set default values
         void initializeSimple2DCell(int n, bool gpu = true);
 
+        //! change the box dimensions, and rescale the positions of particles
+        virtual void setRectangularUnitCell(double Lx, double Ly);
+
         //!Enforce GPU-only operation. This is the default mode, so this method need not be called most of the time.
         virtual void setGPU(){GPUcompute = true;};
 

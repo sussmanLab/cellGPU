@@ -103,6 +103,23 @@ void Simple2DCell::computeGeometry()
     }
 
 /*!
+Resize the box so that the new dimensions are Lx by Ly, and rescale the positions of existing cells
+*/
+void Simple2DCell::setRectangularUnitCell(double Lx, double Ly)
+    {
+    double bxx,bxy,byy,byx;
+    Box->getBoxDims(bxx,bxy,byx,byy);
+    Box->setSquare(Lx,Ly);
+
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::readwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        h_p.data[ii].x = h_p.data[ii].x*Lx/bxx;
+        h_p.data[ii].y = h_p.data[ii].y*Ly/byy;
+        };
+    }
+
+/*!
 Resize the box so that every cell has, on average, area = 1, and place cells via either a simple,
 reproducible RNG or a non-reproducible RNG
 */

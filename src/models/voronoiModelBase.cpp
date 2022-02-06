@@ -80,6 +80,23 @@ void voronoiModelBase::initializeVoronoiModelBase(int n, bool gpu)
     };
 
 /*!
+change particle positions, change the box, and reset the tesselation structures
+*/
+void voronoiModelBase::setRectangularUnitCell(double Lx, double Ly)
+    {
+    //First, use the base class to change the box and rescale cell positions
+    Simple2DCell::setRectangularUnitCell(Lx,Ly);
+    //now, reset the delGPU structures, and re-triangulate
+    int maxNeighGuess = 12;
+    delGPU.initialize(Ncells,maxNeighGuess,1.0,Box, GPUcompute);
+    delGPU.setSafetyMode(true);
+    delGPU.setGPUcompute(GPUcompute);
+    globalTriangulationDelGPU();
+    resizeAndReset();
+    enforceTopology();
+    };
+
+/*!
 \param exes a list of per-particle indications of whether a particle should be excluded (exes[i] !=0) or not/
 */
 void voronoiModelBase::setExclusions(vector<int> &exes)
