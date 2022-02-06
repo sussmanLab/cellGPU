@@ -70,7 +70,7 @@ int main(int argc, char*argv[])
 //    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
     shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(numpts);
     //define a voronoi configuration with a quadratic energy functional
-    shared_ptr<VoronoiQuadraticEnergy> spv  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible);
+    shared_ptr<VoronoiQuadraticEnergy> spv  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible,initializeGPU);
 
     //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
     spv->setCellPreferencesUniform(1.0,p0);

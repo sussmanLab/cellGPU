@@ -64,13 +64,8 @@ int main(int argc, char*argv[])
     bool reproducible = true; // if you want random numbers with a more random seed each run, set this to false
     //check to see if we should run on a GPU
     bool initializeGPU = true;
-    if (USE_GPU >= 0)
-        {
-        bool gpu = chooseGPU(USE_GPU);
-        if (!gpu) return 0;
-        cudaSetDevice(USE_GPU);
-        }
-    else
+    bool gpu = chooseGPU(USE_GPU);
+    if (!gpu) 
         initializeGPU = false;
 
     //possibly save output in netCDF format
@@ -79,7 +74,7 @@ int main(int argc, char*argv[])
     int Nvert = 2*numpts;
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
-    bool runSPV = true;//setting this to true will relax the random cell positions to something more uniform before running vertex model dynamics
+    bool runSPV = false;//setting this to true will relax the random cell positions to something more uniform before running vertex model dynamics
 
     //We will define two potential equations of motion, and choose which later on.
     //define an equation of motion object...here for self-propelled cells
@@ -88,7 +83,7 @@ int main(int argc, char*argv[])
     shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(Nvert);
     bd->setT(v0);
     //define a vertex model configuration with a quadratic energy functional
-    shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible,runSPV);
+    shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible,runSPV,initializeGPU);
     //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
     avm->setCellPreferencesUniform(1.0,p0);
     //set the cell activity to have D_r = 1. and a given v_0
