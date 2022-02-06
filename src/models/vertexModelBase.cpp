@@ -46,8 +46,18 @@ void vertexModelBase::moveDegreesOfFreedom(GPUArray<double2> &displacements,doub
 
 void vertexModelBase::setRectangularUnitCell(double Lx, double Ly)
     {
+    double bxx,bxy,byy,byx;
+    Box->getBoxDims(bxx,bxy,byx,byy);
+
     Simple2DCell::setRectangularUnitCell(Lx,Ly);
-    setCellsVoronoiTesselation(false);//false = no spv initialization....I want to deprecate that, anyway
+    //also set the vertex positions
+    ArrayHandle<double2> h_v(vertexPositions,access_location::host,access_mode::readwrite);
+    for (int i = 0; i < Nvertices; ++i)
+        {
+        h_v.data[i].x = h_v.data[i].x*Lx/bxx;
+        h_v.data[i].y = h_v.data[i].y*Ly/byy;
+        };
+    enforceTopology();
     }
 
 /*!
