@@ -47,3 +47,5 @@ documenation website)
 [cellGPU version information](@ref changelog)
 
 [Contributors](@ref contributorList)
+
+[![DOI](https://zenodo.org/badge/195412342.svg)](https://zenodo.org/badge/latestdoi/195412342)
