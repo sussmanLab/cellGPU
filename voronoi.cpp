@@ -3,11 +3,11 @@
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
-#define ENABLE_CUDA
 
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
 #include "selfPropelledParticleDynamics.h"
+#include "brownianParticleDynamics.h"
 #include "analysisPackage.h"
 
 /*!
@@ -28,10 +28,10 @@ int main(int argc, char*argv[])
     int tSteps = 5; //number of time steps to run after initialization
     int initSteps = 1; //number of initialization steps
 
-    Dscalar dt = 0.01; //the time step size
-    Dscalar p0 = 3.8;  //the preferred perimeter
-    Dscalar a0 = 1.0;  // the preferred area
-    Dscalar v0 = 0.1;  // the self-propulsion
+    double dt = 0.01; //the time step size
+    double p0 = 3.8;  //the preferred perimeter
+    double a0 = 1.0;  // the preferred area
+    double v0 = 0.1;  // the self-propulsion
 
     //The defaults can be overridden from the command line
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
@@ -61,36 +61,35 @@ int main(int argc, char*argv[])
     bool reproducible = true; // if you want random numbers with a more random seed each run, set this to false
     //check to see if we should run on a GPU
     bool initializeGPU = true;
-    if (USE_GPU >= 0)
-        {
-        bool gpu = chooseGPU(USE_GPU);
-        if (!gpu) return 0;
-        cudaSetDevice(USE_GPU);
-        }
-    else
+    bool gpu = chooseGPU(USE_GPU);
+    if (!gpu) 
         initializeGPU = false;
 
+    cout << "initializing a system of " << numpts << " cells at temperature " << v0 << endl;
     //define an equation of motion object...here for self-propelled cells
-    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+//    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
+    shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(numpts);
     //define a voronoi configuration with a quadratic energy functional
-    shared_ptr<VoronoiQuadraticEnergy> spv  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible);
+    shared_ptr<VoronoiQuadraticEnergy> spv  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible,initializeGPU);
 
     //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
     spv->setCellPreferencesUniform(1.0,p0);
     //set the cell activity to have D_r = 1. and a given v_0
     spv->setv0Dr(v0,1.0);
-
+    bd->setT(v0);
 
     //combine the equation of motion and the cell configuration in a "Simulation"
     SimulationPtr sim = make_shared<Simulation>();
     sim->setConfiguration(spv);
-    sim->addUpdater(spp,spv);
+    sim->addUpdater(bd,spv);
     //set the time step size
     sim->setIntegrationTimestep(dt);
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
     //sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
     sim->setCPUOperation(!initializeGPU);
+    if (!gpu) 
+        sim->setOmpThreads(abs(USE_GPU));
     sim->setReproducible(reproducible);
 
     //run for a few initialization timesteps
@@ -99,6 +98,7 @@ int main(int argc, char*argv[])
         {
         sim->performTimestep();
         };
+    spv->computeGeometry();
     printf("Finished with initialization\n");
     cout << "current q = " << spv->reportq() << endl;
     //the reporting of the force should yield a number that is numerically close to zero.
@@ -110,22 +110,25 @@ int main(int argc, char*argv[])
     dynamicalFeatures dynFeat(spv->returnPositions(),spv->Box);
     logSpacedIntegers logInts(0,0.05);
     t1=clock();
+    cudaProfilerStart();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
         //if(ii%100 ==0)
         if(ii == logInts.nextSave)
             {
-            printf("timestep %i\t\t energy %f \t msd %f \t overlap %f topoUpdates %i \n",ii,spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()),spv->localTopologyUpdates);
+//            printf("timestep %i\t\t energy %f \t msd %f \t overlap %f\n",ii,spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()));
             logInts.update();
             };
         sim->performTimestep();
         };
+    cudaProfilerStop();
     t2=clock();
-    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
+    printf("final state:\t\t energy %f \t msd %f \t overlap %f\n",spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()));
+    double steptime = (t2-t1)/(double)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
+    spv->reportMeanCellForce(false);
     cout << spv->reportq() << endl;
-    cout << "number of local topology updates per cell per tau = " << spv->localTopologyUpdates*(1.0/numpts)*(1.0/tSteps/dt) << endl;
 
     if(initializeGPU)
         cudaDeviceReset();

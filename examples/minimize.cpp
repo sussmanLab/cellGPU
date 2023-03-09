@@ -21,9 +21,9 @@ demonstration is pretty straightforward
 */
 
 //! A function of convenience for setting FIRE parameters
-void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, Dscalar deltaT, Dscalar alphaStart,
-        Dscalar deltaTMax, Dscalar deltaTInc, Dscalar deltaTDec, Dscalar alphaDec, int nMin,
-        Dscalar forceCutoff)
+void setFIREParameters(shared_ptr<EnergyMinimizerFIRE> emin, double deltaT, double alphaStart,
+        double deltaTMax, double deltaTInc, double deltaTDec, double alphaDec, int nMin,
+        double forceCutoff)
     {
     emin->setDeltaT(deltaT);
     emin->setAlphaStart(alphaStart);
@@ -45,11 +45,11 @@ int main(int argc, char*argv[])
     int tSteps = 1000;
     int initSteps = 1000;
 
-    Dscalar dt = 0.1;
-    Dscalar KA = 1.0;
-    Dscalar p0 = 3.8;
-    Dscalar a0 = 1.0;
-    Dscalar v0 = 0.1;
+    double dt = 0.1;
+    double KA = 1.0;
+    double p0 = 3.8;
+    double a0 = 1.0;
+    double v0 = 0.1;
 
     int program_switch = 0;
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:k:")) != -1)
@@ -146,7 +146,7 @@ int main(int argc, char*argv[])
 
         AVMDatabaseNetCDF ncdat(2*numpts,dataname,NcFile::Replace);
         ncdat.WriteState(avm);
-        Dscalar mf;
+        double mf;
         for (int i = 0; i <initSteps;++i)
             {
             setFIREParameters(fireMinimizer,dt,0.99,0.1,1.1,0.95,.9,4,1e-12);
@@ -158,9 +158,9 @@ int main(int argc, char*argv[])
             ncdat.WriteState(avm);
             };
         printf("minimized value of q = %f\n",avm->reportq());
-        Dscalar meanQ = avm->reportq();
-        Dscalar varQ = avm->reportVarq();
-        Dscalar2 variances = avm->reportVarAP();
+        double meanQ = avm->reportq();
+        double varQ = avm->reportVarq();
+        double2 variances = avm->reportVarAP();
         printf("current KA = %f\t Cell <q> = %f\t Var(p) = %g\n",KA,meanQ,variances.y);
         ncdat.WriteState(avm);
         };

@@ -24,10 +24,10 @@ int main(int argc, char*argv[])
     int tSteps = 5; //number of time steps to run after initialization
     int initSteps = 1; //number of initialization steps
 
-    Dscalar dt = 0.01; //the time step size
-    Dscalar p0 = 3.8;  //the preferred perimeter
-    Dscalar a0 = 1.0;  // the preferred area
-    Dscalar v0 = 0.1;  // the self-propulsion
+    double dt = 0.01; //the time step size
+    double p0 = 3.8;  //the preferred perimeter
+    double a0 = 1.0;  // the preferred area
+    double v0 = 0.1;  // the self-propulsion
     int Nchain = 4;     //The number of thermostats to chain together
 
     //The defaults can be overridden from the command line
@@ -80,7 +80,7 @@ int main(int argc, char*argv[])
     vm->setCellVelocitiesMaxwellBoltzmann(v0);
     nvt->setT(v0);
 
-    Dscalar boxL = sqrt(numpts);
+    double boxL = sqrt(numpts);
     shared_ptr<MullerPlatheShear> mullerPlathe = make_shared<MullerPlatheShear>(floor(.3/dt),floor(boxL),boxL);
     char dataname2[256];
     sprintf(dataname2,"../testMPprofile.nc");
@@ -117,25 +117,25 @@ int main(int argc, char*argv[])
 
     //run for additional timesteps, and record timing information
     t1=clock();
-    Dscalar meanT = 0.0;
-    Dscalar Tsample = (1/dt);
+    double meanT = 0.0;
+    double Tsample = (1/dt);
     for(int ii = 0; ii < tSteps; ++ii)
         {
-        ArrayHandle<Dscalar> h_kes(nvt->kineticEnergyScaleFactor);
+        ArrayHandle<double> h_kes(nvt->kineticEnergyScaleFactor);
         meanT += h_kes.data[0]/(numpts);
         if(ii%(int)(Tsample) ==0)
             {
-            Dscalar DeltaP = mullerPlathe->getMomentumTransferred();
+            double DeltaP = mullerPlathe->getMomentumTransferred();
             printf("timestep %i\t\t energy %f \t T %f DeltaP %f \n",ii,vm->computeEnergy(),h_kes.data[0]/(numpts),DeltaP);
             ncdat.WriteState(vm);
-            vector<Dscalar> Vprofile;
+            vector<double> Vprofile;
             mullerPlathe->getVelocityProfile(Vprofile);
             vvdat.WriteState(Vprofile,DeltaP/(2.0*(dt*Tsample)*boxL));
             };
         sim->performTimestep();
         };
     t2=clock();
-    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
+    double steptime = (t2-t1)/(double)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
     cout << vm->reportq() << endl;
     cout << "<T> = " << meanT / tSteps << endl;

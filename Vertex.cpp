@@ -2,7 +2,6 @@
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
-#define ENABLE_CUDA
 
 #include "vertexQuadraticEnergy.h"
 #include "selfPropelledCellVertexDynamics.h"
@@ -29,11 +28,11 @@ int main(int argc, char*argv[])
     int tSteps = 5; //number of time steps to run after initialization
     int initSteps = 1; //number of initialization steps
 
-    Dscalar dt = 0.01; //the time step size
-    Dscalar p0 = 4.0;  //the preferred perimeter
-    Dscalar a0 = 1.0;  // the preferred area
-    Dscalar v0 = 0.05;  // the self-propulsion
-    Dscalar Dr = 1.0;  //the rotational diffusion constant of the cell directors
+    double dt = 0.01; //the time step size
+    double p0 = 4.0;  //the preferred perimeter
+    double a0 = 1.0;  // the preferred area
+    double v0 = 0.05;  // the self-propulsion
+    double Dr = 1.0;  //the rotational diffusion constant of the cell directors
     int program_switch = 0; //various settings control output
 
     int c;
@@ -65,13 +64,8 @@ int main(int argc, char*argv[])
     bool reproducible = true; // if you want random numbers with a more random seed each run, set this to false
     //check to see if we should run on a GPU
     bool initializeGPU = true;
-    if (USE_GPU >= 0)
-        {
-        bool gpu = chooseGPU(USE_GPU);
-        if (!gpu) return 0;
-        cudaSetDevice(USE_GPU);
-        }
-    else
+    bool gpu = chooseGPU(USE_GPU);
+    if (!gpu) 
         initializeGPU = false;
 
     //possibly save output in netCDF format
@@ -80,7 +74,7 @@ int main(int argc, char*argv[])
     int Nvert = 2*numpts;
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 
-    bool runSPV = true;//setting this to true will relax the random cell positions to something more uniform before running vertex model dynamics
+    bool runSPV = false;//setting this to true will relax the random cell positions to something more uniform before running vertex model dynamics
 
     //We will define two potential equations of motion, and choose which later on.
     //define an equation of motion object...here for self-propelled cells
@@ -89,7 +83,7 @@ int main(int argc, char*argv[])
     shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(Nvert);
     bd->setT(v0);
     //define a vertex model configuration with a quadratic energy functional
-    shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible,runSPV);
+    shared_ptr<VertexQuadraticEnergy> avm = make_shared<VertexQuadraticEnergy>(numpts,1.0,4.0,reproducible,runSPV,initializeGPU);
     //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
     avm->setCellPreferencesUniform(1.0,p0);
     //set the cell activity to have D_r = 1. and a given v_0
@@ -151,7 +145,7 @@ int main(int argc, char*argv[])
     cudaProfilerStop();
 
     t2=clock();
-    cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
+    cout << "timestep time per iteration currently at " <<  (t2-t1)/(double)CLOCKS_PER_SEC/tSteps << endl << endl;
     avm->reportMeanVertexForce();
     cout << "Mean q = " << avm->reportq() << endl;
 

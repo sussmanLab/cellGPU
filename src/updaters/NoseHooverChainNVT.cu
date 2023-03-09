@@ -1,6 +1,3 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "NoseHooverChainNVT.cuh"
@@ -18,9 +15,9 @@
 into the output vector put 0.5*m[i]*v[i]^2
 */
 __global__ void NoseHooverChainNVT_prepare_KE_kernel(
-                                Dscalar2 *velocities,
-                                Dscalar  *masses,
-                                Dscalar  *keArray,
+                                double2 *velocities,
+                                double  *masses,
+                                double  *keArray,
                                 int      N)
     {
     // read in the index that belongs to this thread
@@ -31,15 +28,15 @@ __global__ void NoseHooverChainNVT_prepare_KE_kernel(
     };
 
 /*!
-\param velocities Dscalar2 array of current velocities
-\param masses Dscalar array of current masses
-\param keArray Dscalar output array
+\param velocities double2 array of current velocities
+\param masses double array of current masses
+\param keArray double output array
 \param N      the length of the arrays
 \post keArray[idx] = 0.5*masses[idx]*(velocities[idx])^2
 */
-bool gpu_prepare_KE_vector(Dscalar2   *velocities,
-                              Dscalar *masses,
-                              Dscalar *keArray,
+bool gpu_prepare_KE_vector(double2   *velocities,
+                              double *masses,
+                              double *keArray,
                               int N)
     {
     unsigned int block_size = 128;
@@ -58,8 +55,8 @@ bool gpu_prepare_KE_vector(Dscalar2   *velocities,
 Each thread scales the velocity of one particle by the second component of the helper array
 */
 __global__ void NoseHooverChainNVT_scale_velocities_kernel(
-                                Dscalar2 *velocities,
-                                Dscalar  *kineticEnergyScaleFactor,
+                                double2 *velocities,
+                                double  *kineticEnergyScaleFactor,
                                 int      N)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -72,8 +69,8 @@ __global__ void NoseHooverChainNVT_scale_velocities_kernel(
 
 //!Simply rescale every component of V by the scale factor
 bool gpu_NoseHooverChainNVT_scale_velocities(
-                    Dscalar2 *velocities,
-                    Dscalar  *kineticEnergyScaleFactor,
+                    double2 *velocities,
+                    double  *kineticEnergyScaleFactor,
                     int       N)
     {
     unsigned int block_size = 128;
@@ -93,10 +90,10 @@ bool gpu_NoseHooverChainNVT_scale_velocities(
 Each thread updates the velocity of one particle
 */
 __global__ void NoseHooverChainNVT_update_velocities_kernel(
-                                Dscalar2 *velocities,
-                                Dscalar2 *forces,
-                                Dscalar  *masses,
-                                Dscalar  deltaT,
+                                double2 *velocities,
+                                double2 *forces,
+                                double  *masses,
+                                double  deltaT,
                                 int      N)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -109,10 +106,10 @@ __global__ void NoseHooverChainNVT_update_velocities_kernel(
 
 //!simple update of velocity based on force and mass
 bool gpu_NoseHooverChainNVT_update_velocities(
-                    Dscalar2 *velocities,
-                    Dscalar2 *forces,
-                    Dscalar  *masses,
-                    Dscalar  deltaT,
+                    double2 *velocities,
+                    double2 *forces,
+                    double  *masses,
+                    double  deltaT,
                     int       N)
     {
     unsigned int block_size = 128;

@@ -12,7 +12,7 @@
 #include "DatabaseNetCDFAVM.h"
 #include "DatabaseNetCDFSPV.h"
 #include "DatabaseTextVoronoi.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 
 /*!
 This file demonstrates simulations in the vertex or voronoi models in which a cell divides.
@@ -32,12 +32,12 @@ int main(int argc, char*argv[])
     int tSteps = 5;
     int initSteps = 0;
 
-    Dscalar dt = 0.01;
-    Dscalar p0 = 3.84;
-    Dscalar a0 = 1.0;
-    Dscalar v0 = 0.01;
-    Dscalar Dr = 1.0;
-    Dscalar gamma = 0.05;
+    double dt = 0.01;
+    double p0 = 3.84;
+    double a0 = 1.0;
+    double v0 = 0.01;
+    double Dr = 1.0;
+    double gamma = 0.05;
 
     //program_switch plays an awkward role in this example of both selecting vertex vs Voronoi model,
     //and also determining whether to save output files... read below for details
@@ -134,9 +134,9 @@ int main(int argc, char*argv[])
 
         //to have a Voronoi model division, one needs to pass in various parameters.
         //the integer vector (of length 1) indicates the cell to divide
-        //the Dscalar vector (of length 2) parameterizes the geometry of the cell division... see voronoiModelBase for details
+        //the double vector (of length 2) parameterizes the geometry of the cell division... see voronoiModelBase for details
         vector<int> cdtest(1); cdtest[0]=10;
-        vector<Dscalar> dParams(2); dParams[0] = 3.0*PI/4.0-.1; dParams[1] = 0.5;
+        vector<double> dParams(2); dParams[0] = 3.0*PI/4.0-.1; dParams[1] = 0.5;
         int Ncells = spv->getNumberOfDegreesOfFreedom();
 
         //in this example, divide a cell every 20 tau
@@ -152,13 +152,13 @@ int main(int argc, char*argv[])
                 spv->cellDivision(cdtest,dParams);
                 Ncells = spv->getNumberOfDegreesOfFreedom();
                 //suppose, for instance, you want to keep p_0/sqrt(<A>) constant...
-                Dscalar meanA = numpts / (Dscalar) Ncells;
-                Dscalar scaledP0 = p0 * sqrt(meanA);
+                double meanA = numpts / (double) Ncells;
+                double scaledP0 = p0 * sqrt(meanA);
                 spv->setCellPreferencesUniform(1.0,scaledP0);
                 printf("Ncells = %i\t <A> = %f \t p0 = %f\n",Ncells,meanA,scaledP0);
 /*
  //An alternative would be to use something like the following to rescale the box size to keep <A> = 1, and not rescale the preferred perimeter
-BoxPtr newbox = make_shared<gpubox>(sqrt(Ncells),sqrt(Ncells));
+PeriodicBoxPtr newbox = make_shared<periodicBoundaries>(sqrt(Ncells),sqrt(Ncells));
 sim->setBox(newbox);
 */
                 };
@@ -170,7 +170,7 @@ sim->setBox(newbox);
             };
 
         t2=clock();
-        cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
+        cout << "timestep time per iteration currently at " <<  (t2-t1)/(double)CLOCKS_PER_SEC/tSteps << endl << endl;
 
         };
 
@@ -242,7 +242,7 @@ sim->setBox(newbox);
 
         t2=clock();
         cout << "final number of vertices = " <<avm->getNumberOfDegreesOfFreedom() << endl;
-        cout << "timestep time per iteration currently at " <<  (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps << endl << endl;
+        cout << "timestep time per iteration currently at " <<  (t2-t1)/(double)CLOCKS_PER_SEC/tSteps << endl << endl;
         avm->reportMeanVertexForce();
         cout << "Mean q = " << avm->reportq() << endl;
         };

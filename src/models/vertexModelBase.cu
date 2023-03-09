@@ -1,6 +1,3 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include <cuda_runtime.h>
 #include "vertexModelBase.cuh"
 
@@ -18,16 +15,16 @@
   self-intersections. The strategy is the same as in the CPU branch.
   */
 __global__ void vm_geometry_kernel(
-                                   const Dscalar2* __restrict__ d_vertexPositions,
+                                   const double2* __restrict__ d_vertexPositions,
                                    const int*  __restrict__ d_cellVertexNum,
                                    const int*  __restrict__ d_cellVertices,
                                    const int*  __restrict__ d_vertexCellNeighbors,
-                                   Dscalar2*  __restrict__ d_voroCur,
-                                   Dscalar4*  __restrict__ d_voroLastNext,
-                                   Dscalar2*  __restrict__ d_AreaPerimeter,
+                                   double2*  __restrict__ d_voroCur,
+                                   double4*  __restrict__ d_voroLastNext,
+                                   double2*  __restrict__ d_AreaPerimeter,
                                    int N,
                                    Index2D n_idx,
-                                   gpubox Box
+                                   periodicBoundaries Box
                                     )
     {
     // read in the cell index that belongs to this thread
@@ -36,10 +33,10 @@ __global__ void vm_geometry_kernel(
         return;
     int neighs = d_cellVertexNum[idx];
     //Define the vertices of a cell relative to some (any one ) of its vertices to take care of periodic BCs
-    Dscalar2 cellPos = d_vertexPositions[ d_cellVertices[n_idx(neighs-2,idx)]];
-    Dscalar2 vlast, vcur,vnext;
-    Dscalar Varea = 0.0;
-    Dscalar Vperi = 0.0;
+    double2 cellPos = d_vertexPositions[ d_cellVertices[n_idx(neighs-2,idx)]];
+    double2 vlast, vcur,vnext;
+    double Varea = 0.0;
+    double Vperi = 0.0;
 
     vlast.x = 0.0; vlast.y=0.0;
     int vidx = d_cellVertices[n_idx(neighs-1,idx)];
@@ -62,12 +59,12 @@ __global__ void vm_geometry_kernel(
         //compute area contribution. It is
         // 0.5 * (vcur.x+vnext.x)*(vnext.y-vcur.y)
         Varea += SignedPolygonAreaPart(vcur,vnext);
-        Dscalar dx = vcur.x-vnext.x;
-        Dscalar dy = vcur.y-vnext.y;
+        double dx = vcur.x-vnext.x;
+        double dy = vcur.y-vnext.y;
         Vperi += sqrt(dx*dx+dy*dy);
         //save voronoi positions in a convenient form
         d_voroCur[forceSetIdx] = vcur;
-        d_voroLastNext[forceSetIdx] = make_Dscalar4(vlast.x,vlast.y,vnext.x,vnext.y);
+        d_voroLastNext[forceSetIdx] = make_double4(vlast.x,vlast.y,vnext.x,vnext.y);
         //advance the loop
         vlast = vcur;
         vcur = vnext;
@@ -80,20 +77,20 @@ __global__ void vm_geometry_kernel(
   This function is being deprecated, but is still useful for calculating, e.g. the mean-squared
 displacement of the cells without transferring data back to the host
 */
-__global__ void vm_get_cell_positions_kernel(Dscalar2* d_cellPositions,
-                                              Dscalar2* d_vertexPositions,
+__global__ void vm_get_cell_positions_kernel(double2* d_cellPositions,
+                                              double2* d_vertexPositions,
                                               int    * d_nn,
                                               int    * d_n,
                                               int N,
                                               Index2D n_idx,
-                                              gpubox Box)
+                                              periodicBoundaries Box)
     {
     // read in the cell index that belongs to this thread
     unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= N)
         return;
 
-    Dscalar2 vertex, pos, baseVertex;
+    double2 vertex, pos, baseVertex;
     pos.x=0.0;pos.y=0.0;
     baseVertex = d_vertexPositions[ d_n[n_idx(0,idx)] ];
     int neighs = d_nn[idx];
@@ -111,17 +108,51 @@ __global__ void vm_get_cell_positions_kernel(Dscalar2* d_cellPositions,
     d_cellPositions[idx] = pos;
     };
 
+__global__ void vm_get_cell_centroids_kernel(double2* d_cellPositions,
+                                              double2* d_vertexPositions,
+                                              int    * d_nn,
+                                              int    * d_n,
+                                              int N,
+                                              Index2D n_idx,
+                                              periodicBoundaries Box)
+    {
+    // read in the cell index that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+
+    double2 baseVertex = d_vertexPositions[ d_n[n_idx(0,idx)] ];
+    double2 lastVertex, currentVertex, centroid;
+    centroid.x=0.0;centroid.y=0.0;
+    lastVertex =centroid; //initialize at zero
+
+    int neighs = d_nn[idx];
+    double area = 0;
+    for (int vv = 1; vv < neighs; ++vv)
+        {
+        int vidx = d_n[n_idx(vv,idx)];
+        Box.minDist(d_vertexPositions[vidx],baseVertex,currentVertex);
+        area += SignedPolygonAreaPart(lastVertex,currentVertex);
+        centroid.x += (lastVertex.x+currentVertex.x)*(lastVertex.x*currentVertex.y-currentVertex.x*lastVertex.y);
+        centroid.y += (lastVertex.y+currentVertex.y)*(lastVertex.x*currentVertex.y-currentVertex.x*lastVertex.y);
+        };
+    centroid.x = centroid.x / (6.0*area) + baseVertex.x;
+    centroid.y = centroid.y / (6.0*area) + baseVertex.y;
+    Box.putInBoxReal(centroid);
+    d_cellPositions[idx] = centroid;
+    };
+
 /*!
   Run through every pair of vertices (once), see if any T1 transitions should be done,
   and see if the cell-vertex list needs to grow
   */
-__global__ void vm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
+__global__ void vm_simple_T1_test_kernel(double2* d_vertexPositions,
                                         int      *d_vertexNeighbors,
                                         int      *d_vertexEdgeFlips,
                                         int      *d_vertexCellNeighbors,
                                         int      *d_cellVertexNum,
-                                        gpubox   Box,
-                                        Dscalar  T1THRESHOLD,
+                                        periodicBoundaries   Box,
+                                        double  T1THRESHOLD,
                                         int      NvTimes3,
                                         int      vertexMax,
                                         int      *d_grow)
@@ -131,7 +162,7 @@ __global__ void vm_simple_T1_test_kernel(Dscalar2* d_vertexPositions,
         return;
     int vertex1 = idx/3;
     int vertex2 = d_vertexNeighbors[idx];
-    Dscalar2 edge;
+    double2 edge;
     if(vertex1 < vertex2)
         {
         Box.minDist(d_vertexPositions[vertex1],d_vertexPositions[vertex2],edge);
@@ -250,14 +281,14 @@ __global__ void vm_one_T1_per_cell_per_vertex_kernel(
   Flip any edge labeled for re-wiring in the vertexEdgeFlipsCurrent list
   */
 __global__ void vm_flip_edges_kernel(int* d_vertexEdgeFlipsCurrent,
-                                      Dscalar2 *d_vertexPositions,
+                                      double2 *d_vertexPositions,
                                       int      *d_vertexNeighbors,
                                       int      *d_vertexCellNeighbors,
                                       int      *d_cellVertexNum,
                                       int      *d_cellVertices,
                                       int      *d_cellEdgeFlips,
                                       int4 *d_cellSets,
-                                      gpubox   Box,
+                                      periodicBoundaries   Box,
                                       Index2D  n_idx,
                                       int      NvTimes3)
     {
@@ -423,12 +454,12 @@ for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSe
         return;
 
     //okay, we're ready to go. First, rotate the vertices in the edge and set them at twice their original distance
-    Dscalar2 edge;
-    Dscalar2 v1 = d_vertexPositions[vertex1];
-    Dscalar2 v2 = d_vertexPositions[vertex2];
+    double2 edge;
+    double2 v1 = d_vertexPositions[vertex1];
+    double2 v2 = d_vertexPositions[vertex2];
     Box.minDist(v1,v2,edge);
 
-    Dscalar2 midpoint;
+    double2 midpoint;
     midpoint.x = v2.x + 0.5*edge.x;
     midpoint.y = v2.y + 0.5*edge.y;
 
@@ -545,16 +576,16 @@ for (int cn = 0; cn < cneigh; ++cn) printf("%i\t",d_cellVertices[n_idx(cn,cellSe
 
 //!Call the kernel to calculate the area and perimeter of each cell
 bool gpu_vm_geometry(
-                    Dscalar2 *d_vertexPositions,
+                    double2 *d_vertexPositions,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      *d_vertexCellNeighbors,
-                    Dscalar2 *d_voroCur,
-                    Dscalar4 *d_voroLastNext,
-                    Dscalar2 *d_AreaPerimeter,
+                    double2 *d_voroCur,
+                    double4 *d_voroLastNext,
+                    double2 *d_AreaPerimeter,
                     int      N,
                     Index2D  &n_idx,
-                    gpubox   &Box)
+                    periodicBoundaries   &Box)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
@@ -572,14 +603,14 @@ bool gpu_vm_geometry(
 
 //!Call the kernel to test every edge for a T1 event, see if vertexMax needs to increase
 bool gpu_vm_test_edges_for_T1(
-                    Dscalar2 *d_vertexPositions,
+                    double2 *d_vertexPositions,
                     int      *d_vertexNeighbors,
                     int      *d_vertexEdgeFlips,
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
-                    gpubox   &Box,
-                    Dscalar  T1THRESHOLD,
+                    periodicBoundaries   &Box,
+                    double  T1THRESHOLD,
                     int      Nvertices,
                     int      vertexMax,
                     int      *d_grow,
@@ -653,14 +684,14 @@ bool gpu_vm_parse_multiple_flips(
 //!Call the kernel to flip at most one edge per cell, write to d_finishedFlippingEdges the current state
 bool gpu_vm_flip_edges(
                     int      *d_vertexEdgeFlipsCurrent,
-                    Dscalar2 *d_vertexPositions,
+                    double2 *d_vertexPositions,
                     int      *d_vertexNeighbors,
                     int      *d_vertexCellNeighbors,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      *d_cellEdgeFlips,
                     int4     *d_cellSets,
-                    gpubox   &Box,
+                    periodicBoundaries   &Box,
                     Index2D  &n_idx,
                     int      Nvertices,
                     int      Ncells)
@@ -683,15 +714,37 @@ bool gpu_vm_flip_edges(
     return cudaSuccess;
     };
 
-//!Call the kernel to calculate the position of each cell from the position of its vertices
-bool gpu_vm_get_cell_positions(
-                    Dscalar2 *d_cellPositions,
-                    Dscalar2 *d_vertexPositions,
+//!Call the kernel to calculate the centroids of each cell from the position of its vertices
+bool gpu_vm_get_cell_centroids(
+                    double2 *d_cellPositions,
+                    double2 *d_vertexPositions,
                     int      *d_cellVertexNum,
                     int      *d_cellVertices,
                     int      N,
                     Index2D  &n_idx,
-                    gpubox   &Box)
+                    periodicBoundaries   &Box)
+    {
+    unsigned int block_size = 128;
+    if (N < 128) block_size = 32;
+    unsigned int nblocks  = N/block_size + 1;
+
+
+    vm_get_cell_centroids_kernel<<<nblocks,block_size>>>(d_cellPositions,d_vertexPositions,
+                                                          d_cellVertexNum,d_cellVertices,
+                                                          N, n_idx, Box);
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    };
+
+//!Call the kernel to calculate the position of each cell from the position of its vertices
+bool gpu_vm_get_cell_positions(
+                    double2 *d_cellPositions,
+                    double2 *d_vertexPositions,
+                    int      *d_cellVertexNum,
+                    int      *d_cellVertices,
+                    int      N,
+                    Index2D  &n_idx,
+                    periodicBoundaries   &Box)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;

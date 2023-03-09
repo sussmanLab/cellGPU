@@ -2,9 +2,7 @@
 #define STDINCLUDE
 
 /*! \file std_include.h
-a file to be included all the time... carries with it things DMS often uses
-Crucially, it also defines Dscalars as either floats or doubles, depending on
-how the program is compiled
+a file of bad practice to be included all the time... carries with it things DMS often uses
 */
 
 #ifdef NVCC
@@ -33,25 +31,19 @@ how the program is compiled
 #include <string.h>
 #include <stdexcept>
 #include <cassert>
+#include <omp.h>
+#include <thread>
+#include <cpuid.h>
 
 using namespace std;
 
-#include <cuda_runtime.h>
 #include "vector_types.h"
 #include "vector_functions.h"
-#include "deprecated.h"
 
 #define PI 3.14159265358979323846
 
 //decide whether to compute everything in floating point or double precision
-#ifndef SCALARFLOAT
 //double variables types
-#define Dscalar double
-#define Dscalar2 double2
-#define Dscalar3 double3
-#define Dscalar4 double4
-//the netcdf variable type
-#define ncDscalar ncDouble
 //the cuda RNG
 #define cur_norm curand_normal_double
 //trig and special funtions
@@ -60,80 +52,41 @@ using namespace std;
 #define Floor floor
 #define Ceil ceil
 
-#else
-//floats
-
-#define Dscalar float
-#define Dscalar2 float2
-#define Dscalar3 float3
-#define Dscalar4 float4
-#define ncDscalar ncFloat
-#define cur_norm curand_normal
-#define Cos cosf
-#define Sin sinf
-#define Floor floorf
-#define Ceil ceilf
-#endif
-
-//!Less than operator for Dscalars just sorts by the x-coordinate
-HOSTDEVICE bool operator<(const Dscalar2 &a, const Dscalar2 &b)
+//texture load templating correctly for old cuda devices and host functions
+template<typename T>
+__host__ __device__ __forceinline__ T ldgHD(const T* ptr)
     {
-    return a.x<b.x;
+    #if __CUDA_ARCH__ >=350
+        return __ldg(ptr);
+    #else
+        return *ptr;
+    #endif
     }
 
-//!Equality operator tests for.... equality of both elements
-HOSTDEVICE bool operator==(const Dscalar2 &a, const Dscalar2 &b)
+/*!
+omp Template: loop over the function with omp or not
+the syntax requires that the first argument of the function is the "index" of whatever the function acts on.
+So, if the function is f(int, double, double,Index2D,...) then this template function should be called by:
+ompFunctionLoop(ompThreadNum,maxIdx, f, double, double,Index2D,...).
+*/
+template< typename... Args>
+void ompFunctionLoop(int nThreads, int maxIdx, void (*fPointer)(int, Args...), Args... args)
     {
-    return (a.x==b.x &&a.y==b.y);
-    }
+    if(nThreads <= 1)
+        {
+        for(int idx = 0; idx < maxIdx; ++idx)
+            fPointer(idx,args...);
+        }
+    else
+        {
+	    #pragma omp parallel for num_threads(nThreads)
+        for(int idx = 0; idx < maxIdx; ++idx)
+            fPointer(idx,args...);
+        }
+    };
 
-//!return a Dscalar2 from two Dscalars
-HOSTDEVICE Dscalar2 make_Dscalar2(Dscalar x, Dscalar y)
-    {
-    Dscalar2 ans;
-    ans.x =x;
-    ans.y=y;
-    return ans;
-    }
-
-//!component-wise addition of two Dscalar2s
-HOSTDEVICE Dscalar2 operator+(const Dscalar2 &a, const Dscalar2 &b)
-    {
-    return make_Dscalar2(a.x+b.x,a.y+b.y);
-    }
-
-//!component-wise subtraction of two Dscalar2s
-HOSTDEVICE Dscalar2 operator-(const Dscalar2 &a, const Dscalar2 &b)
-    {
-    return make_Dscalar2(a.x-b.x,a.y-b.y);
-    }
-
-//!multiplication of Dscalar2 by Dscalar
-HOSTDEVICE Dscalar2 operator*(const Dscalar &a, const Dscalar2 &b)
-    {
-    return make_Dscalar2(a*b.x,a*b.y);
-    }
-
-//!return a Dscalar3 from three Dscalars
-HOSTDEVICE Dscalar3 make_Dscalar3(Dscalar x, Dscalar y,Dscalar z)
-    {
-    Dscalar3 ans;
-    ans.x =x;
-    ans.y=y;
-    ans.z =z;
-    return ans;
-    }
-
-//!return a Dscalar4 from four Dscalars
-HOSTDEVICE Dscalar4 make_Dscalar4(Dscalar x, Dscalar y,Dscalar z, Dscalar w)
-    {
-    Dscalar4 ans;
-    ans.x =x;
-    ans.y=y;
-    ans.z =z;
-    ans.w=w;
-    return ans;
-    }
+//! a file for defining operations on double2's double3's,...  such as addition, equality, etc
+#include "vectorTypeOperations.h"
 
 //!Handle errors in kernel calls...returns file and line numbers if cudaSuccess doesn't pan out
 static void HandleError(cudaError_t err, const char *file, int line)
@@ -156,10 +109,84 @@ inline bool fileExists(const std::string& name)
     return f.good();
     }
 
+__host__ inline bool chooseCPU(int gpuSwitch,bool verbose = false)
+    {
+	char CPUBrandString[0x40];
+	unsigned int CPUInfo[4] = {0,0,0,0};
+	__cpuid(0x80000000, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+	unsigned int nExIds = CPUInfo[0];
+
+	memset(CPUBrandString, 0, sizeof(CPUBrandString));
+
+	for (unsigned int i = 0x80000000; i <= nExIds; ++i)
+		{
+    		__cpuid(i, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+
+    		if (i == 0x80000002)
+	        	memcpy(CPUBrandString, CPUInfo, sizeof(CPUInfo));
+		else if (i == 0x80000003)
+			memcpy(CPUBrandString + 16, CPUInfo, sizeof(CPUInfo));
+		else if (i == 0x80000004)
+			memcpy(CPUBrandString + 32, CPUInfo, sizeof(CPUInfo));
+		}
+
+    if(verbose)
+        cout << "using "<<CPUBrandString <<"     Available threads: "<< std::thread::hardware_concurrency() <<"     Threads requested: "<<abs(gpuSwitch) <<"\n"<< endl;
+    else
+        cout << "Running on the CPU with " << abs(gpuSwitch) << " openMP-based threads" << endl;
+    return false;
+    }
+
+//!Get basic stats about the chosen GPU (if it exists)
+__host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
+    {
+    if(USE_GPU < 0)
+        {
+        return chooseCPU(abs(USE_GPU),true);
+        }
+    int nDev;
+    cudaGetDeviceCount(&nDev);
+    if (USE_GPU >= nDev)
+        {
+        cout << "Requested GPU (device " << USE_GPU<<") does not exist. switching to single-threaded CPU operation" << endl;
+        return chooseCPU(1,true);
+        };
+    if (USE_GPU <nDev)
+        cudaSetDevice(USE_GPU);
+    if(verbose)    cout << "Device # \t\t Device Name \t\t MemClock \t\t MemBusWidth" << endl;
+    for (int ii=0; ii < nDev; ++ii)
+        {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop,ii);
+        if (verbose)
+            {
+            if (ii == USE_GPU) cout << "********************************" << endl;
+            if (ii == USE_GPU) cout << "****Using the following gpu ****" << endl;
+            cout << ii <<"\t\t\t" << prop.name << "\t\t" << prop.memoryClockRate << "\t\t" << prop.memoryBusWidth << endl;
+            if (ii == USE_GPU) cout << "*******************************" << endl;
+            };
+        };
+    if (!verbose)
+        {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop,USE_GPU);
+        cout << "using " << prop.name << "\t ClockRate = " << prop.memoryClockRate << " memBusWidth = " << prop.memoryBusWidth << endl << endl;
+        };
+    return true;
+    };
+//!Report somewhere that code needs to be written
+static void unwrittenCode(const char *message, const char *file, int line)
+    {
+    printf("\nCode unwritten (file %s; line %d)\nMessage: %s\n",file,line,message);
+    throw std::exception();
+    }
+
 //A macro to wrap cuda calls
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
 //spot-checking of code for debugging
 #define DEBUGCODEHELPER printf("\nReached: file %s at line %d\n",__FILE__,__LINE__);
+//A macro to say code needs to be written
+#define UNWRITTENCODE(message) (unwrittenCode(message,__FILE__,__LINE__))
 
 #undef HOSTDEVICE
 #endif

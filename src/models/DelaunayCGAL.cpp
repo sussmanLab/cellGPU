@@ -56,7 +56,7 @@ M= (bxx  bxy
 and a vector, v, whose components are between zero and one has real position
 M*v
 */
-void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, Dscalar bxx, Dscalar bxy,Dscalar byx, Dscalar byy)
+void DelaunayCGAL::PeriodicTriangulation(vector<pair<Point,int> > &V, double bxx, double bxy,double byx, double byy)
     {
     if (bxy == 0 && byx == 0 && bxx == byy)
         PeriodicTriangulationSquareDomain(V,bxx,byy);
@@ -76,19 +76,19 @@ M= (bxx  bxy
 and a vector, v, whose components are between zero and one has real position
 M*v
 */
-void DelaunayCGAL::PeriodicTriangulationNineSheeted(vector<pair<Point,int> > &V, Dscalar bxx, Dscalar bxy,Dscalar byx, Dscalar byy)
+void DelaunayCGAL::PeriodicTriangulationNineSheeted(vector<pair<Point,int> > &V, double bxx, double bxy,double byx, double byy)
     {
     int vnum = V.size();
     allneighs.clear();
     allneighs.resize(vnum);
     //unfortunately, the points have been passed in real coordinates
-    Dscalar xi11, xi12, xi21,xi22;
-    Dscalar prefactor = 1.0/(bxx*byy-bxy*byx);
+    double xi11, xi12, xi21,xi22;
+    double prefactor = 1.0/(bxx*byy-bxy*byx);
     xi11 = prefactor * byy;
     xi22 = prefactor * bxx;
     xi12 = -prefactor * bxy;
     xi21 = -prefactor * byx;
-    vector<Dscalar2> virtualCoords(vnum);
+    vector<double2> virtualCoords(vnum);
     for (int ii = 0; ii < vnum; ++ii)
         {
         virtualCoords[ii].x = xi11*V[ii].first.x() + xi12*V[ii].first.y();
@@ -98,24 +98,26 @@ void DelaunayCGAL::PeriodicTriangulationNineSheeted(vector<pair<Point,int> > &V,
     //great, now construct a vector of pairs of LPoints, where the first vnum are the ones in the
     //primary unit cell, and the others are the 8 surrounding unit cells
     vector<pair<LPoint,int> > allPoints(9*vnum);
-    vector<Dscalar2> primitiveVectors(9);
-    primitiveVectors[0] = make_Dscalar2(0.0,0.0);
-    primitiveVectors[1] = make_Dscalar2(-1.,-1);
-    primitiveVectors[2] = make_Dscalar2(-1.,0.0);
-    primitiveVectors[3] = make_Dscalar2(-1.0,1.0);
-    primitiveVectors[4] = make_Dscalar2(0.0,-1.0);
-    primitiveVectors[5] = make_Dscalar2(0.0,1.0);
-    primitiveVectors[6] = make_Dscalar2(1.0,-1.0);
-    primitiveVectors[7] = make_Dscalar2(1.0,0.0);
-    primitiveVectors[8] = make_Dscalar2(1.0,1.0);
+    vector<double2> primitiveVectors(9);
+    primitiveVectors[0] = make_double2(0.0,0.0);
+    primitiveVectors[1] = make_double2(-1.,-1);
+    primitiveVectors[2] = make_double2(-1.,0.0);
+    primitiveVectors[3] = make_double2(-1.0,1.0);
+    primitiveVectors[4] = make_double2(0.0,-1.0);
+    primitiveVectors[5] = make_double2(0.0,1.0);
+    primitiveVectors[6] = make_double2(1.0,-1.0);
+    primitiveVectors[7] = make_double2(1.0,0.0);
+    primitiveVectors[8] = make_double2(1.0,1.0);
 
     int index = 0;
     for (int cc = 0; cc < primitiveVectors.size(); ++cc)
         {
         for (int ii = 0; ii < vnum; ++ii)
             {
-            Dscalar2 point = virtualCoords[ii]+primitiveVectors[cc];
-            Dscalar2 realPoint;
+            double2 point = virtualCoords[ii];
+            point.x +=primitiveVectors[cc].x;
+            point.y +=primitiveVectors[cc].y;
+            double2 realPoint;
             realPoint.x = bxx*point.x + bxy*point.y;
             realPoint.y = byx*point.x + byy*point.y;
             allPoints[index] = make_pair(LPoint(realPoint.x,realPoint.y),index);
@@ -161,7 +163,7 @@ Perform a periodic triangulation in a SQUARE domain
 
 After the routine is called, the class member allneighs will store a list of particle neighbors, each sorted in CW order
 */
-void DelaunayCGAL::PeriodicTriangulationSquareDomain(vector<pair<Point,int> > &V, Dscalar boxX, Dscalar boxY)
+void DelaunayCGAL::PeriodicTriangulationSquareDomain(vector<pair<Point,int> > &V, double boxX, double boxY)
     {
     int vnum = V.size();
 

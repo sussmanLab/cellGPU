@@ -1,6 +1,3 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "setTotalLinearMomentum.cuh"
@@ -17,9 +14,9 @@
 Each thread updates the velocity of one particle
 */
 __global__ void shift_momentum_kernel(
-                                Dscalar2 *velocities,
-                                Dscalar  *masses,
-                                Dscalar2 pShift,
+                                double2 *velocities,
+                                double  *masses,
+                                double2 pShift,
                                 int      N)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -31,9 +28,9 @@ __global__ void shift_momentum_kernel(
 
 //!simple shift of velocities
 bool gpu_shift_momentum(
-                    Dscalar2 *velocities,
-                    Dscalar  *masses,
-                    Dscalar2 pShift,
+                    double2 *velocities,
+                    double  *masses,
+                    double2 pShift,
                     int       N)
     {
     unsigned int block_size = 128;

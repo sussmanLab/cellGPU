@@ -1,6 +1,3 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "Simple2DCell.cuh"
@@ -14,14 +11,29 @@
     @{
 */
 
+__host__ __device__ void moveDegreesOfFreedomFunction(int idx, double2 *d_points, double2 *d_disp, periodicBoundaries Box)
+    {
+    d_points[idx].x += d_disp[idx].x;
+    d_points[idx].y += d_disp[idx].y;
+    Box.putInBoxReal(d_points[idx]);
+    return;
+    };
+__host__ __device__ void moveDegreesOfFreedomFunctionScaled(int idx, double2 *d_points, double2 *d_disp, double scale, periodicBoundaries Box)
+    {
+    d_points[idx].x += scale*d_disp[idx].x;
+    d_points[idx].y += scale*d_disp[idx].y;
+    Box.putInBoxReal(d_points[idx]);
+    return;
+    };
+
 /*!
   A simple routine that takes in a pointer array of points, an array of displacements,
   adds the displacements to the points, and puts the points back in the primary unit cell.
 */
-__global__ void gpu_move_degrees_of_freedom_kernel(Dscalar2 *d_points,
-                                          Dscalar2 *d_disp,
+__global__ void gpu_move_degrees_of_freedom_kernel(double2 *d_points,
+                                          double2 *d_disp,
                                           int N,
-                                          gpubox Box
+                                          periodicBoundaries Box
                                          )
     {
     // read in the particle that belongs to this thread
@@ -40,11 +52,11 @@ __global__ void gpu_move_degrees_of_freedom_kernel(Dscalar2 *d_points,
   puts the points back in the primary unit cell.
   This is useful, e.g., when the displacements are a dt times a velocity
 */
-__global__ void gpu_move_degrees_of_freedom_kernel(Dscalar2 *d_points,
-                                          Dscalar2 *d_disp,
-                                          Dscalar scale,
+__global__ void gpu_move_degrees_of_freedom_kernel(double2 *d_points,
+                                          double2 *d_disp,
+                                          double scale,
                                           int N,
-                                          gpubox Box
+                                          periodicBoundaries Box
                                          )
     {
     // read in the particle that belongs to this thread
@@ -72,16 +84,16 @@ __global__ void gpu_set_integer_array_kernel(int *d_array,
     };
 
 /*!
-\param d_points Dscalar2 array of locations
-\param d_disp   Dscalar2 array of displacements
+\param d_points double2 array of locations
+\param d_disp   double2 array of displacements
 \param N        The number of degrees of freedom to move
-\param Box      The gpubox in which the new positions must reside
+\param Box      The periodicBoundaries in which the new positions must reside
 */
-bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
-                        Dscalar2 *d_disp,
-                        Dscalar  scale,
+bool gpu_move_degrees_of_freedom(double2 *d_points,
+                        double2 *d_disp,
+                        double  scale,
                         int N,
-                        gpubox &Box
+                        periodicBoundaries &Box
                         )
     {
     unsigned int block_size = 128;
@@ -101,15 +113,15 @@ bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
     };
 
 /*!
-\param d_points Dscalar2 array of locations
-\param d_disp   Dscalar2 array of displacements
+\param d_points double2 array of locations
+\param d_disp   double2 array of displacements
 \param N        The number of degrees of freedom to move
-\param Box      The gpubox in which the new positions must reside
+\param Box      The periodicBoundaries in which the new positions must reside
 */
-bool gpu_move_degrees_of_freedom(Dscalar2 *d_points,
-                        Dscalar2 *d_disp,
+bool gpu_move_degrees_of_freedom(double2 *d_points,
+                        double2 *d_disp,
                         int N,
-                        gpubox &Box
+                        periodicBoundaries &Box
                         )
     {
     unsigned int block_size = 128;

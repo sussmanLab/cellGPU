@@ -1,6 +1,3 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "selfPropelledParticleDynamics.cuh"
@@ -17,16 +14,16 @@
 /*!
 Each thread calculates the displacement of an individual cell
 */
-__global__ void spp_eom_integration_kernel(Dscalar2 *forces,
-                                           Dscalar2 *velocities,
-                                           Dscalar2 *displacements,
-                                           Dscalar2 *motility,
-                                           Dscalar *cellDirectors,
+__global__ void spp_eom_integration_kernel(double2 *forces,
+                                           double2 *velocities,
+                                           double2 *displacements,
+                                           double2 *motility,
+                                           double *cellDirectors,
                                            curandState *RNGs,
                                            int N,
-                                           Dscalar deltaT,
+                                           double deltaT,
                                            int Timestep,
-                                           Dscalar mu)
+                                           double mu)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     if (idx >=N)
@@ -38,12 +35,12 @@ __global__ void spp_eom_integration_kernel(Dscalar2 *forces,
     //next, get an appropriate random angle displacement
     curandState_t randState;
     randState=RNGs[idx];
-    Dscalar v0 = motility[idx].x;
-    Dscalar Dr = motility[idx].y;
-    Dscalar angleDiff = cur_norm(&randState)*sqrt(2.0*deltaT*Dr);
+    double v0 = motility[idx].x;
+    double Dr = motility[idx].y;
+    double angleDiff = cur_norm(&randState)*sqrt(2.0*deltaT*Dr);
     RNGs[idx] = randState;
     //update director and velocity vector
-    Dscalar currentTheta = cellDirectors[idx];
+    double currentTheta = cellDirectors[idx];
     velocities[idx].x = v0 * Cos(cellDirectors[idx]);
     velocities[idx].y = v0 * Sin(cellDirectors[idx]);
     if(velocities[idx].y != 0. && velocities[idx].x != 0.)
@@ -58,16 +55,16 @@ __global__ void spp_eom_integration_kernel(Dscalar2 *forces,
 
 //!get the current timesteps vector of displacements into the displacement vector
 bool gpu_spp_eom_integration(
-                    Dscalar2 *forces,
-                    Dscalar2 *velocities,
-                    Dscalar2 *displacements,
-                    Dscalar2 *motility,
-                    Dscalar *cellDirectors,
+                    double2 *forces,
+                    double2 *velocities,
+                    double2 *displacements,
+                    double2 *motility,
+                    double *cellDirectors,
                     curandState *RNGs,
                     int N,
-                    Dscalar deltaT,
+                    double deltaT,
                     int Timestep,
-                    Dscalar mu)
+                    double mu)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;

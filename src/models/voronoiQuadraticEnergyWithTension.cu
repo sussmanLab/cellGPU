@@ -1,13 +1,10 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "cellListGPU.cuh"
 #include "voronoiQuadraticEnergyWithTension.cuh"
 
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "functions.h"
 #include <iostream>
 #include <stdio.h>
@@ -24,23 +21,23 @@
 */
 
 //!the force on a particle is decomposable into the force contribution from each of its voronoi vertices...calculate those sets of forces with an additional tension term between cells of different type
-__global__ void gpu_VoronoiTension_force_sets_kernel(const Dscalar2* __restrict__ d_points,
-                                          const Dscalar2* __restrict__ d_AP,
-                                          const Dscalar2* __restrict__ d_APpref,
+__global__ void gpu_VoronoiTension_force_sets_kernel(const double2* __restrict__ d_points,
+                                          const double2* __restrict__ d_AP,
+                                          const double2* __restrict__ d_APpref,
                                           const int2* __restrict__ d_delSets,
                                           const int* __restrict__ d_delOther,
-                                          const Dscalar2* __restrict__ d_vc,
-                                          const Dscalar4* __restrict__ d_vln,
-                                          Dscalar2* __restrict__ d_forceSets,
+                                          const double2* __restrict__ d_vc,
+                                          const double4* __restrict__ d_vln,
+                                          double2* __restrict__ d_forceSets,
                                           const int2* __restrict__ d_nidx,
                                           const int* __restrict__ d_cellTypes,
-                                          const Dscalar* __restrict__ d_tensionMatrix,
+                                          const double* __restrict__ d_tensionMatrix,
                                           Index2D cellTypeIndexer,
-                                          Dscalar   KA,
-                                          Dscalar   KP,
+                                          double   KA,
+                                          double   KP,
                                           int     computations,
                                           Index2D n_idx,
-                                          gpubox Box
+                                          periodicBoundaries Box
                                         )
     {
     unsigned int tidx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -53,11 +50,11 @@ __global__ void gpu_VoronoiTension_force_sets_kernel(const Dscalar2* __restrict_
     int nidx=n_idx(nn,pidx);
 
     //Great...access the Delaunay neighbors and the relevant other point
-    Dscalar2 pi   = d_points[pidx];
+    double2 pi   = d_points[pidx];
 
     int2 neighs = d_delSets[nidx];
     int neighOther = d_delOther[nidx];
-    Dscalar2 rij, rik,pno;
+    double2 rij, rik,pno;
 
     Box.minDist(d_points[neighs.x],pi,rij);
     Box.minDist(d_points[neighs.y],pi,rik);
@@ -69,19 +66,19 @@ __global__ void gpu_VoronoiTension_force_sets_kernel(const Dscalar2* __restrict_
 
     //finally, compute all of the forces
     //pnm1 is rij, pn1 is rik
-    Dscalar2 vlast,vcur,vnext,vother;
+    double2 vlast,vcur,vnext,vother;
     vcur = d_vc[nidx];
-    Dscalar4 vvv = d_vln[nidx];
+    double4 vvv = d_vln[nidx];
     vlast.x = vvv.x; vlast.y = vvv.y;
     vnext.x = vvv.z; vnext.y = vvv.w;
     Circumcenter(rij,rik,pno,vother);
 
 
-    Dscalar2 dAdv,dPdv,dTdv;
-    Dscalar2 dEdv;
-    Dscalar  Adiff, Pdiff;
-    Dscalar2 dlast, dnext,dcl,dnc;
-    Dscalar  dlnorm,dnnorm,dclnorm,dncnorm;
+    double2 dAdv,dPdv,dTdv;
+    double2 dEdv;
+    double  Adiff, Pdiff;
+    double2 dlast, dnext,dcl,dnc;
+    double  dlnorm,dnnorm,dclnorm,dncnorm;
     bool Tik = false;
     bool Tij = false;
     bool Tjk = false;
@@ -196,22 +193,22 @@ __global__ void gpu_VoronoiTension_force_sets_kernel(const Dscalar2* __restrict_
     };
 
 //!the force on a particle is decomposable into the force contribution from each of its voronoi vertices...calculate those sets of forces with an additional tension term between cells of different type
-__global__ void gpu_VoronoiSimpleTension_force_sets_kernel(const Dscalar2* __restrict__ d_points,
-                                          const Dscalar2* __restrict__ d_AP,
-                                          const Dscalar2* __restrict__ d_APpref,
+__global__ void gpu_VoronoiSimpleTension_force_sets_kernel(const double2* __restrict__ d_points,
+                                          const double2* __restrict__ d_AP,
+                                          const double2* __restrict__ d_APpref,
                                           const int2* __restrict__ d_delSets,
                                           const int* __restrict__ d_delOther,
-                                          const Dscalar2* __restrict__ d_vc,
-                                          const Dscalar4* __restrict__ d_vln,
-                                          Dscalar2* __restrict__ d_forceSets,
+                                          const double2* __restrict__ d_vc,
+                                          const double4* __restrict__ d_vln,
+                                          double2* __restrict__ d_forceSets,
                                           const int2* __restrict__ d_nidx,
                                           const int* __restrict__ d_cellTypes,
-                                          Dscalar   KA,
-                                          Dscalar   KP,
-                                          Dscalar   gamma,
+                                          double   KA,
+                                          double   KP,
+                                          double   gamma,
                                           int     computations,
                                           Index2D n_idx,
-                                          gpubox Box
+                                          periodicBoundaries Box
                                         )
     {
     unsigned int tidx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -224,11 +221,11 @@ __global__ void gpu_VoronoiSimpleTension_force_sets_kernel(const Dscalar2* __res
     int nidx=n_idx(nn,pidx);
 
     //Great...access the Delaunay neighbors and the relevant other point
-    Dscalar2 pi   = d_points[pidx];
+    double2 pi   = d_points[pidx];
 
     int2 neighs = d_delSets[nidx];
     int neighOther = d_delOther[nidx];
-    Dscalar2 rij, rik,pno;
+    double2 rij, rik,pno;
 
     Box.minDist(d_points[neighs.x],pi,rij);
     Box.minDist(d_points[neighs.y],pi,rik);
@@ -240,19 +237,19 @@ __global__ void gpu_VoronoiSimpleTension_force_sets_kernel(const Dscalar2* __res
 
     //finally, compute all of the forces
     //pnm1 is rij, pn1 is rik
-    Dscalar2 vlast,vcur,vnext,vother;
+    double2 vlast,vcur,vnext,vother;
     vcur = d_vc[nidx];
-    Dscalar4 vvv = d_vln[nidx];
+    double4 vvv = d_vln[nidx];
     vlast.x = vvv.x; vlast.y = vvv.y;
     vnext.x = vvv.z; vnext.y = vvv.w;
     Circumcenter(rij,rik,pno,vother);
 
 
-    Dscalar2 dAdv,dPdv,dTdv;
-    Dscalar2 dEdv;
-    Dscalar  Adiff, Pdiff;
-    Dscalar2 dlast, dnext,dcl,dnc;
-    Dscalar  dlnorm,dnnorm,dclnorm,dncnorm;
+    double2 dAdv,dPdv,dTdv;
+    double2 dEdv;
+    double  Adiff, Pdiff;
+    double2 dlast, dnext,dcl,dnc;
+    double  dlnorm,dnnorm,dclnorm,dncnorm;
     bool Tik = false;
     bool Tij = false;
     bool Tjk = false;
@@ -364,23 +361,23 @@ __global__ void gpu_VoronoiSimpleTension_force_sets_kernel(const Dscalar2* __res
 
 
 //!Call the kernel to compute force sets with a generic matrix of surface tensions between types
-bool gpu_VoronoiTension_force_sets(Dscalar2 *d_points,
-                    Dscalar2 *d_AP,
-                    Dscalar2 *d_APpref,
+bool gpu_VoronoiTension_force_sets(double2 *d_points,
+                    double2 *d_AP,
+                    double2 *d_APpref,
                     int2   *d_delSets,
                     int    *d_delOther,
-                    Dscalar2 *d_vc,
-                    Dscalar4 *d_vln,
-                    Dscalar2 *d_forceSets,
+                    double2 *d_vc,
+                    double4 *d_vln,
+                    double2 *d_forceSets,
                     int2   *d_nidx,
                     int    *d_cellTypes,
-                    Dscalar *d_tensionMatrix,
+                    double *d_tensionMatrix,
                     Index2D &cellTypeIndexer,
-                    Dscalar  KA,
-                    Dscalar  KP,
+                    double  KA,
+                    double  KP,
                     int    NeighIdxNum,
                     Index2D &n_idx,
-                    gpubox &Box
+                    periodicBoundaries &Box
                     )
     {
     unsigned int block_size = 128;
@@ -411,22 +408,22 @@ bool gpu_VoronoiTension_force_sets(Dscalar2 *d_points,
     };
 
 //!Call the kernel to compute force sets with additional (uniform) tension terms
-bool gpu_VoronoiSimpleTension_force_sets(Dscalar2 *d_points,
-                    Dscalar2 *d_AP,
-                    Dscalar2 *d_APpref,
+bool gpu_VoronoiSimpleTension_force_sets(double2 *d_points,
+                    double2 *d_AP,
+                    double2 *d_APpref,
                     int2   *d_delSets,
                     int    *d_delOther,
-                    Dscalar2 *d_vc,
-                    Dscalar4 *d_vln,
-                    Dscalar2 *d_forceSets,
+                    double2 *d_vc,
+                    double4 *d_vln,
+                    double2 *d_forceSets,
                     int2   *d_nidx,
                     int    *d_cellTypes,
-                    Dscalar  KA,
-                    Dscalar  KP,
-                    Dscalar  gamma,
+                    double  KA,
+                    double  KP,
+                    double  gamma,
                     int    NeighIdxNum,
                     Index2D &n_idx,
-                    gpubox &Box
+                    periodicBoundaries &Box
                     )
     {
     unsigned int block_size = 128;

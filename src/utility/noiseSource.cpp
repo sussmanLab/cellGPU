@@ -1,6 +1,3 @@
-#define ENABLE_CUDA
-#define NVCC
-
 #include "noiseSource.h"
 
 /*! \file noiseSource.cpp */
@@ -16,19 +13,19 @@ int noiseSource::getInt(int minimum, int maximum)
     return answer;
     };
 
-Dscalar noiseSource::getRealUniform(Dscalar minimum, Dscalar maximum)
+double noiseSource::getRealUniform(double minimum, double maximum)
     {
-    Dscalar answer;
-    uniform_real_distribution<Dscalar> uniRealRand(minimum,maximum);
+    double answer;
+    uniform_real_distribution<double> uniRealRand(minimum,maximum);
     if (Reproducible)
         answer = uniRealRand(gen);
     else
         answer = uniRealRand(genrd);
     return answer;
     };
-Dscalar noiseSource::getRealNormal(Dscalar mean, Dscalar std)
+double noiseSource::getRealNormal(double mean, double std)
     {
-    Dscalar answer;
+    double answer;
     normal_distribution<> normal(mean,std);
     if (Reproducible)
         answer = normal(gen);

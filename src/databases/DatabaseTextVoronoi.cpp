@@ -1,4 +1,3 @@
-#define ENABLE_CUDA
 #include "DatabaseTextVoronoi.h"
 /*! \file DatabaseTextVoronoi.cpp */
 
@@ -21,7 +20,7 @@ DatabaseTextVoronoi::DatabaseTextVoronoi(string fn, int mode)
         };
     };
 
-void DatabaseTextVoronoi::WriteState(STATE s, Dscalar time, int rec)
+void DatabaseTextVoronoi::WriteState(STATE s, double time, int rec)
     {
     if (rec != -1)
         {
@@ -32,13 +31,13 @@ void DatabaseTextVoronoi::WriteState(STATE s, Dscalar time, int rec)
     int N = s->getNumberOfDegreesOfFreedom();
 //    printf("saving %i cells\n",N);
     if (time < 0) time = s->currentTime;
-    Dscalar x11,x12,x21,x22;
+    double x11,x12,x21,x22;
     s->returnBox().getBoxDims(x11,x12,x21,x22);
 
     outputFile << "N, time, box:\n";
     outputFile << N << "\t" << time <<"\t" <<x11 <<"\t" <<x12<<"\t" <<x21<<"\t" <<x22 <<"\n";
 
-    ArrayHandle<Dscalar2> h_pos(s->cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_pos(s->cellPositions,access_location::host,access_mode::read);
     ArrayHandle<int> h_ct(s->cellType,access_location::host,access_mode::read);
     for (int ii = 0; ii < N; ++ii)
         {

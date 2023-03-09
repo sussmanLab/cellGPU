@@ -1,12 +1,12 @@
-#define ENABLE_CUDA
-
 #include "std_include.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "gpuarray.h"
 #include "indexer.h"
 #include "cuda_runtime.h"
 #include "cellListGPU.cuh"
 #include "cellListGPU.h"
+#include "utilities.cuh"
+
 /*! \file cellListGPU.cpp */
 
 /*!
@@ -14,21 +14,21 @@
 \param points the positions of points to populate the cell list with
 \param bx the period box for the system
  */
-cellListGPU::cellListGPU(Dscalar a, vector<Dscalar> &points,gpubox &bx)
+cellListGPU::cellListGPU(double a, vector<double> &points,periodicBoundaries &bx)
     {
     Nmax = 0;
     setParticles(points);
-    Box = make_shared<gpubox>();
+    Box = make_shared<periodicBoundaries>();
     setGridSize(a);
     }
 
 /*!
 \param points the positions of points to populate the cell list with
  */
-cellListGPU::cellListGPU(vector<Dscalar> &points)
+cellListGPU::cellListGPU(vector<double> &points)
     {
     Nmax = 0;
-    Box = make_shared<gpubox>();
+    Box = make_shared<periodicBoundaries>();
     setParticles(points);
     }
 
@@ -43,14 +43,14 @@ void cellListGPU::setNp(int nn)
 /*!
 \param points set the list of points cellListGPU knows about to this vector
  */
-void cellListGPU::setParticles(const vector<Dscalar> &points)
+void cellListGPU::setParticles(const vector<double> &points)
     {
     int newsize = points.size()/2;
     particles.resize(newsize);
     Np=newsize;
     if(true)
         {
-        ArrayHandle<Dscalar2> h_handle(particles,access_location::host,access_mode::overwrite);
+        ArrayHandle<double2> h_handle(particles,access_location::host,access_mode::overwrite);
         for (int ii = 0; ii < points.size()/2; ++ii)
             {
             h_handle.data[ii].x = points[2*ii];
@@ -60,16 +60,16 @@ void cellListGPU::setParticles(const vector<Dscalar> &points)
     };
 
 /*!
-\param points set the list of points cellListGPU knows about to this vector of Dscalar2's
+\param points set the list of points cellListGPU knows about to this vector of double2's
  */
-void cellListGPU::setParticles(const vector<Dscalar2> &points)
+void cellListGPU::setParticles(const vector<double2> &points)
     {
     int newsize = points.size();
     particles.resize(newsize);
     Np=newsize;
     if(true)
         {
-        ArrayHandle<Dscalar2> h_handle(particles,access_location::host,access_mode::overwrite);
+        ArrayHandle<double2> h_handle(particles,access_location::host,access_mode::overwrite);
         for (int ii = 0; ii < points.size(); ++ii)
             {
             h_handle.data[ii] = points[ii];
@@ -80,9 +80,9 @@ void cellListGPU::setParticles(const vector<Dscalar2> &points)
 /*!
 \param bx the box defining the periodic unit cell
  */
-void cellListGPU::setBox(gpubox &bx)
+void cellListGPU::setBox(periodicBoundaries &bx)
     {
-    Dscalar b11,b12,b21,b22;
+    double b11,b12,b21,b22;
     bx.getBoxDims(b11,b12,b21,b22);
     if (bx.isBoxSquare())
         Box->setSquare(b11,b22);
@@ -94,9 +94,17 @@ void cellListGPU::setBox(gpubox &bx)
 \param a the approximate side length of all of the cells.
 This routine currently picks an even integer of cells, close to the desired size, that fit in the box.
  */
-void cellListGPU::setGridSize(Dscalar a)
+void cellListGPU::setGridSize(double a)
     {
-    Dscalar b11,b12,b21,b22;
+    if(!GPUcompute)
+        {
+        particles.neverGPU = true;
+        cell_sizes.neverGPU = true;
+        idxs.neverGPU = true;
+        assist.neverGPU = true;
+        };
+
+    double b11,b12,b21,b22;
     Box->getBoxDims(b11,b12,b21,b22);
     xsize = (int)floor(b11/a);
     if(xsize%2==1) xsize +=1;
@@ -158,24 +166,23 @@ void cellListGPU::resetCellSizes()
     totalCells=xsize*ysize;
     if(cell_sizes.getNumElements() != totalCells)
         cell_sizes.resize(totalCells);
-
-    ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::overwrite);
-    gpu_zero_array(d_cell_sizes.data,totalCells);
+    ArrayHandle<unsigned int> csizes(cell_sizes,access_location::device,access_mode::overwrite);
+    gpu_set_array<unsigned int>(csizes.data, 0,totalCells);
 
     //set all cell indexes to zero
     cell_list_indexer = Index2D(Nmax,totalCells);
     if(idxs.getNumElements() != cell_list_indexer.getNumElements())
         idxs.resize(cell_list_indexer.getNumElements());
+    ArrayHandle<int> cidxs(idxs,access_location::device,access_mode::overwrite);
+    gpu_set_array<int>(cidxs.data,0,cell_list_indexer.getNumElements());
 
-    ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::overwrite);
-    gpu_zero_array(d_idx.data,(int) cell_list_indexer.getNumElements());
-
-
+    /* no longer using assist structure on the gpu
     if(assist.getNumElements()!= 2)
         assist.resize(2);
     ArrayHandle<int> h_assist(assist,access_location::host,access_mode::overwrite);
     h_assist.data[0]=Nmax;
     h_assist.data[1] = 0;
+    */
     };
 
 /*!
@@ -183,7 +190,7 @@ void cellListGPU::resetCellSizes()
 \param y the y coordinate of the position
 returns the cell index that (x,y) would be contained in for the current cell list
  */
-int cellListGPU::positionToCellIndex(Dscalar x, Dscalar y)
+int cellListGPU::positionToCellIndex(double x, double y)
     {
     int cell_idx = 0;
     int binx = max(0,min(xsize-1,(int)floor(x/boxsize)));
@@ -194,15 +201,15 @@ int cellListGPU::positionToCellIndex(Dscalar x, Dscalar y)
 /*!
 \param cellIndex the base cell index to find the neighbors of
 \param width the distance (in cells) to search
-\param cellNeighbors a vector of all cell indices that are neighbors of cellIndex
+\param neighbors a vector of all cell indices that are neighbors of cellIndex
  */
-void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
+void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &neighbors)
     {
     int w = min(width,xsize/2);
     int cellix = cellIndex%xsize;
     int celliy = (cellIndex - cellix)/ysize;
-    cellNeighbors.clear();
-    cellNeighbors.reserve(w*w);
+    neighbors.clear();
+    neighbors.reserve(w*w);
     for (int ii = -w; ii <=w; ++ii)
         for (int jj = -w; jj <=w; ++jj)
             {
@@ -210,23 +217,23 @@ void cellListGPU::getCellNeighbors(int cellIndex, int width, std::vector<int> &c
             if (cx <0) cx+=xsize;
             int cy = (celliy+ii)%ysize;
             if (cy <0) cy+=ysize;
-            cellNeighbors.push_back(cell_indexer(cx,cy));
+            neighbors.push_back(cell_indexer(cx,cy));
             };
     };
 
 /*!
 \param cellIndex the base cell index to find the neighbors of
 \param width the distance (in cells) to search
-\param cellNeighbors a vector of all cell indices that are neighbors of cellIndex
+\param neighbors a vector of all cell indices that are neighbors of cellIndex
 This method returns a square outline of neighbors (the neighbor shell) rather than all neighbors
 within a set distance
  */
-void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<int> &cellNeighbors)
+void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<int> &neighbors)
     {
     int w = min(width,xsize);
     int cellix = cellIndex%xsize;
     int celliy = (cellIndex - cellix)/xsize;
-    cellNeighbors.clear();
+    neighbors.clear();
     for (int ii = -w; ii <=w; ++ii)
         for (int jj = -w; jj <=w; ++jj)
             if(ii ==-w ||ii == w ||jj ==-w ||jj==w)
@@ -235,7 +242,7 @@ void cellListGPU::getCellShellNeighbors(int cellIndex, int width, std::vector<in
                 if (cx <0) cx+=xsize;
                 int cy = (celliy+ii)%ysize;
                 if (cy <0) cy+=ysize;
-                cellNeighbors.push_back(cell_indexer(cx,cy));
+                neighbors.push_back(cell_indexer(cx,cy));
                 };
     };
 
@@ -248,7 +255,7 @@ void cellListGPU::compute()
     //will loop through particles and put them in cells...
     //if there are more than Nmax particles in any cell, will need to recompute.
     bool recompute = true;
-    ArrayHandle<Dscalar2> h_pt(particles,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_pt(particles,access_location::host,access_mode::read);
     int ibin, jbin;
     int nmax = Nmax;
     int computations = 0;
@@ -289,12 +296,12 @@ void cellListGPU::compute()
 /*!
 \param points the set of points to assign to cells
  */
-void cellListGPU::compute(GPUArray<Dscalar2> &points)
+void cellListGPU::compute(GPUArray<double2> &points)
     {
     //will loop through particles and put them in cells...
     //if there are more than Nmax particles in any cell, will need to recompute.
     bool recompute = true;
-    ArrayHandle<Dscalar2> h_pt(points,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_pt(points,access_location::host,access_mode::read);
     int ibin, jbin;
     int nmax = Nmax;
     int computations = 0;
@@ -339,7 +346,7 @@ Assign known points to cells on the GPU
 void cellListGPU::computeGPU()
     {
     bool recompute = true;
-    //resetCellSizes();
+    int maximumCellOccupation = Nmax;
 
     while (recompute)
         {
@@ -350,12 +357,11 @@ void cellListGPU::computeGPU()
         if (true)
             {
             //get particle data
-            ArrayHandle<Dscalar2> d_pt(particles,access_location::device,access_mode::read);
+            ArrayHandle<double2> d_pt(particles,access_location::device,access_mode::read);
 
             //get cell list arrays...readwrite so things are properly zeroed out
             ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::readwrite);
-            ArrayHandle<int> d_assist(assist,access_location::device,access_mode::readwrite);
 
             //call the gpu function
             gpu_compute_cell_list(d_pt.data,        //particle positions...broken
@@ -369,33 +375,21 @@ void cellListGPU::computeGPU()
                           (*Box),
                           cell_indexer,
                           cell_list_indexer,
-                          d_assist.data
-                          );               //the box
+                          maximumCellOccupation
+                          );
             }
         //get cell list arrays
         recompute = false;
-        //bool loopcheck=false;
-        if (true)
+        if(maximumCellOccupation > Nmax)
             {
-
-            ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
-            ArrayHandle<int> h_idx(idxs,access_location::host,access_mode::read);
-            for (int cc = 0; cc < totalCells; ++cc)
-                {
-                int cs = h_cell_sizes.data[cc] ;
-                for (int bb = 0; bb < cs; ++bb)
-                    {
-                    int wp = cell_list_indexer(bb,cc);
-                    };
-                if(cs > Nmax)
-                    {
-                    Nmax =cs ;
-                    recompute = true;
-                    };
-
-                };
-
-            };
+            Nmax =maximumCellOccupation;
+            if (Nmax%2 == 0 )
+                Nmax +=2;
+            else
+                Nmax +=1;
+            recompute = true;
+            }
+        //bool loopcheck=false;
         };
     cell_list_indexer = Index2D(Nmax,totalCells);
 
@@ -404,10 +398,10 @@ void cellListGPU::computeGPU()
 /*!
 \param points the set of points to assign to cells...on the GPU
  */
-void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
+void cellListGPU::computeGPU(GPUArray<double2> &points)
     {
     bool recompute = true;
-    resetCellSizes();
+    int maximumCellOccupation = Nmax;
 
     while (recompute)
         {
@@ -417,12 +411,11 @@ void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
         if (true)
             {
             //get particle data
-            ArrayHandle<Dscalar2> d_pt(points,access_location::device,access_mode::read);
+            ArrayHandle<double2> d_pt(points,access_location::device,access_mode::read);
 
             //get cell list arrays...readwrite so things are properly zeroed out
             ArrayHandle<unsigned int> d_cell_sizes(cell_sizes,access_location::device,access_mode::readwrite);
             ArrayHandle<int> d_idx(idxs,access_location::device,access_mode::readwrite);
-            ArrayHandle<int> d_assist(assist,access_location::device,access_mode::readwrite);
 
             //call the gpu function
             gpu_compute_cell_list(d_pt.data,        //particle positions...broken
@@ -436,28 +429,20 @@ void cellListGPU::computeGPU(GPUArray<Dscalar2> &points)
                           (*Box),
                           cell_indexer,
                           cell_list_indexer,
-                          d_assist.data
-                          );               //the box
+                          maximumCellOccupation
+                          );
             }
         //get cell list arrays
         recompute = false;
-        if (true)
+        if(maximumCellOccupation > Nmax)
             {
-            ArrayHandle<unsigned int> h_cell_sizes(cell_sizes,access_location::host,access_mode::read);
-            for (int cc = 0; cc < totalCells; ++cc)
-                {
-                int cs = h_cell_sizes.data[cc] ;
-                if(cs > Nmax)
-                    {
-                    Nmax =cs ;
-                    if (Nmax%2 == 0 ) Nmax +=2;
-                    if (Nmax%2 == 1 ) Nmax +=1;
-                    recompute = true;
-                    };
-
-                };
-
-            };
-        };
+            Nmax =maximumCellOccupation;
+            if (Nmax%2 == 0 )
+                Nmax +=2;
+            else
+                Nmax +=1;
+            recompute = true;
+            }
+        }
     cell_list_indexer = Index2D(Nmax,totalCells);
     };

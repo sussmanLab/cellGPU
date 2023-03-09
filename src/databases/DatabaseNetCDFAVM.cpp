@@ -1,4 +1,3 @@
-#define ENABLE_CUDA
 #include "DatabaseNetCDFAVM.h"
 /*! \file DatabaseNetCDFAVM.cpp */
 
@@ -40,16 +39,16 @@ void AVMDatabaseNetCDF::SetDimVar()
     unitDim = File.add_dim("unit",1);
 
     //Set the variables
-    posVar       = File.add_var("pos",       ncDscalar,recDim, dofDim);
-    forceVar     = File.add_var("force",       ncDscalar,recDim, dofDim);
+    posVar       = File.add_var("pos",       ncDouble,recDim, dofDim);
+    forceVar     = File.add_var("force",       ncDouble,recDim, dofDim);
     vcneighVar   = File.add_var("VertexCellNeighbors",         ncInt,recDim, NvnDim );
     vneighVar    = File.add_var("Vneighs",         ncInt,recDim, NvnDim );
-    cellTypeVar  = File.add_var("cellType",         ncDscalar,recDim, ncDim );
-    directorVar  = File.add_var("director",         ncDscalar,recDim, ncDim );
-    cellPosVar   = File.add_var("cellPositions",         ncDscalar,recDim, nc2Dim );
-    BoxMatrixVar = File.add_var("BoxMatrix", ncDscalar,recDim, boxDim);
-    meanqVar     = File.add_var("meanQ",     ncDscalar,recDim, unitDim);
-    timeVar      = File.add_var("time",     ncDscalar,recDim, unitDim);
+    cellTypeVar  = File.add_var("cellType",         ncDouble,recDim, ncDim );
+    directorVar  = File.add_var("director",         ncDouble,recDim, ncDim );
+    cellPosVar   = File.add_var("cellPositions",         ncDouble,recDim, nc2Dim );
+    BoxMatrixVar = File.add_var("BoxMatrix", ncDouble,recDim, boxDim);
+    meanqVar     = File.add_var("meanQ",     ncDouble,recDim, unitDim);
+    timeVar      = File.add_var("time",     ncDouble,recDim, unitDim);
 }
 
 void AVMDatabaseNetCDF::GetDimVar()
@@ -84,20 +83,20 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
     timeVar->get(& t->currentTime,1,1);
     //set the box
     BoxMatrixVar-> set_cur(rec);
-    std::vector<Dscalar> boxdata(4,0.0);
+    std::vector<double> boxdata(4,0.0);
     BoxMatrixVar->get(&boxdata[0],1, boxDim->size());
     t->Box->setGeneral(boxdata[0],boxdata[1],boxdata[2],boxdata[3]);
 
     //get the positions
     posVar-> set_cur(rec);
-    std::vector<Dscalar> posdata(2*Nv,0.0);
+    std::vector<double> posdata(2*Nv,0.0);
     posVar->get(&posdata[0],1, dofDim->size());
 
-    ArrayHandle<Dscalar2> h_p(t->vertexPositions,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_p(t->vertexPositions,access_location::host,access_mode::overwrite);
     for (int idx = 0; idx < Nv; ++idx)
         {
-        Dscalar px = posdata[(2*idx)];
-        Dscalar py = posdata[(2*idx)+1];
+        double px = posdata[(2*idx)];
+        double py = posdata[(2*idx)+1];
         h_p.data[idx].x=px;
         h_p.data[idx].y=py;
         };
@@ -107,8 +106,8 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
     ArrayHandle<int> h_vcn(t->vertexCellNeighbors,access_location::host,access_mode::read);
     vneighVar->set_cur(rec);
     vcneighVar->set_cur(rec);
-    std::vector<Dscalar> vndat(3*Nv,0.0);
-    std::vector<Dscalar> vcndat(3*Nv,0.0);
+    std::vector<double> vndat(3*Nv,0.0);
+    std::vector<double> vcndat(3*Nv,0.0);
     vneighVar       ->get(&vndat[0],1,NvnDim->size());
     vcneighVar       ->get(&vcndat[0],1,NvnDim->size());
     for (int vv = 0; vv < Nv; ++vv)
@@ -156,9 +155,9 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
         {
         int neigh = h_nn.data[cc];
         //The voronoi vertices, relative to cell CM
-        vector< Dscalar2> Vpoints(neigh);
+        vector< double2> Vpoints(neigh);
         int v0 =  h_n.data[t->n_idx(0,cc)];
-        Dscalar2 meanPos = make_Dscalar2(0.0,0.0);
+        double2 meanPos = make_double2(0.0,0.0);
         vector<int> originalVertexOrder(neigh);
         for (int vv = 0; vv < neigh; ++vv)
             {
@@ -170,7 +169,7 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
         for (int vv = 0; vv < neigh; ++vv)
             Vpoints[vv] = Vpoints[vv] - meanPos;
         //a structure to sort them
-        vector<pair <Dscalar,int> > CCWorder(neigh);
+        vector<pair <double,int> > CCWorder(neigh);
         for (int vv = 0; vv < neigh; ++vv)
             {
             CCWorder[vv].first = atan2(Vpoints[vv].y,Vpoints[vv].x);
@@ -191,38 +190,38 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
     };
 
 
-void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
+void AVMDatabaseNetCDF::WriteState(STATE s, double time, int rec)
 {
     Records +=1;
     if(rec<0)   rec = recDim->size();
     if (time < 0) time = s->currentTime;
 
-    std::vector<Dscalar> boxdat(4,0.0);
-    Dscalar x11,x12,x21,x22;
+    std::vector<double> boxdat(4,0.0);
+    double x11,x12,x21,x22;
     s->Box->getBoxDims(x11,x12,x21,x22);
     boxdat[0]=x11;
     boxdat[1]=x12;
     boxdat[2]=x21;
     boxdat[3]=x22;
 
-    std::vector<Dscalar> posdat(2*Nv);
-    std::vector<Dscalar> forcedat(2*Nv);
-    std::vector<Dscalar> directordat(Nc);
+    std::vector<double> posdat(2*Nv);
+    std::vector<double> forcedat(2*Nv);
+    std::vector<double> directordat(Nc);
     std::vector<int> typedat(Nc);
     std::vector<int> vndat(3*Nv);
     std::vector<int> vcndat(3*Nv);
     int idx = 0;
 
-    ArrayHandle<Dscalar2> h_p(s->vertexPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_f(s->vertexForces,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(s->cellDirectors,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(s->vertexPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_f(s->vertexForces,access_location::host,access_mode::read);
+    ArrayHandle<double> h_cd(s->cellDirectors,access_location::host,access_mode::read);
     ArrayHandle<int> h_vn(s->vertexNeighbors,access_location::host,access_mode::read);
     ArrayHandle<int> h_vcn(s->vertexCellNeighbors,access_location::host,access_mode::read);
     ArrayHandle<int> h_ct(s->cellType,access_location::host,access_mode::read);
 
-    std::vector<Dscalar> cellPosDat(2*Nc);
+    std::vector<double> cellPosDat(2*Nc);
     s->getCellPositionsCPU();
-    ArrayHandle<Dscalar2> h_cpos(s->cellPositions);
+    ArrayHandle<double2> h_cpos(s->cellPositions);
     for (int ii = 0; ii < Nc; ++ii)
         {
         int pidx = s->tagToIdx[ii];
@@ -234,12 +233,12 @@ void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
     for (int ii = 0; ii < Nv; ++ii)
         {
         int pidx = s->tagToIdxVertex[ii];
-        Dscalar px = h_p.data[pidx].x;
-        Dscalar py = h_p.data[pidx].y;
+        double px = h_p.data[pidx].x;
+        double py = h_p.data[pidx].y;
         posdat[(2*idx)] = px;
         posdat[(2*idx)+1] = py;
-        Dscalar fx = h_f.data[pidx].x;
-        Dscalar fy = h_f.data[pidx].y;
+        double fx = h_f.data[pidx].x;
+        double fy = h_f.data[pidx].y;
         forcedat[(2*idx)] = fx;
         forcedat[(2*idx)+1] = fy;
         idx +=1;
@@ -254,7 +253,7 @@ void AVMDatabaseNetCDF::WriteState(STATE s, Dscalar time, int rec)
             };
         };
 
-    Dscalar meanq = s->reportq();
+    double meanq = s->reportq();
     //Write all the data
     timeVar     ->put_rec(&time,      rec);
     meanqVar    ->put_rec(&meanq,rec);

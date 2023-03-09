@@ -1,29 +1,34 @@
 # INSTALLATION {#install}
 
-A general makefile is included with the repository. To install on your system, update the CUDA_LIB,
-CUDA_INC, LIB_CUDA, LIB_CGAL, LIB_NETCDF paths, and make sure the PATH and LD_LIBRARY_PATH
-environment variables are appropriately set. From there a simple "make" will do the trick. See below
-for detailed installation instructions on MacOS. The command "make float" will compile the code with
-everything in floating-point precision (a bit faster on GPUs, but, of course, less numerically precise).
+Version 1.0 has switched to a cmake-based build system. Most dependencies can be apt-get installed, which is convenient, and
+a script for installing netcdf locally is included. As noted below, you should have the include and lib of netcdf on your PATH and LD_LIBRARY_PATH,
+but as long as that's the case compilation should be straightforward. Just
+
+* $ cd build/
+* $ cmake ..
+* $ make
+
+By default this will compile executables related to the voronoi.cpp and Vertex.cpp files in the root directory.
+To compile a different cpp file, got to the "foreach(ARG " line at the end of the CMakeLists.txt file and add the name of your file, without the .cpp ending, to the list.
+
 The command "make debug" will add common debugging flags, and also enforce always-reproducible random
 number generation.
 
 # Requirements
 
-The current iteration of the code was written using some features of C++11, and was compiled using
-CUDA-8.0. The code has been tested with CUDA versions as early as 6.5, and uses compute capability
-3.5 devices and higher. It ought to work on lower compute capability devices; compile without the
-"-arch=sm_35" flag to run on them.
+Note that, thanks to the CGAL dependency (which, with some work, can be removed), your compiler needs to support
+features of C++14. This package has been tested with gcc-6 and gcc-7.5 (and equivalent g++ versions)
 
-The Voronoi model branch uses the CGAL library; this dependency can be removed, if necessary, by monkeying
-with the code to run "fullTriangulation()" rather than "globalTriangulationCGAL()" in the relevant
-spots. This is highly discouraged, and the code may be much less stable as a result. In any event,
-CGAL-4.9 was used, which in turn requires up-to-date versions of the gmp and mpfr libraries.
-The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.
+The current iteration of the code was written using some features of C++14, and was compiled using
+CUDA-11.0. The code has been tested with CUDA versions as early as 6.5, and uses compute capability
+3.5 devices and higher.
+
+In any event,
+CGAL-5.0.2 was used, which in turn requires up-to-date versions of the gmp and mpfr libraries.
+The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.All of these, including CGAL now, can be conveniently installed via apt-get
 
 The default database class uses the netCDF-4 C++  library (tested on version 4.1.3).The dependency on netCDF
-can be removed by (1) not including any "Database" class, and (2) commenting out everything after the
-= sign in the LIB_NETCDF entry of the makefile
+can be removed by (1) not including any "Database" class, and (2) removing the database directory and library from the cmake file
 
 The calculation of the dynamical matrix makes use of Eigen3.3.3
 
@@ -34,6 +39,18 @@ Documentation is maintained via doxygen, but is not required for compilation of 
 This repository comes with sample main cpp files that can be compiled into executables in both the root directory
 and in examples/. Please see the [examples](@ref code) documentation for details on each.
 range of parameters.
+
+#Ubuntu installation
+
+Most requirements can be obtained by the usual apt-get method; netcdf is more finicky.
+An install script is included in the cmakeHelp/ directory. Modify the directory paths to be more appropriate for your system,
+and use this if you prefer not to go through by hand the steps outlined on the netcdf page below. In
+any event, make sure that the includes and libraries for netcdf and netcdfcxx
+are on your PATH and LD_LIBRARY_PATH, respectively
+
+# Windows Subsystem for Linux 2
+
+This code has been tested on WSL 2, running Ubuntu 18.04, gcc-6, g++-6, and using the CUDA 11.0 toolkit
 
 # Mac OS X Instructions
 

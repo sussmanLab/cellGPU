@@ -25,12 +25,12 @@ int main(int argc, char*argv[])
     int tSteps = 5; //number of time steps to run after initialization
     int initSteps = 1; //number of initialization steps
 
-    Dscalar dt = 0.01; //the time step size
-    Dscalar p0 = 3.8;  //the preferred perimeter
-    Dscalar a0 = 1.0;  // the preferred area
-    Dscalar v0 = 0.1;  // the self-propulsion
-    Dscalar Dr  =0.5;  // rotational diffusion
-    Dscalar J = 0.0;   //alignment coupling
+    double dt = 0.01; //the time step size
+    double p0 = 3.8;  //the preferred perimeter
+    double a0 = 1.0;  // the preferred area
+    double v0 = 0.1;  // the self-propulsion
+    double Dr  =0.5;  // rotational diffusion
+    double J = 0.0;   //alignment coupling
     int fIdx = 0;
     //The defaults can be overridden from the command line
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:j:x:y:z:p:f:t:e:")) != -1)
@@ -115,8 +115,8 @@ int main(int argc, char*argv[])
     //run for additional timesteps, and record timing information
     //Additionally, every tau record the Vicsek order parameter
     int averages = 0;
-    Dscalar Phi = 0.0;
-    Dscalar2 vPar, vPerp;
+    double Phi = 0.0;
+    double2 vPar, vPerp;
     t1=clock();
     vectorValueDatabase vvdat(3,dataname2,NcFile::Replace);   
     for(int ii = 0; ii < tSteps; ++ii)
@@ -124,9 +124,9 @@ int main(int argc, char*argv[])
 
         if(ii%((int)(10.0/dt))==0)
             {
-            vector<Dscalar> saveVec(3);
+            vector<double> saveVec(3);
             averages +=1;
-            Dscalar val = spv->vicsekOrderParameter(vPar, vPerp);
+            double val = spv->vicsekOrderParameter(vPar, vPerp);
             saveVec[0] = val;
             saveVec[1] = vPar.x;
             saveVec[2] = vPar.y;
@@ -139,23 +139,23 @@ int main(int argc, char*argv[])
     Phi /= averages;
     t2=clock();
 
-    Dscalar steptime = (t2-t1)/(Dscalar)CLOCKS_PER_SEC/tSteps;
+    double steptime = (t2-t1)/(double)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
     cout << spv->reportq() << endl;
     printf("<Phi> = %f\n",Phi);
 
     //get the v-v spatial correlation function
-    Dscalar val = spv->vicsekOrderParameter(vPar, vPerp);
-    Dscalar L = sqrt(numpts);
-    Dscalar binWidth = 0.5;
+    double val = spv->vicsekOrderParameter(vPar, vPerp);
+    double L = sqrt(numpts);
+    double binWidth = 0.5;
     int totalBins = floor(0.5*L/binWidth);
 
     //x-component of each will be parallel, y-component will be perp.
-    vector<Dscalar> vvCorr(totalBins);
-    vector<Dscalar> perBin(totalBins);
-    Dscalar2 disp;
-    ArrayHandle<Dscalar2> points(spv->returnPositions());
-    ArrayHandle<Dscalar2> vel(spv->returnVelocities());
+    vector<double> vvCorr(totalBins);
+    vector<double> perBin(totalBins);
+    double2 disp;
+    ArrayHandle<double2> points(spv->returnPositions());
+    ArrayHandle<double2> vel(spv->returnVelocities());
     //loop through points
     for (int ii = 0; ii < numpts - 1; ++ii)
         {
@@ -165,8 +165,8 @@ int main(int argc, char*argv[])
             int iBin = floor(norm(disp)/binWidth);
             if(iBin < totalBins)
                 {
-                Dscalar2 v1 = vel.data[ii];
-                Dscalar2 v2 = vel.data[jj];
+                double2 v1 = vel.data[ii];
+                double2 v2 = vel.data[jj];
                 perBin[iBin] += 1.0;
                 vvCorr[iBin] += dot(v1,v2) / dot(v1,v1);
                 }

@@ -1,14 +1,15 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include <cuda_runtime.h>
 #include "cellListGPU.cuh"
 #include "indexer.h"
-#include "gpubox.h"
+#include "periodicBoundaries.h"
 #include "functions.h"
 #include <iostream>
 #include <stdio.h>
 #include "voronoiModelBase.cuh"
+#include <thrust/reduce.h>
+#include <thrust/scan.h>
+#include <thrust/execution_policy.h>
+#include <thrust/device_vector.h>
 
 /*! \file voronoiModelBase.cu */
 /*!
@@ -23,14 +24,14 @@
   */
 __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
                                               const int3* __restrict__ d_circumcircles,
-                                              const Dscalar2* __restrict__ d_pt,
+                                              const double2* __restrict__ d_pt,
                                               const unsigned int* __restrict__ d_cell_sizes,
                                               const int* __restrict__ d_cell_idx,
                                               int Nccs,
                                               int xsize,
                                               int ysize,
-                                              Dscalar boxsize,
-                                              gpubox Box,
+                                              double boxsize,
+                                              periodicBoundaries Box,
                                               Index2D ci,
                                               Index2D cli,
                                               int *anyFail
@@ -44,18 +45,18 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     //the indices of particles forming the circumcircle
     int3 i1 = d_circumcircles[idx];
     //the vertex we will take to be the origin, and its cell position
-    Dscalar2 v = d_pt[i1.x];
+    double2 v = d_pt[i1.x];
     int ib=Floor(v.x/boxsize);
     int jb=Floor(v.y/boxsize);
 
 
-    Dscalar2 pt1,pt2;
+    double2 pt1,pt2;
     Box.minDist(d_pt[i1.y],v,pt1);
     Box.minDist(d_pt[i1.z],v,pt2);
 
     //get the circumcircle
-    Dscalar2 Q;
-    Dscalar rad;
+    double2 Q;
+    double rad;
     Circumcircle(pt1,pt2,Q,rad);
 
     //look through cells for other particles...re-use pt1 and pt2 variables below
@@ -108,31 +109,23 @@ __global__ void gpu_test_circumcenters_kernel(int* __restrict__ d_repair,
     return;
     };
 
-/*!
-  Since the cells are guaranteed to be convex, the area of the cell is the sum of the areas of
-  the triangles formed by consecutive Voronoi vertices
-  */
-__global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__ d_points,
-                                          Dscalar2* __restrict__ d_AP,
+
+__host__ __device__ void computeVoronoiGeometryFunction(int idx,
+                                          const double2* __restrict__ d_points,
+                                          double2* __restrict__ d_AP,
                                           const int* __restrict__ d_nn,
                                           const int* __restrict__ d_n,
-                                          Dscalar2* __restrict__ d_vc,
-                                          Dscalar4* __restrict__ d_vln,
-                                          int N,
+                                          double2* __restrict__ d_vc,
+                                          double4* __restrict__ d_vln,
                                           Index2D n_idx,
-                                          gpubox Box
-                                        )
+                                          periodicBoundaries Box
+                                          )
     {
-    // read in the particle that belongs to this thread
-    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= N)
-        return;
-
-    Dscalar2  nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
+    double2  nnextp, nlastp,pi,rij,rik,vlast,vnext,vfirst;
 
     int neigh = d_nn[idx];
-    Dscalar Varea = 0.0;
-    Dscalar Vperi= 0.0;
+    double Varea = 0.0;
+    double Vperi= 0.0;
 
     pi = d_points[idx];
     nlastp = d_points[ d_n[n_idx(neigh-1,idx)] ];
@@ -165,14 +158,14 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
 
         //...and back to computing the geometry
         Varea += TriangleArea(vlast,vnext);
-        Dscalar dx = vlast.x - vnext.x;
-        Dscalar dy = vlast.y - vnext.y;
+        double dx = vlast.x - vnext.x;
+        double dy = vlast.y - vnext.y;
         Vperi += sqrt(dx*dx+dy*dy);
         vlast=vnext;
         };
     Varea += TriangleArea(vlast,vfirst);
-    Dscalar dx = vlast.x - vfirst.x;
-    Dscalar dy = vlast.y - vfirst.y;
+    double dx = vlast.x - vfirst.x;
+    double dy = vlast.y - vfirst.y;
     Vperi += sqrt(dx*dx+dy*dy);
 
     //it's more memory-access friendly to now fill in the VoroLastNext structure separately
@@ -196,7 +189,28 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
 
     d_AP[idx].x=Varea;
     d_AP[idx].y=Vperi;
-
+    return;
+    }
+/*!
+  Since the cells are guaranteed to be convex, the area of the cell is the sum of the areas of
+  the triangles formed by consecutive Voronoi vertices
+  */
+__global__ void gpu_compute_voronoi_geometry_kernel(const double2* __restrict__ d_points,
+                                          double2* __restrict__ d_AP,
+                                          const int* __restrict__ d_nn,
+                                          const int* __restrict__ d_n,
+                                          double2* __restrict__ d_vc,
+                                          double4* __restrict__ d_vln,
+                                          int N,
+                                          Index2D n_idx,
+                                          periodicBoundaries Box
+                                        )
+    {
+    // read in the particle that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= N)
+        return;
+    computeVoronoiGeometryFunction(idx,d_points,d_AP,d_nn,d_n,d_vc,d_vln, n_idx,Box);
     return;
     };
 
@@ -206,14 +220,14 @@ __global__ void gpu_compute_voronoi_geometry_kernel(const Dscalar2* __restrict__
 bool gpu_test_circumcenters(int *d_repair,
                             int3 *d_ccs,
                             int Nccs,
-                            Dscalar2 *d_pt,
+                            double2 *d_pt,
                             unsigned int *d_cell_sizes,
                             int *d_idx,
                             int Np,
                             int xsize,
                             int ysize,
-                            Dscalar boxsize,
-                            gpubox &Box,
+                            double boxsize,
+                            periodicBoundaries &Box,
                             Index2D &ci,
                             Index2D &cli,
                             int *fail)
@@ -243,35 +257,143 @@ bool gpu_test_circumcenters(int *d_repair,
     };
 
 //!Call the kernel to compute the geometry
-bool gpu_compute_voronoi_geometry(Dscalar2 *d_points,
-                        Dscalar2   *d_AP,
-                        int      *d_nn,
-                        int      *d_n,
-                        Dscalar2 *d_vc,
-                        Dscalar4 *d_vln,
+bool gpu_compute_voronoi_geometry(const double2 *d_points,
+                        double2   *d_AP,
+                        const int      *d_nn,
+                        const int      *d_n,
+                        double2 *d_vc,
+                        double4 *d_vln,
                         int      N,
                         Index2D  &n_idx,
-                        gpubox &Box
+                        periodicBoundaries &Box,
+                        bool useGPU,
+                        int nThreads
                         )
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;
     unsigned int nblocks  = N/block_size + 1;
 
-    gpu_compute_voronoi_geometry_kernel<<<nblocks,block_size>>>(
-                                                d_points,
-                                                d_AP,
-                                                d_nn,
-                                                d_n,
-                                                d_vc,
-                                                d_vln,
-                                                N,
-                                                n_idx,
-                                                Box
-                                                );
-    HANDLE_ERROR(cudaGetLastError());
-    return cudaSuccess;
+    if(useGPU)
+        {
+        gpu_compute_voronoi_geometry_kernel<<<nblocks,block_size>>>(                                        d_points,
+                        d_AP,
+                        d_nn,
+                        d_n,
+                        d_vc,
+                        d_vln,
+                        N,
+                        n_idx,
+                        Box
+                        );
+        HANDLE_ERROR(cudaGetLastError());
+        return cudaSuccess;
+        }
+    else
+        ompFunctionLoop(nThreads,N,computeVoronoiGeometryFunction,d_points,d_AP,d_nn,d_n,d_vc,d_vln,n_idx,Box);
+        
+        
+    return true;
     };
 
+__global__ void gpu_update_neighIdxs_kernel(int *neighborNum,
+                          int *neighNumScan,
+                          int2 *neighIdxs,
+                          int Ncells)
+    {
+    // read in the particle that belongs to this thread
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= Ncells)
+        return;
+    int nmax = neighborNum[idx];
+    int offset = neighNumScan[idx];
+    for (int ii = 0; ii < nmax; ++ii)
+        {
+        neighIdxs[offset+ii].x = idx;
+        neighIdxs[offset+ii].y = ii;
+        }
+    return;
+    }
+
+
+bool gpu_update_neighIdxs(int *neighborNum,
+                          int *neighNumScan,
+                          int2 *neighIdxs,
+                          int &NeighIdxNum,
+                          int Ncells)
+    {
+    unsigned int block_size = 128;
+    if (Ncells < 128) block_size = 32;
+    unsigned int nblocks  = Ncells/block_size + 1;
+
+
+    {
+    thrust::device_ptr<int> dpNN(neighborNum);
+    thrust::device_ptr<int> dpNNS(neighNumScan);
+    thrust::exclusive_scan(dpNN,dpNN+Ncells,dpNNS);
+    }
+
+    gpu_update_neighIdxs_kernel<<<nblocks,block_size>>>(neighborNum,neighNumScan,neighIdxs,Ncells);
+
+    {
+    thrust::device_ptr<int> dpNN(neighborNum);
+    NeighIdxNum = thrust::reduce(dpNN,dpNN+Ncells);//neighborNum,neighborNum+Ncells);
+    }
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    }
+
+__global__ void gpu_all_del_sets_kernel(int *neighborNum,
+                      int *neighbors,
+                      int2 *delSets,
+                      int * delOther,
+                      int Ncells,
+                      Index2D nIdx)
+    {
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= Ncells)
+        return;
+
+    int iNeighs = neighborNum[idx];
+    int nm1,n1,n2,nextNeighs,testPoint;
+    nm1 = neighbors[nIdx(iNeighs-2,idx)];
+    n1 = neighbors[nIdx(iNeighs-1,idx)];
+    for(int nn = 0; nn < iNeighs; ++nn)
+        {
+        n2 = neighbors[nIdx(nn,idx)];
+        nextNeighs = neighborNum[n1];
+        for (int nn2 = 0; nn2 <nextNeighs; ++nn2)
+            {
+            testPoint = neighbors[nIdx(nn2,n1)];
+            if(testPoint==nm1)
+                {
+                delOther[nIdx(nn,idx)] = neighbors[nIdx((nn2+1)%nextNeighs,n1)];
+                break;
+                }
+            }
+        delSets[nIdx(nn,idx)].x = nm1;
+        delSets[nIdx(nn,idx)].y = n1;
+
+        nm1=n1;
+        n1=n2;
+        }
+    }
+
+bool gpu_all_del_sets(int *neighborNum,
+                      int *neighbors,
+                      int2 *delSets,
+                      int * delOther,
+                      int Ncells,
+                      Index2D &nIdx)
+    {
+    unsigned int block_size = 128;
+    if (Ncells < 128) block_size = 32;
+    unsigned int nblocks  = Ncells/block_size + 1;
+
+    gpu_all_del_sets_kernel<<<nblocks,block_size>>>(neighborNum,neighbors,delSets,delOther, Ncells,nIdx);
+
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    }
 
 /** @} */ //end of group declaration

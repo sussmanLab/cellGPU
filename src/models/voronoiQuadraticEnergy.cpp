@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "voronoiQuadraticEnergy.h"
 #include "voronoiQuadraticEnergy.cuh"
 #include "cuda_profiler_api.h"
@@ -10,11 +8,11 @@
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
 \post initializeVoronoiQuadraticEnergy(n,initGPURNcellsG) is called, as is setCellPreferenceUniform(1.0,4.0)
 */
-VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod)
+VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod, bool usegpu)
     {
-    printf("Initializing %i cells with random positions in a square box... \n",n);
+//    printf("Initializing %i cells with random positions in a square box... \n",n);
     Reproducible = reprod;
-    initializeVoronoiQuadraticEnergy(n);
+    initializeVoronoiQuadraticEnergy(n, usegpu);
     setCellPreferencesUniform(1.0,4.0);
     };
 
@@ -25,11 +23,11 @@ VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n, bool reprod)
 \param reprod should the simulation be reproducible (i.e. call a RNG with a fixed seed)
 \post initializeVoronoiQuadraticEnergy(n,initGPURNG) is called
 */
-VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n,Dscalar A0, Dscalar P0,bool reprod)
+VoronoiQuadraticEnergy::VoronoiQuadraticEnergy(int n,double A0, double P0,bool reprod, bool gpu)
     {
-    printf("Initializing %i cells with random positions in a square box...\n ",n);
+//    printf("Initializing %i cells with random positions in a square box...\n ",n);
     Reproducible = reprod;
-    initializeVoronoiQuadraticEnergy(n);
+    initializeVoronoiQuadraticEnergy(n, gpu);
     setCellPreferencesUniform(A0,P0);
     setv0Dr(0.05,1.0);
     };
@@ -42,9 +40,9 @@ initialized (initializeVoronoiModelBase(n) gets called), particle exclusions are
 data structures for the topology are set
 */
 //take care of all class initialization functions
-void VoronoiQuadraticEnergy::initializeVoronoiQuadraticEnergy(int n)
+void VoronoiQuadraticEnergy::initializeVoronoiQuadraticEnergy(int n, bool gpu)
     {
-    initializeVoronoiModelBase(n);
+    initializeVoronoiModelBase(n, gpu);
     Timestep = 0;
     setDeltaT(0.01);
     };
@@ -101,9 +99,9 @@ void VoronoiQuadraticEnergy::SumForcesGPU()
 void VoronoiQuadraticEnergy::sumForceSets()
     {
 
-    ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_forces(cellForces,access_location::device,access_mode::overwrite);
+    ArrayHandle<int> d_nn(neighborNum,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_forceSets(forceSets,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_forces(cellForces,access_location::device,access_mode::overwrite);
 
     gpu_sum_force_sets(
                     d_forceSets.data,
@@ -119,10 +117,10 @@ void VoronoiQuadraticEnergy::sumForceSets()
 void VoronoiQuadraticEnergy::sumForceSetsWithExclusions()
     {
 
-    ArrayHandle<int> d_nn(cellNeighborNum,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_forces(cellForces,access_location::device,access_mode::overwrite);
-    ArrayHandle<Dscalar2> d_external_forces(external_forces,access_location::device,access_mode::overwrite);
+    ArrayHandle<int> d_nn(neighborNum,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_forceSets(forceSets,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_forces(cellForces,access_location::device,access_mode::overwrite);
+    ArrayHandle<double2> d_external_forces(external_forces,access_location::device,access_mode::overwrite);
     ArrayHandle<int> d_exes(exclusions,access_location::device,access_mode::read);
 
     gpu_sum_force_sets_with_exclusions(
@@ -140,15 +138,15 @@ vertices
 */
 void VoronoiQuadraticEnergy::computeVoronoiForceSetsGPU()
     {
-    ArrayHandle<Dscalar2> d_p(cellPositions,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_AP(AreaPeri,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_p(cellPositions,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_AP(AreaPeri,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_APpref(AreaPeriPreferences,access_location::device,access_mode::read);
     ArrayHandle<int2> d_delSets(delSets,access_location::device,access_mode::read);
     ArrayHandle<int> d_delOther(delOther,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
+    ArrayHandle<double2> d_forceSets(forceSets,access_location::device,access_mode::overwrite);
     ArrayHandle<int2> d_nidx(NeighIdxs,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar2> d_vc(voroCur,access_location::device,access_mode::read);
-    ArrayHandle<Dscalar4> d_vln(voroLastNext,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_vc(voroCur,access_location::device,access_mode::read);
+    ArrayHandle<double4> d_vln(voroLastNext,access_location::device,access_mode::read);
 
     gpu_force_sets(
                     d_p.data,
@@ -171,19 +169,19 @@ void VoronoiQuadraticEnergy::computeVoronoiForceSetsGPU()
 */
 void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
     {
-    Dscalar Pthreshold = THRESHOLD;
+    double Pthreshold = THRESHOLD;
 
     //read in all the data we'll need
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_f(cellForces,access_location::host,access_mode::readwrite);
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_f(cellForces,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::read);
 
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
 
-    ArrayHandle<Dscalar2> h_external_forces(external_forces,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_external_forces(external_forces,access_location::host,access_mode::overwrite);
     ArrayHandle<int> h_exes(exclusions,access_location::host,access_mode::read);
 
     //get Delaunay neighbors of the cell
@@ -195,14 +193,14 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         };
 
     //compute base set of voronoi points, and the derivatives of those points w/r/t cell i's position
-    vector<Dscalar2> voro(neigh);
+    vector<double2> voro(neigh);
     vector<Matrix2x2> dhdri(neigh);
     Matrix2x2 Id;
-    Dscalar2 circumcent;
-    Dscalar2 rij,rik;
-    Dscalar2 nnextp,nlastp;
-    Dscalar2 rjk;
-    Dscalar2 pi = h_p.data[i];
+    double2 circumcent;
+    double2 rij,rik;
+    double2 nnextp,nlastp;
+    double2 rjk;
+    double2 pi = h_p.data[i];
 
     nlastp = h_p.data[ns[ns.size()-1]];
     Box->minDist(nlastp,pi,rij);
@@ -215,11 +213,11 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         rjk.x =rik.x-rij.x;
         rjk.y =rik.y-rij.y;
 
-        Dscalar2 dbDdri,dgDdri,dDdriOD,z;
-        Dscalar betaD = -dot(rik,rik)*dot(rij,rjk);
-        Dscalar gammaD = dot(rij,rij)*dot(rik,rjk);
-        Dscalar cp = rij.x*rjk.y - rij.y*rjk.x;
-        Dscalar D = 2*cp*cp;
+        double2 dbDdri,dgDdri,dDdriOD,z;
+        double betaD = -dot(rik,rik)*dot(rij,rjk);
+        double gammaD = dot(rij,rij)*dot(rik,rjk);
+        double cp = rij.x*rjk.y - rij.y*rjk.x;
+        double D = 2*cp*cp;
 
         z.x = betaD*rij.x+gammaD*rik.x;
         z.y = betaD*rij.y+gammaD*rik.y;
@@ -238,16 +236,16 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         rij=rik;
         };
 
-    Dscalar2 vlast,vnext,vother;
+    double2 vlast,vnext,vother;
 
     //start calculating forces
-    Dscalar2 forceSum;
+    double2 forceSum;
     forceSum.x=0.0;forceSum.y=0.0;
 
-    Dscalar Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
-    Dscalar Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
+    double Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
+    double Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
 
-    Dscalar2 vcur;
+    double2 vcur;
     vlast = voro[neigh-1];
     for(int nn = 0; nn < neigh; ++nn)
         {
@@ -259,19 +257,19 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         if (other_idx < 0) other_idx += neigh;
         int otherNeigh = ns[other_idx];
 
-        Dscalar2 dAidv,dPidv;
+        double2 dAidv,dPidv;
         dAidv.x = 0.5*(vlast.y-vnext.y);
         dAidv.y = 0.5*(vnext.x-vlast.x);
 
-        Dscalar2 dlast,dnext;
+        double2 dlast,dnext;
         dlast.x = vlast.x-vcur.x;
         dlast.y=vlast.y-vcur.y;
 
-        Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+        double dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
 
         dnext.x = vcur.x-vnext.x;
         dnext.y = vcur.y-vnext.y;
-        Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        double dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
         if(dnnorm < Pthreshold)
             dnnorm = Pthreshold;
         if(dlnorm < Pthreshold)
@@ -295,23 +293,23 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
             printf("Triangulation problem %i\n",DT_other_idx);
             throw std::exception();
             };
-        Dscalar2 nl1 = h_p.data[otherNeigh];
-        Dscalar2 nn1 = h_p.data[baseNeigh];
-        Dscalar2 no1 = h_p.data[DT_other_idx];
+        double2 nl1 = h_p.data[otherNeigh];
+        double2 nn1 = h_p.data[baseNeigh];
+        double2 no1 = h_p.data[DT_other_idx];
 
-        Dscalar2 r1,r2,r3;
+        double2 r1,r2,r3;
         Box->minDist(nl1,pi,r1);
         Box->minDist(nn1,pi,r2);
         Box->minDist(no1,pi,r3);
 
         Circumcenter(r1,r2,r3,vother);
 
-        Dscalar Akdiff = KA*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
-        Dscalar Pkdiff = KP*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
-        Dscalar Ajdiff = KA*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].x);
-        Dscalar Pjdiff = KP*(h_AP.data[otherNeigh].y - h_APpref.data[otherNeigh].y);
+        double Akdiff = KA*(h_AP.data[baseNeigh].x  - h_APpref.data[baseNeigh].x);
+        double Pkdiff = KP*(h_AP.data[baseNeigh].y  - h_APpref.data[baseNeigh].y);
+        double Ajdiff = KA*(h_AP.data[otherNeigh].x - h_APpref.data[otherNeigh].x);
+        double Pjdiff = KP*(h_AP.data[otherNeigh].y - h_APpref.data[otherNeigh].y);
 
-        Dscalar2 dAkdv,dPkdv;
+        double2 dAkdv,dPkdv;
         dAkdv.x = 0.5*(vnext.y-vother.y);
         dAkdv.y = 0.5*(vother.x-vnext.x);
 
@@ -329,7 +327,7 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         dPkdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPkdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-        Dscalar2 dAjdv,dPjdv;
+        double2 dAjdv,dPjdv;
         dAjdv.x = 0.5*(vother.y-vlast.y);
         dAjdv.y = 0.5*(vlast.x-vother.x);
 
@@ -347,7 +345,7 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         dPjdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPjdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
-        Dscalar2 dEdv;
+        double2 dEdv;
 
         dEdv.x = 2.0*Adiff*dAidv.x + 2.0*Pdiff*dPidv.x;
         dEdv.y = 2.0*Adiff*dAidv.y + 2.0*Pdiff*dPidv.y;
@@ -356,7 +354,7 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
         dEdv.x += 2.0*Ajdiff*dAjdv.x + 2.0*Pjdiff*dPjdv.x;
         dEdv.y += 2.0*Ajdiff*dAjdv.y + 2.0*Pjdiff*dPjdv.y;
 
-        Dscalar2 temp = dEdv*dhdri[nn];
+        double2 temp = dEdv*dhdri[nn];
         forceSum.x += temp.x;
         forceSum.y += temp.y;
 
@@ -381,12 +379,12 @@ void VoronoiQuadraticEnergy::computeVoronoiForceCPU(int i)
 Returns the quadratic energy functional:
 E = \sum_{cells} K_A(A_i-A_i,0)^2 + K_P(P_i-P_i,0)^2
 */
-Dscalar VoronoiQuadraticEnergy::computeEnergy()
+double VoronoiQuadraticEnergy::computeEnergy()
     {
     if(!forcesUpToDate)
         computeForces();
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_APP(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_APP(AreaPeriPreferences,access_location::host,access_mode::read);
     Energy = 0.0;
     for (int nn = 0; nn  < Ncells; ++nn)
         {
@@ -412,29 +410,29 @@ This function calculates
 . Notably, this is done by taking analytic derivatives, not by doing a finite-difference computed
 by actually deforming the box a bit and recomputing the geometry.
 */
-Dscalar VoronoiQuadraticEnergy::getSigmaXY()
+double VoronoiQuadraticEnergy::getSigmaXY()
     {
-    Dscalar sigmaXY = 0.0;
-    Dscalar Pthreshold = THRESHOLD;
+    double sigmaXY = 0.0;
+    double Pthreshold = THRESHOLD;
 
     //read in the needed data
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::read);
 
-    ArrayHandle<Dscalar4> h_vln(voroLastNext,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<double4> h_vln(voroLastNext,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
 
     //compute the contribution from each cell
     for (int i = 0; i < Ncells; ++i)
         {
-        Dscalar2 pi = h_p.data[i];
+        double2 pi = h_p.data[i];
         //get Delaunay neighbors of the cell
         int neigh = h_nn.data[i];
         vector<int> ns(neigh);
-        vector<Dscalar2> voro(neigh);
+        vector<double2> voro(neigh);
         for (int nn = 0; nn < neigh; ++nn)
             {
             ns[nn]=h_n.data[n_idx(nn,i)];
@@ -442,15 +440,15 @@ Dscalar VoronoiQuadraticEnergy::getSigmaXY()
             voro[nn] = h_v.data[id];
             };
         //loop through the Delaunay neighbors, computing dA/d\gamma and dP/d\gamma
-        Dscalar2 rij,rik,dhdg;
-        Dscalar2 nnextp,nlastp;
-        Dscalar2 vlast,vnext,vcur;
+        double2 rij,rik,dhdg;
+        double2 nnextp,nlastp;
+        double2 vlast,vnext,vcur;
         nlastp = h_p.data[ns[ns.size()-1]]; 
         Box->minDist(nlastp,pi,rij);
-        Dscalar Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
-        Dscalar Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
-        Dscalar dAdg = 0.0;
-        Dscalar dPdg = 0.0;
+        double Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
+        double Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
+        double dAdg = 0.0;
+        double dPdg = 0.0;
         vlast = voro[neigh-1];
         for (int nn = 0; nn < neigh; ++nn)
             {
@@ -464,16 +462,16 @@ Dscalar VoronoiQuadraticEnergy::getSigmaXY()
             //note that in the force calculation we adopted a sign convention to avoid computing the
             //final minus sign in f= - \nabla E
             //We'll compensate by writing sigmaXY -= (blah blah) instead of the more natural +=
-            Dscalar2 dAidv,dPidv;
+            double2 dAidv,dPidv;
             dAidv.x = 0.5*(vlast.y-vnext.y);
             dAidv.y = 0.5*(vnext.x-vlast.x);
-            Dscalar2 dlast,dnext;
+            double2 dlast,dnext;
             dlast.x = vlast.x-vcur.x;
             dlast.y=vlast.y-vcur.y;
-            Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+            double dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
             dnext.x = vcur.x-vnext.x;
             dnext.y = vcur.y-vnext.y;
-            Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+            double dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
             if(dnnorm < Pthreshold)
                     dnnorm = Pthreshold;
             if(dlnorm < Pthreshold)
@@ -490,9 +488,9 @@ Dscalar VoronoiQuadraticEnergy::getSigmaXY()
         sigmaXY -= 2.0*Adiff*dAdg + 2.0*Pdiff*dPdg;
         };
 
-    Dscalar b1,b2,b3,b4;
+    double b1,b2,b3,b4;
     Box->getBoxDims(b1,b2,b3,b4);
-    Dscalar area = b1*b4;
+    double area = b1*b4;
     return sigmaXY/area;
     };
 
@@ -500,11 +498,11 @@ Dscalar VoronoiQuadraticEnergy::getSigmaXY()
 \param rcs a vector of (row,col) locations
 \param vals a vector of the corresponding value of the dynamical matrix
 */
-void VoronoiQuadraticEnergy::getDynMatEntries(vector<int2> &rcs, vector<Dscalar> &vals,Dscalar unstress, Dscalar stress)
+void VoronoiQuadraticEnergy::getDynMatEntries(vector<int2> &rcs, vector<double> &vals,double unstress, double stress)
     {
     printf("evaluating dynamical matrix\n");
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
 
     neighborType nt0 = neighborType::self;
     neighborType nt1 = neighborType::first;
@@ -625,16 +623,16 @@ x12 = d^2 / dr_{i,x} dr_{j,y}
 x21 = d^2 / dr_{i,y} dr_{j,x}
 x22 = d^2 / dr_{i,y} dr_{j,y}
 */
-Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,Dscalar unstress, Dscalar stress)
+Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,double unstress, double stress)
     {
     Matrix2x2  answer;
     answer.x11 = 0.0; answer.x12=0.0; answer.x21=0.0;answer.x22=0.0;
-    ArrayHandle<Dscalar2> h_p(cellPositions,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(cellNeighbors,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_v(voroCur,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_AP(AreaPeri,access_location::host,access_mode::read);
-    ArrayHandle<Dscalar2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_p(cellPositions,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_v(voroCur,access_location::host,access_mode::readwrite);
+    ArrayHandle<double2> h_AP(AreaPeri,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_APpref(AreaPeriPreferences,access_location::host,access_mode::read);
 
     //how many neighbors does cell i have?
     int neigh = h_nn.data[i];
@@ -644,21 +642,21 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         ns[nn] = h_n.data[n_idx(nn,i)];
         };
     //the saved voronoi positions
-    Dscalar2 vlast, vcur,vnext;
+    double2 vlast, vcur,vnext;
     Matrix2x2 zeroMat(0.0,0.0,0.0,0.0);
     //the cell indices
     int cellG, cellB,cellGp1,cellBm1;
     cellB = ns[neigh-1];
     cellBm1 = ns[neigh-2];
     vlast = h_v.data[n_idx(neigh-1,i)];
-    Dscalar dEdA = 2*KA*(h_AP.data[i].x - h_APpref.data[i].x);
-    Dscalar dEdP = 2*KP*(h_AP.data[i].y - h_APpref.data[i].y);
-    Dscalar2 dAadrj = dAidrj(i,j);
-    Dscalar2 dPadrj = dPidrj(i,j);
+    double dEdA = 2*KA*(h_AP.data[i].x - h_APpref.data[i].x);
+    double dEdP = 2*KP*(h_AP.data[i].y - h_APpref.data[i].y);
+    double2 dAadrj = dAidrj(i,j);
+    double2 dPadrj = dPidrj(i,j);
 
     //For debugging, multiply all of the area or perimeter terms by the values here
-    Dscalar area = 1.0;
-    Dscalar peri = 1.0;
+    double area = 1.0;
+    double peri = 1.0;
 
     answer += area*unstress*2.0*KA*dyad(dAidrj(i,i),dAadrj);
     answer += peri*unstress*2.0*KP*dyad(dPidrj(i,i),dPadrj);
@@ -684,12 +682,12 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
             throw std::exception();
             };
 
-        Dscalar2 rB,rG;
+        double2 rB,rG;
         Box->minDist(h_p.data[cellB],h_p.data[i],rB);
         Box->minDist(h_p.data[cellG],h_p.data[i],rG);
-        Dscalar2 rD;
+        double2 rD;
         Box->minDist(h_p.data[cellD],h_p.data[i],rD);
-        Dscalar2 vother;
+        double2 vother;
         Circumcenter(rB,rG,rD,vother);
 
         vcur = h_v.data[n_idx(vv,i)];
@@ -701,7 +699,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         Matrix2x2 dvim1drj(0.0,0.0,0.0,0.0);
         Matrix2x2 dvodrj(0.0,0.0,0.0,0.0);
         Matrix2x2 tempMatrix(0.0,0.0,0.0,0.0);
-        vector<Dscalar> d2vidridrj(8,0.0);
+        vector<double> d2vidridrj(8,0.0);
         if (neighbor ==neighborType::second)
             {
             if (j == cellD)
@@ -740,7 +738,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         //cell alpha terms
         //
         //Area part
-        Dscalar2 dAdv;
+        double2 dAdv;
         dAdv.x = 0.5*(vnext.y-vlast.y);
         dAdv.y = 0.5*(vlast.x-vnext.x);
         //first of three area terms... now done as a simple dyadic product outside the loop
@@ -761,14 +759,14 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         answer += area*stress*dEdA*tempMatrix;
 
         //perimeter part
-        Dscalar2 dPdv;
-        Dscalar2 dlast,dnext;
+        double2 dPdv;
+        double2 dlast,dnext;
         dlast.x = -vlast.x+vcur.x;
         dlast.y = -vlast.y+vcur.y;
-        Dscalar dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
+        double dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
         dnext.x = -vcur.x+vnext.x;
         dnext.y = -vcur.y+vnext.y;
-        Dscalar dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
+        double dnnorm = sqrt(dnext.x*dnext.x+dnext.y*dnext.y);
         dPdv.x = dlast.x/dlnorm - dnext.x/dnnorm;
         dPdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
@@ -789,13 +787,13 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         //now we compute terms related to cells gamma and beta
 
         //cell gamma terms
-        Dscalar dEGdP = 2.0*KP*(h_AP.data[cellG].y - h_APpref.data[cellG].y);
-        Dscalar dEGdA = 2.0*KA*(h_AP.data[cellG].x  - h_APpref.data[cellG].x);
+        double dEGdP = 2.0*KP*(h_AP.data[cellG].y - h_APpref.data[cellG].y);
+        double dEGdA = 2.0*KA*(h_AP.data[cellG].x  - h_APpref.data[cellG].x);
         //area part
-        Dscalar2 dAGdv;
+        double2 dAGdv;
         dAGdv.x = -0.5*(vnext.y-vother.y);
         dAGdv.y = -0.5*(vother.x-vnext.x);
-        Dscalar2 dAGdrj = dAidrj(cellG,j);
+        double2 dAGdrj = dAidrj(cellG,j);
         //first term
         answer += area*unstress*2.*KA*dyad(dAGdv*dvidri,dAGdrj);
         //second term
@@ -812,7 +810,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
 
 
         //perimeter part
-        Dscalar2 dPGdv;
+        double2 dPGdv;
         dlast.x = -vnext.x+vcur.x;
         dlast.y = -vnext.y+vcur.y;
         dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
@@ -823,7 +821,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         dPGdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
         //first term
-        Dscalar2 dPGdrj = dPidrj(cellG,j);
+        double2 dPGdrj = dPidrj(cellG,j);
         answer += peri*unstress*2.*KP*dyad(dPGdv*dvidri,dPGdrj);
         //second term
         d2Pdvidrj = d2Peridvdr(dvidrj,dvip1drj,dvodrj,vnext,vcur,vother);
@@ -838,14 +836,14 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         answer += peri*stress*dEGdP*tempMatrix;
 
         //cell beta terms
-        Dscalar dEBdP = 2.0*KP*(h_AP.data[cellB].y - h_APpref.data[cellB].y);
-        Dscalar dEBdA = 2.0*KA*(h_AP.data[cellB].x - h_APpref.data[cellB].x);
+        double dEBdP = 2.0*KP*(h_AP.data[cellB].y - h_APpref.data[cellB].y);
+        double dEBdA = 2.0*KA*(h_AP.data[cellB].x - h_APpref.data[cellB].x);
         //
         //area terms
-        Dscalar2 dABdv;
+        double2 dABdv;
         dABdv.x = 0.5*(vlast.y-vother.y);
         dABdv.y = 0.5*(vother.x-vlast.x);
-        Dscalar2 dABdrj = dAidrj(cellB,j);
+        double2 dABdrj = dAidrj(cellB,j);
 
         //first term
         answer += area*unstress*2.*KA*dyad(dABdv*dvidri,dABdrj);
@@ -863,7 +861,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
 
 
         //peri terms
-        Dscalar2 dPBdv;
+        double2 dPBdv;
         dlast.x = -vother.x+vcur.x;
         dlast.y = -vother.y+vcur.y;
         dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
@@ -874,7 +872,7 @@ Matrix2x2 VoronoiQuadraticEnergy::d2Edridrj(int i, int j, neighborType neighbor,
         dPBdv.y = dlast.y/dlnorm - dnext.y/dnnorm;
 
         //first term
-        Dscalar2 dPBdrj = dPidrj(cellB,j);
+        double2 dPBdrj = dPidrj(cellB,j);
         answer += peri*unstress*2.*KP*dyad(dPBdv*dvidri,dPBdrj);
         //second term
         d2Pdvidrj = d2Peridvdr(dvidrj,dvodrj,dvim1drj,vother,vcur,vlast);

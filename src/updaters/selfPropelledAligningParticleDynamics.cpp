@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "selfPropelledAligningParticleDynamics.h"
 #include "selfPropelledAligningParticleDynamics.cuh"
 /*! \file selfPropelledAligningParticleDynamics.cpp */
@@ -69,30 +67,30 @@ void selfPropelledAligningParticleDynamics::integrateEquationsOfMotionCPU()
     {
     activeModel->computeForces();
     {//scope for array Handles
-    ArrayHandle<Dscalar2> h_f(activeModel->returnForces(),access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(activeModel->cellDirectors);
-    ArrayHandle<Dscalar2> h_v(activeModel->cellVelocities);
-    ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_motility(activeModel->Motility,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_f(activeModel->returnForces(),access_location::host,access_mode::read);
+    ArrayHandle<double> h_cd(activeModel->cellDirectors);
+    ArrayHandle<double2> h_v(activeModel->cellVelocities);
+    ArrayHandle<double2> h_disp(displacements,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_motility(activeModel->Motility,access_location::host,access_mode::read);
 
     for (int ii = 0; ii < Ndof; ++ii)
         {
         //displace according to current velocities and forces
-        Dscalar theta = h_cd.data[ii];
+        double theta = h_cd.data[ii];
         if(theta < -PI)
             theta += 2*PI;
         if(theta > PI)
             theta -= 2*PI;
 
-        Dscalar v0i = h_motility.data[ii].x;
-        Dscalar Dri = h_motility.data[ii].y;
+        double v0i = h_motility.data[ii].x;
+        double Dri = h_motility.data[ii].y;
         h_v.data[ii].x = (v0i * cos(theta) + mu * h_f.data[ii].x);
         h_v.data[ii].y = (v0i * sin(theta) + mu * h_f.data[ii].y);
         h_disp.data[ii] = deltaT*h_v.data[ii];
 
-        Dscalar phi = atan2(h_v.data[ii].y,h_v.data[ii].x);
+        double phi = atan2(h_v.data[ii].y,h_v.data[ii].x);
         //rotate the velocity vector a bit
-        Dscalar randomNumber = noise.getRealNormal();
+        double randomNumber = noise.getRealNormal();
         h_cd.data[ii] = theta+ randomNumber*sqrt(2.0*deltaT*Dri) - deltaT*J*sin(theta-phi);
 
         h_v.data[ii] = h_disp.data[ii];
@@ -110,11 +108,11 @@ void selfPropelledAligningParticleDynamics::integrateEquationsOfMotionGPU()
     {
     activeModel->computeForces();
     {//scope for array Handles
-    ArrayHandle<Dscalar2> d_f(activeModel->returnForces(),access_location::device,access_mode::read);
-    ArrayHandle<Dscalar> d_cd(activeModel->cellDirectors,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_v(activeModel->cellVelocities,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::overwrite);
-    ArrayHandle<Dscalar2> d_motility(activeModel->Motility,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_f(activeModel->returnForces(),access_location::device,access_mode::read);
+    ArrayHandle<double> d_cd(activeModel->cellDirectors,access_location::device,access_mode::readwrite);
+    ArrayHandle<double2> d_v(activeModel->cellVelocities,access_location::device,access_mode::readwrite);
+    ArrayHandle<double2> d_disp(displacements,access_location::device,access_mode::overwrite);
+    ArrayHandle<double2> d_motility(activeModel->Motility,access_location::device,access_mode::read);
     ArrayHandle<curandState> d_RNG(noise.RNGs,access_location::device,access_mode::readwrite);
 
     gpu_spp_aligning_eom_integration(d_f.data,

@@ -1,6 +1,3 @@
-#define NVCC
-#define ENABLE_CUDA
-
 #include <cuda_runtime.h>
 #include "curand_kernel.h"
 #include "brownianParticleDynamics.cuh"
@@ -17,13 +14,13 @@
 /*!
 Each thread calculates the displacement of an individual cell
 */
-__global__ void brownian_eom_integration_kernel(Dscalar2 *forces,
-                                           Dscalar2 *displacements,
+__global__ void brownian_eom_integration_kernel(double2 *forces,
+                                           double2 *displacements,
                                            curandState *RNGs,
                                            int N,
-                                           Dscalar deltaT,
-                                           Dscalar mu,
-                                           Dscalar T)
+                                           double deltaT,
+                                           double mu,
+                                           double T)
     {
     unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
     if (idx >=N)
@@ -40,13 +37,13 @@ __global__ void brownian_eom_integration_kernel(Dscalar2 *forces,
 
 //!get the current timesteps vector of displacements into the displacement vector
 bool gpu_brownian_eom_integration(
-                    Dscalar2 *forces,
-                    Dscalar2 *displacements,
+                    double2 *forces,
+                    double2 *displacements,
                     curandState *RNGs,
                     int N,
-                    Dscalar deltaT,
-                    Dscalar mu,
-                    Dscalar T)
+                    double deltaT,
+                    double mu,
+                    double T)
     {
     unsigned int block_size = 128;
     if (N < 128) block_size = 32;

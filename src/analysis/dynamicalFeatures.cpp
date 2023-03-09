@@ -1,10 +1,8 @@
-#define ENABLE_CUDA
-
 #include "dynamicalFeatures.h"
 #include "functions.h"
 /*! \file dynamicalFeatures.cpp */
 
-dynamicalFeatures::dynamicalFeatures(GPUArray<Dscalar2> &initialPos, BoxPtr _bx, Dscalar fractionAnalyzed)
+dynamicalFeatures::dynamicalFeatures(GPUArray<double2> &initialPos, PeriodicBoxPtr _bx, double fractionAnalyzed)
     {
     Box = _bx;
     copyGPUArrayData(initialPos,iPos);
@@ -13,11 +11,11 @@ dynamicalFeatures::dynamicalFeatures(GPUArray<Dscalar2> &initialPos, BoxPtr _bx,
         N = floor(N*fractionAnalyzed);
     };
 
-Dscalar dynamicalFeatures::computeMSD(GPUArray<Dscalar2> &currentPos)
+double dynamicalFeatures::computeMSD(GPUArray<double2> &currentPos)
     {
-    Dscalar msd = 0.0;
-    ArrayHandle<Dscalar2> fPos(currentPos,access_location::host,access_mode::read);
-    Dscalar2 disp,cur,init;
+    double msd = 0.0;
+    ArrayHandle<double2> fPos(currentPos,access_location::host,access_mode::read);
+    double2 disp,cur,init;
     for (int ii = 0; ii < N; ++ii)
         {
         cur = fPos.data[ii];
@@ -29,11 +27,11 @@ Dscalar dynamicalFeatures::computeMSD(GPUArray<Dscalar2> &currentPos)
     return msd;
     };
 
-Dscalar dynamicalFeatures::computeOverlapFunction(GPUArray<Dscalar2> &currentPos, Dscalar cutoff)
+double dynamicalFeatures::computeOverlapFunction(GPUArray<double2> &currentPos, double cutoff)
     {
-    Dscalar overlap = 0.0;
-    ArrayHandle<Dscalar2> fPos(currentPos,access_location::host,access_mode::read);
-    Dscalar2 disp,cur,init;
+    double overlap = 0.0;
+    ArrayHandle<double2> fPos(currentPos,access_location::host,access_mode::read);
+    double2 disp,cur,init;
     for (int ii = 0; ii < N; ++ii)
         {
         cur = fPos.data[ii];

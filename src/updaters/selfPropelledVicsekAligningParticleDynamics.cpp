@@ -1,5 +1,3 @@
-#define ENABLE_CUDA
-
 #include "selfPropelledVicsekAligningParticleDynamics.h"
 #include "selfPropelledVicsekAligningParticleDynamics.cuh"
 /*! \file selfPropelledVicsekAligningParticleDynamics.cpp */
@@ -8,7 +6,7 @@
 An extremely simple constructor that does nothing, but enforces default GPU operation
 \param the number of points in the system (cells or particles)
 */
-selfPropelledVicsekAligningParticleDynamics::selfPropelledVicsekAligningParticleDynamics(int _N, Dscalar _eta, Dscalar _tau)
+selfPropelledVicsekAligningParticleDynamics::selfPropelledVicsekAligningParticleDynamics(int _N, double _eta, double _tau)
     {
     Timestep = 0;
     deltaT = 0.01;
@@ -70,28 +68,28 @@ void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionCPU(
     {
     activeModel->computeForces();
     //a vector for storing the new directors
-    vector<Dscalar> newCD(Ndof);
+    vector<double> newCD(Ndof);
     vector<int> cellNeighs;
     {//scope for array Handles
-    ArrayHandle<Dscalar2> h_f(activeModel->returnForces(),access_location::host,access_mode::read);
-    ArrayHandle<Dscalar> h_cd(activeModel->cellDirectors);
-    ArrayHandle<Dscalar2> h_v(activeModel->cellVelocities);
-    ArrayHandle<Dscalar2> h_disp(displacements,access_location::host,access_mode::overwrite);
-    ArrayHandle<Dscalar2> h_motility(activeModel->Motility,access_location::host,access_mode::read);
-    ArrayHandle<int> h_nn(activeModel->cellNeighborNum,access_location::host,access_mode::read);
-    ArrayHandle<int> h_n(activeModel->cellNeighbors,access_location::host,access_mode::read);
+    ArrayHandle<double2> h_f(activeModel->returnForces(),access_location::host,access_mode::read);
+    ArrayHandle<double> h_cd(activeModel->cellDirectors);
+    ArrayHandle<double2> h_v(activeModel->cellVelocities);
+    ArrayHandle<double2> h_disp(displacements,access_location::host,access_mode::overwrite);
+    ArrayHandle<double2> h_motility(activeModel->Motility,access_location::host,access_mode::read);
+    ArrayHandle<int> h_nn(activeModel->neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(activeModel->neighbors,access_location::host,access_mode::read);
 
 
-    Dscalar2 direction;
-    Dscalar theta;
+    double2 direction;
+    double theta;
     for (int ii = 0; ii < Ndof; ++ii)
         {
         //displace according to current velocities and forces
         //theta = h_cd.data[ii];
         
 
-        Dscalar v0i = h_motility.data[ii].x;
-        Dscalar Dri = h_motility.data[ii].y;
+        double v0i = h_motility.data[ii].x;
+        double Dri = h_motility.data[ii].y;
         h_v.data[ii].x = (v0i * cos(theta) + mu * h_f.data[ii].x);
         h_v.data[ii].y = (v0i * sin(theta) + mu * h_f.data[ii].y);
         h_disp.data[ii] = deltaT*h_v.data[ii];
@@ -109,18 +107,18 @@ void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionCPU(
         for (int nn = 0; nn < neigh; ++nn)
             {
             int neighbor = cellNeighs[nn];
-            Dscalar curTheta =  atan2(h_v.data[neighbor].y,h_v.data[neighbor].x);
-            //Dscalar curTheta = h_cd.data[neighbor];
+            double curTheta =  atan2(h_v.data[neighbor].y,h_v.data[neighbor].x);
+            //double curTheta = h_cd.data[neighbor];
             direction.x += Cos(curTheta);
             direction.y += Sin(curTheta);
             }
-        Dscalar randomNumber = noise.getRealUniform(-PI,PI);
-        Dscalar neighborFactor = neigh*Eta;
+        double randomNumber = noise.getRealUniform(-PI,PI);
+        double neighborFactor = neigh*Eta;
         direction.x += neighborFactor*Cos(randomNumber); 
         direction.y += neighborFactor*Sin(randomNumber); 
 
         //phi is the target direction for the cell director
-        Dscalar phi = atan2(direction.y,direction.x);
+        double phi = atan2(direction.y,direction.x);
         newCD[ii] = theta  - (deltaT/tau)*sin(theta-phi);
         };
     for (int ii = 0; ii < Ndof; ++ii)
@@ -145,14 +143,14 @@ void selfPropelledVicsekAligningParticleDynamics::integrateEquationsOfMotionGPU(
     throw std::exception();
     activeModel->computeForces();
     {//scope for array Handles
-    ArrayHandle<Dscalar2> d_f(activeModel->returnForces(),access_location::device,access_mode::read);
-    ArrayHandle<Dscalar> d_cd(activeModel->cellDirectors,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_v(activeModel->cellVelocities,access_location::device,access_mode::readwrite);
-    ArrayHandle<Dscalar2> d_disp(displacements,access_location::device,access_mode::overwrite);
-    ArrayHandle<Dscalar2> d_motility(activeModel->Motility,access_location::device,access_mode::read);
+    ArrayHandle<double2> d_f(activeModel->returnForces(),access_location::device,access_mode::read);
+    ArrayHandle<double> d_cd(activeModel->cellDirectors,access_location::device,access_mode::readwrite);
+    ArrayHandle<double2> d_v(activeModel->cellVelocities,access_location::device,access_mode::readwrite);
+    ArrayHandle<double2> d_disp(displacements,access_location::device,access_mode::overwrite);
+    ArrayHandle<double2> d_motility(activeModel->Motility,access_location::device,access_mode::read);
     ArrayHandle<curandState> d_RNG(noise.RNGs,access_location::device,access_mode::readwrite);
-    ArrayHandle<int> d_nn(activeModel->cellNeighborNum,access_location::device,access_mode::read);
-    ArrayHandle<int> d_n(activeModel->cellNeighbors,access_location::device,access_mode::read);
+    ArrayHandle<int> d_nn(activeModel->neighborNum,access_location::device,access_mode::read);
+    ArrayHandle<int> d_n(activeModel->neighbors,access_location::device,access_mode::read);
 
     gpu_spp_vicsek_aligning_eom_integration(d_f.data,
                  d_v.data,

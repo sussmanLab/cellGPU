@@ -11,24 +11,19 @@ The developers are actively thinking about or interested in adding the following
 are interested in contributing to any of these development branches please contact the lead developer!
 Please also see the public gitlab cellGPU page for more detailed issues
 
-## Self-propelled Voronoi branch
+## Voronoi branch
 
-1. The current implementation of the test-and-repair scheme should eventually be ported over to a
-fully GPU-accelerated scheme; this, after all, was the initial motivation for using the Chen and
-Gotsman "candidate 1-ring" approach instead of a more conventional star-splaying method. High
-priority.
-    - As an interim feature, add multi-threaded CPU support to the test-and-repair scheme via OpenMP or equivalent. Medium priority.
-2. The current implementation is restricted to square periodic domains. Extensions to non-square
+1. The current implementation is restricted to square periodic domains. Extensions to non-square
 periodic domains should be trivial; extensions to fixed boundary conditions would be interesting.
 Medium priority.
 
-3. The SPV model has a natural extension to 3D models (see the work of M. Merkel). The CPU-branch
+2. The SPV model has a natural extension to 3D models (see the work of M. Merkel). The CPU-branch
 implementation would be straightforward; the GPU branch may take a bit more thought. Medium
 priority.
 
 ## Vertex model branch
 
-1. Extend to allow more general changes to the network topology. High priority.
+1. Extend to allow more general changes to the network topology. High priority, and a branch has this partially completed
 
 2. Allow fixed boundaries and edges. High priority.
 
@@ -67,10 +62,8 @@ Every class, member, function, etc., should be documented with doxygen comments.
 
 This repository currently follows a simple structure. The main executables, Vertex.cpp and
 voronoi.cpp are in the base directory and can be used to reproduce timing information. Other example files are in examples/
-headers and .cu/.cpp files are in inc/ and src/ directories, respectively, with a subdirectory
-structure for updaters, models, utilities, analysis, and database creators. Object files get compiled
-in the obj/ directory. A simple makefile is used to compile everything and all cpp files in the root
-directory.
+headers and .cu/.cpp files are src/ directories, with a subdirectory
+structure for updaters, models, utilities, analysis, and database creators.
 
 ### Optimizations
 
