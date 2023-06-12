@@ -1,36 +1,37 @@
 #!/bin/bash
-BASEDIR=$PWD
 
-mkdir -p $BASEDIR/local
-mkdir -p $BASEDIR/local/bin
-mkdir -p $BASEDIR/local/include
-mkdir -p $BASEDIR/local/lib
+mkdir -p $HOME/local
+mkdir -p $HOME/local/bin
+mkdir -p $HOME/local/include
+mkdir -p $HOME/local/lib
 
 #add the following to your bashrc...
-export PATH="$PATH:$BASEDIR/local/bin"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$BASEDIR/local/lib"
-export LIBRARY_PATH="$LIBRARY_PATH:$BASEDIR/local/lib"
-export CPATH="$CPATH:$BASEDIR/local/include"
+echo 'export PATH="$PATH:$HOME/local/bin"' >> ~/.bashrc
+echo 'export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/local/lib"'  >> ~/.bashrc
+echo 'export LIBRARY_PATH="$LIBRARY_PATH:$HOME/local/lib"' >> ~/.bashrc
+echo 'export CPATH="$CPATH:$HOME/local/include"' >> ~/.bashrc
 
-echo -e "\nStart zlib-1.2.11 install"
-wget "https://www.zlib.net/zlib-1.2.11.tar.gz"
-tar axf zlib-1.2.11.tar.gz
-cd zlib-1.2.11
+echo -e "\nStart zlib-1.2.13 install"
+wget "https://www.zlib.net/zlib-1.2.13.tar.gz"
+tar axf zlib-1.2.13.tar.gz
+cd zlib-1.2.13
 cd build
-./configure --prefix=$BASEDIR/local
+./configure --prefix=$HOME/local
 make
 make check
 make install
 cd ..
+rm zlib-1.2.13.tar.gz
 
-wget "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.4/src/hdf5-1.10.4.tar.gz"
-tar axf hdf5-1.10.4.tar.gz
-cd hdf5-1.10.4
-./configure --prefix=$BASEDIR/local --enable-cxx
+wget "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.5/src/hdf5-1.10.5.tar.gz"
+tar axf hdf5-1.10.5.tar.gz
+cd hdf5-1.10.5
+./configure --prefix=$HOME/local --enable-cxx
 make
 make check
 make install
 cd ..
+rm hdf5-1.10.5.tar.gz
 
 
 wget "https://github.com/Unidata/netcdf-c/archive/v4.6.2.tar.gz"
@@ -41,18 +42,21 @@ make
 make check
 make install
 cd ..
+rm v4.6.2.tar.gz
 
-wget "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-cxx-4.2.tar.gz"
-tar axf netcdf-cxx-4.2.tar.gz
-cd netcdf-cxx-4.2
+source ~/.bashrc
+
+wget "https://github.com/Unidata/netcdf-cxx4/archive/refs/tags/v4.2.1.tar.gz"
+tar axf v4.2.1.tar.gz
+cd netcdf-cxx4-4.2.1/
 ./configure --prefix=$HOME/local
 make
 make check
 make install
 cd ..
+rm v4.2.1.tar.gz
 
-
-wget "https://github.com/Unidata/netcdf-cxx4/archive/v4.3.0.tar.gz"
+wget "https://github.com/Unidata/netcdf-cxx4/archive/refs/tags/v4.3.0.tar.gz"
 tar axf v4.3.0.tar.gz
 cd netcdf-cxx4-4.3.0
 ./configure --prefix=$HOME/local
@@ -60,3 +64,4 @@ make
 make check
 make install
 cd ..
+rm v4.3.0.tar.gz

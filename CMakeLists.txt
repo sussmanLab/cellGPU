@@ -6,15 +6,19 @@ add_definitions(-DENABLE_CUDA)
 
 find_package(OpenMP REQUIRED)
 set(CMAKE_CC_FLAGS "${CMAKE_CC_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++14 -DBOOST_MATH_DISABLE_FLOAT128 -fopenmp  -frounding-math")
+#note: CGAL (which I will get rid of someday) needs at least c++14; some advanced gcc compilers will throw errors if you don't set the cpp standard to 17, though
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -std=c++17 -DBOOST_MATH_DISABLE_FLOAT128 -fopenmp  -frounding-math")
+#the arch compute and sm stuff below should be customized for your hardware
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --expt-relaxed-constexpr
-                                        -arch=sm_30
-                                        -gencode=arch=compute_30,code=sm_30
-                                        -gencode=arch=compute_50,code=sm_50
-                                        -gencode=arch=compute_52,code=sm_52
-                                        -Wno-deprecated-gpu-targets
-                                        ")
-                                        #")#-gencode arch=compute_30,code=sm_30 -Wno-deprecated-gpu-targets ")#-Xptxas -O3 -Xcompiler -O3")
+                                        -arch=sm_80
+                                        -gencode=arch=compute_80,code=sm_80
+                                        -gencode=arch=compute_86,code=sm_86
+					")
+#                                        -gencode=arch=compute_30,code=sm_30
+#                                        -gencode=arch=compute_50,code=sm_50
+#                                        -gencode=arch=compute_52,code=sm_52
+#                                        ")
+                                        #")#-gencode arch=compute_30,code=sm_30 -Wno-deprecated-gpu-targets ")#-Xptxas -O3 -Xcompiler -O3") -Wno-deprecated-gpu-targets
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
