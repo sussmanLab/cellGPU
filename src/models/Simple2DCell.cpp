@@ -78,6 +78,21 @@ void Simple2DCell::setCellPreferencesUniform(double A0, double P0)
     };
 
 /*!
+choose a target p_0, randomly distribute target a_0s (a las pica ciamarra and paoluzzi et al paper
+*/
+void Simple2DCell::setCellPreferencesWithRandomAreas(double p0, double aMin,double aMax)
+    {
+    AreaPeriPreferences.resize(Ncells);
+    ArrayHandle<double2> h_p(AreaPeriPreferences,access_location::host,access_mode::overwrite);
+    for (int ii = 0; ii < Ncells; ++ii)
+        {
+        double a = noise.getRealUniform(aMin, aMax);
+        h_p.data[ii].x = a;
+        h_p.data[ii].y = p0 * sqrt(a);
+        };
+    };
+
+/*!
 Set the Area and Perimeter preferences to the input vector
 */
 void Simple2DCell::setCellPreferences(vector<double2> &APPref)

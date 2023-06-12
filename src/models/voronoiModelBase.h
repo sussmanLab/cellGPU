@@ -93,7 +93,7 @@ class voronoiModelBase : public Simple2DActiveCell
 
         //!Globally construct the triangulation via CGAL
         void globalTriangulationCGAL(bool verbose = false);
-        //!Globally construct the triangulation via CGAL
+        //!Globally construct the triangulation via DelGPU
         void globalTriangulationDelGPU(bool verbose = false);
 
         //!repair any problems with the triangulation on the CPU

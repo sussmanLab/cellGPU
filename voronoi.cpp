@@ -6,9 +6,10 @@
 
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
-#include "selfPropelledParticleDynamics.h"
-#include "brownianParticleDynamics.h"
+#include "NoseHooverChainNVT.h"
+#include "nvtModelDatabase.h"
 #include "analysisPackage.h"
+
 
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
@@ -31,7 +32,8 @@ int main(int argc, char*argv[])
     double dt = 0.01; //the time step size
     double p0 = 3.8;  //the preferred perimeter
     double a0 = 1.0;  // the preferred area
-    double v0 = 0.1;  // the self-propulsion
+    double T = 0.1;  // the temperature
+    int Nchain = 4;     //The number of thermostats to chain together
 
     //The defaults can be overridden from the command line
     while((c=getopt(argc,argv,"n:g:m:s:r:a:i:v:b:x:y:z:p:t:e:")) != -1)
@@ -44,7 +46,7 @@ int main(int argc, char*argv[])
             case 'e': dt = atof(optarg); break;
             case 'p': p0 = atof(optarg); break;
             case 'a': a0 = atof(optarg); break;
-            case 'v': v0 = atof(optarg); break;
+            case 'v': T = atof(optarg); break;
             case '?':
                     if(optopt=='c')
                         std::cerr<<"Option -" << optopt << "requires an argument.\n";
@@ -65,30 +67,35 @@ int main(int argc, char*argv[])
     if (!gpu) 
         initializeGPU = false;
 
-    cout << "initializing a system of " << numpts << " cells at temperature " << v0 << endl;
-    //define an equation of motion object...here for self-propelled cells
-//    EOMPtr spp = make_shared<selfPropelledParticleDynamics>(numpts);
-    shared_ptr<brownianParticleDynamics> bd = make_shared<brownianParticleDynamics>(numpts);
+    char dataname[256];
+    double equilibrationTime = dt*initSteps;
+    sprintf(dataname,"test_N%i_p%.5f_T%.8f_et%.6f.nc",numpts,p0,T,equilibrationTime);
+
+    nvtModelDatabase ncdat(numpts,dataname,NcFile::Replace);
+
+    cout << "initializing a system of " << numpts << " cells at temperature " << T << endl;
+    shared_ptr<NoseHooverChainNVT> nvt = make_shared<NoseHooverChainNVT>(numpts,Nchain,initializeGPU);
+
     //define a voronoi configuration with a quadratic energy functional
-    shared_ptr<VoronoiQuadraticEnergy> spv  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible,initializeGPU);
+    shared_ptr<VoronoiQuadraticEnergy> voronoiModel  = make_shared<VoronoiQuadraticEnergy>(numpts,1.0,4.0,reproducible,initializeGPU);
 
     //set the cell preferences to uniformly have A_0 = 1, P_0 = p_0
-    spv->setCellPreferencesUniform(1.0,p0);
-    //set the cell activity to have D_r = 1. and a given v_0
-    spv->setv0Dr(v0,1.0);
-    bd->setT(v0);
+    voronoiModel->setCellPreferencesWithRandomAreas(p0,0.8,1.2);
+
+    voronoiModel->setCellVelocitiesMaxwellBoltzmann(T);
+    nvt->setT(T);
 
     //combine the equation of motion and the cell configuration in a "Simulation"
     SimulationPtr sim = make_shared<Simulation>();
-    sim->setConfiguration(spv);
-    sim->addUpdater(bd,spv);
+    sim->setConfiguration(voronoiModel);
+    sim->addUpdater(nvt,voronoiModel);
     //set the time step size
     sim->setIntegrationTimestep(dt);
     //initialize Hilbert-curve sorting... can be turned off by commenting out this line or seting the argument to a negative number
     //sim->setSortPeriod(initSteps/10);
     //set appropriate CPU and GPU flags
     sim->setCPUOperation(!initializeGPU);
-    if (!gpu) 
+    if (!gpu)
         sim->setOmpThreads(abs(USE_GPU));
     sim->setReproducible(reproducible);
 
@@ -98,37 +105,34 @@ int main(int argc, char*argv[])
         {
         sim->performTimestep();
         };
-    spv->computeGeometry();
+    voronoiModel->computeGeometry();
     printf("Finished with initialization\n");
-    cout << "current q = " << spv->reportq() << endl;
+    cout << "current q = " << voronoiModel->reportq() << endl;
     //the reporting of the force should yield a number that is numerically close to zero.
-    spv->reportMeanCellForce(false);
-    if(!initializeGPU)
-        spv->setCPU(false);//turn off globabl-ony mode
+    voronoiModel->reportMeanCellForce(false);
 
     //run for additional timesteps, compute dynamical features, and record timing information
-    dynamicalFeatures dynFeat(spv->returnPositions(),spv->Box);
+    dynamicalFeatures dynFeat(voronoiModel->returnPositions(),voronoiModel->Box);
     logSpacedIntegers logInts(0,0.05);
     t1=clock();
-    cudaProfilerStart();
+//    cudaProfilerStart();
     for(int ii = 0; ii < tSteps; ++ii)
         {
 
         //if(ii%100 ==0)
         if(ii == logInts.nextSave)
             {
-//            printf("timestep %i\t\t energy %f \t msd %f \t overlap %f\n",ii,spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()));
+            ncdat.writeState(voronoiModel);
+//            printf("timestep %i\t\t energy %f \t msd %f \t overlap %f\n",ii,voronoiModel->computeEnergy(),dynFeat.computeMSD(voronoiModel->returnPositions()),dynFeat.computeOverlapFunction(voronoiModel->returnPositions()));
             logInts.update();
             };
         sim->performTimestep();
         };
-    cudaProfilerStop();
+//    cudaProfilerStop();
     t2=clock();
-    printf("final state:\t\t energy %f \t msd %f \t overlap %f\n",spv->computeEnergy(),dynFeat.computeMSD(spv->returnPositions()),dynFeat.computeOverlapFunction(spv->returnPositions()));
+    printf("final state:\t\t energy %f \t msd %f \t overlap %f\n",voronoiModel->computeEnergy(),dynFeat.computeMSD(voronoiModel->returnPositions()),dynFeat.computeOverlapFunction(voronoiModel->returnPositions()));
     double steptime = (t2-t1)/(double)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;
-    spv->reportMeanCellForce(false);
-    cout << spv->reportq() << endl;
 
     if(initializeGPU)
         cudaDeviceReset();
