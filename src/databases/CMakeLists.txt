@@ -16,6 +16,7 @@ include_directories(
         )
 
 add_library(database
+    logEquilibrationStateWriter.cpp
     DatabaseNetCDF.cpp
     DatabaseNetCDFAVM.cpp
     DatabaseNetCDFSPV.cpp

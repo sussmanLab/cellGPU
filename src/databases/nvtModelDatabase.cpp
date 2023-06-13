@@ -60,8 +60,9 @@ void nvtModelDatabase::GetDimVar()
 
     }
 
-void nvtModelDatabase::writeState(STATE s, double time, int rec)
+void nvtModelDatabase::writeState(STATE c, double time, int rec)
     {
+    shared_ptr<VoronoiQuadraticEnergy> s = dynamic_pointer_cast<VoronoiQuadraticEnergy>(c);
     if(rec<0)   rec = recDim->size();
     if (time < 0) time = s->currentTime;
 
@@ -113,8 +114,9 @@ void nvtModelDatabase::writeState(STATE s, double time, int rec)
     File.sync();
     }
 
-void nvtModelDatabase::readState(STATE t, int rec,bool geometry)
+void nvtModelDatabase::readState(STATE c, int rec,bool geometry)
     {
+    shared_ptr<VoronoiQuadraticEnergy> t = dynamic_pointer_cast<VoronoiQuadraticEnergy>(c);
     //initialize the NetCDF dimensions and variables
     GetDimVar();
 

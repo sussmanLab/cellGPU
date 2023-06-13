@@ -8,6 +8,7 @@
 #include "voronoiQuadraticEnergy.h"
 #include "NoseHooverChainNVT.h"
 #include "nvtModelDatabase.h"
+#include "logEquilibrationStateWriter.h"
 #include "analysisPackage.h"
 
 
@@ -67,11 +68,21 @@ int main(int argc, char*argv[])
     if (!gpu)
         initializeGPU = false;
 
+    //set-up a log-spaced state saver...can add as few as 1 database, or as many as you'd like. "0.1" will save 10 states per decade of time
+    logEquilibrationStateWriter lewriter(0.1);
     char dataname[256];
     double equilibrationTime = dt*initSteps;
-    sprintf(dataname,"test_N%i_p%.5f_T%.8f_et%.6f.nc",numpts,p0,T,equilibrationTime);
+    vector<long long int> offsets;
+    offsets.push_back(0);
+    //offsets.push_back(100);offsets.push_back(1000);offsets.push_back(50);
+    for(int ii = 0; ii < offsets.size(); ++ii)
+        {
+        sprintf(dataname,"test_N%i_p%.5f_T%.8f_et%.6f.nc",numpts,p0,T,offsets[ii]*dt);
+        shared_ptr<nvtModelDatabase> ncdat=make_shared<nvtModelDatabase>(numpts,dataname,NcFile::Replace);
+        lewriter.addDatabase(ncdat,offsets[ii]);
+        }
+    lewriter.identifyNextFrame();
 
-    nvtModelDatabase ncdat(numpts,dataname,NcFile::Replace);
 
     cout << "initializing a system of " << numpts << " cells at temperature " << T << endl;
     shared_ptr<NoseHooverChainNVT> nvt = make_shared<NoseHooverChainNVT>(numpts,Nchain,initializeGPU);
@@ -101,7 +112,7 @@ int main(int argc, char*argv[])
 
     //run for a few initialization timesteps
     printf("starting initialization\n");
-    for(int ii = 0; ii < initSteps; ++ii)
+    for(long long int ii = 0; ii < initSteps; ++ii)
         {
         sim->performTimestep();
         };
@@ -113,19 +124,16 @@ int main(int argc, char*argv[])
 
     //run for additional timesteps, compute dynamical features, and record timing information
     dynamicalFeatures dynFeat(voronoiModel->returnPositions(),voronoiModel->Box);
-    logSpacedIntegers logInts(0,0.05);
     t1=clock();
 //    cudaProfilerStart();
-    for(int ii = 0; ii < tSteps; ++ii)
+    for(long long int ii = 0; ii < tSteps; ++ii)
         {
 
-        //if(ii%100 ==0)
-        if(ii == logInts.nextSave)
+        if (ii == lewriter.nextFrameToSave)
             {
-            ncdat.writeState(voronoiModel);
-//            printf("timestep %i\t\t energy %f \t msd %f \t overlap %f\n",ii,voronoiModel->computeEnergy(),dynFeat.computeMSD(voronoiModel->returnPositions()),dynFeat.computeOverlapFunction(voronoiModel->returnPositions()));
-            logInts.update();
-            };
+            lewriter.writeState(voronoiModel,ii);
+            }
+
         sim->performTimestep();
         };
 //    cudaProfilerStop();
