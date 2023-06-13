@@ -64,7 +64,7 @@ int main(int argc, char*argv[])
     //check to see if we should run on a GPU
     bool initializeGPU = true;
     bool gpu = chooseGPU(USE_GPU);
-    if (!gpu) 
+    if (!gpu)
         initializeGPU = false;
 
     char dataname[256];

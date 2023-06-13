@@ -121,7 +121,10 @@ void cellListGPU::setGridSize(double a)
     //estimate Nmax
     if(ceil(Np/totalCells)+1 > Nmax)
         Nmax = ceil(Np/totalCells)+1;
-    resetCellSizesCPU();
+    if(GPUcompute)
+        resetCellSizes();
+    else
+        resetCellSizesCPU();
     };
 
 /*!

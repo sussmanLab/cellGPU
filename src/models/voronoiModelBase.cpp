@@ -61,9 +61,9 @@ void voronoiModelBase::initializeVoronoiModelBase(int n, bool gpu)
 
     //DelaunayGPU initialization
     int maxNeighGuess = 12;
-    delGPU.initialize(Ncells,maxNeighGuess,1.0,Box, gpu);
-    delGPU.setSafetyMode(true);
     delGPU.setGPUcompute(GPUcompute);
+    delGPU.setSafetyMode(true);
+    delGPU.initialize(Ncells,maxNeighGuess,1.0,Box, gpu);
 
     //make a full triangulation
     completeRetriangulationPerformed = 0;
@@ -206,7 +206,7 @@ void voronoiModelBase::globalTriangulationDelGPU(bool verbose)
         resizeAndReset();
 
     delGPU.globalDelaunayTriangulation(cellPositions,neighbors,neighborNum);
-    
+
     neighMax = delGPU.MaxSize;
     n_idx = Index2D(neighMax,Ncells);
     if(neighbors.getNumElements() != Ncells*neighMax)
@@ -404,8 +404,8 @@ void voronoiModelBase::enforceTopology()
     int oldNeighMax = delGPU.MaxSize;
     if(neighbors.getNumElements() != Ncells*oldNeighMax)
         resizeAndReset();
-    
-    
+
+
     delGPU.testAndRepairDelaunayTriangulation(cellPositions,neighbors,neighborNum);
 //    globalTriangulationDelGPU();
 
@@ -423,7 +423,7 @@ void voronoiModelBase::enforceTopology()
         resizeAndReset();
         globalTriangulationDelGPU();
         }
-        
+
     allDelSets();
     };
 
