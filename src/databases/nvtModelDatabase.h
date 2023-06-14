@@ -14,7 +14,7 @@ and the shape index parameter for each vertex
 class nvtModelDatabase : public BaseDatabaseNetCDF
 {
 private:
-    typedef shared_ptr<VoronoiQuadraticEnergy> STATE;
+    typedef shared_ptr<Simple2DCell> STATE;
     int Nv; //!< number of vertices in delaunay triangulation
     NcDim *recDim, *NvDim, *dofDim, *boxDim, *unitDim; //!< NcDims we'll use
     //!Currently using "additionalData" to hold target a_0 and p_0 information
