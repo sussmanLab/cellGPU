@@ -58,6 +58,7 @@ class NoseHooverChainNVT : public simpleEquationOfMotion
 
         //!Propagate the chain
         void propagateChain();
+        void propagateChainGPU();
         //!Propagate the position and velocity of the particles
         void propagatePositionsVelocities();
 

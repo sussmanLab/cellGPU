@@ -11,6 +11,84 @@
     @{
 */
 
+__global__ void NoseHooverChainNVT_propagateChain_kernel(
+                    double  *kineticEnergyScaleFactor,
+                    double4 *bathVariables,
+                    double Temperature,
+                    double deltaT,
+                    int Nchain,
+                    int Ndof)
+    {
+    unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= 1)
+        return;
+    double dt8 = 0.125*deltaT;
+    double dt4 = 0.25*deltaT;
+    double dt2 = 0.5*deltaT;
+
+    //partially update bath velocities and accelerations (quarter-timestep), from Nchain to 0
+    for (int ii = Nchain-1; ii > 0; --ii)
+        {
+        //update the acceleration: G = (Q_{i-1}*v_{i-1}^2 - T)/Q_i
+        bathVariables[ii].z = (bathVariables[ii-1].w*bathVariables[ii-1].y*bathVariables[ii-1].y-Temperature)/bathVariables[ii].w;
+        //the exponential factor is exp(-dt*v_{i+1}/2)
+        double ef = exp(-dt8*bathVariables[ii+1].y);
+        bathVariables[ii].y *= ef;
+        bathVariables[ii].y += bathVariables[ii].z*dt4;
+        bathVariables[ii].y *= ef;
+        };
+    bathVariables[0].z = (2.0*kineticEnergyScaleFactor[0] - 2.0*(Ndof-2)*Temperature)/bathVariables[0].w;
+    double ef = exp(-dt8*bathVariables[1].y);
+    bathVariables[0].y *= ef;
+    bathVariables[0].y += bathVariables[0].z*dt4;
+    bathVariables[0].y *= ef;
+
+    //update bath positions (half timestep)
+    for (int ii = 0; ii < Nchain; ++ii)
+        bathVariables[ii].x += dt2*bathVariables[ii].y;
+
+    //get the factor that will particle velocities
+    kineticEnergyScaleFactor[1] = exp(-dt2*bathVariables[0].y);
+    //and pre-emptively update the kinetic energy
+    kineticEnergyScaleFactor[0] = kineticEnergyScaleFactor[1]*kineticEnergyScaleFactor[1]*kineticEnergyScaleFactor[0];
+
+    //finally, do the other quarter-timestep of the velocities and accelerations, from 0 to Nchain
+    bathVariables[0].z = (2.0*kineticEnergyScaleFactor[0] - 2.0*(Ndof-2)*Temperature)/bathVariables[0].w;
+    ef = exp(-dt8*bathVariables[1].y);
+    bathVariables[0].y *= ef;
+    bathVariables[0].y += bathVariables[0].z*dt4;
+    bathVariables[0].y *= ef;
+    for (int ii = 1; ii < Nchain; ++ii)
+        {
+        bathVariables[ii].z = (bathVariables[ii-1].w*bathVariables[ii-1].y*bathVariables[ii-1].y-Temperature)/bathVariables[ii].w;
+        //the exponential factor is exp(-dt*v_{i+1}/2)
+        double ef = exp(-dt8*bathVariables[ii+1].y);
+        bathVariables[ii].y *= ef;
+        bathVariables[ii].y += bathVariables[ii].z*dt4;
+        bathVariables[ii].y *= ef;
+        };
+    };
+                    
+
+bool gpu_NoseHooverChainNVT_propagateChain(
+                    double  *kineticEnergyScaleFactor,
+                    double4 *bathVariables,
+                    double Temperature,
+                    double deltaT,
+                    int Nchain,
+                    int Ndof)
+    {
+    NoseHooverChainNVT_propagateChain_kernel<<<1,1>>>(
+                                                kineticEnergyScaleFactor,
+                                                bathVariables,
+                                                Temperature,
+                                                deltaT,
+                                                Nchain,
+                                                Ndof);
+    HANDLE_ERROR(cudaGetLastError());
+    return cudaSuccess;
+    };
+
 /*!
 into the output vector put 0.5*m[i]*v[i]^2
 */

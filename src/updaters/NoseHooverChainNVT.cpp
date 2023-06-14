@@ -204,6 +204,12 @@ void NoseHooverChainNVT::propagateChain()
         Bath.data[ii].y *= ef;
         };
     };
+void NoseHooverChainNVT::propagateChainGPU()
+    {
+    ArrayHandle<double> d_kes(kineticEnergyScaleFactor,access_location::device,access_mode::readwrite);
+    ArrayHandle<double4> d_Bath(BathVariables,access_location::device,access_mode::readwrite);
+    gpu_NoseHooverChainNVT_propagateChain(d_kes.data,d_Bath.data,Temperature,deltaT,Nchain,Ndof);
+    };
 
 /*!
 The GPU implementation of the identical algorithm done on the CPU
@@ -214,11 +220,11 @@ void NoseHooverChainNVT::integrateEquationsOfMotionGPU()
     //we'll define helper functions
 
     //for now, let's update the chain variables on the CPU... profile later
-    propagateChain(); // use data structure that holds [KE,s], update both.
+    propagateChainGPU(); // use data structure that holds [KE,s], update both.
     rescaleVelocitiesGPU(); //use the velocity vector and the [KE,s] data structure. Note that KE is already scaled by s^2 in the above step
     propagatePositionsVelocitiesGPU();
     calculateKineticEnergyGPU(); //get the kinetic energy into the [KE,s] data structure
-    propagateChain();
+    propagateChainGPU();
     rescaleVelocitiesGPU();
     };
 

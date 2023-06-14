@@ -17,7 +17,15 @@ bool gpu_prepare_KE_vector(double2   *velocities,
                               double *masses,
                               double *keArray,
                               int N);
-
+//!propagate chain (just to keep kineticEnergyScaleFactor on the device)
+bool gpu_NoseHooverChainNVT_propagateChain(
+                    double  *kineticEnergyScaleFactor,
+                    double4 *bathVariables,
+                    double Temperature,
+                    double deltaT,
+                    int Nchain,
+                    int Ndof);
+                    
 //!Rescale the velocities according to the given scale factor
 bool gpu_NoseHooverChainNVT_scale_velocities(
                     double2 *velocities,
