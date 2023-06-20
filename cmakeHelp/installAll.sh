@@ -10,8 +10,8 @@ echo 'export LIBRARY_PATH="$LIBRARY_PATH:$HOME/.local/lib"' >> ~/.bashrc
 echo 'export CPATH="$CPATH:$HOME/.local/include"' >> ~/.bashrc
 echo 'export GMP_LIBRARIES=$HOME/.local/lib'  >> ~/.bashrc
 echo 'export GMP_INCLUDE_DIR=$HOME/.local/include' >> ~/.bashrc
-echo 'MPFR_LIBRARIES=$HOME/.local/lib' >> ~/.bashrc
-echo 'MPFR_INCLUDE_DIR=$HOME/.local/include'  >> ~/.bashrc
+echo 'export MPFR_LIBRARIES=$HOME/.local/lib' >> ~/.bashrc
+echo 'export MPFR_INCLUDE_DIR=$HOME/.local/include'  >> ~/.bashrc
 
 # install boost
 wget "https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.tar.gz"
@@ -70,7 +70,7 @@ rm zlib-1.2.13.tar.gz
 wget "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.5/src/hdf5-1.10.5.tar.gz"
 tar axf hdf5-1.10.5.tar.gz
 cd hdf5-1.10.5
-./configure --prefix=$HOME/local --enable-cxx
+./configure --prefix=$HOME/.local --enable-cxx
 make
 make check
 make install
