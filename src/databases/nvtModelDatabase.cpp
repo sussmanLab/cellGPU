@@ -34,7 +34,7 @@ void nvtModelDatabase::SetDimVar()
     unitDim = File.add_dim("unit",1);
 
     //Set the variables
-    posVar              = File.add_var("postion",       ncDouble,recDim, dofDim);
+    posVar              = File.add_var("position",       ncDouble,recDim, dofDim);
     velVar              = File.add_var("velocity",      ncDouble,recDim, dofDim);
     typeVar             = File.add_var("type",          ncInt,recDim, NvDim );
     additionalDataVar   = File.add_var("additionalData",ncDouble,recDim,dofDim);
