@@ -16,9 +16,9 @@ class DatabaseTextVoronoi : public BaseDatabase
         //!constructor prepares the stream class
         DatabaseTextVoronoi(string fn = "temp.txt", int mode = -1);
         //!Write the current state; if the default value of rec=-1 is used, add a new entry
-        virtual void WriteState(STATE c, double time = -1.0, int rec = -1);
+        virtual void writeState(STATE c, double time = -1.0, int rec = -1);
         //Read the rec state of the database. If geometry = true, call computeGeomerty routines (instead of just reading in the d.o.f.s)
-        virtual void ReadState(STATE c, int rec, bool geometry = true);
+        virtual void readState(STATE c, int rec, bool geometry = true);
     
     protected:
         ofstream outputFile;   

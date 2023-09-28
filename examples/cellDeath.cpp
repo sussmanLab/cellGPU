@@ -113,7 +113,7 @@ int main(int argc, char*argv[])
             if(program_switch == 2 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
-                db1.WriteState(spv);
+                db1.writeState(spv);
                 };
             };
 
@@ -139,7 +139,7 @@ int main(int argc, char*argv[])
             if(program_switch == 2 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
-                db1.WriteState(spv);
+                db1.writeState(spv);
                 };
             };
 
@@ -177,7 +177,7 @@ int main(int argc, char*argv[])
             if(program_switch < -1 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
-                ncdat.WriteState(avm);
+                ncdat.writeState(avm);
                 };
             };
 
@@ -219,7 +219,7 @@ int main(int argc, char*argv[])
                         sprintf(dataname2,"../test%i.nc",fileidx);
                         fileidx +=1;
                         AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
-                        ncdat2.WriteState(avm);
+                        ncdat2.writeState(avm);
                         };
                     cout << "killing cell " << deadCell << endl;
                     avm->cellDeath(deadCell);
@@ -237,14 +237,14 @@ int main(int argc, char*argv[])
                 sprintf(dataname2,"../test%i.nc",fileidx);
                 fileidx +=1;
                 AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
-                ncdat2.WriteState(avm);
+                ncdat2.writeState(avm);
                 };
 
             };
             char dataname2[256];
             sprintf(dataname2,"../test%i.nc",fileidx);
             AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
-            ncdat2.WriteState(avm);
+            ncdat2.writeState(avm);
 
         };
 

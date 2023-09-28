@@ -115,7 +115,7 @@ int main(int argc, char*argv[])
 
     avm->reportMeanVertexForce();
 
-            ncdat.WriteState(avm);
+            ncdat.writeState(avm);
     //perform some initial time steps. If program_switch < 0, save periodically to a netCDF database
     for (int timestep = 0; timestep < initSteps+1; ++timestep)
         {
@@ -123,23 +123,23 @@ int main(int argc, char*argv[])
         if(program_switch <0 && timestep%((int)(100/dt))==0)
             {
             cout << timestep << endl;
-            //ncdat.WriteState(avm);
+            //ncdat.writeState(avm);
             };
         };
     avm->reportMeanVertexForce();
-            ncdat.WriteState(avm);
+            ncdat.writeState(avm);
 
     //run for additional timesteps, and record timing information. Save frames to a database if desired
     cudaProfilerStart();
     t1=clock();
     for (int timestep = 0; timestep < tSteps; ++timestep)
         {
-            ncdat.WriteState(avm);
+            ncdat.writeState(avm);
         sim->performTimestep();
         if(program_switch <0 && timestep%((int)(100/dt))==0)
             {
             cout << timestep << endl;
-            ncdat.WriteState(avm);
+            ncdat.writeState(avm);
             };
         };
     cudaProfilerStop();

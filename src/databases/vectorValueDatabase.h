@@ -19,9 +19,9 @@ class vectorValueDatabase : public BaseDatabaseNetCDF
         //! NcVars
         NcVar *valVar, *vecVar;
         //!read values in a new value and vector
-        void ReadState(int rec);
+        void readState(int rec);
         //!write a new value and vector
-        void WriteState(vector<double> &vec,double val);
+        void writeState(vector<double> &vec,double val);
         //!read the number of records in the database
         int GetNumRecs(){
                     NcDim *rd = File.get_dim("rec");

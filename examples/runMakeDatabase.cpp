@@ -115,7 +115,7 @@ int main(int argc, char*argv[])
         if(ii == nextSave)
             {
             printf(" step %i\n",ii);
-            ncdat.WriteState(spv);
+            ncdat.writeState(spv);
             nextSave = (int)round(pow(pow(10.0,0.05),logSaveIdx));
             while(nextSave == ii)
                 {
@@ -127,7 +127,7 @@ int main(int argc, char*argv[])
         sim->performTimestep();
         };
     t2=clock();
-    ncdat.WriteState(spv);
+    ncdat.writeState(spv);
 
     double steptime = (t2-t1)/(double)CLOCKS_PER_SEC/tSteps;
     cout << "timestep ~ " << steptime << " per frame; " << endl;

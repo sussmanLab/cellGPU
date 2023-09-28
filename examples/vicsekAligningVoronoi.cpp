@@ -130,7 +130,7 @@ int main(int argc, char*argv[])
             saveVec[0] = val;
             saveVec[1] = vPar.x;
             saveVec[2] = vPar.y;
-            vvdat.WriteState(saveVec,10.0/dt);
+            vvdat.writeState(saveVec,10.0/dt);
             Phi += val;
             printf("timestep %i\t\t energy %f\t\t phi %f \n",ii,spv->computeEnergy(),val);
             };
@@ -195,7 +195,7 @@ int main(int argc, char*argv[])
             };
         };
     vectorValueDatabase vvdatVV(totalBins,dataname,NcFile::Replace);
-    vvdatVV.WriteState(vvCorr,binWidth);
+    vvdatVV.writeState(vvCorr,binWidth);
 
 
     if(initializeGPU)

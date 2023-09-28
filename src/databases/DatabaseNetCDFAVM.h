@@ -45,9 +45,9 @@ public:
         };
 
     //!Write the current state of the system to the database. If the default value of "rec=-1" is used, just append the current state to a new record at the end of the database
-    void WriteState(STATE c, double time = -1.0, int rec=-1);
+    void writeState(STATE c, double time = -1.0, int rec=-1);
     //!Read the "rec"th entry of the database into AVM2D state c. DOES NOT WORK RIGHT NOW
-    void ReadState(STATE c, int rec,bool geometry=true);
+    void readState(STATE c, int rec,bool geometry=true);
 };
 
 #endif

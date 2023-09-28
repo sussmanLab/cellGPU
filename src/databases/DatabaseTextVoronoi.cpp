@@ -20,7 +20,7 @@ DatabaseTextVoronoi::DatabaseTextVoronoi(string fn, int mode)
         };
     };
 
-void DatabaseTextVoronoi::WriteState(STATE s, double time, int rec)
+void DatabaseTextVoronoi::writeState(STATE s, double time, int rec)
     {
     if (rec != -1)
         {
@@ -46,7 +46,7 @@ void DatabaseTextVoronoi::WriteState(STATE s, double time, int rec)
         };
     };
 
-void DatabaseTextVoronoi::ReadState(STATE s, int rec, bool geometry)
+void DatabaseTextVoronoi::readState(STATE s, int rec, bool geometry)
     {
     printf("Reading from a text database currently not supported\n");
     throw std::exception();

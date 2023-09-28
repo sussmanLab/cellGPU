@@ -113,7 +113,7 @@ int main(int argc, char*argv[])
         sim->setCPUOperation(!initializeGPU);
 
         SPVDatabaseNetCDF ncdat(numpts,dataname,NcFile::Replace);
-        ncdat.WriteState(spv);
+        ncdat.writeState(spv);
 
         for (int i = 0; i <tSteps;++i)
             {
@@ -122,10 +122,10 @@ int main(int argc, char*argv[])
             //...but incrementing by "50" timesteps here may be *very* short. May require many such loops to be well-minimized
             fireMinimizer->setMaximumIterations(50*(i+1));
             sim->performTimestep();
-            ncdat.WriteState(spv);
+            ncdat.writeState(spv);
             };
         printf("minimized value of q = %f\n",spv->reportq());
-        ncdat.WriteState(spv);
+        ncdat.writeState(spv);
         };
 
     //program_switch == 1 --> vertex model
@@ -145,7 +145,7 @@ int main(int argc, char*argv[])
         sim->setCPUOperation(!initializeGPU);
 
         AVMDatabaseNetCDF ncdat(2*numpts,dataname,NcFile::Replace);
-        ncdat.WriteState(avm);
+        ncdat.writeState(avm);
         double mf;
         for (int i = 0; i <initSteps;++i)
             {
@@ -155,14 +155,14 @@ int main(int argc, char*argv[])
             mf = fireMinimizer->getMaxForce();
             if (mf < 1e-12)
                     break;
-            ncdat.WriteState(avm);
+            ncdat.writeState(avm);
             };
         printf("minimized value of q = %f\n",avm->reportq());
         double meanQ = avm->reportq();
         double varQ = avm->reportVarq();
         double2 variances = avm->reportVarAP();
         printf("current KA = %f\t Cell <q> = %f\t Var(p) = %g\n",KA,meanQ,variances.y);
-        ncdat.WriteState(avm);
+        ncdat.writeState(avm);
         };
     if(initializeGPU)
         cudaDeviceReset();

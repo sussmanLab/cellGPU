@@ -39,9 +39,9 @@ public:
                     };
 
     //!Write the current state of the system to the database. If the default value of "rec=-1" is used, just append the current state to a new record at the end of the database
-    virtual void WriteState(STATE c, double time = -1.0, int rec=-1);
+    virtual void writeState(STATE c, double time = -1.0, int rec=-1);
     //!Read the "rec"th entry of the database into SPV2D state c. If geometry=true, after reading a CPU-based triangulation is performed, and local geometry of cells computed.
-    virtual void ReadState(STATE c, int rec,bool geometry=true);
+    virtual void readState(STATE c, int rec,bool geometry=true);
 
 };
 #endif

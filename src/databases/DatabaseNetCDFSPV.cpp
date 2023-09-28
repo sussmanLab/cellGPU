@@ -64,7 +64,7 @@ void SPVDatabaseNetCDF::GetDimVar()
         exVar = File.get_var("externalForce");
     }
 
-void SPVDatabaseNetCDF::WriteState(STATE s, double time, int rec)
+void SPVDatabaseNetCDF::writeState(STATE s, double time, int rec)
     {
     if(rec<0)   rec = recDim->size();
     if (time < 0) time = s->currentTime;
@@ -132,7 +132,7 @@ void SPVDatabaseNetCDF::WriteState(STATE s, double time, int rec)
     File.sync();
     }
 
-void SPVDatabaseNetCDF::ReadState(STATE t, int rec,bool geometry)
+void SPVDatabaseNetCDF::readState(STATE t, int rec,bool geometry)
     {
     //initialize the NetCDF dimensions and variables
     //test if there is exclusion data to read...

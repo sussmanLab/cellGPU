@@ -128,7 +128,7 @@ int main(int argc, char*argv[])
             if(program_switch == 2 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
-                db1.WriteState(spv);
+                db1.writeState(spv);
                 };
             };
 
@@ -165,7 +165,7 @@ sim->setBox(newbox);
             if(program_switch == 2 && timestep%((int)(10/dt))==0)
                 {
                 cout << timestep << endl;
-                db1.WriteState(spv);
+                db1.writeState(spv);
                 };
             };
 
@@ -203,7 +203,7 @@ sim->setBox(newbox);
             if(program_switch < -1 && timestep%((int)(1/dt))==0)
                 {
                 cout << timestep << endl;
-                ncdat.WriteState(avm);
+                ncdat.writeState(avm);
                 };
             };
 
@@ -236,7 +236,7 @@ sim->setBox(newbox);
                 sprintf(dataname2,"../test%i.nc",fileidx);
                 fileidx +=1;
                 AVMDatabaseNetCDF ncdat2(avm->getNumberOfDegreesOfFreedom(),dataname2,NcFile::Replace);
-                ncdat2.WriteState(avm);
+                ncdat2.writeState(avm);
                 };
             };
 

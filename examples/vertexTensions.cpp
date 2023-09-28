@@ -108,7 +108,7 @@ int main(int argc, char*argv[])
         if(program_switch <0 && timestep%((int)(1000/dt))==0)
             {
             cout << timestep << endl;
-            ncdat.WriteState(avm);
+            ncdat.writeState(avm);
             };
         };
 
@@ -136,7 +136,7 @@ int main(int argc, char*argv[])
         if(program_switch <0 && timestep%((int)(1000/dt))==0)
             {
             cout << timestep << endl;
-            ncdat.WriteState(avm);
+            ncdat.writeState(avm);
             };
         };
 

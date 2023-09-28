@@ -127,10 +127,10 @@ int main(int argc, char*argv[])
             {
             double DeltaP = mullerPlathe->getMomentumTransferred();
             printf("timestep %i\t\t energy %f \t T %f DeltaP %f \n",ii,vm->computeEnergy(),h_kes.data[0]/(numpts),DeltaP);
-            ncdat.WriteState(vm);
+            ncdat.writeState(vm);
             vector<double> Vprofile;
             mullerPlathe->getVelocityProfile(Vprofile);
-            vvdat.WriteState(Vprofile,DeltaP/(2.0*(dt*Tsample)*boxL));
+            vvdat.writeState(Vprofile,DeltaP/(2.0*(dt*Tsample)*boxL));
             };
         sim->performTimestep();
         };

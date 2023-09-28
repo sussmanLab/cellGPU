@@ -74,7 +74,7 @@ void AVMDatabaseNetCDF::GetDimVar()
 /*!
 Vertex model reading not currently functional
 */
-void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
+void AVMDatabaseNetCDF::readState(STATE t, int rec, bool geometry)
     {
     GetDimVar();
 
@@ -100,7 +100,7 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
         h_p.data[idx].x=px;
         h_p.data[idx].y=py;
         };
-    
+
     //set the vertex neighbors and vertex-cell neighbors
     ArrayHandle<int> h_vn(t->vertexNeighbors,access_location::host,access_mode::read);
     ArrayHandle<int> h_vcn(t->vertexCellNeighbors,access_location::host,access_mode::read);
@@ -190,7 +190,7 @@ void AVMDatabaseNetCDF::ReadState(STATE t, int rec, bool geometry)
     };
 
 
-void AVMDatabaseNetCDF::WriteState(STATE s, double time, int rec)
+void AVMDatabaseNetCDF::writeState(STATE s, double time, int rec)
 {
     Records +=1;
     if(rec<0)   rec = recDim->size();

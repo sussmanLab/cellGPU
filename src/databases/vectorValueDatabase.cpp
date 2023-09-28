@@ -49,7 +49,7 @@ void vectorValueDatabase::GetDimVar()
     valVar = File.get_var("value");
     }
 
-void vectorValueDatabase::WriteState(vector<double> &vec,double val)
+void vectorValueDatabase::writeState(vector<double> &vec,double val)
     {
     int rec = recDim->size();
     valVar->put_rec(&val,rec);
@@ -57,7 +57,7 @@ void vectorValueDatabase::WriteState(vector<double> &vec,double val)
     File.sync();
     };
 
-void vectorValueDatabase::ReadState(int rec)
+void vectorValueDatabase::readState(int rec)
     {
     int totalRecords = GetNumRecs();
     if (rec >= totalRecords)
