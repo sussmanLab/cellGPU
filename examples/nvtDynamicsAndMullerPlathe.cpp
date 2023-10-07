@@ -3,8 +3,6 @@
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
-#define ENABLE_CUDA
-
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
 #include "NoseHooverChainNVT.h"
@@ -105,6 +103,8 @@ int main(int argc, char*argv[])
         sim->performTimestep();
         };
 
+    double instantaneousTemperature = vm->computeKineticEnergy()/numpts;
+    cout << "Target temperature = " << v0 << "; instantaneous temperature after initialization = " << instantaneousTemperature << endl;
     sim->addUpdater(mullerPlathe,vm);
     printf("Finished with initialization..adding a Muller-Plathe updater\n");
     for(int ii = 0; ii < initSteps; ++ii)
