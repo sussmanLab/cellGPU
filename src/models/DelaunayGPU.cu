@@ -403,15 +403,17 @@ __host__ __device__ inline void virtual_voronoi_calc_function(        int kidx,
     P[GPU_idx(3, kidx)].y=-LL;
 
 #ifdef DEBUGFLAGUP
+unsigned int t1,t2,t3,t4,t6,t7;
 int blah = 0;
 int blah2 = 0;
 int blah3=0;
 int maxCellsChecked=0;
 int spotcheck=18;
 int counter= 0 ;
+    /*
 if(kidx==spotcheck) printf("VP initial poly_size = %i\n",poly_size);
-unsigned int t1,t2,t3,t4,t6,t7;
 t6=0;
+    */
 #endif
 
     for(m=0; m<poly_size; m++)
@@ -451,11 +453,13 @@ t1=clock();
 
         //check neighbours of Q's cell inside the circumcircle
 #ifdef DEBUGFLAGUP
+        /*
 maxCellsChecked  = max(maxCellsChecked,cell_rad*cell_rad);
 counter+=1;
 t1=0;
 t7=0;
 t2=clock();
+    */
 #endif
         for (int cellSpiral = 0; cellSpiral < cell_rad*cell_rad; ++cellSpiral)
             {
@@ -657,11 +661,13 @@ t7 += clock()-t2;
 
     d_neighnum[kidx]=poly_size;
 #ifdef DEBUGFLAGUP
+    /*
     if(kidx==spotcheck)
         {
         printf("VP points checked for kidx %i = %i, ignore self points = %i, ignore points outside circumcircles = %i, total neighs = %i \n",kidx,blah,blah2,blah3,poly_size);
         printf("time checks : poly loading: %u \t subreplacement: %u \treplacement: %u\n",t1,t7,t6);
         };
+        */
 #endif
     }
 

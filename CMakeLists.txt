@@ -21,7 +21,7 @@ set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCH})
 
 if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
     add_definitions(-DDEBUGFLAGUP)
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -g -lineinfo -Xptxas --generate-line-info")
+    set(CUDA_CUDA_FLAGS "${CUDA_NVCC_FLAGS} -g -lineinfo -Xptxas --generate-line-info")
 endif(${CMAKE_BUILD_TYPE} MATCHES "Debug")
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmakeHelp)
@@ -67,6 +67,7 @@ set(HEADERS
 foreach(ARG
         voronoi
         Vertex
+        nvtVoronoiConf
         )
 add_executable("${ARG}.out" "${ARG}.cpp" )
 target_link_libraries("${ARG}.out"
