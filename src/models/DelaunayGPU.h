@@ -88,7 +88,7 @@ class DelaunayGPU
         void initializeCellList();
 
         //!If false, the user is guaranteeing that the current maximum number of neighbors per point will not be exceeded
-        bool safetyMode = false;
+        bool safetyMode = true;
         //!A flag to notify whether the cellList structure has been updated...used during testAndRepair
         bool cListUpdated=false;
 
