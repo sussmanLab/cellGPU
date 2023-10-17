@@ -51,6 +51,8 @@ class voronoiModelBase : public Simple2DActiveCell
 
         //!Declare which particles are to be excluded (exes[i]!=0)
         void setExclusions(vector<int> &exes);
+        //!set a new simulation box, update the positions of cells based on virtual positions, and then recompute the geometry
+        void alterBox(PeriodicBoxPtr _box);
 
         //virtual functions that need to be implemented
         //!In voronoi models the number of degrees of freedom is the number of cells

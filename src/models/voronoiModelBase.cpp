@@ -79,6 +79,24 @@ void voronoiModelBase::initializeVoronoiModelBase(int n, bool gpu)
     h_actf.data[0]=0;
     };
 
+void voronoiModelBase::alterBox(PeriodicBoxPtr _box)
+    {
+    //WRITE GPU ROUTINE LATER
+    vector<double2> newPos(Ncells);
+    {
+    ArrayHandle<double2> p(cellPositions);
+    //find list of current virtual positions
+    for(int ii = 0; ii < Ncells; ++ii)
+        Box->invTrans(p.data[ii],newPos[ii]);
+    for(int ii = 0; ii < Ncells; ++ii)
+        _box->Trans(newPos[ii],p.data[ii]);
+    }//end array scope
+    Box=_box;
+    reinitialize(12);
+    enforceTopology();
+    computeGeometry();
+
+    };
 /*!
 change particle positions, change the box, and reset the tesselation structures
 */

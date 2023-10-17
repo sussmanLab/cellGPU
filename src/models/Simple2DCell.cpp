@@ -63,6 +63,7 @@ void Simple2DCell::initializeSimple2DCell(int n, bool gpu)
     vertexForces.resize(Nvertices);
     };
 
+
 /*!
 Generically believe that cells in 2D have a notion of a preferred area and perimeter
 */

@@ -107,6 +107,7 @@ class Simple2DCell : public Simple2DModel
         //!This can be used, but should not normally be. This re-assigns the pointer
         void setBox(PeriodicBoxPtr _box){Box = _box;};
 
+
         //!return the base "itt" re-indexing vector
         virtual vector<int> & returnItt(){return itt;};
 
