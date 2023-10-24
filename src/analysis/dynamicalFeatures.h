@@ -4,6 +4,7 @@
 #include "std_include.h"
 #include "functions.h"
 #include "periodicBoundaries.h"
+#include "indexer.h"
 
 /*! \file dynamicalFeatures.h */
 
@@ -19,6 +20,9 @@ class dynamicalFeatures
 
         //!compute the overlap function
         double computeOverlapFunction(GPUArray<double2> &currentPos, double cutoff = 0.5);
+
+        //!set the list of neighbors forming initial cages of the particles (to be used for cage-relative calculations)
+        void setCageNeighbors(GPUArray<int> &neighbors, GPUArray<int> &neighborNum, Index2D n_idx);
     protected:
         //!the box defining the periodic domain
         PeriodicBoxPtr Box;
@@ -26,5 +30,7 @@ class dynamicalFeatures
         vector<double2> iPos;
         //!the number of double2's
         int N;
+        vector<vector<int>> cageNeighbors;
+        Index2D nIdx;
     };
 #endif
