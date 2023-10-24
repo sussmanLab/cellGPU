@@ -23,7 +23,7 @@ class autocorrelator
         autocorrelator(int pp=16, int mm=2, double deltaT = 1.0);
         //! Add a new data point to the correlator
         void add(double w, int k=0);
-        //! evaluate the current state of the correlator.
+        //! evaluate the current state of the correlator... only set normalize to "true" if you need to correct for a non-zero bias (a la MSDs...details in the paper above)
         void evaluate(bool normalize = false);
 
         //!After evaluate is called, correlator is filled with the current autocorrelation.
