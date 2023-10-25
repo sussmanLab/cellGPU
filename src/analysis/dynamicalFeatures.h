@@ -23,13 +23,23 @@ class dynamicalFeatures
 
         //!compute the overlap function
         double computeOverlapFunction(GPUArray<double2> &currentPos, double cutoff = 0.5);
+        //!compute cage relative SISF with 2D angular averaging
+        double computeSISF(GPUArray<double2> &currentPos, double k = 6.28319);
 
         //!compute cage relative MSD
         double computeCageRelativeMSD(GPUArray<double2> &currentPos);
+        //!compute cage relative SISF with 2D angular averaging
+        double computeCageRelativeSISF(GPUArray<double2> &currentPos, double k = 6.28319);
 
         //!a helper function that computes vectors of current displacements and cage relative displacements
         void computeCageRelativeDisplacements(GPUArray<double2> &currentPos);
+        //!a helper function that computes vectors of current displacements
+        void computeDisplacements(GPUArray<double2> &currentPos);
 
+        //!helper function that computes the angular average self-intermediate scattering function associated with a vector of displacements
+        double angularAverageSISF(vector<double2> &displacements, double k);
+        //!helper function that computes the mean dot product of a vector of double2's
+        double MSDhelper(vector<double2> &displacements);
     protected:
         //!the box defining the periodic domain
         PeriodicBoxPtr Box;

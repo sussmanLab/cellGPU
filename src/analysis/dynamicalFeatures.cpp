@@ -30,10 +30,9 @@ void dynamicalFeatures::setCageNeighbors(GPUArray<int> &neighbors, GPUArray<int>
         }
     };
 
-void dynamicalFeatures::computeCageRelativeDisplacements(GPUArray<double2> &currentPos)
+void dynamicalFeatures::computeDisplacements(GPUArray<double2> &currentPos)
     {
     currentDisplacements.resize(N);
-    cageRelativeDisplacements.resize(N);
     //first, compute the vector of current displacements
     ArrayHandle<double2> fPos(currentPos,access_location::host,access_mode::read);
     double2 disp,cur,init;
@@ -44,7 +43,16 @@ void dynamicalFeatures::computeCageRelativeDisplacements(GPUArray<double2> &curr
         Box->minDist(init,cur,disp);
         currentDisplacements[ii] = disp;
         }
+    };
+
+void dynamicalFeatures::computeCageRelativeDisplacements(GPUArray<double2> &currentPos)
+    {
+    cageRelativeDisplacements.resize(N);
+    //first, compute the vector of current displacements
+    computeDisplacements(currentPos);
+
     //now, for each particle, compute the cage-relativedisplacement
+    double2 cur;
     for(int ii = 0; ii < N; ++ii)
         {
         //self term
@@ -60,18 +68,13 @@ void dynamicalFeatures::computeCageRelativeDisplacements(GPUArray<double2> &curr
         };
     };
 
-double dynamicalFeatures::computeCageRelativeMSD(GPUArray<double2> &currentPos)
+double dynamicalFeatures::MSDhelper(vector<double2> &displacements)
     {
-    //call helper function to compute the vector of current cage-relative displacement vectors
-    computeCageRelativeDisplacements(currentPos);
-
-    //then just compute the MSD of that set of vectors..
-
     double2 disp;
     double msd = 0.0;
     for (int ii = 0; ii < N; ++ii)
         {
-        disp = cageRelativeDisplacements[ii];
+        disp = displacements[ii];
         msd += dot(disp,disp);
         };
     msd = msd / N;
@@ -80,19 +83,65 @@ double dynamicalFeatures::computeCageRelativeMSD(GPUArray<double2> &currentPos)
 
 double dynamicalFeatures::computeMSD(GPUArray<double2> &currentPos)
     {
-    double msd = 0.0;
-    ArrayHandle<double2> fPos(currentPos,access_location::host,access_mode::read);
-    double2 disp,cur,init;
+    //call helper function to compute vector of current displacements
+    computeDisplacements(currentPos);
+    double result = MSDhelper(currentDisplacements);
+    return result;
+    };
+
+double dynamicalFeatures::computeCageRelativeMSD(GPUArray<double2> &currentPos)
+    {
+    //call helper function to compute the vector of current cage-relative displacement vectors
+    computeCageRelativeDisplacements(currentPos);
+
+    //then just compute the MSD of that set of vectors..
+    double result = MSDhelper(cageRelativeDisplacements);
+    return result;
+    };
+
+/*!
+In d-dimensions, the contribution of the angularly average of <exp(I k.r)> is
+(Power(2,-1 + n/2.)*(-(k*r*BesselJ(1 + n/2.,k*r)) + n*BesselJ(n/2.,k*r))*Gamma(n/2.))/
+   Power(k*r,n/2.)
+See: THE DEBYE SCATTERING FORMULA IN n DIMENSION, Wieder, J. Math. Comput. Sci. 2 (2012), No. 4, 1086-1090
+*/
+double dynamicalFeatures::angularAverageSISF(vector<double2> &displacements, double k)
+    {
+    double2 disp;
+    double sisfContribution = 0.0;
+    double kr;
     for (int ii = 0; ii < N; ++ii)
         {
-        cur = fPos.data[ii];
-        init = iPos[ii];
-        Box->minDist(init,cur,disp);
-        msd += dot(disp,disp);
+        disp = displacements[ii];
+        kr = k*sqrt(dot(disp,disp));
+        sisfContribution += std::cyl_bessel_j((double) 0.0, (double) kr);
         };
-    msd = msd / N;
-    return msd;
+    sisfContribution = sisfContribution / N;
+    return sisfContribution;
     };
+
+double dynamicalFeatures::computeSISF(GPUArray<double2> &currentPos, double k)
+    {
+    //call helper function to compute the vector of current cage-relative displacement vectors
+    computeDisplacements(currentPos);
+
+    //then just compute the MSD of that set of vectors..
+    double result = angularAverageSISF(currentDisplacements,k);
+    return result;
+    };
+/*
+ Just compute cage relative displacements and pass that vector to the helper function
+ */
+double dynamicalFeatures::computeCageRelativeSISF(GPUArray<double2> &currentPos, double k)
+    {
+    //call helper function to compute the vector of current cage-relative displacement vectors
+    computeCageRelativeDisplacements(currentPos);
+
+    //then just compute the MSD of that set of vectors..
+    double result = angularAverageSISF(cageRelativeDisplacements,k);
+    return result;
+    };
+
 
 double dynamicalFeatures::computeOverlapFunction(GPUArray<double2> &currentPos, double cutoff)
     {
