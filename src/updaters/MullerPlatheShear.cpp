@@ -65,7 +65,7 @@ void MullerPlatheShear::performUpdate()
         };
 
     //if swap candidates were found, swap the velocities
-    if(p1idx >=0 && p2idx >=0)
+    if(p1idx >=0 && p2idx >=0 && maxNegativeV < 0 && maxPositiveV > 0)
         {
         double v1 = h_v.data[p1idx].x;
         double m1 = h_m.data[p1idx];
