@@ -53,18 +53,22 @@ void dynamicalFeatures::computeCageRelativeDisplacements(GPUArray<double2> &curr
 
     //now, for each particle, compute the cage-relativedisplacement
     double2 cur;
+    double2 temp;
     for(int ii = 0; ii < N; ++ii)
         {
         //self term
         cur = currentDisplacements[ii];
         //subtract off net neighbor motion
         int nNeighs = cageNeighbors[ii].size();
+        temp.x=0;temp.y=0;
         for(int nn = 0; nn < nNeighs; ++nn)
             {
-            int neighborIndex = nIdx(nn,ii);
-            cur = cur - ((1./(double)nNeighs)) * currentDisplacements[neighborIndex];
+            int neighborIndex = cageNeighbors[ii][nn];
+            temp.x = temp.x + currentDisplacements[neighborIndex].x/nNeighs;
+            temp.y = temp.y + currentDisplacements[neighborIndex].y/nNeighs;
             }
-        cageRelativeDisplacements[ii] = cur;
+        cageRelativeDisplacements[ii].x = cur.x - (1./((double) nNeighs))* temp.x;
+        cageRelativeDisplacements[ii].y = cur.y - (1./((double) nNeighs))* temp.y;
         };
     };
 
