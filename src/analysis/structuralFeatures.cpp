@@ -112,3 +112,36 @@ void structuralFeatures::computeStructureFactor(vector<double2> &points,vector<d
 
     SofK=answer;
     };
+
+double2 structuralFeatures::computeBondOrderParameter(GPUArray<double2> &points, GPUArray<int> &neighbors, GPUArray<int> &neighborNum, Index2D n_idx, int n)
+    {
+    ArrayHandle<int> h_nn(neighborNum,access_location::host,access_mode::read);
+    ArrayHandle<int> h_n(neighbors,access_location::host,access_mode::read);
+    int N = points.getNumElements();
+    ArrayHandle<double2> h_p(points,access_location::host,access_mode::read);
+
+
+    double2 ans; ans.x=0; ans.y=0;
+    double2 disp,p1,p2;
+    int neighborIndex;
+    double theta;
+    for(int ii = 0; ii < N; ++ii)
+        {
+        double2 localPsi; localPsi.x=0;localPsi.y=0;
+        int neighs = h_nn.data[ii];
+        p1 = h_p.data[ii];
+        for (int nn = 0; nn < neighs; ++nn)
+            {
+            neighborIndex = h_n.data[n_idx(nn,ii)];
+            p2 = h_p.data[neighborIndex];
+            Box->minDist(p2,p1,disp);
+            theta = atan2(disp.y,disp.x);
+            localPsi.x += cos(n*theta)/neighs;
+            localPsi.x += sin(n*theta)/neighs;
+            }
+        ans = ans+localPsi;
+        };
+    ans.x = ans.x/N;
+    ans.y = ans.y/N;
+    return ans;
+    };
