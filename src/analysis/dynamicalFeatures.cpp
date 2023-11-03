@@ -146,6 +146,25 @@ double dynamicalFeatures::computeCageRelativeSISF(GPUArray<double2> &currentPos,
     return result;
     };
 
+double2 dynamicalFeatures::computeFsChi4(GPUArray<double2> &currentPos, double k)
+    {
+    double2 ans; ans.x=0;ans.y=0;
+    double meanFs= computeSISF(currentPos,k);
+
+
+    ans.x=meanFs;
+    return ans;
+    };
+
+double2 dynamicalFeatures::computeCageRelativeFsChi4(GPUArray<double2> &currentPos, double k)
+    {
+    double2 ans; ans.x=0;ans.y=0;
+    double meanFs= computeCageRelativeSISF(currentPos,k);
+    };
+
+double2 dynamicalFeatures::computeOrientationalCorrelationFunction(GPUArray<double2> &currentPos,GPUArray<int> &currentNeighbors, GPUArray<int> &currentNeighborNum, Index2D n_idx)
+    {
+    };
 
 double dynamicalFeatures::computeOverlapFunction(GPUArray<double2> &currentPos, double cutoff)
     {

@@ -31,16 +31,24 @@ class dynamicalFeatures
         //!compute cage relative SISF with 2D angular averaging
         double computeCageRelativeSISF(GPUArray<double2> &currentPos, double k = 6.28319);
 
+        //!compute chi_4 and F_s (result.x = Fs, result.y=chi_4)
+        double2 computeFsChi4(GPUArray<double2> &currentPos, double k = 6.28319);
+        //!compute cage-relative verions of above function
+        double2 computeCageRelativeFsChi4(GPUArray<double2> &currentPos, double k = 6.28319);
+
+        //!compute *un-normalized* flenner-Szamel psi_6 bond correlation decay (i.e., without the average |\psi_6|^2) that would make the function 1 at t=0. return.x is real, return.y is imaginary part
+        double2 computeOrientationalCorrelationFunction(GPUArray<double2> &currentPos,GPUArray<int> &currentNeighbors, GPUArray<int> &currentNeighborNum, Index2D n_idx);
+        
+
+    protected:
         //!a helper function that computes vectors of current displacements and cage relative displacements
         void computeCageRelativeDisplacements(GPUArray<double2> &currentPos);
         //!a helper function that computes vectors of current displacements
         void computeDisplacements(GPUArray<double2> &currentPos);
-
         //!helper function that computes the angular average self-intermediate scattering function associated with a vector of displacements
         double angularAverageSISF(vector<double2> &displacements, double k);
         //!helper function that computes the mean dot product of a vector of double2's
         double MSDhelper(vector<double2> &displacements);
-    protected:
         //!the box defining the periodic domain
         PeriodicBoxPtr Box;
         //!the initial positions
