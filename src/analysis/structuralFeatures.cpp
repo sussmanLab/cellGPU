@@ -137,7 +137,7 @@ double2 structuralFeatures::computeBondOrderParameter(GPUArray<double2> &points,
             Box->minDist(p2,p1,disp);
             theta = atan2(disp.y,disp.x);
             localPsi.x += cos(n*theta)/neighs;
-            localPsi.x += sin(n*theta)/neighs;
+            localPsi.y += sin(n*theta)/neighs;
             }
         ans = ans+localPsi;
         };

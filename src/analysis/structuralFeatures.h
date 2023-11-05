@@ -14,6 +14,9 @@ class structuralFeatures
     public:
         //!The constructor takes in a defining set of boundary conditions
         structuralFeatures(PeriodicBoxPtr _bx){Box = _bx;};
+        structuralFeatures(){};
+
+        void setBox(PeriodicBoxPtr _bx){Box = _bx;};
 
         //!Compute the (isotropic) radial distribution function of the point pattern
         void computeRadialDistributionFunction(vector<double2> &points,vector<double2> &GofR, double binWidth = 0.1);

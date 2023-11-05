@@ -37,7 +37,7 @@ class dynamicalFeatures
         double2 computeCageRelativeFsChi4(GPUArray<double2> &currentPos, double k = 6.28319);
 
         //!compute *un-normalized* flenner-Szamel psi_6 bond correlation decay (i.e., without the average |\psi_6|^2) that would make the function 1 at t=0. return.x is real, return.y is imaginary part
-        double2 computeOrientationalCorrelationFunction(GPUArray<double2> &currentPos,GPUArray<int> &currentNeighbors, GPUArray<int> &currentNeighborNum, Index2D n_idx);
+        double2 computeOrientationalCorrelationFunction(GPUArray<double2> &currentPos,GPUArray<int> &currentNeighbors, GPUArray<int> &currentNeighborNum, Index2D n_idx, int n=6);
         
 
     protected:
@@ -61,5 +61,8 @@ class dynamicalFeatures
         int N;
         vector<vector<int>> cageNeighbors;
         Index2D nIdx;
+
+        bool initialBondOrderComputed = false;
+        vector<double2> initialConjugateBondOrder;
     };
 #endif
