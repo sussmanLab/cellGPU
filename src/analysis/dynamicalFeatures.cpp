@@ -169,7 +169,7 @@ double2 dynamicalFeatures::computeOrientationalCorrelationFunction(GPUArray<doub
     double2 disp,p1,p2;
     int neighborIndex;
     double theta;
-    if(initialBondOrderComputed)
+    if(!initialBondOrderComputed)
         {
         initialBondOrderComputed = true;
         initialConjugateBondOrder.resize(currentPos.getNumElements());
@@ -193,7 +193,6 @@ double2 dynamicalFeatures::computeOrientationalCorrelationFunction(GPUArray<doub
             }
         };
 
-
     ArrayHandle<int> h_nn(currentNeighborNum,access_location::host,access_mode::read);
     ArrayHandle<int> h_n(currentNeighbors,access_location::host,access_mode::read);
     ArrayHandle<double2> h_p(currentPos,access_location::host,access_mode::read);
@@ -216,7 +215,7 @@ double2 dynamicalFeatures::computeOrientationalCorrelationFunction(GPUArray<doub
         ans.y+= localPsi.y*initialConjugateBondOrder[ii].x - localPsi.x*initialConjugateBondOrder[ii].y;
         };
 
-    
+    return ans;
     };
 
 double dynamicalFeatures::computeOverlapFunction(GPUArray<double2> &currentPos, double cutoff)
