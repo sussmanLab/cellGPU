@@ -45,6 +45,8 @@ class dynamicalFeatures
         void computeCageRelativeDisplacements(GPUArray<double2> &currentPos);
         //!a helper function that computes vectors of current displacements
         void computeDisplacements(GPUArray<double2> &currentPos);
+        //!helper function that computes the angular average of <F_s^2(q,t)>
+        double chi4Helper(vector<double2> &displacements, double k);
         //!helper function that computes the angular average self-intermediate scattering function associated with a vector of displacements
         double angularAverageSISF(vector<double2> &displacements, double k);
         //!helper function that computes the mean dot product of a vector of double2's
