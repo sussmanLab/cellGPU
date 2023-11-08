@@ -40,7 +40,7 @@ void dynamicalFeatures::computeDisplacements(GPUArray<double2> &currentPos)
         {
         cur = fPos.data[ii];
         init = iPos[ii];
-        Box->minDist(init,cur,disp);
+        Box->minDist(cur,init,disp);
         currentDisplacements[ii] = disp;
         }
     };
@@ -64,8 +64,8 @@ void dynamicalFeatures::computeCageRelativeDisplacements(GPUArray<double2> &curr
         for(int nn = 0; nn < nNeighs; ++nn)
             {
             int neighborIndex = cageNeighbors[ii][nn];
-            temp.x = temp.x + currentDisplacements[neighborIndex].x/nNeighs;
-            temp.y = temp.y + currentDisplacements[neighborIndex].y/nNeighs;
+            temp.x = temp.x + currentDisplacements[neighborIndex].x;
+            temp.y = temp.y + currentDisplacements[neighborIndex].y;
             }
         cageRelativeDisplacements[ii].x = cur.x - (1./((double) nNeighs))* temp.x;
         cageRelativeDisplacements[ii].y = cur.y - (1./((double) nNeighs))* temp.y;
@@ -156,15 +156,9 @@ double dynamicalFeatures::chi4Helper(vector<double2> &displacements, double k)
     double kr;
 
     double chi4Contribution = 0.0;
-    //Do self-terms first
-    for (int ii = 0; ii < N; ++ii)
-        {
-        disp = displacements[ii];
-        kr = 2.0*k*sqrt(dot(disp,disp));
-        chi4Contribution += 0.5*(1.0+std::cyl_bessel_j((double) 0.0, (double) kr));
-        };
-
-    //the other terms, only computing once each
+    //self contribution
+    chi4Contribution = 1.0*N;
+    //relative contributions
     for(int ii = 0; ii < N-1; ++ii)
         {
         disp = displacements[ii];
@@ -173,12 +167,8 @@ double dynamicalFeatures::chi4Helper(vector<double2> &displacements, double k)
             disp2 = displacements[jj];
             relativeDisp.x=disp.x-disp2.x;
             relativeDisp.y=disp.y-disp2.y;
-            totalDisp.x=disp.x+disp2.x;
-            totalDisp.y=disp.y+disp2.y;
-            kr = k*sqrt(dot(totalDisp,totalDisp));
-            chi4Contribution += 0.5*2.0*std::cyl_bessel_j((double) 0.0, (double) kr);
             kr = k*sqrt(dot(relativeDisp,relativeDisp));
-            chi4Contribution += 0.5*2.0*std::cyl_bessel_j((double) 0.0, (double) kr);
+            chi4Contribution += 2*std::cyl_bessel_j((double) 0.0, (double) kr);
             };
         }
 
@@ -192,7 +182,7 @@ double2 dynamicalFeatures::computeFsChi4(GPUArray<double2> &currentPos, double k
     double fsSquared = chi4Helper(currentDisplacements,k);
 
     ans.x=meanFs;
-    ans.y=fsSquared - meanFs*meanFs;
+    ans.y=N*(fsSquared - meanFs*meanFs);
     return ans;
     };
 
@@ -203,7 +193,7 @@ double2 dynamicalFeatures::computeCageRelativeFsChi4(GPUArray<double2> &currentP
 
     double fsSquared = chi4Helper(cageRelativeDisplacements,k);
     ans.x=meanFs;
-    ans.y=fsSquared - meanFs*meanFs;
+    ans.y=N*(fsSquared - meanFs*meanFs);
     return ans;
 
     };
