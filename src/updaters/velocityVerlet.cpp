@@ -2,6 +2,15 @@
 #include "EnergyMinimizerFIRE2D.cuh"//FIRE, written first, has by default some velocity verlet functions
 /*! \file velocityVerlet.cpp */
 
+velocityVerlet::velocityVerlet(int nPoint, bool  usegpu)
+    {
+    Timestep = 0;
+    deltaT=0.01;
+    GPUcompute=usegpu;
+    Ndof = nPoint;
+    displacements.resize(Ndof);
+    };
+
 void velocityVerlet::integrateEquationsOfMotion()
     {
     Timestep += 1;

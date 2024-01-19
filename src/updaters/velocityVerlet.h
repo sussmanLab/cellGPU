@@ -8,6 +8,7 @@
 class velocityVerlet : public simpleEquationOfMotion
     {
     public:
+        velocityVerlet(int nPoint, bool  usegpu =true);
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion();
         //!call the CPU routine to integrate the e.o.m.
