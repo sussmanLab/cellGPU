@@ -65,7 +65,7 @@ void langevinDynamics::set2DModel(shared_ptr<Simple2DModel> _model)
     }
 
 /*!
-Advances brownian dynamics by one time step
+Advances langevin dynamics by one time step
 */
 void langevinDynamics::integrateEquationsOfMotion()
     {

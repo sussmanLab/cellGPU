@@ -16,6 +16,7 @@ include_directories(
         )
 
 add_library(updaters
+    velocityVerlet.cpp
     brownianParticleDynamics.cpp
     EnergyMinimizerFIRE2D.cpp
     MullerPlatheShear.cpp

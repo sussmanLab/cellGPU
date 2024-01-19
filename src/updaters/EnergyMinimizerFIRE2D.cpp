@@ -102,7 +102,7 @@ void EnergyMinimizerFIRE::fireStep()
  */
 void EnergyMinimizerFIRE::velocityVerletGPU()
     {
-    //calculated displacements and update velocities
+    //calculate displacements and update velocities
     if (true) //scope for array handles
         {
         ArrayHandle<double2> d_f(force,access_location::device,access_mode::read);
