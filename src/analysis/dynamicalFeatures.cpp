@@ -225,7 +225,7 @@ double2 dynamicalFeatures::computeOrientationalCorrelationFunction(GPUArray<doub
                 localPsi.y += sin(n*theta)/neighs;
                 };
             initialConjugateBondOrder[ii].x = localPsi.x;
-            initialConjugateBondOrder[ii].y = -localPsi.y;
+            initialConjugateBondOrder[ii].y = localPsi.y;
             }
         };
 
@@ -247,7 +247,7 @@ double2 dynamicalFeatures::computeOrientationalCorrelationFunction(GPUArray<doub
             localPsi.x += cos(n*theta)/neighs;
             localPsi.y += sin(n*theta)/neighs;
             }
-        ans.x+= localPsi.x*initialConjugateBondOrder[ii].x+localPsi.y*initialConjugateBondOrder[ii].y;
+        ans.x+= localPsi.x*initialConjugateBondOrder[ii].x + localPsi.y*initialConjugateBondOrder[ii].y;
         ans.y+= localPsi.y*initialConjugateBondOrder[ii].x - localPsi.x*initialConjugateBondOrder[ii].y;
         };
 
