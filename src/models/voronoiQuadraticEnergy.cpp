@@ -412,6 +412,11 @@ by actually deforming the box a bit and recomputing the geometry.
 */
 double VoronoiQuadraticEnergy::getSigmaXY()
     {
+    if(!forcesUpToDate)
+        {
+        enforceTopology();
+        computeGeometry();
+        }
     double sigmaXY = 0.0;
     double Pthreshold = THRESHOLD;
 
