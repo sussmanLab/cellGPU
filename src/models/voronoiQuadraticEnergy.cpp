@@ -438,27 +438,75 @@ double VoronoiQuadraticEnergy::getSigmaXY()
         int neigh = h_nn.data[i];
         vector<int> ns(neigh);
         vector<double2> voro(neigh);
+        vector<double2> voroLast(neigh);
+        vector<double2> voroNext(neigh);
         for (int nn = 0; nn < neigh; ++nn)
             {
-            ns[nn]=h_n.data[n_idx(nn,i)];
+            //There is an indexing offset in the relevant voroCur, LastNext data structures between GPU and CPU
             int id = n_idx(nn,i);
+            ns[nn]=h_n.data[id];
+            int newIndex = nn;
+            if(GPUcompute)
+                {
+                newIndex = nn+1;
+                if(newIndex == neigh)
+                    newIndex = 0;
+                id =n_idx(newIndex,i);
+                }
+
             voro[nn] = h_v.data[id];
+            }
+        for (int nn = 0; nn < neigh; ++nn)
+            {
+            //There is an indexing offset in the relevant voroCur, LastNext data structures between GPU and CPU
+            int loopOffset = 0;
+            if(GPUcompute)
+                loopOffset = 1;
+            int newIndex = nn + loopOffset;
+            if(newIndex == neigh)
+                newIndex = 0;
+            int id = n_idx(newIndex,i);
+
+            if(!GPUcompute)
+                {
+                voroNext[nn] = voro[(newIndex+1)%neigh];
+                if(newIndex>0)
+                    voroLast[nn] = voro[newIndex-1];
+                else
+                    voroLast[nn] = voro[neigh-1];
+                }
+            else
+                {
+                voroLast[nn].x = h_vln.data[id].x;
+                voroLast[nn].y = h_vln.data[id].y;
+                int id2;
+                if (newIndex+1 == neigh)
+                    id2 = n_idx(0,i);
+                else
+                    id2 = n_idx(newIndex+1,i);
+                voroNext[nn].x = h_vln.data[id].z;
+                voroNext[nn].y = h_vln.data[id].w;
+                };
             };
         //loop through the Delaunay neighbors, computing dA/d\gamma and dP/d\gamma
         double2 rij,rik,dhdg;
         double2 nnextp,nlastp;
         double2 vlast,vnext,vcur;
-        nlastp = h_p.data[ns[ns.size()-1]]; 
+        nlastp = h_p.data[ns[neigh-1]];
         Box->minDist(nlastp,pi,rij);
         double Adiff = KA*(h_AP.data[i].x - h_APpref.data[i].x);
         double Pdiff = KP*(h_AP.data[i].y - h_APpref.data[i].y);
         double dAdg = 0.0;
         double dPdg = 0.0;
         vlast = voro[neigh-1];
+        double2 dAidv,dPidv;
+        double2 dlast,dnext;
         for (int nn = 0; nn < neigh; ++nn)
             {
+            vlast = voroLast[nn];
             vcur = voro[nn];
-            vnext = voro[(nn+1)%neigh];
+            vnext = voroNext[nn];
+
             nnextp = h_p.data[ns[nn]];
             Box->minDist(nnextp,pi,rik);
             getdhdgamma(dhdg,rij,rik);
@@ -467,10 +515,8 @@ double VoronoiQuadraticEnergy::getSigmaXY()
             //note that in the force calculation we adopted a sign convention to avoid computing the
             //final minus sign in f= - \nabla E
             //We'll compensate by writing sigmaXY -= (blah blah) instead of the more natural +=
-            double2 dAidv,dPidv;
             dAidv.x = 0.5*(vlast.y-vnext.y);
             dAidv.y = 0.5*(vnext.x-vlast.x);
-            double2 dlast,dnext;
             dlast.x = vlast.x-vcur.x;
             dlast.y=vlast.y-vcur.y;
             double dlnorm = sqrt(dlast.x*dlast.x+dlast.y*dlast.y);
