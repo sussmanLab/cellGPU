@@ -70,7 +70,7 @@ int main(int argc, char*argv[])
 
     //possibly save output in netCDF format
     char dataname[256];
-    sprintf(dataname,"./data/test_p%.3f.nc",p0);
+    sprintf(dataname,"./test_p%.3f.nc",p0);
     int Nvert = 2*numpts;
     AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
 

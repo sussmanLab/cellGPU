@@ -72,9 +72,9 @@ int main(int argc, char*argv[])
         initializeGPU = false;
 
     char dataname[256];
-    sprintf(dataname,"./data/vvCorr_N%i_p0%.3f_v0%.3f_J%.3f_fidx%i.nc",numpts,p0,v0,J,fIdx);
+    sprintf(dataname,"./vvCorr_N%i_p0%.3f_v0%.3f_J%.3f_fidx%i.nc",numpts,p0,v0,J,fIdx);
     char dataname2[256];
-    sprintf(dataname2,"./data/Phi_N%i_p0%.3f_v0%.3f_J%.3f_fidx%i.nc",numpts,p0,v0,J,fIdx);
+    sprintf(dataname2,"./Phi_N%i_p0%.3f_v0%.3f_J%.3f_fidx%i.nc",numpts,p0,v0,J,fIdx);
 
     //define an equation of motion object...here for self-propelled cells
     shared_ptr<selfPropelledAligningParticleDynamics> spp = make_shared<selfPropelledAligningParticleDynamics>(numpts);
