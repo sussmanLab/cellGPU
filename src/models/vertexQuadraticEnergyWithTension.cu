@@ -41,7 +41,7 @@ __global__ void vm_tensionForceSets_kernel(
 
     int cellIdx1 = vertexCellNeighbors[fsidx];
     double Adiff = KA*(areaPeri[cellIdx1].x - APPref[cellIdx1].x);
-    double Pdiff = KA*(areaPeri[cellIdx1].y - APPref[cellIdx1].y);
+    double Pdiff = KP*(areaPeri[cellIdx1].y - APPref[cellIdx1].y);
     vcur = voroCur[fsidx];
     vlast.x = voroLastNext[fsidx].x;  vlast.y = voroLastNext[fsidx].y;
     vnext.x = voroLastNext[fsidx].z;  vnext.y = voroLastNext[fsidx].w;
