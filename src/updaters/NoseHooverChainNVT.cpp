@@ -45,7 +45,10 @@ void NoseHooverChainNVT::setT(double T)
     {
     Temperature = T;
     ArrayHandle<double4> h_bv(BathVariables);
-    h_bv.data[0].w = 2.0 * (Ndof-2)*Temperature;
+    if (Nchain ==1)
+        h_bv.data[0].w = 2.0 * (Ndof-2)*Temperature;
+    else
+        h_bv.data[0].w = 2.0 * (Ndof)*Temperature;
     for (int ii = 1; ii < Nchain+1; ++ii)
         {
         h_bv.data[ii].w = Temperature;
