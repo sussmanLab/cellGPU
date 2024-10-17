@@ -37,7 +37,7 @@ __global__ void NoseHooverChainNVT_propagateChain_kernel(
         bathVariables[ii].y += bathVariables[ii].z*dt4;
         bathVariables[ii].y *= ef;
         };
-    bathVariables[0].z = (2.0*kineticEnergyScaleFactor[0] - 2.0*(Ndof-2)*Temperature)/bathVariables[0].w;
+    bathVariables[0].z = (2.0*kineticEnergyScaleFactor[0]/bathVariables[0].w - 1.0);
     double ef = exp(-dt8*bathVariables[1].y);
     bathVariables[0].y *= ef;
     bathVariables[0].y += bathVariables[0].z*dt4;
@@ -53,7 +53,7 @@ __global__ void NoseHooverChainNVT_propagateChain_kernel(
     kineticEnergyScaleFactor[0] = kineticEnergyScaleFactor[1]*kineticEnergyScaleFactor[1]*kineticEnergyScaleFactor[0];
 
     //finally, do the other quarter-timestep of the velocities and accelerations, from 0 to Nchain
-    bathVariables[0].z = (2.0*kineticEnergyScaleFactor[0] - 2.0*(Ndof-2)*Temperature)/bathVariables[0].w;
+    bathVariables[0].z = (2.0*kineticEnergyScaleFactor[0]/bathVariables[0].w - 1.0);
     ef = exp(-dt8*bathVariables[1].y);
     bathVariables[0].y *= ef;
     bathVariables[0].y += bathVariables[0].z*dt4;
