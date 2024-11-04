@@ -39,16 +39,14 @@ NoseHooverChainNVT::NoseHooverChainNVT(int N, int M, bool useGPU)
 
 /*!
 Set the target temperature to the specified value.
-Additionally, use the observation in the Mol Phys paper to set the masses of the chain of thermostats
+A careful reading of the "Non-Hamiltonian molecular dynamics: Generalizing Hamiltonian phase
+space principles to non-Hamiltonian systems" paper (jcp 2001) suggests the correct setting of the first thermostat chain mass to guarantee conservation of energy in the context of a total momentum=0 setting
 */
 void NoseHooverChainNVT::setT(double T)
     {
     Temperature = T;
     ArrayHandle<double4> h_bv(BathVariables);
-    if (Nchain ==1)
-        h_bv.data[0].w = 2.0 * (Ndof-1)*Temperature;
-    else
-        h_bv.data[0].w = 2.0 * (Ndof)*Temperature;
+    h_bv.data[0].w = 2.0 * (Ndof-1)*Temperature;
     for (int ii = 1; ii < Nchain+1; ++ii)
         {
         h_bv.data[ii].w = Temperature;
