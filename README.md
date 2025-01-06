@@ -1,5 +1,17 @@
 # CellGPU
 
+## Changes in progress
+
+I am currently in the process of updating the cellGPU codebase --- its age is showing, and it
+has become a bit unweildy to maintain. Please use the v1.0.0 tag for legacy code and compilation,
+as it is the last commit before this modernization effort.
+
+Current versions will start requiring c++-17, a more modern build system, and newer versions of
+cuda. I'll be updating the structure of the code base to better reflect best practices in
+building a simulation framework. Progress will be slow, since I'm not a postdoc anymore.
+
+## Information
+
 CellGPU implements GPU-accelerated algorithms to simulate off-lattice models of cells. Its current
 two main feature sets focus on a Voronoi-decomposition-based model of two-dimensional monolayers
 and on a two-dimensional dynamical version of the vertex model. CellGPU grew out of DMS'
