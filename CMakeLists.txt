@@ -1,21 +1,35 @@
-cmake_minimum_required(VERSION 3.9.0)
+cmake_minimum_required(VERSION 3.22)
 
 project(cellGPU LANGUAGES CUDA CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 #note: CGAL (which I will get rid of someday) needs at least c++14; some advanced gcc compilers will throw errors if you don't set the cpp standard to 17, though
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+
+#set a default "Release" build type
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build." FORCE)
+endif()
+
 add_definitions(-DENABLE_CUDA)
 
 find_package(OpenMP REQUIRED)
+find_package(HDF5 REQUIRED)
 
-set(CUDA_ARCH "30;35;50")
+set(CUDA_ARCH "35;50")
                 #if you have different cuda-capable hardware, modify this line to get much more optimized performance. By default,
                 #I have set this to work on Tesla K40s (still used at many XSEDE facilities), but add the correct codes for optimizing performance
                 #on your cards
 
 
 set(CMAKE_CC_FLAGS "${CMAKE_CC_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DBOOST_MATH_DISABLE_FLOAT128 -fopenmp -frounding-math")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -DBOOST_MATH_DISABLE_FLOAT128 -fopenmp -frounding-math")
 set(CMAKE_CUDA_FLAGS "${CUDA_NVCC_FLAGS} --expt-relaxed-constexpr")
 set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCH})
 
