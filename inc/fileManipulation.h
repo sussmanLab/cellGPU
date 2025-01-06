@@ -14,7 +14,10 @@ inline bool fileExists(const std::string& name)
 //!A utility: when handed filename = "path/to/file.txt", creates directories if they don't already exist
 inline void createDirectoriesOnPath(const std::string &filename)
     {
-    std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
+    std::filesystem::path filePath(filename);
+    std::filesystem::path parentPath = filePath.parent_path();
+    if(!parentPath.empty())
+        std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
     }
 
 #endif

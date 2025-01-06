@@ -11,7 +11,7 @@ simpleVertexDatabase::simpleVertexDatabase(int np, string fn,fileMode::Enum _mod
     Nc = np/2;
     timeVector.resize(1);
     boxVector.resize(4);
-    intVector.resize(N);
+    intVector.resize(Nc);
     doubleVector.resize(N);
     coordinateVector.resize(2*N);
     cellCoordinateVector.resize(2*Nc);
