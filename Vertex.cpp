@@ -6,7 +6,7 @@
 #include "vertexQuadraticEnergy.h"
 #include "selfPropelledCellVertexDynamics.h"
 #include "brownianParticleDynamics.h"
-#include "DatabaseNetCDFAVM.h"
+#include "simpleVertexDatabase.h"
 /*!
 This file compiles to produce an executable that can be used to reproduce the timing information
 for the 2D AVM model found in the "cellGPU" paper, using the following parameters:
@@ -72,7 +72,7 @@ int main(int argc, char*argv[])
     char dataname[256];
     sprintf(dataname,"./test_p%.3f.nc",p0);
     int Nvert = 2*numpts;
-    AVMDatabaseNetCDF ncdat(Nvert,dataname,NcFile::Replace);
+    simpleVertexDatabase ncdat(Nvert,dataname,fileMode::replace);
 
     bool runSPV = false;//setting this to true will relax the random cell positions to something more uniform before running vertex model dynamics
 

@@ -7,7 +7,7 @@
 #include <set>
 #include <algorithm>
 
-#ifdef NVCC
+#ifdef __NVCC__
 /*!
 \def HOSTDEVICE
 __host__ __device__ inline

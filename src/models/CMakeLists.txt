@@ -27,8 +27,9 @@ add_library(model
     voronoiQuadraticEnergy.cpp
     voronoiQuadraticEnergyWithTension.cpp
     )
+target_include_directories(model PUBLIC ${HDF5_INCLUDE_DIRS})
 
-cuda_add_library(modelGPU
+add_library(modelGPU
     DelaunayGPU.cu
     Simple2DCell.cu
     vertexModelBase.cu
@@ -38,4 +39,6 @@ cuda_add_library(modelGPU
     voronoiQuadraticEnergy.cu
     voronoiQuadraticEnergyWithTension.cu
     )
+set_target_properties(modelGPU PROPERTIES
+                            CUDA_SEPARABLE_COMPILATION ON)
 

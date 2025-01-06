@@ -5,7 +5,7 @@
 a file of bad practice to be included all the time... carries with it things DMS often uses
 */
 
-#ifdef NVCC
+#ifdef __NVCC__
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))
@@ -102,13 +102,6 @@ static void HandleError(cudaError_t err, const char *file, int line)
         }
     }
 
-//!A utility function for checking if a file exists
-inline bool fileExists(const std::string& name)
-    {
-    ifstream f(name.c_str());
-    return f.good();
-    }
-
 __host__ inline bool chooseCPU(int gpuSwitch,bool verbose = false)
     {
 	char CPUBrandString[0x40];
@@ -174,19 +167,9 @@ __host__ inline bool chooseGPU(int USE_GPU,bool verbose = false)
         };
     return true;
     };
-//!Report somewhere that code needs to be written
-static void unwrittenCode(const char *message, const char *file, int line)
-    {
-    printf("\nCode unwritten (file %s; line %d)\nMessage: %s\n",file,line,message);
-    throw std::exception();
-    }
 
 //A macro to wrap cuda calls
 #define HANDLE_ERROR(err) (HandleError( err, __FILE__,__LINE__ ))
-//spot-checking of code for debugging
-#define DEBUGCODEHELPER printf("\nReached: file %s at line %d\n",__FILE__,__LINE__);
-//A macro to say code needs to be written
-#define UNWRITTENCODE(message) (unwrittenCode(message,__FILE__,__LINE__))
 
 #undef HOSTDEVICE
 #endif

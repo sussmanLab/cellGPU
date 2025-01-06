@@ -10,7 +10,7 @@ which is released under the GNU LGPL license
 #include "std_include.h"
 #include "hilbert_curve.hpp"
 
-#ifdef NVCC
+#ifdef __NVCC__
 #define HOSTDEVICE __host__ __device__ inline
 #else
 #define HOSTDEVICE inline __attribute__((always_inline))

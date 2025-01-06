@@ -21,9 +21,10 @@ add_library(utility
     hilbert_curve.cpp
     noiseSource.cpp
     )
-cuda_add_library(utilityGPU
+add_library(utilityGPU
     cellListGPU.cu
     noiseSource.cu
     utilities.cu
     )
-
+set_target_properties(utilityGPU PROPERTIES
+                            CUDA_SEPARABLE_COMPILATION ON)

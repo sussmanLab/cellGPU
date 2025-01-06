@@ -1,41 +1,46 @@
-#ifndef vectorValueDatabase_h
-#define vectorValueDatabase_h
+#ifndef VECTORVALUEDATABASE_H
+#define VECTORVALUEDATABASE_H
 
-#include "DatabaseNetCDF.h"
+#include "baseHDF5Database.h"
 
-/*! \file vectorValueDatabase.h */
-//! Sometimes it is convenient to have a NetCDF database where every record is a value and a vector
 /*!
-There is one unlimited dimension, and each record stores a scalar value and a vector of scalars
+@class valueVectorDatabase
+
+This class uses the baseHDF5Database as a backend to write a hdf5 file with two unlimited records.
+One corresponds to a single scalar, and the other to a vector of doubles,
+and every call to the writeState function appends a record to each of these two datasets.
+
+The usage might be something like
+    int n;
+    std::vector<double> vectorToWrite(n,0);
+    double value = 0;
+    valueVectorDatabase stateSaver("./data/test.h5",vectorToWrite.size(),fileMode::replace);
+    //other code to populate the vector and value
+    stateSaver.writeState(vectorToWrite,value);
+    //more code to repopulate the vector and value
+    stateSaver.writeState(vectorToWrite,value);
+    //etc.
 */
-class vectorValueDatabase : public BaseDatabaseNetCDF
+class valueVectorDatabase : public baseHDF5Database
     {
     public:
-        vectorValueDatabase(int vectorLength, string fn="temp.nc", NcFile::FileMode mode=NcFile::ReadOnly);
-        ~vectorValueDatabase(){File.close();};
+        //!The constructor calls the baseHDF5Database constructor (to handle fileMode stuff), sets data structures, and registers the datasets in the hdf5 file if needed
+        valueVectorDatabase(std::string _filename, unsigned long vectorSize, fileMode::Enum _accessMode = fileMode::readonly);
 
-        //! NcDims we'll use
-        NcDim *recDim, *dofDim, *unitDim;
-        //! NcVars
-        NcVar *valVar, *vecVar;
-        //!read values in a new value and vector
-        void readState(int rec);
-        //!write a new value and vector
-        void writeState(vector<double> &vec,double val);
-        //!read the number of records in the database
-        int GetNumRecs(){
-                    NcDim *rd = File.get_dim("rec");
-                    return rd->size();
-                    };
-        //!The variable that will be loaded for "value" when state is read
-        double val;
-        //!The variable that will be loaded for "vector" when state is read
-        vector<double> vec;
+        //! create the two unlimited datasets, "/vector" and "/value", in the hdf5 file
+        void registerDatasets();
+        //! return the number of records in the dataset
+        unsigned long currentNumberOfRecords();
+        //! Append the data passed to this function as a new record in the file
+        void writeState(double val, std::vector<double> &data);
+        //! populate valueVector[0] and dataVector with the values in the corresponding data rows
+        void readState(int record);
 
-    protected:
-        void SetDimVar();
-        void GetDimVar();
-        //!Length of the vector
-        int N;
+        unsigned long maximumVectorSize;
+        //! the zeroth element will be populated after a readState call
+        std::vector<double> valueVector;
+        //! will be populated after a readState call
+        std::vector<double> dataVector;
     };
+
 #endif

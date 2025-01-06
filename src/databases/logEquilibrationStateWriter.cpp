@@ -1,11 +1,12 @@
 #include "logEquilibrationStateWriter.h"
+#include "baseHDF5Database.h"
 
 logEquilibrationStateWriter::logEquilibrationStateWriter(double exponent)
     {
     logSpaceParameters.x = exponent;
     };
 
-void logEquilibrationStateWriter::addDatabase(shared_ptr<BaseDatabase> db, int firstFrameToSave)
+void logEquilibrationStateWriter::addDatabase(shared_ptr<baseHDF5Database> db, int firstFrameToSave)
     {
     databases.push_back(db);
     shared_ptr<logSpacedIntegers> lsi = make_shared<logSpacedIntegers>(0,logSpaceParameters.x);

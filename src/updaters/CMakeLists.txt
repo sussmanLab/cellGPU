@@ -30,7 +30,7 @@ add_library(updaters
     langevinDynamics.cpp
     VSSRNEMD.cpp
     )
-cuda_add_library(updatersGPU
+add_library(updatersGPU
     EnergyMinimizerFIRE2D.cu
     NoseHooverChainNVT.cu
     brownianParticleDynamics.cu
@@ -42,3 +42,6 @@ cuda_add_library(updatersGPU
     simpleEquationOfMotion.cu
     langevinDynamics.cu
     )
+
+set_target_properties(updatersGPU PROPERTIES
+                            CUDA_SEPARABLE_COMPILATION ON)

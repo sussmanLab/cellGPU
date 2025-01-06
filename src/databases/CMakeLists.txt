@@ -1,27 +1,13 @@
-if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-    add_definitions(-DDEBUGFLAGUP)
-endif(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-
-include_directories(
-            ${EIGEN3_INCLUDE_DIR}
-            ${CUDA_INCLUDE_DIRS}
-            ${CMAKE_SOURCE_DIR}/inc 
-            ${CMAKE_SOURCE_DIR}/src
-            ${CMAKE_SOURCE_DIR}/src/utility
-            ${CMAKE_SOURCE_DIR}/src/analysis
-            ${CMAKE_SOURCE_DIR}/src/models
-            ${CMAKE_SOURCE_DIR}/src/forces
-            ${CMAKE_SOURCE_DIR}/src/updaters
-            ${CMAKE_SOURCE_DIR}/src/simulation
-        )
-
-add_library(database
+add_library(databases
+    baseHDF5Database.cpp
     logEquilibrationStateWriter.cpp
-    DatabaseNetCDF.cpp
-    DatabaseNetCDFAVM.cpp
-    DatabaseNetCDFSPV.cpp
-    DatabaseTextVoronoi.cpp
+    # DatabaseNetCDFAVM.cpp
+    # DatabaseNetCDFSPV.cpp
+    databaseTextVoronoi.cpp
     vectorValueDatabase.cpp
-    nvtModelDatabase.cpp
+    simpleVoronoiDatabase.cpp
+    simpleVertexDatabase.cpp
     )
 
+target_include_directories(databases PUBLIC ${HDF5_INCLUDE_DIRS})
+target_link_libraries(databases PUBLIC ${HDF5_LIBRARIES})

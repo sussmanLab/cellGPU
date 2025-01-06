@@ -1,7 +1,8 @@
 #ifndef logEqStateWriter_H
 #define logEqStateWriter_H
 
-#include "BaseDatabase.h"
+#include "Simple2DCell.h"
+#include "baseHDF5Database.h"
 #include "analysisPackage.h"
 
 //! Handles the logic of saving log-spaced data files that might begin at different offset times
@@ -14,11 +15,11 @@ class logEquilibrationStateWriter
         logEquilibrationStateWriter(double exponent = 0.1);
 
 
-        void addDatabase(shared_ptr<BaseDatabase> db, int firstFrameToSave);
+        void addDatabase(shared_ptr<baseHDF5Database> db, int firstFrameToSave);
         void identifyNextFrame();
         void writeState(STATE c, long long int frame);
 
-        vector<shared_ptr<BaseDatabase>> databases;
+        vector<shared_ptr<baseHDF5Database>> databases;
         vector<int> saveOffsets;
         vector<shared_ptr<logSpacedIntegers>> logSpaces;
         vector<long long int> nextFrames;

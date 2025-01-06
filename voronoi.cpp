@@ -7,7 +7,7 @@
 #include "Simulation.h"
 #include "voronoiQuadraticEnergy.h"
 #include "NoseHooverChainNVT.h"
-#include "nvtModelDatabase.h"
+#include "simpleVoronoiDatabase.h"
 #include "logEquilibrationStateWriter.h"
 #include "analysisPackage.h"
 
@@ -78,7 +78,7 @@ int main(int argc, char*argv[])
     for(int ii = 0; ii < offsets.size(); ++ii)
         {
         sprintf(dataname,"test_N%i_p%.5f_T%.8f_et%.6f.nc",numpts,p0,T,offsets[ii]*dt);
-        shared_ptr<nvtModelDatabase> ncdat=make_shared<nvtModelDatabase>(numpts,dataname,NcFile::Replace);
+        shared_ptr<simpleVoronoiDatabase> ncdat=make_shared<simpleVoronoiDatabase>(numpts,dataname,fileMode::replace);
         lewriter.addDatabase(ncdat,offsets[ii]);
         }
     lewriter.identifyNextFrame();

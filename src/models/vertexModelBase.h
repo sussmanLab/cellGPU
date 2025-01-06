@@ -5,6 +5,7 @@
 //include spp dynamics for SPV-based initialization of configurations
 #include "selfPropelledParticleDynamics.h"
 #include "Simulation.h"
+#include "simpleVertexDatabase.h"
 
 /*! \file vertexModelBase.h */
 //!A class that can calculate many geometric and topological features common to vertex models
@@ -157,5 +158,6 @@ class vertexModelBase : public Simple2DActiveCell
                 }
             cout <<endl;
             };
+    friend class simpleVertexDatabase;
     };
 #endif

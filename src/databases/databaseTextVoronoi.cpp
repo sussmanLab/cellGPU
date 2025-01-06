@@ -1,18 +1,19 @@
-#include "DatabaseTextVoronoi.h"
-/*! \file DatabaseTextVoronoi.cpp */
+#include "databaseTextVoronoi.h"
+/*! \file databaseTextVoronoi.cpp */
 
-DatabaseTextVoronoi::DatabaseTextVoronoi(string fn, int mode)
-    : BaseDatabase(fn,mode)
+DatabaseTextVoronoi::DatabaseTextVoronoi(string fn, fileMode::Enum _mode)
     {
-    switch(Mode)
+    filename = fn;
+    mode = _mode;
+    switch(mode)
         {
-        case -1:
+            case fileMode::readonly:
             inputFile.open(filename);
             break;
-        case 0:
+            case fileMode::replace:
             outputFile.open(filename);
             break;
-        case 1:
+            case fileMode::readwrite:
             outputFile.open(filename, ios::app);
             break;
         default:
