@@ -75,7 +75,7 @@ the topology maintenance problem in Voronoi models
 * vertexModelBase -- a child of Simple2DActiveCell that serves as a base for... vertex models. Is currently
 restricted to vertex models where every vertex is three-fold coordinated
 
-* DatabaseNetCDF -- A NetCDF 4.x interface used to store simulation trajectories compactly
+* baseHDF5Database -- An interface used to write hdf5 files, storing simulation trajectories compactly
 
 * eigenMatrixInterface -- a very simple interface to the Eigen package; used to diagonalize the dynamical matrix 
 

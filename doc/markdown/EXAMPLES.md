@@ -3,6 +3,8 @@
 These minimal samples show how to run default-initialized simulations. Please see the provided .cpp
 files in the main directory and examples directory for more samples, or consult the documentation for more advanced usage.
 
+PLEASE NOTE: I haven't really maintained the files in the `examples/` directory as cellGPU has gone through breaking changes. The functionality is all there, though, so think of them as inspiration for what is possible rather than as working samples.
+
 # Vertex.cpp
 
 A simple interface that initializes and runs a simulation of the 2D vertex model.
@@ -19,10 +21,6 @@ The same thing, but for running the 2D Voronoi model
 
 Provides an example of using the FIRE minimizer to minimize either a 2D Voronoi or AVM system.
 
-# runMakeDatabase.cpp
-
-Provides an example of using the NetCDF database class to write snapshots of a simulation of the 2D
-Voronoi model, using either active cell or overdamped Brownian dynamics
 
 # tensions.cpp
 

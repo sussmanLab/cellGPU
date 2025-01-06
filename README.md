@@ -21,7 +21,7 @@ the code (Please note that if you are reading this on the Gitlab main page the l
 visit the main documentation page at https://dmsussman.gitlab.io/cellGPUdocumentation or compile
 Doxygen documentation locally).
 
-By default cellGPU includes a few different classes, mostly using the netCDF format, for saving simulation
+By default cellGPU includes a few different classes, mostly using the hdf5 format, for saving simulation
 data. For convenience, a few Mathematica scripts demonstrating how to load these files and turn them
 into simple visualizations are included in the visualizationTools directory -- these should be readily
 portable to matlab, python, etc.

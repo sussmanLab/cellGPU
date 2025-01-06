@@ -27,8 +27,7 @@ In any event,
 CGAL-5.0.2 was used, which in turn requires up-to-date versions of the gmp and mpfr libraries.
 The code was developed and tested against gmp-6.1.2 and mpfr-3.1.5.All of these, including CGAL now, can be conveniently installed via apt-get
 
-The default database class uses the netCDF-4 C++  library (tested on version 4.1.3).The dependency on netCDF
-can be removed by (1) not including any "Database" class, and (2) removing the database directory and library from the cmake file
+The default database class uses the hdf5 library.
 
 The calculation of the dynamical matrix makes use of Eigen3.3.3
 
@@ -37,10 +36,9 @@ Documentation is maintained via doxygen, but is not required for compilation of 
 # Sample programs
 
 This repository comes with sample main cpp files that can be compiled into executables in both the root directory
-and in examples/. Please see the [examples](@ref code) documentation for details on each.
-range of parameters.
+and in examples/. Please see the [examples](@ref code) documentation for details on each. These examples have not been maintained, so do not expect them to compile without some tinkering.
 
-#Ubuntu installation
+# Ubuntu installation
 
 Most requirements can be obtained by the usual apt-get method; netcdf is more finicky.
 An install script is included in the cmakeHelp/ directory. Modify the directory paths to be more appropriate for your system,
