@@ -2,6 +2,9 @@
 
 ### Changes in progress
 
+- [x] migrate away from netcdf
+- [ ] refactor entire codebase into a more flexible and modern structure
+
 ## version 1.0.0
 
 * Inclusion of only-on-GPU operation of voronoi models.
