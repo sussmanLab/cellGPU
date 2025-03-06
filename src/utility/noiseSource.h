@@ -22,9 +22,11 @@ class noiseSource
         noiseSource()
             {
             Reproducible = false;
-            mt19937 Gener(13377);
+            RNGSeed = 13377;
+            mt19937 Gener(RNGSeed);
         #ifndef DEBUGFLAGUP
-            mt19937 GenerRd(rd());
+            RNGSeed = rd();
+            mt19937 GenerRd(RNGSeed);
         #else
             mt19937 GenerRd(13377);
         #endif
@@ -43,6 +45,8 @@ class noiseSource
         void initialize(int _N)
             {
             N=_N;
+            if(initializeGPURNG)
+                initializeGPURNGs(RNGSeed);
             };
         //!set reproducibility
         void setReproducible(bool _rep){Reproducible = _rep;};
