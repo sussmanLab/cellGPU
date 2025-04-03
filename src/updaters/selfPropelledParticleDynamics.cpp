@@ -6,13 +6,17 @@
 An extremely simple constructor that does nothing, but enforces default GPU operation
 \param the number of points in the system (cells or particles)
 */
-selfPropelledParticleDynamics::selfPropelledParticleDynamics(int _N)
+selfPropelledParticleDynamics::selfPropelledParticleDynamics(int _N, bool _useGPU)
     {
     Timestep = 0;
     deltaT = 0.01;
-    GPUcompute = true;
+    GPUcompute = _useGPU;
+
+    if(!GPUcompute)
+        displacements.neverGPU=true;
     mu = 1.0;
     Ndof = _N;
+    noise.initializeGPURNG = GPUcompute;
     noise.initialize(Ndof);
     displacements.resize(Ndof);
     };

@@ -17,7 +17,7 @@ class selfPropelledParticleDynamics : public simpleEquationOfMotion
         selfPropelledParticleDynamics(){deltaT = 0.01; GPUcompute =true;Timestep = 0;};
 
         //!additionally set the number of particles andinitialize things
-        selfPropelledParticleDynamics(int N);
+        selfPropelledParticleDynamics(int N, bool _useGPU = true);
 
         //!the fundamental function that models will call, using vectors of different data structures
         virtual void integrateEquationsOfMotion();
