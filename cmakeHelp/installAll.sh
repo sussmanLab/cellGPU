@@ -45,7 +45,7 @@ cd ..
 rm mpfr-4.2.0.tar.xz
 
 # install CGAL
-wget "https://github.com/CGAL/cgal/releases/download/v5.5.2/CGAL-5.5.2.tar.xz"
+wget "https://github.com/CGAL/cgal/releases/download/v5.6.1/CGAL-5.6.1.tar.xz"
 tar -xvf CGAL-5.6.1.tar.xz
 cd CGAL-5.6.1
 cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local -DCMAKE_BUILD_TYPE=Release .
