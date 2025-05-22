@@ -14,13 +14,13 @@ echo 'export MPFR_LIBRARIES=$HOME/.local/lib' >> ~/.bashrc
 echo 'export MPFR_INCLUDE_DIR=$HOME/.local/include'  >> ~/.bashrc
 
 # install boost
-wget "https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.tar.gz"
-tar -xvzf boost_1_82_0.tar.gz
-cd boost_1_82_0
+wget "https://boostorg.jfrog.io/artifactory/main/release/1.84.0/source/boost_1_84_0.tar.gz"
+tar -xvzf boost_1_84_0.tar.gz
+cd boost_1_84_0
 ./bootstrap.sh --prefix=$HOME/.local
 ./b2 install
 cd ..
-rm boost_1_82_0.tar.gz
+rm boost_1_84_0.tar.gz
 
 # install GMP
 wget "https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz"
@@ -34,7 +34,7 @@ cd ..
 rm gmp-6.2.1.tar.xz
 
 # install MPFR
-wget "https://www.mpfr.org/mpfr-current/mpfr-4.2.0.tar.xz"
+wget "https://www.mpfr.org/mpfr-4.20/mpfr-4.2.0.tar.xz"
 tar -xvf mpfr-4.2.0.tar.xz
 cd mpfr-4.2.0
 ./configure --prefix=$HOME/.local
@@ -46,17 +46,17 @@ rm mpfr-4.2.0.tar.xz
 
 # install CGAL
 wget "https://github.com/CGAL/cgal/releases/download/v5.5.2/CGAL-5.5.2.tar.xz"
-tar -xvf CGAL-5.5.2.tar.xz
-cd CGAL-5.5.2
+tar -xvf CGAL-5.6.1.tar.xz
+cd CGAL-5.6.1
 cmake -DCMAKE_INSTALL_PREFIX=$HOME/.local -DCMAKE_BUILD_TYPE=Release .
 make
 make check
 make install
 cd ..
-rm CGAL-5.5.2.tar.xz
+rm CGAL-5.6.1.tar.xz
 
 # install zlib
-wget "https://www.zlib.net/zlib-1.2.13.tar.gz"
+wget "https://www.zlib.net/fossils/zlib-1.2.13.tar.gz"
 tar axf zlib-1.2.13.tar.gz
 cd zlib-1.2.13
 ./configure --prefix=$HOME/.local
