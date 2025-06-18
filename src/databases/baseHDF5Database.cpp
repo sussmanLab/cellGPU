@@ -137,6 +137,7 @@ void baseHDF5Database::addHeaderData(std::string name, const std::vector<T> &dat
     h5dataSpaceCreate dataset(hdf5File,name.c_str(),getDatatypeFor<T>(),fileSpace.internalId,H5P_DEFAULT,plist.internalId,H5P_DEFAULT);
 
     H5Dwrite(dataset.internalId, getDatatypeFor<T>(), H5S_ALL, H5S_ALL, H5P_DEFAULT, data.data());
+    H5Fflush(hdf5File, H5F_SCOPE_GLOBAL);
     };
 
 unsigned long baseHDF5Database::getDatasetDimensions(std::string name)
@@ -179,6 +180,7 @@ void baseHDF5Database::extendDataset(std::string name,std::vector<T> &data)
     H5Sselect_hyperslab(dataspace,H5S_SELECT_SET,offset,NULL,count,NULL);
     H5Dwrite(dataset.internalId,getDatatypeFor<T>(),memorySpace.internalId,dataspace,H5P_DEFAULT,data.data());
     H5Sclose(dataspace);
+    H5Fflush(hdf5File, H5F_SCOPE_GLOBAL);
     };
 
 template<typename T>
