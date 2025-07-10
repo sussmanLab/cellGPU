@@ -149,7 +149,7 @@ unsigned long baseHDF5Database::getDatasetDimensions(std::string name)
     herr_t ndims = H5Sget_simple_extent_dims(dataspace,dims,NULL);
     if(ndims<0)
         ERRORERROR("failed to get dimensions\n");
-    H5Dclose(dataspace);
+    H5Sclose(dataspace);
     return dims[0];
     };
 
@@ -159,10 +159,13 @@ void baseHDF5Database::extendDataset(std::string name,std::vector<T> &data)
     if(mode == fileMode::readonly)
         ERRORERROR("don't write on a readonly file");
     h5dataSpaceOpen dataset(hdf5File,name.c_str(),H5P_DEFAULT);
-    hid_t dataspace = H5Dget_space(dataset.internalId);
-    //get the current dimensions of the dataset
+
+    //get initial dataspace to find dimensions
+    hid_t initialDataspace = H5Dget_space(dataset.internalId);
     hsize_t dims[2];
-    herr_t ndims = H5Sget_simple_extent_dims(dataspace,dims,NULL);
+    herr_t ndims = H5Sget_simple_extent_dims(initialDataspace,dims,NULL);
+    H5Sclose(initialDataspace);
+
     if(ndims<0)
         ERRORERROR("incorrect dimensions on extending dataset\n");
     if(data.size()!= dims[1])
@@ -172,12 +175,16 @@ void baseHDF5Database::extendDataset(std::string name,std::vector<T> &data)
     hsize_t newDimensions[2] = {dims[0]+1,dims[1]};
     H5Dset_extent(dataset.internalId,newDimensions);
 
+    //create memory space for the new data
     hsize_t newMemoryDimensions[2] = {1,dims[1]};
     h5memorySpace memorySpace(ndims,newMemoryDimensions,NULL);
-    dataspace = H5Dget_space(dataset.internalId);
+
+    hid_t dataspace = H5Dget_space(dataset.internalId);
     hsize_t offset[2] = {dims[0],0};
     hsize_t count[2] = {1,dims[1]};
     H5Sselect_hyperslab(dataspace,H5S_SELECT_SET,offset,NULL,count,NULL);
+
+    //write the data and close file dataspace
     H5Dwrite(dataset.internalId,getDatatypeFor<T>(),memorySpace.internalId,dataspace,H5P_DEFAULT,data.data());
     H5Sclose(dataspace);
     H5Fflush(hdf5File, H5F_SCOPE_GLOBAL);
@@ -221,7 +228,11 @@ void baseHDF5Database::readDataset(std::string name,std::vector<T> &data, int re
     if(ndims!=2)
         ERRORERROR("reading a dataset that isn't two dimensional\n");
     if(data.size()!= dims[1])
+        {
+        data.resize(dims[1]);
+        logMessage(logger::warning, "reading a dataset that isn't the same saize as the given vector!");
         ERRORERROR("trying to read a vector of the wrong size for the dataset");
+        }
 
     hsize_t rowIndex = record;
     if(record < 0)
@@ -238,7 +249,7 @@ void baseHDF5Database::readDataset(std::string name,std::vector<T> &data, int re
 
     H5Dread(dataset.internalId,getDatatypeFor<T>(),memorySpace.internalId,dataspace, H5P_DEFAULT, data.data());
 
-    H5Dclose(dataspace);
+    H5Sclose(dataspace);
     };
 
 void baseHDF5Database::readTest(int record)
